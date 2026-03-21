@@ -42,6 +42,18 @@ class LLMSettings(BaseSettings):
     model_narrative: str = "gemini/gemini-2.5-flash"
     model_visualization: str = "gemini/gemini-2.5-flash"
 
+    # Phase 2 agents
+    model_trend: str = "gemini/gemini-2.5-pro"
+    model_financial: str = "claude-sonnet-4-6-20250514"
+    model_risk: str = "claude-sonnet-4-6-20250514"
+    model_real_estate: str = "gemini/gemini-2.5-flash"
+    model_regulatory: str = "claude-sonnet-4-6-20250514"
+
+    # Debate agents
+    model_advocate: str = "gemini/gemini-2.5-pro"
+    model_critic: str = "claude-sonnet-4-6-20250514"
+    model_judge: str = "claude-opus-4-6-20250514"
+
     temperature_analysis: float = 0.1
     temperature_narrative: float = 0.7
     temperature_default: float = 0.2
@@ -62,6 +74,16 @@ class LLMSettings(BaseSettings):
             "model_location",
             "model_narrative",
             "model_visualization",
+            # Phase 2
+            "model_trend",
+            "model_financial",
+            "model_risk",
+            "model_real_estate",
+            "model_regulatory",
+            # Debate
+            "model_advocate",
+            "model_critic",
+            "model_judge",
         ]
         for field_name in model_fields:
             value = getattr(self, field_name)
@@ -196,7 +218,18 @@ class Settings(BaseSettings):
         return self
 
     # MCP
-    mcp_server_url: str = "http://localhost:5100"
+    mcp_server_url: str = "http://localhost:5100"  # legacy (단일 서버 fallback)
+    mcp_servers: dict[str, str] = {
+        "public_data": "http://localhost:5100",
+        "maps": "http://localhost:5101",
+        "real_estate": "http://localhost:5102",
+        "news": "http://localhost:5103",
+        "regulatory": "http://localhost:5104",
+        "finance": "http://localhost:5105",
+        "database": "http://localhost:5106",
+        "google_maps": "http://localhost:5107",
+        "naver_maps": "http://localhost:5108",
+    }
     mcp_transport: MCPTransport = MCPTransport.STDIO
     mcp_timeout: int = 30
     mcp_max_concurrent_tools: int = 5
@@ -213,7 +246,9 @@ class Settings(BaseSettings):
     data_api_public_data_key: Optional[str] = None
     data_api_naver_client_id: Optional[str] = None
     data_api_naver_client_secret: Optional[str] = None
+    data_api_naver_datalab_key: Optional[str] = None
     data_api_kakao_rest_key: Optional[str] = None
+    data_api_google_maps_key: Optional[str] = None
 
     # Analysis
     analysis_max_parallel_agents: int = 4

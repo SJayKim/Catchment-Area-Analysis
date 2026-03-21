@@ -47,13 +47,20 @@ class ThreatLevel(str, Enum):
 # Phase 1 활성 에이전트
 PHASE1_ACTIVE_AGENTS = ["population", "competition", "revenue", "location"]
 
-# Phase 1 병렬 실행 그룹
+# Phase 2 추가 에이전트
+PHASE2_AGENTS = ["trend", "real_estate", "regulatory", "financial", "risk"]
+
+# 전체 에이전트 목록
+ALL_AGENTS = PHASE1_ACTIVE_AGENTS + PHASE2_AGENTS
+
+# 병렬 실행 그룹
 PARALLEL_GROUP_1 = ["population", "competition"]  # 독립 실행
 PARALLEL_GROUP_2 = ["revenue", "location"]  # Group 1 의존
+PARALLEL_GROUP_3 = ["trend", "real_estate", "regulatory"]  # Group 2 의존
 
 # 분석 모드별 에이전트 매핑
 ANALYSIS_MODE_AGENTS = {
-    AnalysisMode.BASIC: ["population", "competition", "revenue", "location"],
+    AnalysisMode.BASIC: ALL_AGENTS,
     AnalysisMode.QUICK: ["population", "competition"],
-    AnalysisMode.COMPARISON: ["population", "competition", "revenue", "location"],
+    AnalysisMode.COMPARISON: ALL_AGENTS,
 }

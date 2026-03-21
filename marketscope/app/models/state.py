@@ -10,10 +10,16 @@ from langgraph.graph.message import add_messages
 
 from app.models.agent_outputs import (
     CompetitionAnalysis,
+    FinancialAnalysis,
     LocationAnalysis,
     PopulationAnalysis,
+    RealEstateAnalysis,
+    RegulatoryAnalysis,
     RevenueAnalysis,
+    RiskAnalysis,
+    TrendAnalysis,
 )
+from app.models.debate import DebateResult
 
 
 class CommanderPlan(TypedDict):
@@ -92,6 +98,18 @@ class MarketScopeState(TypedDict):
     revenue_result: Optional[RevenueAnalysis]
     location_result: Optional[LocationAnalysis]
 
+    # Phase 2 agent results
+    trend_result: Optional[TrendAnalysis]
+    financial_result: Optional[FinancialAnalysis]
+    risk_result: Optional[RiskAnalysis]
+    real_estate_result: Optional[RealEstateAnalysis]
+    regulatory_result: Optional[RegulatoryAnalysis]
+
+    # Debate
+    debate_decision: Optional[str]  # "trigger" | "skip"
+    debate_trigger_reasons: Annotated[list[str], operator.add]
+    debate_result: Optional[DebateResult]
+
     # Report outputs
     visualization_output: Optional[VisualizationOutput]
     narrative_output: Optional[NarrativeOutput]
@@ -124,10 +142,21 @@ def create_initial_state(session_id: str, user_input: str) -> MarketScopeState:
         messages=[],
         commander_plan=None,
         final_judgment=None,
+        # Phase 1
         population_result=None,
         competition_result=None,
         revenue_result=None,
         location_result=None,
+        # Phase 2
+        trend_result=None,
+        financial_result=None,
+        risk_result=None,
+        real_estate_result=None,
+        regulatory_result=None,
+        debate_decision=None,
+        debate_trigger_reasons=[],
+        debate_result=None,
+        # Report
         visualization_output=None,
         narrative_output=None,
         final_report=None,

@@ -8,7 +8,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 from app.agents.base import BaseAgent
-from app.constants import ANALYSIS_MODE_AGENTS, AnalysisMode
+from app.constants import ALL_AGENTS, ANALYSIS_MODE_AGENTS, AnalysisMode
 from app.models.state import CommanderPlan, FinalJudgment
 
 
@@ -77,10 +77,12 @@ class CommanderAgent(BaseAgent[CommanderPlanOutput]):
 ## 역할
 사용자의 자연어 쿼리를 분석하여 구조화된 분석 계획을 수립합니다.
 
-## Phase 1 제한사항
-- 서울 주요 상권만 지원: 강남, 홍대, 이태원, 건대, 신촌, 종로, 명동, 여의도, 성수, 잠실
-- 활성 에이전트: population(유동인구), revenue(매출), competition(경쟁), location(입지) — 4개
-- 분석 모드: basic(전체 4개), quick(population+competition만), comparison(두 상권 비교)
+## 지원 범위
+- 서울 주요 상권 지원: 강남, 홍대, 이태원, 건대, 신촌, 종로, 명동, 여의도, 성수, 잠실
+- 활성 에이전트 (9개):
+  - Phase 1: population(유동인구), revenue(매출), competition(경쟁), location(입지)
+  - Phase 2: trend(트렌드), real_estate(부동산), regulatory(규제), financial(재무), risk(리스크)
+- 분석 모드: basic(전체 9개), quick(population+competition만), comparison(두 상권 비교)
 
 ## 분석 모드 결정 기준
 - "비교", "vs", "어디가 나은지" → comparison
@@ -109,11 +111,21 @@ class CommanderAgent(BaseAgent[CommanderPlanOutput]):
 2. 최종 추천 의견 도출
 3. 핵심 발견사항과 필수 조치사항 정리
 
-## 점수 산출 기준
-- 유동인구 (30%): 일평균 유동인구, 타겟 연령대 매칭도
-- 매출 전망 (25%): 점포당 매출, 매출 추세
-- 경쟁 환경 (25%): 포화 지수, 차별화 기회
-- 입지 조건 (20%): 접근성, 가시성, 앵커 시설
+## 점수 산출 기준 (Phase 2 - 9개 에이전트 기반)
+- 유동인구 (15%): 일평균 유동인구, 타겟 연령대 매칭도
+- 매출 전망 (15%): 점포당 매출, 매출 추세
+- 경쟁 환경 (15%): 포화 지수, 차별화 기회
+- 입지 조건 (10%): 접근성, 가시성, 앵커 시설
+- 트렌드 (10%): 업종 수명주기, 검색 트렌드
+- 부동산 (10%): 임대료, 공실률, 권리금
+- 재무 (10%): ROI, 손익분기, 현금흐름
+- 규제 (5%): 인허가 난이도, 규제 리스크
+- 리스크 (10%): 종합 리스크 점수
+
+## 토론 결과 반영
+토론(debate_result)이 있는 경우:
+- 판정(verdict)을 점수에 ±5~15점 반영
+- 조건부추천 시 conditions_for_success를 critical_actions에 포함
 
 ## 등급 기준
 - S (90~100): 최상급 상권, 강력 추천
@@ -176,7 +188,7 @@ class CommanderAgent(BaseAgent[CommanderPlanOutput]):
                 "target_industry": plan_output.target_industry,
                 "agents_to_run": agents_to_run,
                 "agents_to_skip": [
-                    a for a in ["population", "competition", "revenue", "location"]
+                    a for a in ALL_AGENTS
                     if a not in agents_to_run
                 ],
                 "force_debate": False,
@@ -248,12 +260,46 @@ class CommanderAgent(BaseAgent[CommanderPlanOutput]):
         if loc:
             results_summary.append(f"입지: 접근성 {loc.get('accessibility_score', 'N/A')}, 등급 {loc.get('location_grade', 'N/A')}")
 
+        # Phase 2 결과
+        trend = state.get("trend_result")
+        if trend:
+            results_summary.append(f"트렌드: 수명주기 {trend.get('lifecycle_stage', 'N/A')}, 검색지수 {trend.get('search_volume_index', 'N/A')}")
+
+        real_estate = state.get("real_estate_result")
+        if real_estate:
+            results_summary.append(f"부동산: 평당임대료 {real_estate.get('avg_rent_per_pyeong', 'N/A')}원, 공실률 {real_estate.get('vacancy_rate', 'N/A')}%")
+
+        financial = state.get("financial_result")
+        if financial:
+            results_summary.append(f"재무: 초기투자 {financial.get('initial_investment_total', 'N/A')}원, 손익분기 {financial.get('break_even_months', 'N/A')}개월, ROI 12개월 {financial.get('roi_12m', 'N/A')}%")
+
+        regulatory = state.get("regulatory_result")
+        if regulatory:
+            results_summary.append(f"규제: 인허가 {regulatory.get('total_permit_count', 'N/A')}건, 예상소요 {regulatory.get('estimated_total_days', 'N/A')}일")
+
+        risk = state.get("risk_result")
+        if risk:
+            results_summary.append(f"리스크: 종합 {risk.get('overall_risk_score', 'N/A')}점, 등급 {risk.get('risk_grade', 'N/A')}")
+
+        # 토론 결과
+        debate = state.get("debate_result")
+        debate_section = ""
+        if debate:
+            debate_section = f"""
+토론(Debate) 결과:
+- 최종 판정: {debate.get('overall_verdict', 'N/A')}
+- 요약: {debate.get('verdict_summary', 'N/A')[:300]}
+- 강점: {', '.join(debate.get('strengths', [])[:3])}
+- 약점: {', '.join(debate.get('weaknesses', [])[:3])}
+- 판사 신뢰도: {debate.get('judge_confidence', 'N/A')}
+"""
+
         plan = state.get("commander_plan", {})
         user_prompt = f"""다음은 '{plan.get('target_location', '')}' 상권의 '{plan.get('target_industry', '')}' 업종 분석 결과입니다.
 
 에이전트 분석 결과:
 {chr(10).join(results_summary) if results_summary else "분석 결과 없음"}
-
+{debate_section}
 사용자 원본 쿼리: {state.get('user_input', '')}
 
 위 결과를 종합하여 최종 판단을 JSON으로 생성하세요."""

@@ -35,6 +35,110 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  # ── MCP Servers ──
+
+  mcp-public-data:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-mcp-public-data
+    command: python -m app.mcp_servers.public_data.server
+    ports:
+      - "5100:5100"
+    env_file: .env
+    restart: unless-stopped
+
+  mcp-maps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-mcp-maps
+    command: python -m app.mcp_servers.maps
+    ports:
+      - "5101:5101"
+    env_file: .env
+    restart: unless-stopped
+
+  mcp-real-estate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-mcp-real-estate
+    command: python -m app.mcp_servers.real_estate.server
+    ports:
+      - "5102:5102"
+    env_file: .env
+    restart: unless-stopped
+
+  mcp-news:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-mcp-news
+    command: python -m app.mcp_servers.news.server
+    ports:
+      - "5103:5103"
+    env_file: .env
+    restart: unless-stopped
+
+  mcp-regulatory:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-mcp-regulatory
+    command: python -m app.mcp_servers.regulatory.server
+    ports:
+      - "5104:5104"
+    env_file: .env
+    restart: unless-stopped
+
+  mcp-finance:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-mcp-finance
+    command: python -m app.mcp_servers.finance.server
+    ports:
+      - "5105:5105"
+    env_file: .env
+    restart: unless-stopped
+
+  mcp-database:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-mcp-database
+    command: python -m app.mcp_servers.database.server
+    ports:
+      - "5106:5106"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mcp-google-maps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-mcp-google-maps
+    command: python -m app.mcp_servers.google_maps.server
+    ports:
+      - "5107:5107"
+    env_file: .env
+    restart: unless-stopped
+
+  mcp-naver-maps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-mcp-naver-maps
+    command: python -m app.mcp_servers.naver_maps.server
+    ports:
+      - "5108:5108"
+    env_file: .env
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:

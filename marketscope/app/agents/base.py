@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import time
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
@@ -113,12 +114,12 @@ class BaseAgent(ABC, Generic[T]):
                     parsed = self._parse_structured_output(llm_response.content, response_format)
 
                 self.logger.info(
-                    "LLM 호출 성공",
-                    extra={
-                        "model": self._llm_model,
-                        "attempt": attempt + 1,
-                        "latency_ms": round(llm_response.latency_ms, 2),
-                    },
+                    "agent.llm_call",
+                    model=self._llm_model,
+                    attempt=attempt + 1,
+                    latency_ms=round(llm_response.latency_ms, 2),
+                    prompt_tokens=llm_response.usage.get("prompt_tokens", 0) if llm_response.usage else 0,
+                    completion_tokens=llm_response.usage.get("completion_tokens", 0) if llm_response.usage else 0,
                 )
                 return {
                     "content": llm_response.content,
@@ -131,8 +132,11 @@ class BaseAgent(ABC, Generic[T]):
             except Exception as e:
                 last_error = e
                 self.logger.warning(
-                    f"LLM 호출 실패 (시도 {attempt + 1}/{self.max_retries + 1})",
-                    extra={"error": str(e), "model": self._llm_model},
+                    "agent.llm_call_failed",
+                    attempt=attempt + 1,
+                    max_attempts=self.max_retries + 1,
+                    error=str(e),
+                    model=self._llm_model,
                 )
                 if attempt < self.max_retries:
                     await asyncio.sleep(self.retry_base_delay * (2 ** attempt))
@@ -191,24 +195,47 @@ class BaseAgent(ABC, Generic[T]):
         timeout: Optional[int] = None,
     ) -> dict[str, Any]:
         if self.mcp_client is None:
-            self.logger.warning(f"MCP 클라이언트 미설정, 빈 결과 반환: {tool_name}")
+            self.logger.warning("agent.mcp_call", tool=tool_name, success=False, reason="no_client")
             return {}
 
         effective_timeout = timeout or self.settings.mcp_timeout
+        start = time.monotonic()
         try:
             result = await asyncio.wait_for(
                 self.mcp_client.call_tool(tool_name, arguments),
                 timeout=effective_timeout,
             )
-            self.logger.info(f"MCP 도구 호출 성공: {tool_name}")
+            latency_ms = (time.monotonic() - start) * 1000
+            self.logger.info(
+                "agent.mcp_call",
+                tool=tool_name,
+                success=True,
+                latency_ms=round(latency_ms, 1),
+            )
             return result
         except asyncio.TimeoutError:
+            latency_ms = (time.monotonic() - start) * 1000
+            self.logger.error(
+                "agent.mcp_call",
+                tool=tool_name,
+                success=False,
+                error_type="timeout",
+                latency_ms=round(latency_ms, 1),
+            )
             raise MCPToolCallError(
                 agent_name=self.agent_name,
                 tool_name=tool_name,
                 message=f"타임아웃 ({effective_timeout}초)",
             )
         except Exception as e:
+            latency_ms = (time.monotonic() - start) * 1000
+            self.logger.error(
+                "agent.mcp_call",
+                tool=tool_name,
+                success=False,
+                error_type=type(e).__name__,
+                latency_ms=round(latency_ms, 1),
+            )
             raise MCPToolCallError(
                 agent_name=self.agent_name,
                 tool_name=tool_name,
@@ -227,7 +254,7 @@ class BaseAgent(ABC, Generic[T]):
                 try:
                     return await self.call_tool(tc["tool_name"], tc["arguments"])
                 except MCPToolCallError as e:
-                    self.logger.warning(f"병렬 도구 호출 실패: {tc['tool_name']}")
+                    self.logger.warning("agent.mcp_call_parallel_failed", tool=tc["tool_name"], error=str(e))
                     return {"_error": str(e), "_tool_name": tc["tool_name"]}
 
         return await asyncio.gather(*[_call(tc) for tc in tool_calls])
@@ -295,10 +322,17 @@ class BaseAgent(ABC, Generic[T]):
         결과는 Pydantic → dict 변환하여 State 타입 일관성을 보장한다.
         """
         execution_start = datetime.now(timezone.utc).isoformat()
+        run_start = time.monotonic()
         state_update: dict[str, Any] = {}
         result_field = self._get_result_field()
 
-        self.logger.info(f"에이전트 실행 시작: {self.agent_name}")
+        session_id = state.get("session_id", "")
+        self.logger.info(
+            "agent.start",
+            session_id=session_id,
+            location=state.get("commander_plan", {}).get("target_location", ""),
+            industry=state.get("commander_plan", {}).get("target_industry", ""),
+        )
 
         try:
             result = await asyncio.wait_for(
@@ -318,24 +352,57 @@ class BaseAgent(ABC, Generic[T]):
                     token_usage={"prompt_tokens": 0, "completion_tokens": 0},
                 )
             ]
-            self.logger.info(f"에이전트 실행 완료: {self.agent_name}")
+
+            duration_ms = (time.monotonic() - run_start) * 1000
+            confidence = None
+            if isinstance(result, BaseModel) and hasattr(result, "confidence_score"):
+                confidence = result.confidence_score
+
+            self.logger.info(
+                "agent.complete",
+                duration_ms=round(duration_ms, 1),
+                confidence=confidence,
+            )
+
+            # Prometheus 메트릭
+            from app.monitoring.metrics import observe_agent_execution
+            observe_agent_execution(self.agent_name, duration_ms / 1000)
 
         except asyncio.TimeoutError:
+            duration_ms = (time.monotonic() - run_start) * 1000
             error_msg = f"{self.agent_name} 타임아웃 ({self.settings.analysis_agent_timeout}초)"
-            self.logger.error(error_msg)
+            self.logger.error(
+                "agent.error",
+                error_type="TimeoutError",
+                error_message=error_msg,
+                duration_ms=round(duration_ms, 1),
+            )
             state_update[result_field] = None
             state_update["node_executions"] = [
                 self.create_node_execution("failed", execution_start, error_message=error_msg)
             ]
             state_update["errors"] = [{"agent": self.agent_name, "error": error_msg}]
 
+            from app.monitoring.metrics import inc_agent_error
+            inc_agent_error(self.agent_name, "TimeoutError")
+
         except Exception as e:
+            duration_ms = (time.monotonic() - run_start) * 1000
             error_msg = f"{self.agent_name} 실행 에러: {str(e)}"
-            self.logger.error(error_msg, extra={"traceback": traceback.format_exc()})
+            self.logger.error(
+                "agent.error",
+                error_type=type(e).__name__,
+                error_message=str(e),
+                duration_ms=round(duration_ms, 1),
+                exc_info=True,
+            )
             state_update[result_field] = None
             state_update["node_executions"] = [
                 self.create_node_execution("failed", execution_start, error_message=error_msg)
             ]
             state_update["errors"] = [{"agent": self.agent_name, "error": error_msg}]
+
+            from app.monitoring.metrics import inc_agent_error
+            inc_agent_error(self.agent_name, type(e).__name__)
 
         return state_update
