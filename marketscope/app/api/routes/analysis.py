@@ -1,42 +1,46 @@
-"""분석 엔드포인트."""
+"""분석 엔드포인트 — Redis 브로커 기반 서비스 분리 버전."""
 
 from __future__ import annotations
 
-import asyncio
 import json
-import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.services.analysis_service import AnalysisService
+from app.engine.redis_broker import RedisBroker
 
 router = APIRouter()
 
 # ---------------------------------------------------------------------------
-# In-memory analysis store with TTL-based auto-expiry
+# Redis Broker 싱글턴 (app lifespan에서 초기화)
 # ---------------------------------------------------------------------------
-_STORE_TTL_SECONDS: int = 3600  # 1 hour
-
-_analysis_store: dict[str, dict[str, Any]] = {}
-_analysis_queues: dict[str, asyncio.Queue[dict[str, Any] | None]] = {}
+_broker: RedisBroker | None = None
 
 
-def _cleanup_expired_entries() -> None:
-    """Remove entries older than _STORE_TTL_SECONDS from the in-memory store."""
-    now = time.monotonic()
-    expired = [
-        rid
-        for rid, entry in _analysis_store.items()
-        if now - entry.get("_created_mono", now) > _STORE_TTL_SECONDS
-    ]
-    for rid in expired:
-        _analysis_store.pop(rid, None)
-        _analysis_queues.pop(rid, None)
+async def init_broker(redis_url: str) -> RedisBroker:
+    """API 시작 시 Redis Broker 초기화. lifespan에서 호출."""
+    global _broker
+    _broker = RedisBroker(redis_url=redis_url)
+    await _broker.connect()
+    return _broker
+
+
+async def close_broker() -> None:
+    """API 종료 시 Redis Broker 정리."""
+    global _broker
+    if _broker is not None:
+        await _broker.close()
+        _broker = None
+
+
+def _get_broker() -> RedisBroker:
+    if _broker is None:
+        raise RuntimeError("RedisBroker not initialized. Call init_broker() first.")
+    return _broker
 
 
 # ---------------------------------------------------------------------------
@@ -88,35 +92,19 @@ class AnalysisCreateResponse(BaseModel):
 # Routes
 # ---------------------------------------------------------------------------
 @router.post("", response_model=AnalysisCreateResponse, status_code=202)
-async def create_analysis(
-    request: AnalysisCreateRequest,
-    background_tasks: BackgroundTasks,
-):
-    """새 분석 요청 생성."""
-    # Housekeeping: purge expired entries before creating a new one
-    _cleanup_expired_entries()
-
+async def create_analysis(request: AnalysisCreateRequest):
+    """새 분석 요청 생성 → Redis Stream에 발행."""
+    broker = _get_broker()
     request_id = str(uuid.uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
 
-    queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
-    _analysis_queues[request_id] = queue
-
-    _analysis_store[request_id] = {
-        "request_id": request_id,
-        "status": "queued",
-        "query": request.query,
-        "depth": request.depth,
-        "created_at": created_at,
-        "result": None,
-        "events": [],
-        "_created_mono": time.monotonic(),
-    }
-
-    background_tasks.add_task(
-        _run_analysis,
+    # Redis Stream에 분석 요청 발행 (Engine Worker가 소비)
+    await broker.publish_request(
         request_id=request_id,
         query=request.query,
+        depth=request.depth,
+        location=request.location or "",
+        industry=request.industry or "",
     )
 
     duration_map: dict[str, int] = {"quick": 60, "standard": 180, "deep": 420}
@@ -132,23 +120,40 @@ async def create_analysis(
 
 @router.get("/{request_id}")
 async def get_analysis(request_id: str):
-    """분석 결과 조회."""
-    if request_id not in _analysis_store:
+    """분석 상태/결과 조회 — Redis Hash에서 조회."""
+    broker = _get_broker()
+
+    status_data = await broker.get_status(request_id)
+    if status_data is None:
         return _error_response(
             status_code=404,
             code="ANALYSIS_NOT_FOUND",
             message="분석을 찾을 수 없습니다",
             request_id=request_id,
         )
-    entry = _analysis_store[request_id]
-    # Strip internal bookkeeping keys before returning
-    return {k: v for k, v in entry.items() if not k.startswith("_")}
+
+    response: dict[str, Any] = {
+        "request_id": request_id,
+        **status_data,
+    }
+
+    # 완료 상태면 결과도 포함
+    if status_data.get("status") == "completed":
+        result = await broker.get_result(request_id)
+        if result is not None:
+            response["result"] = result
+
+    return response
 
 
 @router.get("/{request_id}/stream")
 async def stream_analysis(request_id: str, request: Request):
-    """분석 진행 상태 SSE 스트리밍."""
-    if request_id not in _analysis_store:
+    """분석 진행 상태 SSE 스트리밍 — Redis Pub/Sub 구독."""
+    broker = _get_broker()
+
+    # 상태 확인: 존재하는 요청인지 검증
+    status_data = await broker.get_status(request_id)
+    if status_data is None:
         return _error_response(
             status_code=404,
             code="ANALYSIS_NOT_FOUND",
@@ -156,16 +161,10 @@ async def stream_analysis(request_id: str, request: Request):
             request_id=request_id,
         )
 
-    queue = _analysis_queues.get(request_id)
-    if queue is None:
-        # Analysis exists but already finished before a stream was opened.
-        # Return a single done event.
-        store = _analysis_store[request_id]
-
+    # 이미 완료된 경우 즉시 done 이벤트 반환
+    if status_data.get("status") in ("completed", "failed"):
         async def _replay():
-            for ev in store.get("events", []):
-                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
-            yield f"data: {json.dumps({'type': 'done', 'status': store.get('status', 'completed')}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'status': status_data.get('status', 'completed')}, ensure_ascii=False)}\n\n"
 
         return StreamingResponse(
             _replay(),
@@ -174,36 +173,18 @@ async def stream_analysis(request_id: str, request: Request):
         )
 
     async def event_generator():
-        """Yield SSE events from the per-connection asyncio.Queue.
-
-        A heartbeat comment is sent every 15 seconds to keep the
-        connection alive through proxies / load balancers.
-        """
-        heartbeat_interval = 15.0  # seconds
-
+        """Redis Pub/Sub에서 진행률 이벤트를 SSE로 스트리밍."""
         try:
-            while True:
-                # Check if client disconnected
+            async for event in broker.subscribe_progress(request_id):
+                # 클라이언트 연결 끊김 확인
                 if await request.is_disconnected():
                     break
 
-                try:
-                    event = await asyncio.wait_for(
-                        queue.get(), timeout=heartbeat_interval
-                    )
-                except asyncio.TimeoutError:
-                    # Send SSE comment as heartbeat
-                    yield ": heartbeat\n\n"
-                    continue
-
-                # None is the sentinel that signals the stream is done
-                if event is None:
-                    break
-
                 yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
-        finally:
-            # Cleanup: remove queue reference so memory can be reclaimed
-            _analysis_queues.pop(request_id, None)
+
+                # done 또는 error면 subscribe_progress에서 자동 종료
+        except Exception:
+            yield f"data: {json.dumps({'type': 'error', 'message': '스트리밍 연결 오류'}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(
         event_generator(),
@@ -214,53 +195,3 @@ async def stream_analysis(request_id: str, request: Request):
             "X-Accel-Buffering": "no",
         },
     )
-
-
-# ---------------------------------------------------------------------------
-# Background task
-# ---------------------------------------------------------------------------
-async def _run_analysis(request_id: str, query: str) -> None:
-    """백그라운드에서 LangGraph 분석 파이프라인 실행."""
-    store = _analysis_store.get(request_id)
-    if store is None:
-        return
-
-    queue = _analysis_queues.get(request_id)
-
-    def _emit(event: dict[str, Any]) -> None:
-        """Append event to the store and push it to the queue."""
-        store["events"].append(event)
-        if queue is not None:
-            try:
-                queue.put_nowait(event)
-            except asyncio.QueueFull:
-                pass  # drop if consumer cannot keep up
-
-    store["status"] = "processing"
-    _emit({"type": "status", "status": "processing", "message": "분석을 시작합니다..."})
-
-    try:
-        service = AnalysisService()
-        result = await service.run_analysis(
-            session_id=request_id,
-            user_input=query,
-            on_progress=_emit,
-        )
-        store["result"] = result
-        store["status"] = "completed"
-        _emit({"type": "status", "status": "completed", "message": "분석이 완료되었습니다."})
-
-    except Exception as e:
-        store["status"] = "failed"
-        _emit({
-            "type": "error",
-            "code": "ANALYSIS_FAILED",
-            "message": str(e),
-        })
-    finally:
-        # Send sentinel to signal stream end
-        if queue is not None:
-            try:
-                queue.put_nowait(None)
-            except asyncio.QueueFull:
-                pass

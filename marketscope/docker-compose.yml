@@ -1,6 +1,8 @@
 version: "3.9"
 
 services:
+  # ── Infrastructure ──
+
   postgres:
     image: postgis/postgis:15-3.4
     container_name: marketscope-postgres
@@ -33,6 +35,63 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
+
+  # ── Application Services ──
+
+  marketscope-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      MCP_SERVERS: '{"public_data":"http://mcp-public-data:5100","maps":"http://mcp-maps:5101","real_estate":"http://mcp-real-estate:5102","news":"http://mcp-news:5103","regulatory":"http://mcp-regulatory:5104","finance":"http://mcp-finance:5105","database":"http://mcp-database:5106","google_maps":"http://mcp-google-maps:5107","naver_maps":"http://mcp-naver-maps:5108"}'
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  marketscope-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-engine
+    command: python -m app.engine
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      MCP_SERVERS: '{"public_data":"http://mcp-public-data:5100","maps":"http://mcp-maps:5101","real_estate":"http://mcp-real-estate:5102","news":"http://mcp-news:5103","regulatory":"http://mcp-regulatory:5104","finance":"http://mcp-finance:5105","database":"http://mcp-database:5106","google_maps":"http://mcp-google-maps:5107","naver_maps":"http://mcp-naver-maps:5108"}'
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  marketscope-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketscope-pipeline
+    command: python -m app.pipeline
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   # ── MCP Servers ──

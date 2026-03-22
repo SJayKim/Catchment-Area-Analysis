@@ -112,8 +112,9 @@ async def _check_database() -> dict[str, Any]:
     """DB 연결 상태 확인."""
     try:
         from sqlalchemy import text
-        from app.db.session import async_session_factory
-        async with async_session_factory() as session:
+        from app.db.session import get_session_factory
+        factory = get_session_factory()
+        async with factory() as session:
             await session.execute(text("SELECT 1"))
         return {"status": "ok"}
     except Exception as e:
@@ -123,11 +124,8 @@ async def _check_database() -> dict[str, Any]:
 async def _check_redis() -> dict[str, Any]:
     """Redis 연결 상태 확인."""
     try:
-        from app.cache.redis_client import _redis_client
-        if _redis_client is None:
-            return {"status": "not_configured"}
-        await _redis_client.ping()
-        return {"status": "ok"}
+        from app.cache.redis_client import health_check
+        return await health_check()
     except Exception as e:
         return {"status": "error", "error": str(e)}
 

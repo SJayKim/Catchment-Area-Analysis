@@ -21,6 +21,37 @@ from apscheduler.triggers.cron import CronTrigger
 
 logger = logging.getLogger("scheduler.jobs")
 
+
+def _current_quarter() -> tuple[int, int]:
+    """현재 연도와 분기 반환."""
+    now = datetime.now(timezone.utc)
+    quarter = (now.month - 1) // 3 + 1
+    return now.year, quarter
+
+
+def _prev_month() -> tuple[int, int]:
+    """직전 월 (year, month) 반환."""
+    now = datetime.now(timezone.utc)
+    if now.month == 1:
+        return now.year - 1, 12
+    return now.year, now.month - 1
+
+
+async def _get_districts() -> list[dict]:
+    """DB에서 district 목록 조회. 실패 시 빈 리스트 반환."""
+    try:
+        from sqlalchemy import text
+        from app.db.session import get_session_factory
+        factory = get_session_factory()
+        async with factory() as session:
+            result = await session.execute(
+                text("SELECT id, district_code, district_name FROM districts LIMIT 100")
+            )
+            return [dict(row._mapping) for row in result]
+    except Exception:
+        logger.warning("district 목록 조회 실패 — 빈 리스트로 진행")
+        return []
+
 _scheduler: AsyncIOScheduler | None = None
 
 
@@ -41,16 +72,36 @@ async def job_semas_population_quarterly():
     logger.info("[스케줄] SEMAS 유동인구 수집 시작")
     try:
         from app.collectors.semas import SemasCollector
+        from app.config import get_settings
         from app.db.session import get_session_factory
 
+        settings = get_settings()
+        api_key = settings.data_api_public_data_key
+        if not api_key:
+            logger.warning("[스케줄] SEMAS API 키 미설정 — 스킵")
+            return
+
+        year, quarter = _current_quarter()
+        districts = await _get_districts()
         factory = get_session_factory()
-        async with factory() as session:
-            collector = SemasCollector(session)
-            await collector.collect_floating_population()
-            await session.commit()
-        logger.info("[스케줄] SEMAS 유동인구 수집 완료")
+
+        for dist in districts:
+            try:
+                async with factory() as session:
+                    collector = SemasCollector(session, api_key)
+                    await collector.collect_floating_population(
+                        district_code=dist["district_code"],
+                        year=year,
+                        quarter=quarter,
+                        district_id=dist["id"],
+                    )
+                    await session.commit()
+            except Exception:
+                logger.exception("[스케줄] SEMAS 유동인구 수집 실패: %s", dist.get("district_name"))
+
+        logger.info("[스케줄] SEMAS 유동인구 수집 완료 (%d개 상권)", len(districts))
     except Exception:
-        logger.exception("[스케줄] SEMAS 유동인구 수집 실패")
+        logger.exception("[스케줄] SEMAS 유동인구 수집 전체 실패")
 
 
 async def job_semas_revenue_quarterly():
@@ -58,16 +109,37 @@ async def job_semas_revenue_quarterly():
     logger.info("[스케줄] SEMAS 추정매출 수집 시작")
     try:
         from app.collectors.semas import SemasCollector
+        from app.config import get_settings
         from app.db.session import get_session_factory
 
+        settings = get_settings()
+        api_key = settings.data_api_public_data_key
+        if not api_key:
+            logger.warning("[스케줄] SEMAS API 키 미설정 — 스킵")
+            return
+
+        year, quarter = _current_quarter()
+        districts = await _get_districts()
         factory = get_session_factory()
-        async with factory() as session:
-            collector = SemasCollector(session)
-            await collector.collect_estimated_revenue()
-            await session.commit()
-        logger.info("[스케줄] SEMAS 추정매출 수집 완료")
+
+        for dist in districts:
+            try:
+                async with factory() as session:
+                    collector = SemasCollector(session, api_key)
+                    await collector.collect_estimated_revenue(
+                        district_code=dist["district_code"],
+                        industry_code="",  # 전체 업종
+                        year=year,
+                        quarter=quarter,
+                        district_id=dist["id"],
+                    )
+                    await session.commit()
+            except Exception:
+                logger.exception("[스케줄] SEMAS 추정매출 수집 실패: %s", dist.get("district_name"))
+
+        logger.info("[스케줄] SEMAS 추정매출 수집 완료 (%d개 상권)", len(districts))
     except Exception:
-        logger.exception("[스케줄] SEMAS 추정매출 수집 실패")
+        logger.exception("[스케줄] SEMAS 추정매출 수집 전체 실패")
 
 
 async def job_semas_stores_quarterly():
@@ -75,16 +147,33 @@ async def job_semas_stores_quarterly():
     logger.info("[스케줄] SEMAS 점포 수집 시작")
     try:
         from app.collectors.semas import SemasCollector
+        from app.config import get_settings
         from app.db.session import get_session_factory
 
+        settings = get_settings()
+        api_key = settings.data_api_public_data_key
+        if not api_key:
+            logger.warning("[스케줄] SEMAS API 키 미설정 — 스킵")
+            return
+
+        districts = await _get_districts()
         factory = get_session_factory()
-        async with factory() as session:
-            collector = SemasCollector(session)
-            await collector.collect_store_list()
-            await session.commit()
-        logger.info("[스케줄] SEMAS 점포 수집 완료")
+
+        for dist in districts:
+            try:
+                async with factory() as session:
+                    collector = SemasCollector(session, api_key)
+                    await collector.collect_store_list(
+                        district_code=dist["district_code"],
+                        district_id=dist["id"],
+                    )
+                    await session.commit()
+            except Exception:
+                logger.exception("[스케줄] SEMAS 점포 수집 실패: %s", dist.get("district_name"))
+
+        logger.info("[스케줄] SEMAS 점포 수집 완료 (%d개 상권)", len(districts))
     except Exception:
-        logger.exception("[스케줄] SEMAS 점포 수집 실패")
+        logger.exception("[스케줄] SEMAS 점포 수집 전체 실패")
 
 
 async def job_seoul_population_monthly():
@@ -92,16 +181,37 @@ async def job_seoul_population_monthly():
     logger.info("[스케줄] 서울 생활인구 수집 시작")
     try:
         from app.collectors.seoul import SeoulCollector
+        from app.config import get_settings
         from app.db.session import get_session_factory
 
+        settings = get_settings()
+        api_key = settings.data_api_seoul_open_data_key
+        if not api_key:
+            logger.warning("[스케줄] 서울 열린데이터 API 키 미설정 — 스킵")
+            return
+
+        year, month = _prev_month()
+        date_str = f"{year}{month:02d}01"
+        districts = await _get_districts()
         factory = get_session_factory()
-        async with factory() as session:
-            collector = SeoulCollector(session)
-            await collector.collect_living_population()
-            await session.commit()
-        logger.info("[스케줄] 서울 생활인구 수집 완료")
+
+        for dist in districts:
+            try:
+                dong_code = dist.get("district_code", "")
+                async with factory() as session:
+                    collector = SeoulCollector(session, api_key)
+                    await collector.collect_living_population(
+                        dong_code=dong_code,
+                        date_str=date_str,
+                        district_id=dist["id"],
+                    )
+                    await session.commit()
+            except Exception:
+                logger.exception("[스케줄] 서울 생활인구 수집 실패: %s", dist.get("district_name"))
+
+        logger.info("[스케줄] 서울 생활인구 수집 완료 (%d개 상권)", len(districts))
     except Exception:
-        logger.exception("[스케줄] 서울 생활인구 수집 실패")
+        logger.exception("[스케줄] 서울 생활인구 수집 전체 실패")
 
 
 async def job_seoul_subway_monthly():
@@ -109,13 +219,24 @@ async def job_seoul_subway_monthly():
     logger.info("[스케줄] 서울 지하철 수집 시작")
     try:
         from app.collectors.seoul import SeoulCollector
+        from app.config import get_settings
         from app.db.session import get_session_factory
 
+        settings = get_settings()
+        api_key = settings.data_api_seoul_open_data_key
+        if not api_key:
+            logger.warning("[스케줄] 서울 열린데이터 API 키 미설정 — 스킵")
+            return
+
+        year, month = _prev_month()
+        year_month = f"{year}{month:02d}01"
         factory = get_session_factory()
+
         async with factory() as session:
-            collector = SeoulCollector(session)
-            await collector.collect_subway_stats()
+            collector = SeoulCollector(session, api_key)
+            await collector.collect_subway_stats(year_month=year_month)
             await session.commit()
+
         logger.info("[스케줄] 서울 지하철 수집 완료")
     except Exception:
         logger.exception("[스케줄] 서울 지하철 수집 실패")
@@ -126,16 +247,36 @@ async def job_seoul_card_sales_monthly():
     logger.info("[스케줄] 서울 카드매출 수집 시작")
     try:
         from app.collectors.seoul import SeoulCollector
+        from app.config import get_settings
         from app.db.session import get_session_factory
 
+        settings = get_settings()
+        api_key = settings.data_api_seoul_open_data_key
+        if not api_key:
+            logger.warning("[스케줄] 서울 열린데이터 API 키 미설정 — 스킵")
+            return
+
+        year, month = _prev_month()
+        districts = await _get_districts()
         factory = get_session_factory()
-        async with factory() as session:
-            collector = SeoulCollector(session)
-            await collector.collect_card_sales()
-            await session.commit()
-        logger.info("[스케줄] 서울 카드매출 수집 완료")
+
+        for dist in districts:
+            try:
+                async with factory() as session:
+                    collector = SeoulCollector(session, api_key)
+                    await collector.collect_card_sales(
+                        year=str(year),
+                        month=str(month),
+                        district_id=dist["id"],
+                        dong_code=dist.get("district_code", ""),
+                    )
+                    await session.commit()
+            except Exception:
+                logger.exception("[스케줄] 서울 카드매출 수집 실패: %s", dist.get("district_name"))
+
+        logger.info("[스케줄] 서울 카드매출 수집 완료 (%d개 상권)", len(districts))
     except Exception:
-        logger.exception("[스케줄] 서울 카드매출 수집 실패")
+        logger.exception("[스케줄] 서울 카드매출 수집 전체 실패")
 
 
 async def job_refresh_mv_monthly():

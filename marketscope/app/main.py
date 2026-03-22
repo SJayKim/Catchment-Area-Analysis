@@ -21,18 +21,21 @@ async def lifespan(app: FastAPI):
     # ── Startup ──
     logger.info("app.startup", env=settings.app_env.value, version=settings.app_version)
 
-    # Redis 연결
+    # Redis 캐시 연결
     try:
         from app.cache.redis_client import get_redis
-        await get_redis(settings)
-        logger.info("redis.connected")
+        await get_redis()
+        logger.info("redis.cache.connected")
     except Exception as e:
-        logger.warning("redis.connection_failed", error=str(e))
+        logger.warning("redis.cache.connection_failed", error=str(e))
 
-    # MCP Router 초기화
-    from app.graph.nodes import _get_mcp_router
-    _get_mcp_router()
-    logger.info("mcp_router.initialized", servers=list(settings.mcp_servers.keys()))
+    # Redis Broker 연결 (Engine 통신용)
+    try:
+        from app.api.routes.analysis import init_broker
+        await init_broker(settings.redis_url)
+        logger.info("redis.broker.connected")
+    except Exception as e:
+        logger.warning("redis.broker.connection_failed", error=str(e))
 
     # Langfuse 초기화
     from app.monitoring.langfuse_handler import setup_langfuse
@@ -43,18 +46,24 @@ async def lifespan(app: FastAPI):
     # ── Shutdown ──
     logger.info("app.shutdown_start")
 
-    from app.graph.nodes import shutdown_mcp_router
-    await shutdown_mcp_router()
-
     from app.monitoring.langfuse_handler import shutdown_langfuse
     await shutdown_langfuse()
 
+    # Redis Broker 종료
+    try:
+        from app.api.routes.analysis import close_broker
+        await close_broker()
+        logger.info("redis.broker.disconnected")
+    except Exception as e:
+        logger.warning("redis.broker.cleanup_error", error=str(e))
+
+    # Redis 캐시 종료
     try:
         from app.cache.redis_client import close_redis
         await close_redis()
-        logger.info("redis.disconnected")
+        logger.info("redis.cache.disconnected")
     except Exception as e:
-        logger.warning("redis.cleanup_error", error=str(e))
+        logger.warning("redis.cache.cleanup_error", error=str(e))
 
     logger.info("app.shutdown_complete")
 

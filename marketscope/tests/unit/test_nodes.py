@@ -49,9 +49,11 @@ class TestDebateCheckNode:
     async def test_high_revenue_variance_triggers(self, sample_state_with_results):
         sample_state_with_results["revenue_result"] = {
             "confidence_score": 0.8,
-            "estimated_revenue": 10000000,
-            "revenue_lower_bound": 5000000,
-            "revenue_upper_bound": 15000000,  # variance = 100%
+            "estimated_monthly_revenue": 10000000,
+            "revenue_range": {
+                "min_value": 5000000,
+                "max_value": 15000000,  # variance = 100%
+            },
         }
         result = await debate_check_node(sample_state_with_results)
         assert result["debate_decision"] == "trigger"

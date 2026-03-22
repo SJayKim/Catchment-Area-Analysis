@@ -217,9 +217,14 @@ async def debate_check_node(state: dict[str, Any]) -> dict[str, Any]:
     # 조건 3: 매출 추정치 분산 > 30%
     revenue = state.get("revenue_result")
     if isinstance(revenue, dict):
-        estimated = revenue.get("estimated_revenue", 0)
-        lower = revenue.get("revenue_lower_bound", estimated)
-        upper = revenue.get("revenue_upper_bound", estimated)
+        estimated = revenue.get("estimated_monthly_revenue", 0)
+        revenue_range = revenue.get("revenue_range", {})
+        if isinstance(revenue_range, dict):
+            lower = revenue_range.get("min_value", estimated)
+            upper = revenue_range.get("max_value", estimated)
+        else:
+            lower = estimated
+            upper = estimated
         if estimated and estimated > 0:
             variance_pct = (upper - lower) / estimated * 100
             if variance_pct > 30:

@@ -125,7 +125,7 @@ async def check_completeness(session: AsyncSession) -> list[CheckResult]:
     checks = [
         ("population_stats", "total_population", PopulationStat),
         ("revenue_stats", "total_revenue", RevenueStat),
-        ("transit_stats", "daily_boarding", TransitStat),
+        ("transit_stats", "boarding_total", TransitStat),
     ]
 
     for label, column_name, model in checks:
@@ -173,16 +173,16 @@ async def check_anomaly(session: AsyncSession) -> list[CheckResult]:
 
     # population: 최근 2개 분기 총인구 비교
     stmt = (
-        select(PopulationStat.period, func.sum(PopulationStat.total_population))
-        .group_by(PopulationStat.period)
-        .order_by(PopulationStat.period.desc())
+        select(PopulationStat.year, PopulationStat.quarter, func.sum(PopulationStat.total_population))
+        .group_by(PopulationStat.year, PopulationStat.quarter)
+        .order_by(PopulationStat.year.desc(), PopulationStat.quarter.desc())
         .limit(2)
     )
     rows = (await session.execute(stmt)).all()
 
     if len(rows) == 2:
-        latest_val = rows[0][1] or 0
-        prev_val = rows[1][1] or 0
+        latest_val = rows[0][2] or 0
+        prev_val = rows[1][2] or 0
         if prev_val > 0:
             change_pct = abs(latest_val - prev_val) / prev_val * 100
             if change_pct > 300:
@@ -258,19 +258,19 @@ async def get_collection_summary(session: AsyncSession) -> dict:
     """collection_logs 기반 최근 수집 현황."""
     stmt = (
         select(
-            CollectionLog.source,
+            CollectionLog.collector_name,
             func.count().label("total"),
             func.sum(CollectionLog.records_fetched).label("total_fetched"),
-            func.max(CollectionLog.started_at).label("last_run"),
+            func.max(CollectionLog.created_at).label("last_run"),
         )
-        .group_by(CollectionLog.source)
+        .group_by(CollectionLog.collector_name)
     )
     rows = (await session.execute(stmt)).all()
 
     return {
         "sources": [
             {
-                "source": row.source,
+                "source": row.collector_name,
                 "total_runs": row.total,
                 "total_fetched": row.total_fetched or 0,
                 "last_run": str(row.last_run) if row.last_run else None,
