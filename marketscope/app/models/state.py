@@ -120,6 +120,9 @@ class MarketScopeState(TypedDict):
     current_phase: int
     progress_pct: float
 
+    # Token/cost tracking (각 에이전트 LLM 호출 시 자동 누적)
+    token_usage_log: Annotated[list[dict[str, Any]], operator.add]
+
     # Errors
     errors: Annotated[list[dict[str, Any]], operator.add]
     has_critical_failure: bool
@@ -163,6 +166,7 @@ def create_initial_state(session_id: str, user_input: str) -> MarketScopeState:
         node_executions=[],
         current_phase=0,
         progress_pct=0.0,
+        token_usage_log=[],
         errors=[],
         has_critical_failure=False,
         secondary_population_result=None,

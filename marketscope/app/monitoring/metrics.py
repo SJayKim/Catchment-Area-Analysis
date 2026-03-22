@@ -124,6 +124,20 @@ def inc_mcp_error(server: str, error_type: str) -> None:
     MCP_ERRORS_TOTAL.labels(server=server, error_type=error_type).inc()
 
 
+def record_llm_usage(model: str, prompt_tokens: int, completion_tokens: int) -> None:
+    """LLM 토큰 사용량과 비용을 Prometheus에 기록한다."""
+    if prompt_tokens > 0:
+        LLM_TOKENS_TOTAL.labels(model=model, type="prompt").inc(prompt_tokens)
+    if completion_tokens > 0:
+        LLM_TOKENS_TOTAL.labels(model=model, type="completion").inc(completion_tokens)
+
+    from app.llm.pricing import calculate_cost
+    cost_info = calculate_cost(model, prompt_tokens, completion_tokens)
+    total_cost = float(cost_info["total_cost_usd"])
+    if total_cost > 0:
+        LLM_COST_DOLLARS.labels(model=model).inc(total_cost)
+
+
 def observe_debate(rounds: int, converged: bool) -> None:
     """토론 메트릭을 기록한다."""
     DEBATE_ROUNDS.observe(rounds)

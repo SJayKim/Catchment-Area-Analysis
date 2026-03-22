@@ -3,7 +3,12 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: "marketscope"
+  - job_name: "marketscope-api"
     static_configs:
-      - targets: ["host.docker.internal:8000"]
+      - targets: ["marketscope-api:8000"]
+    metrics_path: /metrics
+
+  - job_name: "marketscope-engine"
+    static_configs:
+      - targets: ["marketscope-engine:9100"]
     metrics_path: /metrics

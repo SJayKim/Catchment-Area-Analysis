@@ -2,8 +2,10 @@ FROM python:3.11-slim AS base
 
 # 시스템 의존성 (PostGIS 클라이언트, proj)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev libproj-dev gcc \
+    libpq-dev libproj-dev gcc tzdata curl \
     && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=Asia/Seoul
 
 WORKDIR /app
 

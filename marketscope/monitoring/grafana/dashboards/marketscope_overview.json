@@ -74,12 +74,12 @@
       }
     },
     {
-      "title": "LLM 토큰 사용량 (시간당)",
+      "title": "LLM 총 토큰 사용량",
       "type": "stat",
       "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
       "targets": [
         {
-          "expr": "sum(increase(llm_tokens_total[1h]))",
+          "expr": "sum(llm_tokens_total)",
           "legendFormat": "Total Tokens"
         }
       ],
@@ -90,13 +90,45 @@
       }
     },
     {
-      "title": "LLM 비용 (시간당)",
+      "title": "LLM 총 비용",
       "type": "stat",
       "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
       "targets": [
         {
-          "expr": "sum(increase(llm_cost_dollars[1h]))",
+          "expr": "sum(llm_cost_dollars_total)",
           "legendFormat": "Cost"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD"
+        }
+      }
+    },
+    {
+      "title": "모델별 토큰 사용량",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+      "targets": [
+        {
+          "expr": "sum(rate(llm_tokens_total[5m])) by (model)",
+          "legendFormat": "{{model}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "title": "모델별 비용 누적",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+      "targets": [
+        {
+          "expr": "sum(llm_cost_dollars_total) by (model)",
+          "legendFormat": "{{model}}"
         }
       ],
       "fieldConfig": {
@@ -108,7 +140,7 @@
     {
       "title": "MCP 서버 레이턴시",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 36},
       "targets": [
         {
           "expr": "histogram_quantile(0.95, sum(rate(mcp_call_duration_seconds_bucket[5m])) by (le, server))",
@@ -124,7 +156,7 @@
     {
       "title": "MCP 서버 에러율",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 36},
       "targets": [
         {
           "expr": "sum(rate(mcp_errors_total[5m])) by (server)",
@@ -175,7 +207,7 @@
     {
       "title": "파이프라인 노드별 소요시간",
       "type": "heatmap",
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 28},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 44},
       "targets": [
         {
           "expr": "sum(rate(pipeline_node_duration_seconds_bucket[5m])) by (le, node)",
@@ -186,7 +218,7 @@
     {
       "title": "파이프라인 전체 실행 시간",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 36},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 52},
       "targets": [
         {
           "expr": "histogram_quantile(0.5, sum(rate(pipeline_duration_seconds_bucket[5m])) by (le, mode))",

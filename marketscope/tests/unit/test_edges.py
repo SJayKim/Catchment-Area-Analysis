@@ -1,5 +1,8 @@
 """Edge 함수 단위 테스트."""
 
+from langgraph.graph import END
+from langgraph.types import Send
+
 from app.graph.edges import (
     route_after_debate_check,
     should_continue_after_commander,
@@ -26,15 +29,19 @@ class TestRouteAfterDebateCheck:
 class TestShouldContinueAfterCommander:
     def test_no_plan_returns_end(self):
         state = {}
-        assert should_continue_after_commander(state) == "end"
+        assert should_continue_after_commander(state) == END
 
     def test_clarification_needed_returns_end(self):
         state = {"commander_plan": {"clarification_needed": True}}
-        assert should_continue_after_commander(state) == "end"
+        assert should_continue_after_commander(state) == END
 
-    def test_valid_plan_returns_group1(self):
+    def test_valid_plan_returns_group1_sends(self):
         state = {"commander_plan": {"analysis_mode": "basic"}}
-        assert should_continue_after_commander(state) == "parallel_group_1"
+        result = should_continue_after_commander(state)
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert result[0] == Send("population", state)
+        assert result[1] == Send("competition", state)
 
 
 class TestShouldRunGroup2:
@@ -42,17 +49,25 @@ class TestShouldRunGroup2:
         state = {"commander_plan": {"analysis_mode": "quick"}}
         assert should_run_group2(state) == "commander_judgment"
 
-    def test_basic_mode_runs_group2(self):
+    def test_basic_mode_runs_group2_sends(self):
         state = {"commander_plan": {"analysis_mode": "basic"}}
-        assert should_run_group2(state) == "parallel_group_2"
+        result = should_run_group2(state)
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert result[0] == Send("revenue", state)
+        assert result[1] == Send("location", state)
 
-    def test_deep_mode_runs_group2(self):
+    def test_deep_mode_runs_group2_sends(self):
         state = {"commander_plan": {"analysis_mode": "deep"}}
-        assert should_run_group2(state) == "parallel_group_2"
+        result = should_run_group2(state)
+        assert isinstance(result, list)
+        assert len(result) == 2
 
     def test_missing_plan_defaults_to_basic(self):
         state = {}
-        assert should_run_group2(state) == "parallel_group_2"
+        result = should_run_group2(state)
+        assert isinstance(result, list)
+        assert len(result) == 2
 
 
 class TestShouldRunGroup3:
@@ -60,9 +75,14 @@ class TestShouldRunGroup3:
         state = {"commander_plan": {"analysis_mode": "quick"}}
         assert should_run_group3(state) == "financial"
 
-    def test_basic_mode_runs_group3(self):
+    def test_basic_mode_runs_group3_sends(self):
         state = {"commander_plan": {"analysis_mode": "basic"}}
-        assert should_run_group3(state) == "parallel_group_3"
+        result = should_run_group3(state)
+        assert isinstance(result, list)
+        assert len(result) == 3
+        assert result[0] == Send("trend", state)
+        assert result[1] == Send("real_estate", state)
+        assert result[2] == Send("regulatory", state)
 
 
 class TestShouldSkipReports:

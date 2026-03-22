@@ -102,13 +102,10 @@ def build_workflow() -> StateGraph:
     workflow.add_edge("user_input", "commander_plan")
 
     # 2. Commander → fan-out Group 1 or END (clarification needed)
+    #    Send 객체로 fan-out (LangGraph 1.1+ 호환)
     workflow.add_conditional_edges(
         "commander_plan",
         should_continue_after_commander,
-        {
-            "parallel_group_1": ["population", "competition"],
-            "end": END,
-        },
     )
 
     # 3. Group 1 fan-in
@@ -116,13 +113,10 @@ def build_workflow() -> StateGraph:
     workflow.add_edge("competition", "group1_complete")
 
     # 4. Group 1 → fan-out Group 2 or skip to judgment (quick mode)
+    #    Send 객체로 fan-out (LangGraph 1.1+ 호환)
     workflow.add_conditional_edges(
         "group1_complete",
         should_run_group2,
-        {
-            "parallel_group_2": ["revenue", "location"],
-            "commander_judgment": "commander_judgment",
-        },
     )
 
     # 5. Group 2 fan-in
@@ -130,13 +124,10 @@ def build_workflow() -> StateGraph:
     workflow.add_edge("location", "group2_complete")
 
     # 6. Group 2 → fan-out Group 3 or skip (quick mode)
+    #    Send 객체로 fan-out (LangGraph 1.1+ 호환)
     workflow.add_conditional_edges(
         "group2_complete",
         should_run_group3,
-        {
-            "parallel_group_3": ["trend", "real_estate", "regulatory"],
-            "financial": "financial",
-        },
     )
 
     # 7. Group 3 fan-in

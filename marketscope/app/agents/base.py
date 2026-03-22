@@ -65,6 +65,7 @@ class BaseAgent(ABC, Generic[T]):
         self.logger = get_agent_logger(self.agent_name)
         self._llm_model = self.settings.llm.get_model_for_agent(self.agent_name)
         self._temperature = self.settings.llm.get_temperature_for_role(self.llm_role)
+        self._llm_call_log: list[dict[str, Any]] = []  # run() 단위 토큰 추적
 
     # ── 서브클래스 필수 구현 ──
 
@@ -113,20 +114,45 @@ class BaseAgent(ABC, Generic[T]):
                 if response_format is not None and llm_response.content:
                     parsed = self._parse_structured_output(llm_response.content, response_format)
 
+                pt = llm_response.usage.get("prompt_tokens", 0) if llm_response.usage else 0
+                ct = llm_response.usage.get("completion_tokens", 0) if llm_response.usage else 0
+                effective_model = llm_response.model or self._llm_model
+
                 self.logger.info(
                     "agent.llm_call",
-                    model=self._llm_model,
+                    model=effective_model,
                     attempt=attempt + 1,
                     latency_ms=round(llm_response.latency_ms, 2),
-                    prompt_tokens=llm_response.usage.get("prompt_tokens", 0) if llm_response.usage else 0,
-                    completion_tokens=llm_response.usage.get("completion_tokens", 0) if llm_response.usage else 0,
+                    prompt_tokens=pt,
+                    completion_tokens=ct,
                 )
+
+                # Prometheus 메트릭에 토큰/비용 기록
+                from app.monitoring.metrics import record_llm_usage
+                record_llm_usage(model=effective_model, prompt_tokens=pt, completion_tokens=ct)
+
+                # 비용 계산
+                from app.llm.pricing import calculate_cost
+                cost_info = calculate_cost(effective_model, pt, ct)
+                cost_usd = float(cost_info["total_cost_usd"])
+
+                # 인스턴스 레벨 호출 로그 (run()에서 state에 반영)
+                self._llm_call_log.append({
+                    "agent": self.agent_name,
+                    "model": effective_model,
+                    "prompt_tokens": pt,
+                    "completion_tokens": ct,
+                    "total_tokens": pt + ct,
+                    "cost_usd": cost_usd,
+                })
+
                 return {
                     "content": llm_response.content,
                     "parsed": parsed,
                     "usage": llm_response.usage,
-                    "model": llm_response.model,
+                    "model": effective_model,
                     "latency_ms": llm_response.latency_ms,
+                    "cost_usd": cost_usd,
                 }
 
             except Exception as e:
@@ -346,12 +372,20 @@ class BaseAgent(ABC, Generic[T]):
             else:
                 state_update[result_field] = result
 
+            # 토큰 사용 합산
+            total_pt = sum(c.get("prompt_tokens", 0) for c in self._llm_call_log)
+            total_ct = sum(c.get("completion_tokens", 0) for c in self._llm_call_log)
+
             state_update["node_executions"] = [
                 self.create_node_execution(
                     "completed", execution_start,
-                    token_usage={"prompt_tokens": 0, "completion_tokens": 0},
+                    token_usage={"prompt_tokens": total_pt, "completion_tokens": total_ct},
                 )
             ]
+
+            # LangGraph state에 토큰 로그 누적 (Annotated + add 리듀서)
+            if self._llm_call_log:
+                state_update["token_usage_log"] = list(self._llm_call_log)
 
             duration_ms = (time.monotonic() - run_start) * 1000
             confidence = None

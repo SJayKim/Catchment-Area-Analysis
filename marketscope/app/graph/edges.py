@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, Union
+
+from langgraph.graph import END
+from langgraph.types import Send
 
 from app.logging_config import get_logger
 
@@ -11,23 +14,23 @@ logger = get_logger("graph.edges")
 
 def should_continue_after_commander(
     state: dict[str, Any],
-) -> str:
+) -> Union[str, list[Send]]:
     """Commander 계획 후 다음 단계 결정."""
     plan = state.get("commander_plan")
     if not plan:
-        return "end"
+        return END
 
     if plan.get("clarification_needed"):
         logger.info("edge.decision", edge="should_continue_after_commander", result="end", reason="clarification_needed")
-        return "end"  # 명확화 필요 → 사용자에게 반환
+        return END  # 명확화 필요 → 사용자에게 반환
 
     logger.info("edge.decision", edge="should_continue_after_commander", result="parallel_group_1")
-    return "parallel_group_1"
+    return [Send("population", state), Send("competition", state)]
 
 
 def should_run_group2(
     state: dict[str, Any],
-) -> str:
+) -> Union[str, list[Send]]:
     """Group 1 완료 후 Group 2 실행 여부 결정."""
     plan = state.get("commander_plan", {})
     mode = plan.get("analysis_mode", "basic")
@@ -38,7 +41,7 @@ def should_run_group2(
         return "commander_judgment"
 
     logger.info("edge.decision", edge="should_run_group2", result="parallel_group_2", mode=mode)
-    return "parallel_group_2"
+    return [Send("revenue", state), Send("location", state)]
 
 
 def is_comparison_mode(state: dict[str, Any]) -> str:
@@ -51,7 +54,7 @@ def is_comparison_mode(state: dict[str, Any]) -> str:
 
 def should_run_group3(
     state: dict[str, Any],
-) -> str:
+) -> Union[str, list[Send]]:
     """Group 2 완료 후 Group 3 (trend, real_estate, regulatory) 실행 여부."""
     plan = state.get("commander_plan", {})
     mode = plan.get("analysis_mode", "basic")
@@ -61,7 +64,7 @@ def should_run_group3(
         return "financial"  # quick → Group 3 스킵, financial로
 
     logger.info("edge.decision", edge="should_run_group3", result="parallel_group_3", mode=mode)
-    return "parallel_group_3"
+    return [Send("trend", state), Send("real_estate", state), Send("regulatory", state)]
 
 
 def route_after_debate_check(

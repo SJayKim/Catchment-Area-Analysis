@@ -50,6 +50,7 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: marketscope_dev_pw
       REDIS_HOST: redis
       MCP_SERVERS: '{"public_data":"http://mcp-public-data:5100","maps":"http://mcp-maps:5101","real_estate":"http://mcp-real-estate:5102","news":"http://mcp-news:5103","regulatory":"http://mcp-regulatory:5104","finance":"http://mcp-finance:5105","database":"http://mcp-database:5106","google_maps":"http://mcp-google-maps:5107","naver_maps":"http://mcp-naver-maps:5108"}'
     depends_on:
@@ -57,6 +58,12 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
 
   marketscope-engine:
@@ -65,9 +72,12 @@ services:
       dockerfile: Dockerfile
     container_name: marketscope-engine
     command: python -m app.engine
+    ports:
+      - "9100:9100"
     env_file: .env
     environment:
       POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: marketscope_dev_pw
       REDIS_HOST: redis
       MCP_SERVERS: '{"public_data":"http://mcp-public-data:5100","maps":"http://mcp-maps:5101","real_estate":"http://mcp-real-estate:5102","news":"http://mcp-news:5103","regulatory":"http://mcp-regulatory:5104","finance":"http://mcp-finance:5105","database":"http://mcp-database:5106","google_maps":"http://mcp-google-maps:5107","naver_maps":"http://mcp-naver-maps:5108"}'
     depends_on:
@@ -86,6 +96,7 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: marketscope_dev_pw
       REDIS_HOST: redis
     depends_on:
       postgres:
@@ -101,10 +112,16 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-public-data
-    command: python -m app.mcp_servers.public_data.server
+    command: uvicorn app.mcp_servers.public_data.server:app --host 0.0.0.0 --port 5100
     ports:
       - "5100:5100"
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5100/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   mcp-maps:
@@ -112,10 +129,16 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-maps
-    command: python -m app.mcp_servers.maps
+    command: uvicorn app.mcp_servers.maps.server:app --host 0.0.0.0 --port 5101
     ports:
       - "5101:5101"
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5101/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   mcp-real-estate:
@@ -123,10 +146,16 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-real-estate
-    command: python -m app.mcp_servers.real_estate.server
+    command: uvicorn app.mcp_servers.real_estate.server:app --host 0.0.0.0 --port 5102
     ports:
       - "5102:5102"
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5102/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   mcp-news:
@@ -134,10 +163,16 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-news
-    command: python -m app.mcp_servers.news.server
+    command: uvicorn app.mcp_servers.news.server:app --host 0.0.0.0 --port 5103
     ports:
       - "5103:5103"
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5103/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   mcp-regulatory:
@@ -145,10 +180,16 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-regulatory
-    command: python -m app.mcp_servers.regulatory.server
+    command: uvicorn app.mcp_servers.regulatory.server:app --host 0.0.0.0 --port 5104
     ports:
       - "5104:5104"
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5104/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   mcp-finance:
@@ -156,10 +197,16 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-finance
-    command: python -m app.mcp_servers.finance.server
+    command: uvicorn app.mcp_servers.finance.server:app --host 0.0.0.0 --port 5105
     ports:
       - "5105:5105"
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5105/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   mcp-database:
@@ -167,13 +214,22 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-database
-    command: python -m app.mcp_servers.database.server
+    command: uvicorn app.mcp_servers.database.server:app --host 0.0.0.0 --port 5106
     ports:
       - "5106:5106"
     env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: marketscope_dev_pw
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5106/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   mcp-google-maps:
@@ -181,10 +237,16 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-google-maps
-    command: python -m app.mcp_servers.google_maps.server
+    command: uvicorn app.mcp_servers.google_maps.server:app --host 0.0.0.0 --port 5107
     ports:
       - "5107:5107"
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5107/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   mcp-naver-maps:
@@ -192,12 +254,51 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-naver-maps
-    command: python -m app.mcp_servers.naver_maps.server
+    command: uvicorn app.mcp_servers.naver_maps.server:app --host 0.0.0.0 --port 5108
     ports:
       - "5108:5108"
     env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5108/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  # ── Monitoring ──
+
+  prometheus:
+    image: prom/prometheus:v3.4.0
+    container_name: marketscope-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: marketscope-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_DEFAULT_THEME: light
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
     restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
+  prometheus_data:
+  grafana_data:

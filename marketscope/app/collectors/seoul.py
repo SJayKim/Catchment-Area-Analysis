@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import calendar
 import logging
 import time
 from typing import Any, Optional
@@ -69,6 +70,14 @@ class SeoulCollector(BaseCollector):
 
         return all_rows
 
+    # 시간대 코드 → DB 컬럼 매핑 (시작시간 기준 + 순번 기준 모두 지원)
+    _TMZON_COL_MAP: dict[str, str] = {
+        "00": "time_00_06", "06": "time_06_11", "11": "time_11_14",
+        "14": "time_14_17", "17": "time_17_21", "21": "time_21_24",
+        "1": "time_00_06", "2": "time_06_11", "3": "time_11_14",
+        "4": "time_14_17", "5": "time_17_21", "6": "time_21_24",
+    }
+
     async def collect_living_population(
         self,
         dong_code: str,
@@ -76,6 +85,11 @@ class SeoulCollector(BaseCollector):
         district_id: int,
     ) -> dict[str, Any]:
         """서울 생활인구 수집 (SPOP_LOCAL_RESD_DONG).
+
+        API 응답은 시간대별로 분리된 여러 행을 반환합니다.
+        이를 하나의 PopulationStat 행으로 집계합니다:
+        - total/male/female/age → 시간대별 합산
+        - time_XX_YY → 각 시간대 인구를 개별 컬럼에 저장
 
         Args:
             dong_code: 행정동 코드
@@ -94,43 +108,68 @@ class SeoulCollector(BaseCollector):
                 )
                 return {"status": "no_data", "count": 0}
 
-            inserted = 0
-            for row in rows:
-                year = int(date_str[:4])
-                month = int(date_str[4:6])
+            year = int(date_str[:4])
+            month = int(date_str[4:6])
 
-                values = dict(
-                    district_id=district_id,
-                    stat_type="living",
-                    year=year,
-                    month=month,
-                    total_population=_safe_int(row.get("TOT_LVPOP_CO")),
-                    male_population=_safe_int(row.get("ML_LVPOP_CO")),
-                    female_population=_safe_int(row.get("FML_LVPOP_CO")),
-                    age_0_9=_safe_int(row.get("AGRDE_0_LVPOP_CO")),
-                    age_10_19=_safe_int(row.get("AGRDE_10_LVPOP_CO")),
-                    age_20_29=_safe_int(row.get("AGRDE_20_LVPOP_CO")),
-                    age_30_39=_safe_int(row.get("AGRDE_30_LVPOP_CO")),
-                    age_40_49=_safe_int(row.get("AGRDE_40_LVPOP_CO")),
-                    age_50_59=_safe_int(row.get("AGRDE_50_LVPOP_CO")),
-                    age_60_plus=_safe_int(row.get("AGRDE_60_ABOVE_LVPOP_CO")),
-                    data_source="SEOUL",
-                    raw_data=row,
-                )
-                stmt = pg_insert(PopulationStat).values(**values).on_conflict_do_update(
-                    constraint="uq_population_period",
-                    set_={k: v for k, v in values.items() if k not in ("district_id", "stat_type", "year", "quarter", "month", "date")},
-                )
-                await self.session.execute(stmt)
-                inserted += 1
+            # 시간대별 행을 하나의 레코드로 집계
+            agg_keys = [
+                "total_population", "male_population", "female_population",
+                "age_0_9", "age_10_19", "age_20_29", "age_30_39",
+                "age_40_49", "age_50_59", "age_60_plus",
+            ]
+            api_field_map = {
+                "total_population": "TOT_LVPOP_CO",
+                "male_population": "ML_LVPOP_CO",
+                "female_population": "FML_LVPOP_CO",
+                "age_0_9": "AGRDE_0_LVPOP_CO",
+                "age_10_19": "AGRDE_10_LVPOP_CO",
+                "age_20_29": "AGRDE_20_LVPOP_CO",
+                "age_30_39": "AGRDE_30_LVPOP_CO",
+                "age_40_49": "AGRDE_40_LVPOP_CO",
+                "age_50_59": "AGRDE_50_LVPOP_CO",
+                "age_60_plus": "AGRDE_60_ABOVE_LVPOP_CO",
+            }
+            totals = {k: 0 for k in agg_keys}
+            time_pops: dict[str, int] = {}
+
+            for row in rows:
+                for db_col, api_field in api_field_map.items():
+                    totals[db_col] += _safe_int(row.get(api_field)) or 0
+
+                tmzon = str(row.get("TMZON_PD_SE", "")).strip()
+                col = self._TMZON_COL_MAP.get(tmzon)
+                if col:
+                    time_pops[col] = _safe_int(row.get("TOT_LVPOP_CO")) or 0
+
+            # 0 → None 변환 (데이터 없음과 구분)
+            clean = {k: (v if v > 0 else None) for k, v in totals.items()}
+
+            values = dict(
+                district_id=district_id,
+                stat_type="living",
+                year=year,
+                month=month,
+                **clean,
+                **time_pops,
+                data_source="SEOUL",
+                raw_data=rows[:3],  # 원본 샘플 보관
+            )
+            upsert_set = {
+                k: v for k, v in values.items()
+                if k not in ("district_id", "stat_type", "year", "quarter", "month", "date")
+            }
+            stmt = pg_insert(PopulationStat).values(**values).on_conflict_do_update(
+                constraint="uq_population_period", set_=upsert_set,
+            )
+            await self.session.execute(stmt)
 
             elapsed = int((time.monotonic() - t0) * 1000)
             await self._log_collection(
                 endpoint, {"dong_code": dong_code, "date": date_str},
-                records_fetched=len(rows), records_inserted=inserted,
+                records_fetched=len(rows), records_inserted=1,
                 duration_ms=elapsed,
             )
-            return {"status": "success", "fetched": len(rows), "inserted": inserted}
+            return {"status": "success", "fetched": len(rows), "inserted": 1}
 
         except Exception as e:
             elapsed = int((time.monotonic() - t0) * 1000)
@@ -160,6 +199,7 @@ class SeoulCollector(BaseCollector):
             inserted = 0
             year = int(year_month[:4])
             month = int(year_month[4:6])
+            days_in_month = calendar.monthrange(year, month)[1]
 
             for row in rows:
                 station = row.get("SUB_STA_NM", "").strip()
@@ -167,14 +207,19 @@ class SeoulCollector(BaseCollector):
                 if not station:
                     continue
 
+                boarding = _safe_int(row.get("RIDE_PASGR_NUM"))
+                alighting = _safe_int(row.get("ALIGHT_PASGR_NUM"))
+
                 values = dict(
                     station_name=station,
                     line_name=line,
                     transit_type="subway",
                     year=year,
                     month=month,
-                    boarding_total=_safe_int(row.get("RIDE_PASGR_NUM")),
-                    alighting_total=_safe_int(row.get("ALIGHT_PASGR_NUM")),
+                    boarding_total=boarding,
+                    alighting_total=alighting,
+                    daily_avg_boarding=boarding // days_in_month if boarding else None,
+                    daily_avg_alighting=alighting // days_in_month if alighting else None,
                     data_source="SEOUL",
                     raw_data=row,
                 )
@@ -238,6 +283,13 @@ class SeoulCollector(BaseCollector):
                     transaction_count=_safe_int(row.get("TOT_SELNG_CO")),
                     male_revenue=_safe_decimal(row.get("ML_SELNG_AMT")),
                     female_revenue=_safe_decimal(row.get("FML_SELNG_AMT")),
+                    # 연령대별 매출
+                    age_20_revenue=_safe_decimal(row.get("AGRDE_20_SELNG_AMT")),
+                    age_30_revenue=_safe_decimal(row.get("AGRDE_30_SELNG_AMT")),
+                    age_40_revenue=_safe_decimal(row.get("AGRDE_40_SELNG_AMT")),
+                    age_50_revenue=_safe_decimal(row.get("AGRDE_50_SELNG_AMT")),
+                    age_60_plus_revenue=_safe_decimal(row.get("AGRDE_60_ABOVE_SELNG_AMT")),
+                    # 요일별 매출
                     day_mon_revenue=_safe_decimal(row.get("MON_SELNG_AMT")),
                     day_tue_revenue=_safe_decimal(row.get("TUES_SELNG_AMT")),
                     day_wed_revenue=_safe_decimal(row.get("WED_SELNG_AMT")),
@@ -245,6 +297,13 @@ class SeoulCollector(BaseCollector):
                     day_fri_revenue=_safe_decimal(row.get("FRI_SELNG_AMT")),
                     day_sat_revenue=_safe_decimal(row.get("SAT_SELNG_AMT")),
                     day_sun_revenue=_safe_decimal(row.get("SUN_SELNG_AMT")),
+                    # 시간대별 매출
+                    time_00_06_revenue=_safe_decimal(row.get("TMZON_1_SELNG_AMT")),
+                    time_06_11_revenue=_safe_decimal(row.get("TMZON_2_SELNG_AMT")),
+                    time_11_14_revenue=_safe_decimal(row.get("TMZON_3_SELNG_AMT")),
+                    time_14_17_revenue=_safe_decimal(row.get("TMZON_4_SELNG_AMT")),
+                    time_17_21_revenue=_safe_decimal(row.get("TMZON_5_SELNG_AMT")),
+                    time_21_24_revenue=_safe_decimal(row.get("TMZON_6_SELNG_AMT")),
                     data_source="SEOUL",
                     raw_data=row,
                 )

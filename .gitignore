@@ -7,3 +7,9 @@ __pycache__/
 dist/
 build/
 .venv/
+
+# Environment secrets
+.env
+.env.local
+.env.backup
+!.env.example

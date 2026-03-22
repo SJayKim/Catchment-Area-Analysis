@@ -146,6 +146,50 @@ async def get_analysis(request_id: str):
     return response
 
 
+@router.get("/{request_id}/cost")
+async def get_analysis_cost(request_id: str):
+    """분석 요청의 토큰 사용량 및 비용 상세 조회."""
+    broker = _get_broker()
+
+    status_data = await broker.get_status(request_id)
+    if status_data is None:
+        return _error_response(
+            status_code=404,
+            code="ANALYSIS_NOT_FOUND",
+            message="분석을 찾을 수 없습니다",
+            request_id=request_id,
+        )
+
+    if status_data.get("status") != "completed":
+        return JSONResponse(
+            status_code=200,
+            content={
+                "request_id": request_id,
+                "status": status_data.get("status", "unknown"),
+                "message": "분석이 아직 완료되지 않아 비용 정보가 없습니다",
+                "token_usage": None,
+            },
+        )
+
+    result = await broker.get_result(request_id)
+    token_usage = result.get("token_usage") if result else None
+
+    if token_usage is None:
+        token_usage = {
+            "total_tokens": 0,
+            "total_prompt_tokens": 0,
+            "total_completion_tokens": 0,
+            "total_cost_usd": 0.0,
+            "per_agent": [],
+        }
+
+    return {
+        "request_id": request_id,
+        "status": "completed",
+        **token_usage,
+    }
+
+
 @router.get("/{request_id}/stream")
 async def stream_analysis(request_id: str, request: Request):
     """분석 진행 상태 SSE 스트리밍 — Redis Pub/Sub 구독."""

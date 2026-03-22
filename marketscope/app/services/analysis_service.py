@@ -57,9 +57,52 @@ class AnalysisService:
 
             final_state = event
 
-        # 최종 결과 추출
-        if final_state and "report_assembly" in final_state:
-            return final_state["report_assembly"].get("final_report", {})
+        # 토큰 사용량 합산
+        token_summary = self._aggregate_token_usage(final_state, app, config)
 
-        logger.warning("분석 완료 - 최종 리포트 없음")
-        return {"error": "분석 결과가 생성되지 않았습니다"}
+        # 최종 결과 추출
+        result: dict[str, Any]
+        if final_state and "report_assembly" in final_state:
+            result = final_state["report_assembly"].get("final_report", {})
+        else:
+            logger.warning("분석 완료 - 최종 리포트 없음")
+            result = {"error": "분석 결과가 생성되지 않았습니다"}
+
+        # 결과에 토큰 사용 정보 첨부
+        result["token_usage"] = token_summary
+        return result
+
+    @staticmethod
+    def _aggregate_token_usage(
+        final_event: dict[str, Any] | None,
+        app: Any,
+        config: dict,
+    ) -> dict[str, Any]:
+        """LangGraph state에서 토큰 사용 로그를 합산한다."""
+        try:
+            # LangGraph state에서 전체 state 가져오기
+            state = app.get_state(config)
+            token_log: list[dict] = state.values.get("token_usage_log", []) if state else []
+        except Exception:
+            token_log = []
+
+        if not token_log:
+            return {
+                "total_tokens": 0,
+                "total_prompt_tokens": 0,
+                "total_completion_tokens": 0,
+                "total_cost_usd": 0.0,
+                "per_agent": [],
+            }
+
+        total_pt = sum(e.get("prompt_tokens", 0) for e in token_log)
+        total_ct = sum(e.get("completion_tokens", 0) for e in token_log)
+        total_cost = sum(e.get("cost_usd", 0.0) for e in token_log)
+
+        return {
+            "total_tokens": total_pt + total_ct,
+            "total_prompt_tokens": total_pt,
+            "total_completion_tokens": total_ct,
+            "total_cost_usd": round(total_cost, 6),
+            "per_agent": token_log,
+        }

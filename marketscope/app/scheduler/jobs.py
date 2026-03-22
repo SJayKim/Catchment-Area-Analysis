@@ -1,4 +1,4 @@
-"""APScheduler 배치 수집 작업 — 8개 수집 스케줄.
+"""APScheduler 배치 수집 작업 — 10개 수집 스케줄.
 
 스케줄:
 - semas_population_quarterly: 분기 15일 06:00
@@ -7,6 +7,8 @@
 - seoul_population_monthly: 매월 15일 12:00
 - seoul_subway_monthly: 매월 15일 11:00
 - seoul_card_sales_monthly: 매월 15일 13:00
+- kosis_resident_population_yearly: 매년 3월 1일 09:00
+- kosis_worker_population_yearly: 매년 3월 1일 10:00
 - refresh_mv_monthly: 매월 25일 02:00
 - data_quality_daily: 매일 03:00
 """
@@ -45,7 +47,7 @@ async def _get_districts() -> list[dict]:
         factory = get_session_factory()
         async with factory() as session:
             result = await session.execute(
-                text("SELECT id, district_code, district_name FROM districts LIMIT 100")
+                text("SELECT id, district_code, district_name, gu_name, admin_dong_code FROM districts WHERE is_active = true LIMIT 100")
             )
             return [dict(row._mapping) for row in result]
     except Exception:
@@ -279,6 +281,99 @@ async def job_seoul_card_sales_monthly():
         logger.exception("[스케줄] 서울 카드매출 수집 전체 실패")
 
 
+_KOSIS_GU_REGION_CODES = {
+    "강남구": "1168000000", "마포구": "1144000000",
+    "용산구": "1117000000", "광진구": "1121500000",
+    "서대문구": "1141000000", "종로구": "1111000000",
+    "중구": "1114000000", "영등포구": "1156000000",
+    "성동구": "1120000000", "송파구": "1171000000",
+}
+
+
+async def job_kosis_resident_population_yearly():
+    """KOSIS 주민등록인구 연간 수집."""
+    logger.info("[스케줄] KOSIS 주민등록인구 수집 시작")
+    try:
+        from app.collectors.kosis import KosisCollector
+        from app.config import get_settings
+        from app.db.session import get_session_factory
+
+        settings = get_settings()
+        api_key = getattr(settings, "data_api_kosis_key", "")
+        if not api_key:
+            logger.warning("[스케줄] KOSIS API 키 미설정 — 스킵")
+            return
+
+        year = datetime.now(timezone.utc).year - 1
+        districts = await _get_districts()
+        factory = get_session_factory()
+
+        seen_gu: set[str] = set()
+        for dist in districts:
+            gu_name = dist.get("gu_name", "")
+            if not gu_name or gu_name in seen_gu or gu_name not in _KOSIS_GU_REGION_CODES:
+                continue
+            seen_gu.add(gu_name)
+
+            try:
+                async with factory() as session:
+                    collector = KosisCollector(session, api_key)
+                    await collector.collect_resident_population(
+                        region_code=_KOSIS_GU_REGION_CODES[gu_name],
+                        year=year,
+                        district_id=dist["id"],
+                    )
+                    await session.commit()
+            except Exception:
+                logger.exception("[스케줄] KOSIS 주민인구 수집 실패: %s", gu_name)
+
+        logger.info("[스케줄] KOSIS 주민등록인구 수집 완료 (%d개 구)", len(seen_gu))
+    except Exception:
+        logger.exception("[스케줄] KOSIS 주민등록인구 수집 전체 실패")
+
+
+async def job_kosis_worker_population_yearly():
+    """KOSIS 직장인구 연간 수집."""
+    logger.info("[스케줄] KOSIS 직장인구 수집 시작")
+    try:
+        from app.collectors.kosis import KosisCollector
+        from app.config import get_settings
+        from app.db.session import get_session_factory
+
+        settings = get_settings()
+        api_key = getattr(settings, "data_api_kosis_key", "")
+        if not api_key:
+            logger.warning("[스케줄] KOSIS API 키 미설정 — 스킵")
+            return
+
+        year = datetime.now(timezone.utc).year - 1
+        districts = await _get_districts()
+        factory = get_session_factory()
+
+        seen_gu: set[str] = set()
+        for dist in districts:
+            gu_name = dist.get("gu_name", "")
+            if not gu_name or gu_name in seen_gu or gu_name not in _KOSIS_GU_REGION_CODES:
+                continue
+            seen_gu.add(gu_name)
+
+            try:
+                async with factory() as session:
+                    collector = KosisCollector(session, api_key)
+                    await collector.collect_worker_population(
+                        region_code=_KOSIS_GU_REGION_CODES[gu_name],
+                        year=year,
+                        district_id=dist["id"],
+                    )
+                    await session.commit()
+            except Exception:
+                logger.exception("[스케줄] KOSIS 직장인구 수집 실패: %s", gu_name)
+
+        logger.info("[스케줄] KOSIS 직장인구 수집 완료 (%d개 구)", len(seen_gu))
+    except Exception:
+        logger.exception("[스케줄] KOSIS 직장인구 수집 전체 실패")
+
+
 async def job_refresh_mv_monthly():
     """Materialized View 갱신."""
     logger.info("[스케줄] MV 갱신 시작")
@@ -355,6 +450,20 @@ def register_all_jobs(scheduler: AsyncIOScheduler | None = None) -> AsyncIOSched
         job_seoul_card_sales_monthly,
         CronTrigger(day=15, hour=13),
         id="seoul_card_sales_monthly",
+        replace_existing=True,
+    )
+
+    # KOSIS 연간 (매년 3월)
+    s.add_job(
+        job_kosis_resident_population_yearly,
+        CronTrigger(month=3, day=1, hour=9),
+        id="kosis_resident_population_yearly",
+        replace_existing=True,
+    )
+    s.add_job(
+        job_kosis_worker_population_yearly,
+        CronTrigger(month=3, day=1, hour=10),
+        id="kosis_worker_population_yearly",
         replace_existing=True,
     )
 

@@ -34,7 +34,7 @@ class MCPTransport(str, Enum):
 class LLMSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="LLM_")
 
-    model_commander: str = "claude-sonnet-4-6-20250514"
+    model_commander: str = "anthropic/claude-sonnet-4-6-20250514"
     model_population: str = "gemini/gemini-2.5-flash"
     model_revenue: str = "gemini/gemini-2.5-flash"
     model_competition: str = "gemini/gemini-2.5-flash"
@@ -44,15 +44,15 @@ class LLMSettings(BaseSettings):
 
     # Phase 2 agents
     model_trend: str = "gemini/gemini-2.5-pro"
-    model_financial: str = "claude-sonnet-4-6-20250514"
-    model_risk: str = "claude-sonnet-4-6-20250514"
+    model_financial: str = "anthropic/claude-sonnet-4-6-20250514"
+    model_risk: str = "anthropic/claude-sonnet-4-6-20250514"
     model_real_estate: str = "gemini/gemini-2.5-flash"
-    model_regulatory: str = "claude-sonnet-4-6-20250514"
+    model_regulatory: str = "anthropic/claude-sonnet-4-6-20250514"
 
     # Debate agents
     model_advocate: str = "gemini/gemini-2.5-pro"
-    model_critic: str = "claude-sonnet-4-6-20250514"
-    model_judge: str = "claude-opus-4-6-20250514"
+    model_critic: str = "anthropic/claude-sonnet-4-6-20250514"
+    model_judge: str = "anthropic/claude-opus-4-6-20250514"
 
     temperature_analysis: float = 0.1
     temperature_narrative: float = 0.7
@@ -244,6 +244,7 @@ class Settings(BaseSettings):
     data_api_seoul_open_data_key: Optional[str] = None
     data_api_small_biz_key: Optional[str] = None
     data_api_public_data_key: Optional[str] = None
+    data_api_kosis_key: Optional[str] = None
     data_api_naver_client_id: Optional[str] = None
     data_api_naver_client_secret: Optional[str] = None
     data_api_naver_datalab_key: Optional[str] = None

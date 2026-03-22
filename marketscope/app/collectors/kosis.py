@@ -126,10 +126,106 @@ class KosisCollector(BaseCollector):
             )
             raise
 
+    async def collect_worker_population(
+        self,
+        region_code: str,
+        year: int,
+        district_id: int,
+    ) -> dict[str, Any]:
+        """직장인구(종사자수) 수집 — 사업체조사 (DT_1K52B01).
+
+        Args:
+            region_code: 행정구역코드 (예: "1168000000" = 강남구)
+            year: 기준년도
+            district_id: districts 테이블 FK
+        """
+        t0 = time.monotonic()
+        endpoint = "DT_1K52B01"
+
+        params = {
+            "method": "getList",
+            "apiKey": self.api_key,
+            "itmId": "T1+",  # 종사자수
+            "objL1": region_code,
+            "objL2": "ALL",
+            "format": "json",
+            "jsonVD": "Y",
+            "prdSe": "Y",
+            "startPrdDe": str(year),
+            "endPrdDe": str(year),
+            "orgId": "101",
+            "tblId": "DT_1K52B01",
+        }
+
+        try:
+            data = await self._call_api_with_retry("GET", self.BASE_URL, params=params)
+
+            if not isinstance(data, list) or len(data) == 0:
+                await self._log_collection(
+                    endpoint, {"region_code": region_code, "year": year},
+                    status="partial", records_fetched=0,
+                )
+                return {"status": "no_data", "count": 0}
+
+            # 종사자수 파싱 — ITM_ID: T1=종사자수
+            total_workers = None
+            male_workers = None
+            female_workers = None
+
+            for item in data:
+                itm_id = item.get("ITM_ID", "")
+                itm_nm = item.get("ITM_NM", "")
+                value = _safe_int(item.get("DT"))
+
+                if itm_id == "T1" or "종사자" in itm_nm:
+                    if "남" in itm_nm:
+                        male_workers = value
+                    elif "여" in itm_nm:
+                        female_workers = value
+                    elif total_workers is None:
+                        total_workers = value
+
+            if female_workers is None and total_workers and male_workers:
+                female_workers = total_workers - male_workers
+
+            values = dict(
+                district_id=district_id,
+                stat_type="worker",
+                year=year,
+                total_population=total_workers,
+                male_population=male_workers,
+                female_population=female_workers,
+                data_source="KOSIS",
+                raw_data=data[:5] if len(data) > 5 else data,
+            )
+            stmt = pg_insert(PopulationStat).values(**values).on_conflict_do_update(
+                constraint="uq_population_period",
+                set_={k: v for k, v in values.items() if k not in ("district_id", "stat_type", "year", "quarter", "month", "date")},
+            )
+            await self.session.execute(stmt)
+
+            elapsed = int((time.monotonic() - t0) * 1000)
+            await self._log_collection(
+                endpoint, {"region_code": region_code, "year": year},
+                records_fetched=len(data), records_inserted=1,
+                duration_ms=elapsed,
+            )
+            return {"status": "success", "fetched": len(data), "inserted": 1}
+
+        except Exception as e:
+            elapsed = int((time.monotonic() - t0) * 1000)
+            await self._log_collection(
+                endpoint, {"region_code": region_code, "year": year},
+                status="failed", error_message=str(e), duration_ms=elapsed,
+            )
+            raise
+
     async def collect(self, **kwargs) -> dict[str, Any]:
         collect_type = kwargs.pop("collect_type", "resident_population")
         if collect_type == "resident_population":
             return await self.collect_resident_population(**kwargs)
+        elif collect_type == "worker_population":
+            return await self.collect_worker_population(**kwargs)
         raise ValueError(f"Unknown collect_type: {collect_type}")
 
 

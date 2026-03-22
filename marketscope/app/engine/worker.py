@@ -105,6 +105,11 @@ async def main() -> None:
 
     logger.info("MarketScope Engine Worker 초기화 중...")
 
+    # Prometheus metrics HTTP 서버 (엔진 프로세스의 메트릭 노출)
+    from prometheus_client import start_http_server
+    start_http_server(9100)
+    logger.info("Prometheus metrics 서버 시작: port=9100")
+
     # MCP Router 초기화 (에이전트가 사용)
     from app.graph.nodes import _get_mcp_router
     _get_mcp_router()
