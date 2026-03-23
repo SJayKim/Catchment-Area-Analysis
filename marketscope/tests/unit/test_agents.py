@@ -5,16 +5,16 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.agents.base import BaseAgent
-from app.exceptions import LLMCallError, MCPToolCallError
-from app.llm.provider import LLMResponse
+from marketscope_agent.agents.base import BaseAgent
+from marketscope_common.exceptions import LLMCallError, MCPToolCallError
+from marketscope_agent.llm.provider import LLMResponse
 
 
 @pytest.mark.asyncio
 class TestBaseAgentCallTool:
     async def test_call_tool_success(self, mock_settings, mock_mcp_client):
         """MCP 도구 호출 성공 케이스."""
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         agent = PopulationAgent(
             settings=mock_settings,
@@ -26,7 +26,7 @@ class TestBaseAgentCallTool:
 
     async def test_call_tool_no_client_returns_empty(self, mock_settings):
         """MCP 클라이언트 없을 때 빈 dict 반환."""
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         agent = PopulationAgent(settings=mock_settings, mcp_client=None)
         result = await agent.call_tool("maps.geocode", {"address": "강남역"})
@@ -34,7 +34,7 @@ class TestBaseAgentCallTool:
 
     async def test_call_tool_timeout(self, mock_settings, mock_mcp_client):
         """MCP 타임아웃 시 MCPToolCallError."""
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         mock_mcp_client.call_tool = AsyncMock(side_effect=asyncio.TimeoutError)
         agent = PopulationAgent(
@@ -46,7 +46,7 @@ class TestBaseAgentCallTool:
 
     async def test_call_tool_exception(self, mock_settings, mock_mcp_client):
         """MCP 일반 에러 시 MCPToolCallError."""
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         mock_mcp_client.call_tool = AsyncMock(side_effect=ConnectionError("refused"))
         agent = PopulationAgent(
@@ -61,7 +61,7 @@ class TestBaseAgentCallTool:
 class TestBaseAgentCallLLM:
     async def test_call_llm_success(self, mock_settings, mock_llm_provider):
         """LLM 호출 성공 케이스."""
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         agent = PopulationAgent(
             settings=mock_settings,
@@ -78,7 +78,7 @@ class TestBaseAgentCallLLM:
 
     async def test_call_llm_retry_on_failure(self, mock_settings):
         """LLM 첫 호출 실패 → 재시도 → 성공."""
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         provider = AsyncMock()
         provider.completion = AsyncMock(
@@ -108,7 +108,7 @@ class TestBaseAgentCallLLM:
 
     async def test_call_llm_all_retries_fail(self, mock_settings):
         """LLM 모든 재시도 실패 → LLMCallError."""
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         provider = AsyncMock()
         provider.completion = AsyncMock(side_effect=Exception("persistent error"))
@@ -130,7 +130,7 @@ class TestBaseAgentCallLLM:
 class TestBaseAgentCallToolsParallel:
     async def test_parallel_success(self, mock_settings, mock_mcp_client):
         """병렬 도구 호출 성공."""
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         call_count = 0
 
@@ -154,7 +154,7 @@ class TestBaseAgentCallToolsParallel:
 
     async def test_parallel_partial_failure(self, mock_settings, mock_mcp_client):
         """병렬 호출 중 일부 실패 → 에러 dict 포함."""
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         call_idx = 0
 
@@ -183,7 +183,7 @@ class TestBaseAgentCallToolsParallel:
 
 class TestConfidenceCalculation:
     def test_perfect_scores(self, mock_settings):
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         agent = PopulationAgent(settings=mock_settings, mcp_client=None)
         score = agent.calculate_confidence(
@@ -195,7 +195,7 @@ class TestConfidenceCalculation:
         assert score == 1.0
 
     def test_zero_scores(self, mock_settings):
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         agent = PopulationAgent(settings=mock_settings, mcp_client=None)
         score = agent.calculate_confidence(
@@ -207,7 +207,7 @@ class TestConfidenceCalculation:
         assert score == 0.0
 
     def test_clamped_to_range(self, mock_settings):
-        from app.agents.population import PopulationAgent
+        from marketscope_agent.agents.population import PopulationAgent
 
         agent = PopulationAgent(settings=mock_settings, mcp_client=None)
         score = agent.calculate_confidence(

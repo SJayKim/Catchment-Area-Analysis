@@ -6,7 +6,7 @@ import pytest
 @pytest.mark.asyncio
 class TestFinanceTools:
     async def test_calculate_loan_repayment_basic(self):
-        from app.mcp_servers.finance.tools import calculate_loan_repayment
+        from marketscope_mcp.finance.tools import calculate_loan_repayment
 
         result = await calculate_loan_repayment(
             {"principal": 100000000, "annual_rate": 5.0, "term_months": 12},
@@ -22,7 +22,7 @@ class TestFinanceTools:
         assert result["schedule_total_months"] == 12
 
     async def test_calculate_loan_repayment_schedule_sum(self):
-        from app.mcp_servers.finance.tools import calculate_loan_repayment
+        from marketscope_mcp.finance.tools import calculate_loan_repayment
 
         result = await calculate_loan_repayment(
             {"principal": 50000000, "annual_rate": 4.0, "term_months": 6},
@@ -33,7 +33,7 @@ class TestFinanceTools:
         assert schedule[-1]["remaining_balance"] == 0
 
     async def test_calculate_loan_repayment_invalid_params(self):
-        from app.mcp_servers.finance.tools import calculate_loan_repayment
+        from marketscope_mcp.finance.tools import calculate_loan_repayment
 
         result = await calculate_loan_repayment(
             {"principal": 0, "annual_rate": 5.0, "term_months": 12},
@@ -42,7 +42,7 @@ class TestFinanceTools:
         assert "error" in result
 
     async def test_get_minimum_wage_2026(self):
-        from app.mcp_servers.finance.tools import get_minimum_wage
+        from marketscope_mcp.finance.tools import get_minimum_wage
 
         result = await get_minimum_wage({"year": 2026}, client=None)
         assert result["year"] == 2026
@@ -51,14 +51,14 @@ class TestFinanceTools:
         assert result["weekly_hours"] == 40
 
     async def test_get_minimum_wage_fallback(self):
-        from app.mcp_servers.finance.tools import get_minimum_wage
+        from marketscope_mcp.finance.tools import get_minimum_wage
 
         # 먼 미래 연도 → 가장 가까운 과거 데이터로 폴백
         result = await get_minimum_wage({"year": 2050}, client=None)
         assert result["hourly_wage"] > 0
 
     async def test_get_insurance_rates(self):
-        from app.mcp_servers.finance.tools import get_insurance_rates
+        from marketscope_mcp.finance.tools import get_insurance_rates
 
         result = await get_insurance_rates({}, client=None)
         assert "insurance_rates" in result
@@ -69,7 +69,7 @@ class TestFinanceTools:
 @pytest.mark.asyncio
 class TestDatabaseTools:
     async def test_execute_spatial_query_blocks_delete(self):
-        from app.mcp_servers.database.tools import execute_spatial_query
+        from marketscope_mcp.database.tools import execute_spatial_query
 
         result = await execute_spatial_query(
             {"query": "DELETE FROM stores WHERE id = 1"}, client=None
@@ -78,7 +78,7 @@ class TestDatabaseTools:
         assert "SELECT" in result["error"] or "DELETE" in result["error"]
 
     async def test_execute_spatial_query_blocks_drop(self):
-        from app.mcp_servers.database.tools import execute_spatial_query
+        from marketscope_mcp.database.tools import execute_spatial_query
 
         result = await execute_spatial_query(
             {"query": "DROP TABLE stores"}, client=None
@@ -86,7 +86,7 @@ class TestDatabaseTools:
         assert "error" in result
 
     async def test_execute_spatial_query_blocks_insert(self):
-        from app.mcp_servers.database.tools import execute_spatial_query
+        from marketscope_mcp.database.tools import execute_spatial_query
 
         result = await execute_spatial_query(
             {"query": "INSERT INTO stores VALUES (1, 'test')"}, client=None
@@ -94,7 +94,7 @@ class TestDatabaseTools:
         assert "error" in result
 
     async def test_execute_spatial_query_blocks_update(self):
-        from app.mcp_servers.database.tools import execute_spatial_query
+        from marketscope_mcp.database.tools import execute_spatial_query
 
         result = await execute_spatial_query(
             {"query": "UPDATE stores SET name='hack'"}, client=None
@@ -102,13 +102,13 @@ class TestDatabaseTools:
         assert "error" in result
 
     async def test_execute_spatial_query_empty(self):
-        from app.mcp_servers.database.tools import execute_spatial_query
+        from marketscope_mcp.database.tools import execute_spatial_query
 
         result = await execute_spatial_query({"query": ""}, client=None)
         assert "error" in result
 
     async def test_execute_spatial_query_blocks_truncate(self):
-        from app.mcp_servers.database.tools import execute_spatial_query
+        from marketscope_mcp.database.tools import execute_spatial_query
 
         result = await execute_spatial_query(
             {"query": "TRUNCATE stores"}, client=None
@@ -116,7 +116,7 @@ class TestDatabaseTools:
         assert "error" in result
 
     async def test_execute_spatial_query_blocks_grant(self):
-        from app.mcp_servers.database.tools import execute_spatial_query
+        from marketscope_mcp.database.tools import execute_spatial_query
 
         result = await execute_spatial_query(
             {"query": "GRANT ALL ON stores TO public"}, client=None
@@ -124,7 +124,7 @@ class TestDatabaseTools:
         assert "error" in result
 
     async def test_execute_spatial_query_blocks_injection_in_select(self):
-        from app.mcp_servers.database.tools import execute_spatial_query
+        from marketscope_mcp.database.tools import execute_spatial_query
 
         result = await execute_spatial_query(
             {"query": "SELECT * FROM stores; DROP TABLE stores;--"},

@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.tools.mcp_client import MCPClientRouter
+from marketscope_agent.tools.mcp_client import MCPClientRouter
 
 
 class TestResolveServer:
@@ -88,6 +88,6 @@ class TestGetClient:
 
     def test_unknown_server_raises(self, mock_settings):
         router = MCPClientRouter(mock_settings)
-        from app.tools.mcp_client import MCPClientError
+        from marketscope_agent.tools.mcp_client import MCPClientError
         with pytest.raises(MCPClientError):
             router._get_client("nonexistent_server")

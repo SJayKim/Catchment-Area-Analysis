@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.graph.nodes import debate_check_node, user_input_node
+from marketscope_agent.graph.nodes import debate_check_node, user_input_node
 
 
 @pytest.mark.asyncio

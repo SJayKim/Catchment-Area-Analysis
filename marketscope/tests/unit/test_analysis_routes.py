@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.api.routes.analysis import _broker, init_broker, close_broker
+from marketscope_api.routes.analysis import _broker, init_broker, close_broker
 
 
 @pytest.fixture
@@ -27,12 +27,12 @@ def mock_broker():
 @pytest.fixture
 def app_with_broker(mock_broker):
     """RedisBroker를 주입한 FastAPI app."""
-    import app.api.routes.analysis as analysis_module
+    import marketscope_api.routes.analysis as analysis_module
     # broker를 직접 주입
     original = analysis_module._broker
     analysis_module._broker = mock_broker
 
-    from app.main import create_app
+    from marketscope_api.main import create_app
     test_app = create_app()
 
     yield test_app

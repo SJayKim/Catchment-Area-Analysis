@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "marketscope-api"
+version = "0.1.0"
+description = "MarketScope AI API — FastAPI REST 서비스"
+requires-python = ">=3.11"
+dependencies = [
+    "marketscope-common",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "prometheus-client>=0.20.0",
+    "sse-starlette>=2.0.0",
+]
+
+[project.scripts]
+marketscope-api = "marketscope_api.main:create_app"

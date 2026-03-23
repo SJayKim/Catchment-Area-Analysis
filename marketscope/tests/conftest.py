@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.config import Settings
-from app.models.state import create_initial_state
+from marketscope_common.config import Settings
+from marketscope_common.models.state import create_initial_state
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def mock_mcp_client():
 @pytest.fixture
 def mock_llm_provider():
     """LLM Provider AsyncMock."""
-    from app.llm.provider import LLMResponse
+    from marketscope_agent.llm.provider import LLMResponse
 
     provider = AsyncMock()
     provider.completion = AsyncMock(

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.engine.redis_broker import (
+from marketscope_common.broker.redis_broker import (
     CONSUMER_GROUP,
     PROGRESS_CHANNEL_PREFIX,
     RESULT_KEY_PREFIX,

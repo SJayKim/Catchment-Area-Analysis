@@ -44,7 +44,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-api
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn marketscope_api.main:app --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
     env_file: .env
@@ -71,7 +71,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-engine
-    command: python -m app.engine
+    command: python -m marketscope_agent.engine
     ports:
       - "9100:9100"
     env_file: .env
@@ -92,7 +92,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-pipeline
-    command: python -m app.pipeline
+    command: python -m marketscope_pipeline
     env_file: .env
     environment:
       POSTGRES_HOST: postgres
@@ -112,7 +112,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-public-data
-    command: uvicorn app.mcp_servers.public_data.server:app --host 0.0.0.0 --port 5100
+    command: uvicorn marketscope_mcp.public_data.server:app --host 0.0.0.0 --port 5100
     ports:
       - "5100:5100"
     env_file: .env
@@ -129,7 +129,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-maps
-    command: uvicorn app.mcp_servers.maps.server:app --host 0.0.0.0 --port 5101
+    command: uvicorn marketscope_mcp.maps.server:app --host 0.0.0.0 --port 5101
     ports:
       - "5101:5101"
     env_file: .env
@@ -146,7 +146,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-real-estate
-    command: uvicorn app.mcp_servers.real_estate.server:app --host 0.0.0.0 --port 5102
+    command: uvicorn marketscope_mcp.real_estate.server:app --host 0.0.0.0 --port 5102
     ports:
       - "5102:5102"
     env_file: .env
@@ -163,7 +163,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-news
-    command: uvicorn app.mcp_servers.news.server:app --host 0.0.0.0 --port 5103
+    command: uvicorn marketscope_mcp.news.server:app --host 0.0.0.0 --port 5103
     ports:
       - "5103:5103"
     env_file: .env
@@ -180,7 +180,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-regulatory
-    command: uvicorn app.mcp_servers.regulatory.server:app --host 0.0.0.0 --port 5104
+    command: uvicorn marketscope_mcp.regulatory.server:app --host 0.0.0.0 --port 5104
     ports:
       - "5104:5104"
     env_file: .env
@@ -197,7 +197,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-finance
-    command: uvicorn app.mcp_servers.finance.server:app --host 0.0.0.0 --port 5105
+    command: uvicorn marketscope_mcp.finance.server:app --host 0.0.0.0 --port 5105
     ports:
       - "5105:5105"
     env_file: .env
@@ -214,7 +214,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-database
-    command: uvicorn app.mcp_servers.database.server:app --host 0.0.0.0 --port 5106
+    command: uvicorn marketscope_mcp.database.server:app --host 0.0.0.0 --port 5106
     ports:
       - "5106:5106"
     env_file: .env
@@ -237,7 +237,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-google-maps
-    command: uvicorn app.mcp_servers.google_maps.server:app --host 0.0.0.0 --port 5107
+    command: uvicorn marketscope_mcp.google_maps.server:app --host 0.0.0.0 --port 5107
     ports:
       - "5107:5107"
     env_file: .env
@@ -254,7 +254,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marketscope-mcp-naver-maps
-    command: uvicorn app.mcp_servers.naver_maps.server:app --host 0.0.0.0 --port 5108
+    command: uvicorn marketscope_mcp.naver_maps.server:app --host 0.0.0.0 --port 5108
     ports:
       - "5108:5108"
     env_file: .env

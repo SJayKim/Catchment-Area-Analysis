@@ -10,8 +10,8 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from app.config import get_settings
-from app.db.models import Base
+from marketscope_common.config import get_settings
+from marketscope_common.db.models import Base
 
 # Alembic Config object
 config = context.config

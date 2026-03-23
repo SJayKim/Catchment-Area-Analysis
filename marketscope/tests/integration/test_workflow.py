@@ -2,8 +2,8 @@
 
 import pytest
 
-from app.graph.workflow import build_workflow
-from app.models.state import create_initial_state
+from marketscope_agent.graph.workflow import build_workflow
+from marketscope_common.models.state import create_initial_state
 
 
 class TestWorkflowStructure:

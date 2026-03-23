@@ -3,7 +3,7 @@
 from langgraph.graph import END
 from langgraph.types import Send
 
-from app.graph.edges import (
+from marketscope_agent.graph.edges import (
     route_after_debate_check,
     should_continue_after_commander,
     should_run_group2,

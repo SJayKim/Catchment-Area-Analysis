@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.engine.worker import EngineWorker
+from marketscope_agent.engine.worker import EngineWorker
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ class TestEngineWorker:
         """정상 분석 요청 처리 — AnalysisService 호출 + 결과 저장."""
         mock_result = {"score": 90, "grade": "A"}
 
-        with patch("app.services.analysis_service.AnalysisService") as MockService:
+        with patch("marketscope_agent.services.analysis_service.AnalysisService") as MockService:
             mock_service = AsyncMock()
             mock_service.run_analysis = AsyncMock(return_value=mock_result)
             MockService.return_value = mock_service
@@ -65,7 +65,7 @@ class TestEngineWorker:
     @pytest.mark.asyncio
     async def test_process_request_failure(self, worker, mock_broker):
         """분석 실패 시 failed 상태 업데이트."""
-        with patch("app.services.analysis_service.AnalysisService") as MockService:
+        with patch("marketscope_agent.services.analysis_service.AnalysisService") as MockService:
             mock_service = AsyncMock()
             mock_service.run_analysis = AsyncMock(
                 side_effect=RuntimeError("LLM 호출 실패")

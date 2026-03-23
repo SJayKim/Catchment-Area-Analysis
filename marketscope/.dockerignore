@@ -1,9 +1,10 @@
 __pycache__
 *.pyc
+*.pyo
+*.egg-info
 .git
 .env
 .env.local
-*.egg-info
 .ruff_cache
 .pytest_cache
 tests/

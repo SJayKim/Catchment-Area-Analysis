@@ -15,9 +15,9 @@ from pathlib import Path
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from app.config import get_settings
-from app.db.models import CodeMapping, District, UnitPrice, StartupCost
-from app.db.session import get_session_factory
+from marketscope_common.config import get_settings
+from marketscope_common.db.models import CodeMapping, District, UnitPrice, StartupCost
+from marketscope_common.db.session import get_session_factory
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
