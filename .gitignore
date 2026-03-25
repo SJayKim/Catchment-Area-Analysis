@@ -13,3 +13,15 @@ build/
 .env.local
 .env.backup
 !.env.example
+
+# Node
+node_modules/
+.next/
+
+# Docker
+pgdata/
+
+# IDE
+.idea/
+.vscode/
+*.swp
