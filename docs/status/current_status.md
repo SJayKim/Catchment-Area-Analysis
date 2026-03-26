@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-03-25 (E2E 테스트 완료 후)
-> **Phase 1A: Mock E2E — 백엔드 파이프라인 검증 완료, 프론트엔드 통합 테스트 필요**
+> 최종 갱신: 2026-03-26 (브라우저 E2E 테스트 — 카카오맵 로딩 이슈 디버깅 중)
+> **Phase 1A: Mock E2E — 백엔드 완료, 프론트엔드 카카오맵 로딩 이슈 해결 중**
 
 ---
 
@@ -44,30 +44,64 @@
 #### 백엔드 E2E 검증 ✅ (2026-03-25)
 - [x] API 엔드포인트 정상: /health, /api/districts, /api/map-data/polygons, /api/chat
 - [x] Agent ReAct Loop: 질문 유형별 Tool 선택 → 실행 → 결과 종합 → 응답 생성
-- [x] SSE 스트리밍: thinking → tool → text → suggestion → done 흐름 정상
+- [x] SSE 스트리밍: thinking → tool → text → card → suggestion → done 흐름 정상
 - [x] TEST 1 — 강남역 종합분석: 4 Tools 호출, 1,177자 응답 (7.5s)
 - [x] TEST 2 — 홍대 vs 건대 비교: compare_districts 정상, 상권코드 정확 매핑
 - [x] TEST 3 — 명동 업종추천+리스크: 2 Tools 조합, 면책 안내 포함
 
-#### 버그 수정 (2026-03-25)
-- [x] config.py: `.env` 경로를 프로젝트 루트 절대경로로 수정 (상대경로 → `Path(__file__).parents[2]`)
+#### 프론트엔드 통합 테스트 ✅ (2026-03-26)
+- [x] 프론트엔드+백엔드 동시 기동 (localhost:3000 + localhost:8000)
+- [x] Next.js API rewrite 프록시 정상 동작 (/api/* → backend)
+- [x] 프론트엔드 TypeScript 빌드 성공 (에러 0건)
+- [x] SSE 스트리밍: 프록시 통해 thinking → tool → text → card → suggestion → done 정상
+- [x] compare/recommend/risk Card 이벤트 SSE 전달 확인
+
+#### 버그 수정 — 백엔드 (2026-03-25~26)
+- [x] config.py: `.env` 경로를 프로젝트 루트 절대경로로 수정
 - [x] config.py: `extra="ignore"` 추가 (프론트 전용 env 변수 ValidationError 해결)
 - [x] system.py: 시스템 프롬프트에 상권코드 목록 명시 (Agent 코드 추측 방지)
 - [x] graph.py: `LLM_PROVIDER` 설정으로 Gemini/Anthropic 동적 전환 지원
+- [x] graph.py: `on_tool_end` 이벤트 캡처하여 card SSE 이벤트 emit 추가 (compare/recommend/risk)
+- [x] chat.py: 상권 코드 제공 시 `map_cmd` 이벤트 emit 추가 (채팅→지도 위치 연동)
 
-### 남은 작업 (Phase 1A 완료 조건)
+#### 버그 수정 — 프론트엔드 (2026-03-26)
+- [x] api.ts `fetchPolygons`: GeoJSON FeatureCollection → PolygonFeature[] 변환 추가
+- [x] api.ts `fetchPolygons`: 백엔드 `bounds` 파라미터 형식에 맞게 쿼리스트링 수정
+- [x] api.ts `fetchDistricts`: 백엔드 응답 `{total, items}` → `District[]` 변환 + 필드명 매핑 추가
+- [x] CompareCard.tsx: `districtNames` 없을 때 `district_name` 필드에서 이름 가져오도록 수정
+- [x] RecommendCard.tsx: `startup_cost` 만원 단위 → 원 단위 변환 수정
+- [x] types.ts: `CompareCardData`에 `district_name` 필드 추가 (TS 에러 해결)
+- [x] MapContainer.tsx: React Strict Mode 호환 — `initializedRef` 제거, SDK 재로드 로직 개선
+- [x] MapContainer.tsx: `mapReady` state 추가 → DistrictLayer 조건부 렌더링
+- [x] MapContainer.tsx: Next.js `<Script>` 컴포넌트로 SDK 로딩 방식 전환
+- [x] DistrictLayer.tsx: `renderPolygons`를 `useCallback`으로 래핑, 맵 준비 후에만 마운트
+- [x] frontend/.env.local: Kakao Map API 키 설정
 
-#### 프론트엔드 통합 테스트 (우선순위 높음)
-- [ ] `npm run dev` + 백엔드 동시 기동 → 브라우저에서 전체 흐름 확인
-- [ ] 폴리곤 클릭 → Agent 자동 요약 → SummaryCard 렌더링
-- [ ] 자연어 입력 → SSE 스트리밍 → 채팅 UI 표시
+### 진행 중 🔧
+
+#### 카카오맵 SDK 로딩 이슈 (2026-03-26)
+- **증상**: 지도 영역에 "지도 로딩 중..." 표시, 맵 렌더링 안됨
+- **디버깅 결과**:
+  - `curl`로 SDK URL 접근 시 정상 응답 (200 OK)
+  - 브라우저에서 `<script>` 태그로 로드 시 `onerror` 발생
+  - 프로토콜 `//` → `https://`로 변경 후에도 동일 현상
+  - Next.js `<Script strategy="afterInteractive">` 방식으로 전환 후에도 동일
+- **추정 원인**: 카카오 개발자 콘솔에서 JavaScript 키의 허용 도메인에 `localhost`가 미등록
+  - 카카오 API 키는 등록된 도메인에서만 SDK 로드 허용
+  - https://developers.kakao.com → 내 애플리케이션 → 플랫폼 → Web → 사이트 도메인에 `http://localhost:3000` 추가 필요
+- **대안**: API 키 문제 확인 불가 시, 새 카카오 앱 생성 후 키 재발급 고려
+
+### 남은 작업 (Phase 1A 최종 확인)
+
+#### 카카오맵 로딩 해결 후
+- [ ] 브라우저에서 지도 + 채팅 화면 정상 로드 (Kakao Map 렌더링)
+- [ ] 폴리곤 클릭 → Agent 자동 요약 → 텍스트 응답 렌더링
 - [ ] "홍대랑 비교해줘" → CompareCard 렌더링
 - [ ] "뭐하면 좋을까?" → RecommendCard 렌더링
 - [ ] "이 자리 위험해?" → RiskCard 렌더링
 - [ ] SuggestionChips 클릭 → 추가 질문 동작
-- [ ] CORS 정상 동작 (localhost:3000 → localhost:8000)
 
-#### LLM 전환
+#### LLM 전환 (선택)
 - [ ] Anthropic API 크레딧 충전 후 `LLM_PROVIDER=anthropic`으로 전환 테스트
 - [ ] 현재 Gemini 2.5 Flash로 검증 완료 — Claude 전환 시 응답 품질 비교
 

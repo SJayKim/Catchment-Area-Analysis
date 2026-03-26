@@ -75,7 +75,7 @@ export default function RecommendCard({ data }: RecommendCardProps) {
               {rec.startup_cost && (
                 <p className="text-xs text-gray-500 flex items-start gap-1">
                   <span className="text-gray-300 mt-0.5">└</span>
-                  평균 창업비용 {formatWon(rec.startup_cost)}
+                  평균 창업비용 {formatWon(rec.startup_cost * 10000)}
                 </p>
               )}
             </div>

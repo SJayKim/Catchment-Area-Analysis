@@ -27,6 +27,7 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
     # Resolve district info if code provided
     district_name = "미선택"
     data_quarter = "최신"
+    district_center: dict | None = None
 
     if request.district_code:
         if settings.use_mock:
@@ -35,6 +36,7 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
             if d:
                 district_name = d["name"]
                 data_quarter = d["quarter"]
+                district_center = d.get("center")
         else:
             from sqlalchemy import select
             from server.api.deps import get_db
@@ -52,6 +54,18 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
                     data_quarter = row.data_quarter
 
     async def event_generator():
+        # Emit map_cmd to move map to the district being discussed
+        if district_center:
+            yield {"data": json.dumps({
+                "type": "map_cmd",
+                "action": "move",
+                "params": {
+                    "lat": district_center["lat"],
+                    "lng": district_center["lng"],
+                    "zoom": 5,
+                },
+            }, ensure_ascii=False)}
+
         try:
             async for event in run_agent(
                 message=request.message,

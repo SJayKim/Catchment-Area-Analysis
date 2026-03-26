@@ -235,6 +235,13 @@ async def run_agent(
 
         config = {"recursion_limit": MAX_ITERATIONS * 2 + 1}
 
+        # Map tool names → card types for structured card events
+        _TOOL_CARD_MAP = {
+            "compare_districts_tool": "compare",
+            "recommend_business_tool": "recommend",
+            "get_store_history_tool": "risk",
+        }
+
         async for event in agent.astream_events(input_state, version="v2", config=config):
             kind = event["event"]
 
@@ -253,6 +260,25 @@ async def run_agent(
                 }
                 # Reset so we emit thinking again for the next LLM call
                 thinking_emitted = False
+
+            elif kind == "on_tool_end":
+                tool_name = event.get("name", "")
+                card_type = _TOOL_CARD_MAP.get(tool_name)
+                if card_type:
+                    raw = event.get("data", {}).get("output", "")
+                    # output is a ToolMessage; get its content
+                    if hasattr(raw, "content"):
+                        raw = raw.content
+                    try:
+                        card_data = json.loads(raw) if isinstance(raw, str) else raw
+                    except (json.JSONDecodeError, TypeError):
+                        card_data = {}
+                    if card_data:
+                        yield {
+                            "type": "card",
+                            "card_type": card_type,
+                            "data": card_data,
+                        }
 
             elif kind == "on_chat_model_stream":
                 chunk = event.get("data", {}).get("chunk")

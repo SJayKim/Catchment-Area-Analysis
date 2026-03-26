@@ -47,7 +47,16 @@
       "Bash(findstr \":8000\")",
       "Bash(python -u -c \":*)",
       "Bash(findstr LISTENING)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(find /c/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/server/server -type f -name *.py)",
+      "Bash(curl -s http://localhost:8000/api/districts)",
+      "Bash(curl -s \"http://localhost:8000/api/map-data/polygons\")",
+      "Bash(curl -s -N -X POST http://localhost:8000/api/chat -H \"Content-Type: application/json\" -d '{\"\"\"\"message\"\"\"\":\"\"\"\"강남역 상권 요약해줘\"\"\"\",\"\"\"\"district_code\"\"\"\":\"\"\"\"D3001\"\"\"\"}' --max-time 30)",
+      "Bash(curl:*)",
+      "Bash(ls \"C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/frontend/.env\"*)",
+      "Bash(ls \"C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/.env\"*)",
+      "Bash(npx tsc:*)",
+      "Bash(wmic process:*)"
     ]
   }
 }

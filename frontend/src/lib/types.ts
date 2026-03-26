@@ -35,6 +35,7 @@ export interface SummaryCardData {
 export interface CompareCardData {
   districts: Record<string, {
     district_code: string;
+    district_name?: string;
     floating_pop: number;
     main_age: string;
     store_count: number;

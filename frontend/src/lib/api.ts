@@ -17,7 +17,18 @@ export async function fetchDistricts(
   if (!res.ok) {
     throw new Error(`Failed to fetch districts: ${res.status}`);
   }
-  return res.json();
+
+  const data = await res.json();
+  const items = data.items || data;
+
+  // Transform backend response → District[]
+  return items.map((item: Record<string, any>) => ({
+    code: item.district_code,
+    name: item.district_name,
+    type: item.district_type,
+    center: { lat: item.center_lat, lng: item.center_lng },
+    dataQuarter: item.data_quarter,
+  }));
 }
 
 export async function fetchDistrictDetail(code: string): Promise<District> {
@@ -29,18 +40,26 @@ export async function fetchDistrictDetail(code: string): Promise<District> {
 }
 
 export async function fetchPolygons(bounds: MapBounds): Promise<PolygonFeature[]> {
-  const params = new URLSearchParams({
-    sw_lat: bounds.sw_lat.toString(),
-    sw_lng: bounds.sw_lng.toString(),
-    ne_lat: bounds.ne_lat.toString(),
-    ne_lng: bounds.ne_lng.toString(),
-  });
+  const boundsStr = `${bounds.sw_lat},${bounds.sw_lng},${bounds.ne_lat},${bounds.ne_lng}`;
+  const params = new URLSearchParams({ bounds: boundsStr });
 
   const res = await fetch(`${API_BASE}/map-data/polygons?${params}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch polygons: ${res.status}`);
   }
-  return res.json();
+
+  const geojson = await res.json();
+
+  // Transform GeoJSON FeatureCollection → PolygonFeature[]
+  return (geojson.features || []).map((f: Record<string, any>) => ({
+    code: f.properties.district_code,
+    name: f.properties.district_name,
+    type: f.properties.district_type,
+    coordinates: f.geometry.coordinates[0], // outer ring
+    center: f.properties.center
+      ? { lat: f.properties.center[1], lng: f.properties.center[0] }
+      : { lat: 0, lng: 0 },
+  }));
 }
 
 export async function sendChatMessage(

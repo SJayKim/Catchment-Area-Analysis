@@ -39,7 +39,9 @@ export default function CompareCard({ data }: CompareCardProps) {
 
   const codes = card.district_codes;
   const districts = codes.map((c) => card.districts[c]).filter(Boolean);
-  const names = codes.map((c) => card.districtNames?.[c] || c);
+  const names = codes.map((c) =>
+    card.districtNames?.[c] || card.districts[c]?.district_name || c
+  );
 
   const metrics = [
     {

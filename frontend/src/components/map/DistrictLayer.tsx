@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, MutableRefObject } from 'react';
+import { useEffect, useRef, useCallback, MutableRefObject } from 'react';
 import { useDistrictStore } from '@/stores/districtStore';
 import { useMapStore } from '@/stores/mapStore';
 import { fetchPolygons } from '@/lib/api';
@@ -16,6 +16,68 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
   const setHovered = useDistrictStore((s) => s.setHovered);
   const selectedCode = useDistrictStore((s) => s.selected?.code);
   const activeLayers = useMapStore((s) => s.activeLayers);
+
+  const renderPolygons = useCallback(
+    (map: any, features: PolygonFeature[]) => {
+      // Clear existing polygons
+      polygonsRef.current.forEach((polygon) => polygon.setMap(null));
+      polygonsRef.current.clear();
+
+      if (!activeLayers.includes('polygon')) return;
+
+      features.forEach((feature) => {
+        const path = feature.coordinates.map(
+          ([lng, lat]: number[]) => new window.kakao.maps.LatLng(lat, lng)
+        );
+
+        const isSelected = feature.code === selectedCode;
+
+        const polygon = new window.kakao.maps.Polygon({
+          map,
+          path,
+          strokeWeight: isSelected ? 3 : 1,
+          strokeColor: isSelected ? '#2563eb' : '#3b82f6',
+          strokeOpacity: 0.8,
+          fillColor: isSelected ? '#3b82f6' : '#60a5fa',
+          fillOpacity: isSelected ? 0.4 : 0.15,
+        });
+
+        // Hover effects
+        window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
+          if (feature.code !== selectedCode) {
+            polygon.setOptions({
+              fillOpacity: 0.3,
+              strokeWeight: 2,
+            });
+          }
+          setHovered(feature.code);
+        });
+
+        window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
+          if (feature.code !== selectedCode) {
+            polygon.setOptions({
+              fillOpacity: 0.15,
+              strokeWeight: 1,
+            });
+          }
+          setHovered(null);
+        });
+
+        // Click to select
+        window.kakao.maps.event.addListener(polygon, 'click', () => {
+          select({
+            code: feature.code,
+            name: feature.name,
+            type: feature.type,
+            center: feature.center,
+          });
+        });
+
+        polygonsRef.current.set(feature.code, polygon);
+      });
+    },
+    [activeLayers, selectedCode, select, setHovered]
+  );
 
   useEffect(() => {
     const map = mapInstance.current;
@@ -49,67 +111,11 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
       if (map && window.kakao) {
         window.kakao.maps.event.removeListener(map, 'idle', loadPolygons);
       }
+      // Clean up polygons on unmount
+      polygonsRef.current.forEach((polygon) => polygon.setMap(null));
+      polygonsRef.current.clear();
     };
-  }, [mapInstance.current]);
-
-  const renderPolygons = (map: any, features: PolygonFeature[]) => {
-    // Clear existing polygons
-    polygonsRef.current.forEach((polygon) => polygon.setMap(null));
-    polygonsRef.current.clear();
-
-    if (!activeLayers.includes('polygon')) return;
-
-    features.forEach((feature) => {
-      const path = feature.coordinates.map(
-        ([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)
-      );
-
-      const isSelected = feature.code === selectedCode;
-
-      const polygon = new window.kakao.maps.Polygon({
-        map,
-        path,
-        strokeWeight: isSelected ? 3 : 1,
-        strokeColor: isSelected ? '#2563eb' : '#3b82f6',
-        strokeOpacity: 0.8,
-        fillColor: isSelected ? '#3b82f6' : '#60a5fa',
-        fillOpacity: isSelected ? 0.4 : 0.15,
-      });
-
-      // Hover effects
-      window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
-        if (feature.code !== selectedCode) {
-          polygon.setOptions({
-            fillOpacity: 0.3,
-            strokeWeight: 2,
-          });
-        }
-        setHovered(feature.code);
-      });
-
-      window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
-        if (feature.code !== selectedCode) {
-          polygon.setOptions({
-            fillOpacity: 0.15,
-            strokeWeight: 1,
-          });
-        }
-        setHovered(null);
-      });
-
-      // Click to select
-      window.kakao.maps.event.addListener(polygon, 'click', () => {
-        select({
-          code: feature.code,
-          name: feature.name,
-          type: feature.type,
-          center: feature.center,
-        });
-      });
-
-      polygonsRef.current.set(feature.code, polygon);
-    });
-  };
+  }, [renderPolygons]);
 
   return null; // This component only manages map overlays
 }
