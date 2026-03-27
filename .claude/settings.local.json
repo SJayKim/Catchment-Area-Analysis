@@ -56,7 +56,21 @@
       "Bash(ls \"C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/frontend/.env\"*)",
       "Bash(ls \"C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/.env\"*)",
       "Bash(npx tsc:*)",
-      "Bash(wmic process:*)"
+      "Bash(wmic process:*)",
+      "Bash(npx @anthropic-ai/claude-code@latest --version)",
+      "Bash(npx:*)",
+      "Bash(claude mcp:*)",
+      "Bash(grep -E \"\\\\.py$|config\")",
+      "Bash(xargs cat:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click"
     ]
   }
 }

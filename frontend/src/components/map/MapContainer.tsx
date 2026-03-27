@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import Script from 'next/script';
 import { useMapStore } from '@/stores/mapStore';
 import DistrictLayer from './DistrictLayer';
 import MapControls from './MapControls';
@@ -12,8 +11,6 @@ declare global {
   }
 }
 
-const KAKAO_SDK_URL = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`;
-
 export default function MapContainer() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -21,7 +18,59 @@ export default function MapContainer() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const { center, zoom, setCenter, setZoom } = useMapStore();
 
-  const initMap = useCallback(() => {
+  // 동적 스크립트 로딩 → kakao.maps.load() → initMap
+  useEffect(() => {
+    // 이미 SDK가 로드된 경우
+    if (window.kakao?.maps?.load) {
+      console.log('[KakaoMap] SDK already loaded, calling maps.load()');
+      window.kakao.maps.load(() => initMap());
+      return;
+    }
+
+    // 프록시를 통해 SDK를 fetch → 실행 (외부 도메인 차단 우회)
+    // SDK 내부에서 script[src] 매칭으로 appkey를 추출하므로,
+    // 먼저 더미 script 태그를 삽입해 appkey를 제공한 뒤 SDK를 eval
+    console.log('[KakaoMap] Fetching SDK via proxy...');
+
+    // 1) SDK가 appkey를 찾을 수 있도록 더미 script src 삽입
+    const dummy = document.createElement('script');
+    dummy.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`;
+    dummy.type = 'text/placeholder'; // 실제 로드하지 않음
+    document.head.appendChild(dummy);
+
+    // 2) 프록시로 SDK 코드를 가져와 실행
+    fetch('/api/kakao-sdk')
+      .then((res) => {
+        if (!res.ok) throw new Error(`SDK proxy returned ${res.status}`);
+        return res.text();
+      })
+      .then((sdkCode) => {
+        const script = document.createElement('script');
+        script.textContent = sdkCode;
+        document.head.appendChild(script);
+        console.log('[KakaoMap] SDK injected via proxy');
+
+        if (window.kakao?.maps?.load) {
+          window.kakao.maps.load(() => {
+            console.log('[KakaoMap] maps.load callback fired');
+            initMap();
+          });
+        } else {
+          console.error('[KakaoMap] SDK loaded but kakao.maps.load not found');
+          setLoadError('카카오맵 SDK 초기화 실패. 페이지를 새로고침해주세요.');
+        }
+      })
+      .catch((err) => {
+        console.error('[KakaoMap] SDK load failed:', err);
+        setLoadError('카카오맵 SDK를 불러올 수 없습니다. 네트워크를 확인해주세요.');
+      });
+
+    return () => {
+      if (dummy.parentNode) dummy.parentNode.removeChild(dummy);
+    };
+  }, []);
+
+  function initMap() {
     if (!mapRef.current || mapInstanceRef.current) return;
 
     try {
@@ -32,6 +81,7 @@ export default function MapContainer() {
 
       mapInstanceRef.current = map;
       setMapReady(true);
+      console.log('[KakaoMap] Map initialized successfully');
 
       window.kakao.maps.event.addListener(map, 'center_changed', () => {
         const latlng = map.getCenter();
@@ -45,23 +95,7 @@ export default function MapContainer() {
       console.error('[KakaoMap] init error:', e);
       setLoadError(`지도 초기화 실패: ${e}`);
     }
-  }, []);
-
-  // Called when Next.js <Script> finishes loading
-  const handleScriptLoad = useCallback(() => {
-    console.log('[KakaoMap] Script onReady fired');
-    if (window.kakao?.maps?.load) {
-      window.kakao.maps.load(() => {
-        console.log('[KakaoMap] maps.load callback');
-        initMap();
-      });
-    }
-  }, [initMap]);
-
-  const handleScriptError = useCallback(() => {
-    console.error('[KakaoMap] Script load failed');
-    setLoadError('카카오맵 SDK 로드 실패. API 키 또는 네트워크를 확인하세요.');
-  }, []);
+  }
 
   // Sync store → map: center
   useEffect(() => {
@@ -96,13 +130,6 @@ export default function MapContainer() {
 
   return (
     <div className="relative w-full h-full">
-      <Script
-        src={KAKAO_SDK_URL}
-        strategy="afterInteractive"
-        onReady={handleScriptLoad}
-        onError={handleScriptError}
-      />
-
       <div ref={mapRef} className="w-full h-full" />
 
       {/* 로딩 상태 */}

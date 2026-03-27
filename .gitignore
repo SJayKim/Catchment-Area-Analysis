@@ -25,3 +25,9 @@ pgdata/
 .idea/
 .vscode/
 *.swp
+
+# Playwright MCP logs
+.playwright-mcp/*.log
+
+# Screenshots (temp)
+map-loaded.png
