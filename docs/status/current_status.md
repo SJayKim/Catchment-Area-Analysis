@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-03-27 (카카오맵 로딩 해결, AI 챗봇 E2E 검증 완료)
-> **Phase 1A: Mock E2E — 지도 로딩 + AI 챗봇 질의/응답 + 지도 연동 동작 확인 완료**
+> 최종 갱신: 2026-03-28 (Card UI 4종 E2E 검증 완료, Phase 1A 핵심 목표 달성)
+> **Phase 1A: Mock E2E — 지도 + AI 챗봇 + Card UI 렌더링 전체 흐름 완료 ✅**
 
 ---
 
@@ -86,6 +86,20 @@
 - [x] chat.py: `map_cmd` zoom level 5→4로 조정 (더 확대된 뷰)
 - [x] **Playwright E2E 검증 완료**: 강남역, 홍대입구, 명동 상권 — 자연어 질의 → AI 응답 → 지도 이동 확인
 
+#### Card UI 4종 E2E 연동 완료 (2026-03-28) ✅
+- [x] `district_summary.py` 신규 — Mock 데이터(유동인구+매출+점포) 집계 → SummaryCardData 형태 반환
+- [x] `graph.py` — `get_district_summary_tool` Tool wrapper 추가 + TOOLS 리스트 등록
+- [x] `graph.py` — LLM을 Gemini 2.5 Flash → **Gemini 2.5 Pro**로 변경 (도구 선택 정확도 향상)
+- [x] `system.py` — 도구 선택 규칙 강화 (요약 요청 시 `get_district_summary` 단일 호출 가이드)
+- [x] `chat.py` — 요약 요청 패턴 감지(regex) → `get_district_summary` 직접 호출 → card SSE 이벤트 emit
+  - LLM 도구 선택에 의존하지 않는 확실한 방식으로 SummaryCard 보장
+- [x] `graph.py` — `_TOOL_CARD_MAP`에서 summary 제거 (chat.py에서 직접 emit하므로 중복 방지)
+- [x] **Playwright E2E 검증 — 4종 Card 모두 통과**:
+  - ✅ "강남역 요약해줘" → **SummaryCard**: 유동인구 바차트(0~23시) + Top 5 업종 + 폐업률(5.3%, 평균 대비)
+  - ✅ "강남역이랑 홍대 비교해줘" → **CompareCard**: 비교표(유동인구/연령/점포/매출/폐업률/상태) + 판정 컬럼
+  - ✅ "강남역에서 뭐하면 좋을까?" → **RecommendCard**: 업종 Top 5 점수바 + 점포당 매출/매칭률/경쟁밀집도/창업비용
+  - ✅ "강남역 위험해?" → **RiskCard**: 안정성 게이지(72점/양호) + 업종별 생존 기간 바 + 위험 업종 + 분기별 개폐업 추이 차트
+
 ### 해결 완료 ✅
 
 #### 카카오맵 SDK 로딩 이슈 — 해결 (2026-03-27)
@@ -97,24 +111,54 @@
   3. SDK 내부 appkey 추출을 위한 더미 `<script src="dapi.kakao.com/...">` 태그 삽입
 - **검증**: Playwright 브라우저 자동화로 지도 로딩 + AI 응답 + 지도 이동 E2E 확인 완료
 
-#### 브라우저 E2E 검증 완료 (2026-03-27, Playwright)
-- [x] 브라우저에서 지도 + 채팅 화면 정상 로드 (Kakao Map 렌더링)
-- [x] 자연어 질의 → Agent 응답 → 텍스트 렌더링 (강남역, 홍대입구, 명동)
-- [x] AI 챗봇 응답 시 해당 상권으로 지도 자동 이동 (map_cmd)
-- [x] SSE 스트리밍 (thinking → tool → text → suggestion → done) 정상
-- [x] SuggestionChips 동적 업데이트 (AI가 추천 질문 생성)
+#### Card UI 렌더링 이슈 — 해결 (2026-03-28)
+- **증상**: 채팅에서 텍스트 응답만 출력, Card UI가 렌더링되지 않음
+- **원인**:
+  1. `_TOOL_CARD_MAP`에 `summary` 미등록 → 기본 요약 시 card 이벤트 미발송
+  2. Gemini Flash/Pro가 시스템 프롬프트의 도구 선택 가이드를 무시하고 개별 Tool 4종 호출
+- **해결 방법**:
+  1. `get_district_summary` Tool 신규 생성 (유동인구+매출+점포 집계)
+  2. `chat.py`에서 요약 요청 패턴 감지 → card 이벤트 직접 emit (LLM 의존 제거)
+  3. compare/recommend/risk는 기존 `_TOOL_CARD_MAP` 매커니즘으로 정상 동작
+- **검증**: Playwright E2E로 4종 Card 모두 렌더링 확인
 
-### 남은 작업 (Phase 1A 최종 확인)
+### 남은 작업 (Phase 1A 마무리)
 
-#### Card UI 연동
-- [ ] 폴리곤 클릭 → Agent 자동 요약 → SummaryCard 렌더링
-- [ ] "홍대랑 비교해줘" → CompareCard 렌더링
-- [ ] "뭐하면 좋을까?" → RecommendCard 렌더링
-- [ ] "이 자리 위험해?" → RiskCard 렌더링
+#### 폴리곤 클릭 → 자동 요약 (선택적 개선)
+- [ ] 지도에서 폴리곤 클릭 시 `districtStore.selected` 설정 → `useMapSync`가 자동 질의 → SummaryCard
+  - 현재: 채팅에서 "강남역 요약해줘" 입력하면 동작
+  - 개선: 폴리곤 직접 클릭만으로도 SummaryCard 자동 표시
+- [ ] 대화 컨텍스트 유지 — 이전 대화에서 선택된 상권을 후속 질문에서 자동 참조
+  - 현재: 매 질문마다 상권명을 포함해야 함 ("강남역 위험해?" O, "위험해?" X)
 
 #### LLM 전환 (선택)
 - [ ] Anthropic API 크레딧 충전 후 `LLM_PROVIDER=anthropic`으로 전환 테스트
-- [ ] 현재 Gemini 2.5 Flash로 검증 완료 — Claude 전환 시 응답 품질 비교
+- [ ] 현재 Gemini 2.5 Pro로 검증 완료 — Claude 전환 시 응답 품질 비교
+
+---
+
+---
+
+## Next Items (우선순위 순)
+
+### 1. Phase 1A 마무리 — 폴리곤 클릭 자동 요약 + 대화 컨텍스트
+- 폴리곤 클릭 → `districtStore.selected` → `useMapSync` 자동 질의 → SummaryCard (현재는 채팅 입력 필요)
+- 대화 컨텍스트 유지: 이전에 선택된 상권을 후속 질문에서 자동 참조
+
+### 2. Phase 1B — Real Data 연결
+- Docker Compose 기동 (PostGIS, Redis)
+- 서울 열린데이터 / data.go.kr API 키 발급 및 1개 분기 적재
+- `USE_MOCK=false` 전환 후 실제 데이터 기반 동작 확인
+- Redis 캐시 활성화 + 뷰포트 기반 폴리곤 로딩
+
+### 3. UX/UI 개선
+- 반응형 레이아웃 (모바일 기본 대응)
+- 에러 상태 UX (로딩 스피너, 스켈레톤)
+- 데이터 기준 시점 일관 표시
+
+### 4. Phase 2 — 프리미엄 기능
+- Tier 게이팅 인프라 (OAuth2, 결제)
+- 비교모드 복수 상권 하이라이트
 
 ---
 
@@ -161,6 +205,7 @@
 
 ## 참고
 
+- Card UI 구현 계획: `docs/plan/card-ui-integration.md`
 - E2E 테스트 상세 보고서: `docs/status/e2e_test_report.md`
 - 체크리스트: `docs/spec/checklist.md`
 - 아키텍처: `docs/architecture/overall-architecture.md`

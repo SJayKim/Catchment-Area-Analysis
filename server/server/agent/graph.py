@@ -254,7 +254,7 @@ async def run_agent(
 
         # Map tool names → card types for structured card events
         _TOOL_CARD_MAP = {
-            "get_district_summary_tool": "summary",
+            # summary card is emitted directly by chat.py — no duplicate here
             "compare_districts_tool": "compare",
             "recommend_business_tool": "recommend",
             "get_store_history_tool": "risk",
