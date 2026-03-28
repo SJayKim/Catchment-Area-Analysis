@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -12,6 +13,14 @@ from server.config import settings
 
 router = APIRouter(prefix="/api", tags=["chat"])
 logger = logging.getLogger(__name__)
+
+# Patterns that indicate a summary/overview request (not comparison, recommendation, or risk)
+_SUMMARY_PATTERNS = re.compile(
+    r"(요약|분석|알려줘|어때|보여줘|정보|현황|상권을? 선택)"
+)
+_NON_SUMMARY_PATTERNS = re.compile(
+    r"(비교|추천|뭐.*하면|위험|리스크|폐업|히트맵|시뮬|카페|한식|커피|치킨)"
+)
 
 
 class ChatRequest(BaseModel):
@@ -53,6 +62,23 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
                     district_name = row.district_name
                     data_quarter = row.data_quarter
 
+    # Auto-detect district from message text if no district_code provided
+    if not request.district_code and settings.use_mock:
+        from server.agent.tools.mock_data import DISTRICTS
+        for code, d in DISTRICTS.items():
+            if d["name"] in request.message:
+                request.district_code = code
+                district_name = d["name"]
+                data_quarter = d["quarter"]
+                district_center = d.get("center")
+                break
+
+    # Determine if this is a summary-type request
+    is_summary_request = False
+    if request.district_code and _SUMMARY_PATTERNS.search(request.message):
+        if not _NON_SUMMARY_PATTERNS.search(request.message):
+            is_summary_request = True
+
     async def event_generator():
         # Emit map_cmd to move map to the district being discussed
         if district_center:
@@ -62,9 +88,23 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
                 "params": {
                     "lat": district_center["lat"],
                     "lng": district_center["lng"],
-                    "zoom": 5,
+                    "zoom": 4,
                 },
             }, ensure_ascii=False)}
+
+        # Emit summary card directly when a summary request is detected
+        if is_summary_request and request.district_code:
+            try:
+                from server.agent.tools.district_summary import get_district_summary
+                summary_data = await get_district_summary(request.district_code)
+                if "error" not in summary_data:
+                    yield {"data": json.dumps({
+                        "type": "card",
+                        "card_type": "summary",
+                        "data": summary_data,
+                    }, ensure_ascii=False)}
+            except Exception:
+                logger.exception("Failed to generate summary card")
 
         try:
             async for event in run_agent(

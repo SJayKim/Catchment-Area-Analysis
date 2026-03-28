@@ -95,6 +95,22 @@ async def get_population_info_tool(district_code: str) -> str:
 
 
 @tool
+async def get_district_summary_tool(district_code: str) -> str:
+    """상권의 종합 요약 정보를 조회합니다.
+
+    유동인구, 매출, 점포 현황을 집계하여 한눈에 볼 수 있는 요약 데이터를 반환합니다.
+    사용자가 상권을 선택하거나 "상권 분석해줘", "요약해줘" 등을 요청할 때 사용합니다.
+
+    Args:
+        district_code: 상권코드
+    """
+    from server.agent.tools.district_summary import get_district_summary
+
+    result = await get_district_summary(district_code)
+    return json.dumps(result, ensure_ascii=False, default=str)
+
+
+@tool
 async def compare_districts_tool(district_codes: list[str]) -> str:
     """2~3개 상권의 주요 지표를 비교합니다.
 
@@ -153,6 +169,7 @@ async def get_store_history_tool(district_code: str) -> str:
 # ---------------------------------------------------------------------------
 
 TOOLS = [
+    get_district_summary_tool,
     get_floating_population_tool,
     get_estimated_sales_tool,
     get_store_info_tool,
@@ -171,7 +188,7 @@ def _create_llm():
         from langchain_google_genai import ChatGoogleGenerativeAI
 
         return ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-pro",
             google_api_key=settings.google_api_key,  # type: ignore[arg-type]
             temperature=0.3,
             max_output_tokens=4096,
@@ -237,6 +254,7 @@ async def run_agent(
 
         # Map tool names → card types for structured card events
         _TOOL_CARD_MAP = {
+            "get_district_summary_tool": "summary",
             "compare_districts_tool": "compare",
             "recommend_business_tool": "recommend",
             "get_store_history_tool": "risk",

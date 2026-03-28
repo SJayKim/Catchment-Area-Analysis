@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-03-26 (브라우저 E2E 테스트 — 카카오맵 로딩 이슈 디버깅 중)
-> **Phase 1A: Mock E2E — 백엔드 완료, 프론트엔드 카카오맵 로딩 이슈 해결 중**
+> 최종 갱신: 2026-03-27 (카카오맵 로딩 해결, AI 챗봇 E2E 검증 완료)
+> **Phase 1A: Mock E2E — 지도 로딩 + AI 챗봇 질의/응답 + 지도 연동 동작 확인 완료**
 
 ---
 
@@ -77,29 +77,40 @@
 - [x] DistrictLayer.tsx: `renderPolygons`를 `useCallback`으로 래핑, 맵 준비 후에만 마운트
 - [x] frontend/.env.local: Kakao Map API 키 설정
 
-### 진행 중 🔧
+#### 카카오맵 SDK 로딩 해결 + 지도-챗봇 연동 (2026-03-27)
+- [x] **SDK 로드 차단 해결**: Next.js API Route `/api/kakao-sdk` 프록시 생성 → SDK를 same-origin으로 제공
+- [x] MapContainer.tsx: `fetch('/api/kakao-sdk')` → inline `<script>` 주입 방식으로 전환
+- [x] MapContainer.tsx: SDK 내부 appkey 추출을 위한 더미 `<script src="dapi.kakao.com/...">` 태그 삽입
+- [x] layout.tsx: 기존 `<Script>` 태그 제거 (프록시로 대체)
+- [x] chat.py: `district_code` 없이도 메시지 텍스트에서 상권명 자동 인식 → `map_cmd` 발생 (지도 이동)
+- [x] chat.py: `map_cmd` zoom level 5→4로 조정 (더 확대된 뷰)
+- [x] **Playwright E2E 검증 완료**: 강남역, 홍대입구, 명동 상권 — 자연어 질의 → AI 응답 → 지도 이동 확인
 
-#### 카카오맵 SDK 로딩 이슈 (2026-03-26)
+### 해결 완료 ✅
+
+#### 카카오맵 SDK 로딩 이슈 — 해결 (2026-03-27)
 - **증상**: 지도 영역에 "지도 로딩 중..." 표시, 맵 렌더링 안됨
-- **디버깅 결과**:
-  - `curl`로 SDK URL 접근 시 정상 응답 (200 OK)
-  - 브라우저에서 `<script>` 태그로 로드 시 `onerror` 발생
-  - 프로토콜 `//` → `https://`로 변경 후에도 동일 현상
-  - Next.js `<Script strategy="afterInteractive">` 방식으로 전환 후에도 동일
-- **추정 원인**: 카카오 개발자 콘솔에서 JavaScript 키의 허용 도메인에 `localhost`가 미등록
-  - 카카오 API 키는 등록된 도메인에서만 SDK 로드 허용
-  - https://developers.kakao.com → 내 애플리케이션 → 플랫폼 → Web → 사이트 도메인에 `http://localhost:3000` 추가 필요
-- **대안**: API 키 문제 확인 불가 시, 새 카카오 앱 생성 후 키 재발급 고려
+- **원인**: 외부 도메인(`dapi.kakao.com`) 스크립트가 `net::ERR_BLOCKED_BY_ORB` / `net::ERR_FAILED`로 차단
+- **해결 방법**:
+  1. Next.js API Route `/api/kakao-sdk`로 SDK 프록시 생성 (서버 측에서 카카오 서버로 fetch)
+  2. MapContainer에서 `fetch('/api/kakao-sdk')` → inline `<script>` 주입
+  3. SDK 내부 appkey 추출을 위한 더미 `<script src="dapi.kakao.com/...">` 태그 삽입
+- **검증**: Playwright 브라우저 자동화로 지도 로딩 + AI 응답 + 지도 이동 E2E 확인 완료
+
+#### 브라우저 E2E 검증 완료 (2026-03-27, Playwright)
+- [x] 브라우저에서 지도 + 채팅 화면 정상 로드 (Kakao Map 렌더링)
+- [x] 자연어 질의 → Agent 응답 → 텍스트 렌더링 (강남역, 홍대입구, 명동)
+- [x] AI 챗봇 응답 시 해당 상권으로 지도 자동 이동 (map_cmd)
+- [x] SSE 스트리밍 (thinking → tool → text → suggestion → done) 정상
+- [x] SuggestionChips 동적 업데이트 (AI가 추천 질문 생성)
 
 ### 남은 작업 (Phase 1A 최종 확인)
 
-#### 카카오맵 로딩 해결 후
-- [ ] 브라우저에서 지도 + 채팅 화면 정상 로드 (Kakao Map 렌더링)
-- [ ] 폴리곤 클릭 → Agent 자동 요약 → 텍스트 응답 렌더링
+#### Card UI 연동
+- [ ] 폴리곤 클릭 → Agent 자동 요약 → SummaryCard 렌더링
 - [ ] "홍대랑 비교해줘" → CompareCard 렌더링
 - [ ] "뭐하면 좋을까?" → RecommendCard 렌더링
 - [ ] "이 자리 위험해?" → RiskCard 렌더링
-- [ ] SuggestionChips 클릭 → 추가 질문 동작
 
 #### LLM 전환 (선택)
 - [ ] Anthropic API 크레딧 충전 후 `LLM_PROVIDER=anthropic`으로 전환 테스트

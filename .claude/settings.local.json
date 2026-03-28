@@ -70,7 +70,12 @@
       "mcp__playwright__browser_take_screenshot",
       "mcp__playwright__browser_type",
       "mcp__playwright__browser_snapshot",
-      "mcp__playwright__browser_click"
+      "mcp__playwright__browser_click",
+      "Bash(tasklist /v /fi 'imagename eq python.exe')",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \"\"Name=''''python.exe''''\"\" | Select-Object ProcessId,CommandLine | Format-List\")",
+      "Bash(powershell -Command \"Stop-Process -Id 36596 -Force; Stop-Process -Id 25084 -Force\" 2>&1)",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='python.exe'\\\\\" | Select-Object ProcessId,CommandLine | Format-List\" 2>&1)",
+      "Bash(powershell -Command \"Stop-Process -Id 11236 -Force; Stop-Process -Id 8296 -Force\" 2>&1)"
     ]
   }
 }
