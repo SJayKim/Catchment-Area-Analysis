@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     etl_max_retries: int = 3
     etl_request_timeout: int = 30
     etl_max_concurrency: int = 3
-    etl_batch_size: int = 5000
+    etl_batch_size: int = 1000
 
     model_config = {
         "env_file": str(_ENV_FILE),

@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #283548;
+  --bg-accent: #3b82f6;
+  --bg-accent-hover: #2563eb;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #334155;
+  --bot-bubble: #1e293b;
+  --user-bubble: #3b82f6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --thinking-bg: rgba(59, 130, 246, 0.06);
+  --thinking-border: #3b82f6;
+}
+
 @layer base {
   html,
   body {
@@ -9,7 +28,9 @@
   }
 
   body {
-    @apply bg-white text-gray-900 antialiased;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    @apply antialiased;
   }
 
   /* Hide scrollbar for cleaner UI */
@@ -31,10 +52,114 @@
     background: transparent;
   }
   .thin-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #d1d5db;
+    background-color: var(--border-color);
     border-radius: 2px;
   }
   .thin-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #9ca3af;
+    background-color: var(--text-muted);
   }
+
+  /* Streaming blinking cursor */
+  .streaming::after {
+    content: '\25CA';
+    animation: blink 0.7s step-end infinite;
+    color: var(--bg-accent);
+    margin-left: 2px;
+    font-weight: bold;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* Message fade-in animation */
+  @keyframes msg-in {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .animate-msg-in {
+    animation: msg-in 0.25s ease-out forwards;
+  }
+
+  /* Step slide-in animation */
+  @keyframes step-in {
+    0% { opacity: 0; transform: translateX(-8px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+  .animate-step-in {
+    animation: step-in 0.2s ease-out forwards;
+  }
+
+  /* Markdown body styles */
+  .markdown-body {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+  .markdown-body p {
+    margin: 0.25em 0;
+  }
+  .markdown-body p:first-child {
+    margin-top: 0;
+  }
+  .markdown-body p:last-child {
+    margin-bottom: 0;
+  }
+  .markdown-body code {
+    background-color: var(--bg-tertiary);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.8em;
+  }
+  .markdown-body pre {
+    background-color: var(--bg-tertiary);
+    padding: 0.75em 1em;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 0.5em 0;
+  }
+  .markdown-body pre code {
+    background: none;
+    padding: 0;
+  }
+  .markdown-body ul, .markdown-body ol {
+    padding-left: 1.5em;
+    margin: 0.4em 0;
+  }
+  .markdown-body li {
+    margin: 0.15em 0;
+  }
+  .markdown-body table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.5em 0;
+    font-size: 0.8em;
+  }
+  .markdown-body th, .markdown-body td {
+    border: 1px solid var(--border-color);
+    padding: 0.35em 0.6em;
+    text-align: left;
+  }
+  .markdown-body th {
+    background-color: var(--bg-tertiary);
+    font-weight: 600;
+  }
+  .markdown-body blockquote {
+    border-left: 3px solid var(--bg-accent);
+    padding-left: 0.75em;
+    color: var(--text-secondary);
+    margin: 0.4em 0;
+  }
+  .markdown-body strong {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+    font-weight: 600;
+    margin: 0.6em 0 0.3em;
+  }
+  .markdown-body h1 { font-size: 1.1em; }
+  .markdown-body h2 { font-size: 1.0em; }
+  .markdown-body h3 { font-size: 0.95em; }
 }

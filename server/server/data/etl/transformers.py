@@ -86,7 +86,10 @@ def _build_polygon_wkt(raw: dict) -> str | None:
 
 
 def transform_district(raw: dict) -> dict:
-    """Transform raw district API row to districts table format."""
+    """Transform raw district API row to districts table format.
+
+    Handles both polygon API (VwsmTrdarSelngW) and store change API (VwsmTrdarStorQq) formats.
+    """
     code = str(raw.get("TRDAR_CD", ""))
     type_code = str(raw.get("TRDAR_SE_CD", ""))
 
@@ -106,14 +109,20 @@ def transform_district(raw: dict) -> dict:
     # Quarter: "STDR_YR_CD" + "Q" + "STDR_QU_CD" or from STDR_YYQU_CD
     year = raw.get("STDR_YR_CD", "")
     qu = raw.get("STDR_QU_CD", "")
-    quarter = f"{year}Q{qu}" if year and qu else raw.get("STDR_YYQU_CD", "")
+    if year and qu:
+        quarter = f"{year}Q{qu}"
+    elif raw.get("STDR_YYQU_CD"):
+        yyqu = str(raw["STDR_YYQU_CD"])
+        quarter = f"{yyqu[:4]}Q{yyqu[4:]}" if len(yyqu) >= 5 else yyqu
+    else:
+        quarter = ""
 
     return {
         "district_code": code,
         "district_name": str(raw.get("TRDAR_CD_NM", "")),
         "district_type": DISTRICT_TYPE_MAP.get(type_code, type_code),
-        "boundary_wkt": polygon_wkt,  # WKT string, SRID=5181
-        "center_wkt": center_wkt,      # WKT string, SRID=5181
+        "boundary_wkt": polygon_wkt,  # WKT string, SRID=5181 (None if from store change API)
+        "center_wkt": center_wkt,      # WKT string, SRID=5181 (None if from store change API)
         "gu_code": str(raw.get("SIGNGU_CD", "")) or None,
         "dong_code": str(raw.get("ADSTRD_CD", "")) or None,
         "data_quarter": quarter,

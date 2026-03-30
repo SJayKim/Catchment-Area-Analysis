@@ -1,5 +1,7 @@
 'use client';
 
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ChatMessage } from '@/lib/types';
 import SummaryCard from './cards/SummaryCard';
 import CompareCard from './cards/CompareCard';
@@ -8,9 +10,10 @@ import RiskCard from './cards/RiskCard';
 
 interface MessageBubbleProps {
   message: ChatMessage;
+  isStreaming?: boolean;
 }
 
-export default function MessageBubble({ message }: MessageBubbleProps) {
+export default function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isCard = message.type === 'card';
   const isError = message.type === 'error';
@@ -18,8 +21,9 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
   // Card messages
   if (isCard && message.cardData) {
     return (
-      <div className="flex items-start gap-2">
-        <div className="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+      <div className="flex items-start gap-2 animate-msg-in">
+        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: 'var(--bg-tertiary)' }}>
           <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
@@ -34,8 +38,8 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
           ) : message.cardType === 'risk' ? (
             <RiskCard data={message.cardData as any} />
           ) : (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <pre className="text-xs text-gray-600 whitespace-pre-wrap">
+            <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+              <pre className="text-xs whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
                 {JSON.stringify(message.cardData, null, 2)}
               </pre>
             </div>
@@ -48,8 +52,9 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
   // User messages
   if (isUser) {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[75%] bg-primary-500 text-white rounded-2xl rounded-tr-sm px-4 py-2.5">
+      <div className="flex justify-end animate-msg-in">
+        <div className="max-w-[75%] text-white rounded-2xl rounded-tr-sm px-4 py-2.5"
+          style={{ backgroundColor: 'var(--user-bubble)' }}>
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
         </div>
       </div>
@@ -58,26 +63,32 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
 
   // Assistant text / error messages
   return (
-    <div className="flex items-start gap-2">
-      <div className="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+    <div className="flex items-start gap-2 animate-msg-in">
+      <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: 'var(--bg-tertiary)' }}>
         <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       </div>
       <div
-        className={`max-w-[75%] rounded-2xl rounded-tl-sm px-4 py-2.5 ${
+        className={`max-w-[75%] rounded-2xl rounded-tl-sm px-4 py-2.5 ${isStreaming && !isError ? 'streaming' : ''}`}
+        style={
           isError
-            ? 'bg-red-50 border border-red-200'
-            : 'bg-gray-100'
-        }`}
+            ? { backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid var(--error)' }
+            : { backgroundColor: 'var(--bot-bubble)' }
+        }
       >
-        <p
-          className={`text-sm whitespace-pre-wrap ${
-            isError ? 'text-red-600' : 'text-gray-800'
-          }`}
-        >
-          {message.content || '\u200B'}
-        </p>
+        {isError ? (
+          <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--error)' }}>
+            {message.content || '\u200B'}
+          </p>
+        ) : (
+          <div className="markdown-body">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {message.content || '\u200B'}
+            </ReactMarkdown>
+          </div>
+        )}
       </div>
     </div>
   );

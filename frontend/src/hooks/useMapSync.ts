@@ -3,12 +3,12 @@
 import { useEffect, useRef } from 'react';
 import { useDistrictStore } from '@/stores/districtStore';
 import { useMapStore } from '@/stores/mapStore';
-import { useChat } from './useChat';
+import { useChatStore } from '@/stores/chatStore';
 
 export function useMapSync() {
   const selected = useDistrictStore((s) => s.selected);
+  const selectSource = useDistrictStore((s) => s.selectSource);
   const setView = useMapStore((s) => s.setView);
-  const { sendMessage } = useChat();
   const prevSelectedRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -21,12 +21,21 @@ export function useMapSync() {
     if (prevSelectedRef.current === selected.code) return;
     prevSelectedRef.current = selected.code;
 
-    // Center map on selected district
-    if (selected.center) {
+    // Center map on selected district (for map clicks)
+    if (selectSource === 'map' && selected.center) {
       setView(selected.center, 5);
     }
 
-    // Auto-query for district summary
-    sendMessage(`${selected.name} 상권 요약해줘`);
-  }, [selected, setView, sendMessage]);
+    // Only auto-query when selection came from map click, not from chat
+    if (selectSource === 'chat') return;
+
+    // Guard: need center coordinates
+    if (!selected.center || (!selected.center.lat && !selected.center.lng)) return;
+
+    // Auto-query for district summary using store directly (no dual-instance issue)
+    useChatStore.getState().sendMessage(
+      `${selected.name} 상권 요약해줘`,
+      selected.code
+    );
+  }, [selected, selectSource, setView]);
 }

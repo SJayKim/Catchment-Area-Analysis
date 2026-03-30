@@ -252,6 +252,18 @@ async def run_agent(
 
         config = {"recursion_limit": MAX_ITERATIONS * 2 + 1}
 
+        # Tool emoji mapping for SSE events
+        _TOOL_EMOJI = {
+            "get_floating_population_tool": "🔍",
+            "get_estimated_sales_tool": "🔍",
+            "get_store_info_tool": "🔍",
+            "get_population_info_tool": "🔍",
+            "get_district_summary_tool": "📋",
+            "compare_districts_tool": "📊",
+            "recommend_business_tool": "💡",
+            "get_store_history_tool": "📋",
+        }
+
         # Map tool names → card types for structured card events
         _TOOL_CARD_MAP = {
             # summary card is emitted directly by chat.py — no duplicate here
@@ -265,7 +277,7 @@ async def run_agent(
 
             if kind == "on_chat_model_start":
                 if not thinking_emitted:
-                    yield {"type": "thinking", "step": "분석 중..."}
+                    yield {"type": "thinking", "step": "분석 중...", "icon": "🧠"}
                     thinking_emitted = True
 
             elif kind == "on_tool_start":
@@ -275,12 +287,14 @@ async def run_agent(
                     "type": "tool",
                     "name": tool_name,
                     "input": tool_input,
+                    "icon": _TOOL_EMOJI.get(tool_name, "🔧"),
                 }
                 # Reset so we emit thinking again for the next LLM call
                 thinking_emitted = False
 
             elif kind == "on_tool_end":
                 tool_name = event.get("name", "")
+                yield {"type": "tool_end", "name": tool_name, "icon": _TOOL_EMOJI.get(tool_name, "🔧")}
                 card_type = _TOOL_CARD_MAP.get(tool_name)
                 if card_type:
                     raw = event.get("data", {}).get("output", "")

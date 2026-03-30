@@ -24,7 +24,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   };
 
   return (
-    <div className="border-t border-gray-200 p-3 flex-shrink-0">
+    <div className="p-3 flex-shrink-0" style={{ borderTop: '1px solid var(--border-color)' }}>
       <div className="flex items-end gap-2">
         <textarea
           value={input}
@@ -33,12 +33,20 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           placeholder="무엇이든 물어보세요..."
           rows={1}
           disabled={disabled}
-          className="flex-1 resize-none rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+          className="flex-1 resize-none rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50"
+          style={{
+            backgroundColor: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-color)',
+          }}
         />
         <button
           onClick={handleSend}
           disabled={disabled || !input.trim()}
-          className="w-10 h-10 bg-primary-500 text-white rounded-xl flex items-center justify-center hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          className="w-10 h-10 text-white rounded-xl flex items-center justify-center hover:opacity-90 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          style={{
+            backgroundColor: disabled || !input.trim() ? 'var(--bg-tertiary)' : 'var(--bg-accent)',
+          }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path

@@ -56,7 +56,7 @@ export default function Toolbar() {
     if (isCompareMode) {
       addToCompare(district);
     } else {
-      select(district);
+      select(district, 'map');
     }
     if (district.center) {
       setView(district.center, 5);
@@ -81,9 +81,10 @@ export default function Toolbar() {
   };
 
   return (
-    <div className="h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-3 flex-shrink-0 z-10">
+    <div className="h-12 flex items-center px-4 gap-3 flex-shrink-0 z-10"
+      style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
       {/* Logo */}
-      <h1 className="text-lg font-bold text-primary-600 whitespace-nowrap">
+      <h1 className="text-lg font-bold whitespace-nowrap" style={{ color: 'var(--bg-accent)' }}>
         MarketScope AI
       </h1>
 
@@ -91,7 +92,8 @@ export default function Toolbar() {
       <div className="relative flex-1 max-w-md" ref={dropdownRef}>
         <div className="relative">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+            style={{ color: 'var(--text-muted)' }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -108,21 +110,31 @@ export default function Toolbar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="상권 검색..."
-            className="w-full pl-10 pr-4 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-1.5 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            style={{
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+            }}
           />
         </div>
 
         {/* Autocomplete Dropdown */}
         {showDropdown && results.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto z-50">
+          <div className="absolute top-full left-0 right-0 mt-1 rounded-lg shadow-lg max-h-64 overflow-y-auto z-50"
+            style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
             {results.map((district) => (
               <button
                 key={district.code}
                 onClick={() => handleSelect(district)}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-primary-50 flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors"
+                style={{ color: 'var(--text-primary)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                <span className="text-gray-900">{district.name}</span>
-                <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                <span>{district.name}</span>
+                <span className="text-xs px-1.5 py-0.5 rounded"
+                  style={{ color: 'var(--text-muted)', backgroundColor: 'var(--bg-tertiary)' }}>
                   {district.type}
                 </span>
               </button>
@@ -134,7 +146,8 @@ export default function Toolbar() {
       {/* Current Location Button */}
       <button
         onClick={handleLocate}
-        className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+        className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg transition-colors hover:opacity-80"
+        style={{ color: 'var(--text-secondary)' }}
         title="현재 위치"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,8 +173,9 @@ export default function Toolbar() {
         className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
           isCompareMode
             ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
-            : 'text-gray-600 hover:text-indigo-600 hover:bg-indigo-50'
+            : ''
         }`}
+        style={!isCompareMode ? { color: 'var(--text-secondary)' } : undefined}
         title="비교모드"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

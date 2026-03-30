@@ -1,186 +1,121 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-03-28 (Card UI 4종 E2E 검증 완료, Phase 1A 핵심 목표 달성)
-> **Phase 1A: Mock E2E — 지도 + AI 챗봇 + Card UI 렌더링 전체 흐름 완료 ✅**
+> 최종 갱신: 2026-03-30
+> **Phase 1B 완료 ✅ — Mock E2E + Real Data ETL + Streaming UX + E2E 32 PASS**
 
 ---
 
-## 전략 변경 요약
+## 전략
 
-**기존**: Phase 0(DB/ETL) → Phase 1(MVP) → Phase 2(Premium)
-**변경**: **Phase 1A(Mock E2E)** → Phase 1B(Real Data) → Phase 2(Premium)
+**Phase 1A(Mock E2E)** → **Phase 1B(Real Data + UX)** → Phase 2(Premium) → Phase 3(확장)
 
 ---
 
-## Phase 1A — E2E Mock ⬅️ 현재 단계
+## Phase 1A — Mock E2E ✅ 완료
 
-### 목표
 데이터 없이 "지도 클릭 → AI Agent 응답 → Card 렌더링" 전체 흐름 동작 확인
 
-### 완료된 작업
-
-#### 코드 구현 ✅
-- [x] FastAPI 프로젝트 구조 (main, config, routes, agent)
-- [x] LangGraph ReAct Agent 그래프 정의 (create_react_agent)
-- [x] 시스템 프롬프트 (한국어 상권 분석 컨설턴트)
-- [x] POST /api/chat SSE 스트리밍 엔드포인트
-- [x] Agent Tools 7종 (유동인구, 매출, 점포, 인구, 비교, 추천, 이력)
-- [x] Next.js 14 프로젝트 (App Router, TypeScript, Tailwind)
-- [x] Kakao Map + DistrictLayer + MapControls
-- [x] ChatPanel + MessageList + MessageBubble + ChatInput
-- [x] SplitPanel (resizable), Toolbar, StatusBar
-- [x] useChat 훅 (SSE 클라이언트)
-- [x] useMapSync (지도↔채팅 동기화)
-- [x] SummaryCard, CompareCard, RecommendCard, RiskCard, InlineChart
-- [x] Zustand stores (district, map, chat), SuggestionChips
-
-#### Mock 데이터 레이어 ✅
-- [x] `mock_data.py` — 5개 상권 (강남역, 홍대, 건대, 명동, 서울역)
-- [x] Mock 유동인구/매출/점포/인구/이력 데이터셋
-- [x] Mock 상권 폴리곤 GeoJSON (실제 서울 좌표)
-- [x] `USE_MOCK` 환경변수 분기 (config.py, 각 Tool, API routes)
-- [x] Mock 모드에서 DB/Redis 연결 없이 기동 확인
-
-#### 백엔드 E2E 검증 ✅ (2026-03-25)
-- [x] API 엔드포인트 정상: /health, /api/districts, /api/map-data/polygons, /api/chat
-- [x] Agent ReAct Loop: 질문 유형별 Tool 선택 → 실행 → 결과 종합 → 응답 생성
-- [x] SSE 스트리밍: thinking → tool → text → card → suggestion → done 흐름 정상
-- [x] TEST 1 — 강남역 종합분석: 4 Tools 호출, 1,177자 응답 (7.5s)
-- [x] TEST 2 — 홍대 vs 건대 비교: compare_districts 정상, 상권코드 정확 매핑
-- [x] TEST 3 — 명동 업종추천+리스크: 2 Tools 조합, 면책 안내 포함
-
-#### 프론트엔드 통합 테스트 ✅ (2026-03-26)
-- [x] 프론트엔드+백엔드 동시 기동 (localhost:3000 + localhost:8000)
-- [x] Next.js API rewrite 프록시 정상 동작 (/api/* → backend)
-- [x] 프론트엔드 TypeScript 빌드 성공 (에러 0건)
-- [x] SSE 스트리밍: 프록시 통해 thinking → tool → text → card → suggestion → done 정상
-- [x] compare/recommend/risk Card 이벤트 SSE 전달 확인
-
-#### 버그 수정 — 백엔드 (2026-03-25~26)
-- [x] config.py: `.env` 경로를 프로젝트 루트 절대경로로 수정
-- [x] config.py: `extra="ignore"` 추가 (프론트 전용 env 변수 ValidationError 해결)
-- [x] system.py: 시스템 프롬프트에 상권코드 목록 명시 (Agent 코드 추측 방지)
-- [x] graph.py: `LLM_PROVIDER` 설정으로 Gemini/Anthropic 동적 전환 지원
-- [x] graph.py: `on_tool_end` 이벤트 캡처하여 card SSE 이벤트 emit 추가 (compare/recommend/risk)
-- [x] chat.py: 상권 코드 제공 시 `map_cmd` 이벤트 emit 추가 (채팅→지도 위치 연동)
-
-#### 버그 수정 — 프론트엔드 (2026-03-26)
-- [x] api.ts `fetchPolygons`: GeoJSON FeatureCollection → PolygonFeature[] 변환 추가
-- [x] api.ts `fetchPolygons`: 백엔드 `bounds` 파라미터 형식에 맞게 쿼리스트링 수정
-- [x] api.ts `fetchDistricts`: 백엔드 응답 `{total, items}` → `District[]` 변환 + 필드명 매핑 추가
-- [x] CompareCard.tsx: `districtNames` 없을 때 `district_name` 필드에서 이름 가져오도록 수정
-- [x] RecommendCard.tsx: `startup_cost` 만원 단위 → 원 단위 변환 수정
-- [x] types.ts: `CompareCardData`에 `district_name` 필드 추가 (TS 에러 해결)
-- [x] MapContainer.tsx: React Strict Mode 호환 — `initializedRef` 제거, SDK 재로드 로직 개선
-- [x] MapContainer.tsx: `mapReady` state 추가 → DistrictLayer 조건부 렌더링
-- [x] MapContainer.tsx: Next.js `<Script>` 컴포넌트로 SDK 로딩 방식 전환
-- [x] DistrictLayer.tsx: `renderPolygons`를 `useCallback`으로 래핑, 맵 준비 후에만 마운트
-- [x] frontend/.env.local: Kakao Map API 키 설정
-
-#### 카카오맵 SDK 로딩 해결 + 지도-챗봇 연동 (2026-03-27)
-- [x] **SDK 로드 차단 해결**: Next.js API Route `/api/kakao-sdk` 프록시 생성 → SDK를 same-origin으로 제공
-- [x] MapContainer.tsx: `fetch('/api/kakao-sdk')` → inline `<script>` 주입 방식으로 전환
-- [x] MapContainer.tsx: SDK 내부 appkey 추출을 위한 더미 `<script src="dapi.kakao.com/...">` 태그 삽입
-- [x] layout.tsx: 기존 `<Script>` 태그 제거 (프록시로 대체)
-- [x] chat.py: `district_code` 없이도 메시지 텍스트에서 상권명 자동 인식 → `map_cmd` 발생 (지도 이동)
-- [x] chat.py: `map_cmd` zoom level 5→4로 조정 (더 확대된 뷰)
-- [x] **Playwright E2E 검증 완료**: 강남역, 홍대입구, 명동 상권 — 자연어 질의 → AI 응답 → 지도 이동 확인
-
-#### Card UI 4종 E2E 연동 완료 (2026-03-28) ✅
-- [x] `district_summary.py` 신규 — Mock 데이터(유동인구+매출+점포) 집계 → SummaryCardData 형태 반환
-- [x] `graph.py` — `get_district_summary_tool` Tool wrapper 추가 + TOOLS 리스트 등록
-- [x] `graph.py` — LLM을 Gemini 2.5 Flash → **Gemini 2.5 Pro**로 변경 (도구 선택 정확도 향상)
-- [x] `system.py` — 도구 선택 규칙 강화 (요약 요청 시 `get_district_summary` 단일 호출 가이드)
-- [x] `chat.py` — 요약 요청 패턴 감지(regex) → `get_district_summary` 직접 호출 → card SSE 이벤트 emit
-  - LLM 도구 선택에 의존하지 않는 확실한 방식으로 SummaryCard 보장
-- [x] `graph.py` — `_TOOL_CARD_MAP`에서 summary 제거 (chat.py에서 직접 emit하므로 중복 방지)
-- [x] **Playwright E2E 검증 — 4종 Card 모두 통과**:
-  - ✅ "강남역 요약해줘" → **SummaryCard**: 유동인구 바차트(0~23시) + Top 5 업종 + 폐업률(5.3%, 평균 대비)
-  - ✅ "강남역이랑 홍대 비교해줘" → **CompareCard**: 비교표(유동인구/연령/점포/매출/폐업률/상태) + 판정 컬럼
-  - ✅ "강남역에서 뭐하면 좋을까?" → **RecommendCard**: 업종 Top 5 점수바 + 점포당 매출/매칭률/경쟁밀집도/창업비용
-  - ✅ "강남역 위험해?" → **RiskCard**: 안정성 게이지(72점/양호) + 업종별 생존 기간 바 + 위험 업종 + 분기별 개폐업 추이 차트
-
-### 해결 완료 ✅
-
-#### 카카오맵 SDK 로딩 이슈 — 해결 (2026-03-27)
-- **증상**: 지도 영역에 "지도 로딩 중..." 표시, 맵 렌더링 안됨
-- **원인**: 외부 도메인(`dapi.kakao.com`) 스크립트가 `net::ERR_BLOCKED_BY_ORB` / `net::ERR_FAILED`로 차단
-- **해결 방법**:
-  1. Next.js API Route `/api/kakao-sdk`로 SDK 프록시 생성 (서버 측에서 카카오 서버로 fetch)
-  2. MapContainer에서 `fetch('/api/kakao-sdk')` → inline `<script>` 주입
-  3. SDK 내부 appkey 추출을 위한 더미 `<script src="dapi.kakao.com/...">` 태그 삽입
-- **검증**: Playwright 브라우저 자동화로 지도 로딩 + AI 응답 + 지도 이동 E2E 확인 완료
-
-#### Card UI 렌더링 이슈 — 해결 (2026-03-28)
-- **증상**: 채팅에서 텍스트 응답만 출력, Card UI가 렌더링되지 않음
-- **원인**:
-  1. `_TOOL_CARD_MAP`에 `summary` 미등록 → 기본 요약 시 card 이벤트 미발송
-  2. Gemini Flash/Pro가 시스템 프롬프트의 도구 선택 가이드를 무시하고 개별 Tool 4종 호출
-- **해결 방법**:
-  1. `get_district_summary` Tool 신규 생성 (유동인구+매출+점포 집계)
-  2. `chat.py`에서 요약 요청 패턴 감지 → card 이벤트 직접 emit (LLM 의존 제거)
-  3. compare/recommend/risk는 기존 `_TOOL_CARD_MAP` 매커니즘으로 정상 동작
-- **검증**: Playwright E2E로 4종 Card 모두 렌더링 확인
-
-### 남은 작업 (Phase 1A 마무리)
-
-#### 폴리곤 클릭 → 자동 요약 (선택적 개선)
-- [ ] 지도에서 폴리곤 클릭 시 `districtStore.selected` 설정 → `useMapSync`가 자동 질의 → SummaryCard
-  - 현재: 채팅에서 "강남역 요약해줘" 입력하면 동작
-  - 개선: 폴리곤 직접 클릭만으로도 SummaryCard 자동 표시
-- [ ] 대화 컨텍스트 유지 — 이전 대화에서 선택된 상권을 후속 질문에서 자동 참조
-  - 현재: 매 질문마다 상권명을 포함해야 함 ("강남역 위험해?" O, "위험해?" X)
-
-#### LLM 전환 (선택)
-- [ ] Anthropic API 크레딧 충전 후 `LLM_PROVIDER=anthropic`으로 전환 테스트
-- [ ] 현재 Gemini 2.5 Pro로 검증 완료 — Claude 전환 시 응답 품질 비교
+### 구현 완료
+- FastAPI + LangGraph ReAct Agent + SSE 스트리밍
+- Next.js 14 + Kakao Map + Zustand + Recharts
+- Agent Tools 8종 (유동인구, 매출, 점포, 인구, 요약, 비교, 추천, 이력)
+- Card UI 4종 (SummaryCard, CompareCard, RecommendCard, RiskCard)
+- Mock 데이터 5개 상권 (강남역, 홍대, 건대, 명동, 서울역)
+- SplitPanel, Toolbar, StatusBar, SuggestionChips
+- Feature 1: 폴리곤 클릭 → 자동 SummaryCard
+- Feature 2: 대화 컨텍스트 유지 (세션 기반)
+- Feature 3: 양방향 채팅↔폴리곤 동기화
 
 ---
+
+## Phase 1B — Real Data + Streaming UX ✅ 완료 (2026-03-30)
+
+### Step 1: Agent Progress Indicator ✅
+- `AgentProgressIndicator.tsx` — 🟡→🟢 실시간 단계 표시
+- Tool name → 한국어 라벨 매핑 (8종)
+- `graph.py`에 `tool_end` SSE 이벤트 추가
+- `chatStore.ts`에 `agentSteps` 상태 관리
+- `sendMessage` 시 즉시 초기 step 표시 ("질문 분석 중...")
+- card/tool/thinking 이벤트마다 step 추가/완료 업데이트
+- 텍스트 응답 시작 후 1.5초간 완료 상태 유지 후 fade-out
+
+### Step 2: Streaming Enhancement ✅
+- SSE 버퍼링 문제 해결 — Chat API를 Next.js rewrite 대신 직접 백엔드 호출 (`NEXT_PUBLIC_API_URL`)
+- `firstTextReceived` 변수 위치 버그 수정 (try 블록 전으로 이동)
+- Tool 없는 직접 응답, 에러 시 step 정리, 다중 tool 순차 처리
+- `done` 이벤트에서 agentSteps 즉시 clear 방지 (타이머에 위임)
+
+### Step 3: E2E 테스트 ✅ — 32/32 ALL PASSED
+- `feature4-progress-indicator.spec.ts` (6개)
+- `feature5-card-rendering.spec.ts` (5개)
+- `feature6-streaming-ux.spec.ts` (5개)
+- `feature7-error-handling.spec.ts` (4개)
+- 기존 feature1~3 (12개) 모두 통과
+
+### Step 4: 데이터 파이프라인 ✅
+- Docker Compose: PostGIS 16 + Redis 7 기동
+- Alembic migration: 9개 테이블 + 인덱스 생성
+- 서울 열린데이터 API 연동 (4개 서비스 승인)
+- ETL 적재 완료:
+
+| 테이블 | 행 수 | 분기 | 소스 API |
+|--------|------:|------|----------|
+| districts | 1,650 | 전체 | VwsmTrdarFlpopQq에서 추출 |
+| floating_population | 9,888 | 2025Q4 | VwsmTrdarFlpopQq |
+| estimated_sales | 21,333 | 2025Q4 | VwsmTrdarSelngQq |
+| stores | 75,985 | 2025Q4 | VwsmTrdarStorQq |
+| resident_population | 19,692 | 2025Q4 | VwsmTrdarWrcPopltnQq (직장인구) |
+
+- `USE_MOCK=false` 전환 → 실제 DB 데이터 API 반환 확인
+- Redis 연결 확인
+
+### 해결한 버그들 (Phase 1B)
+- **SSE 버퍼링**: Next.js rewrite 프록시가 SSE 이벤트를 버퍼링 → Chat API 직접 연결로 해결
+- **텍스트 응답 누락**: `firstTextReceived` 변수가 `finally` 뒤에 선언 → `try` 앞으로 이동
+- **Progress Indicator 안 보임**: `isThinking && agentSteps.length > 0` 조건에서 text 이벤트 시 즉시 isThinking=false → agentSteps만으로 표시하도록 변경
+- **Progress 너무 빨리 사라짐**: 300ms → 1.5초로 연장, sendMessage 시 초기 step 즉시 추가
+- **ETL 쿼터 필터**: `STDR_YR_CD`/`STDR_QU_CD` 대신 `STDR_YYQU_CD` 사용하도록 통합 필터
+- **asyncpg 파라미터 제한**: batch_size 5000 → 1000으로 축소 (32767 파라미터 제한)
+- **폴리곤 API 미승인**: VwsmTrdarFlpopQq에서 district 정보 추출하는 fallback 구현
+- **Alembic GiST 인덱스 충돌**: `CREATE INDEX IF NOT EXISTS`로 변경
+
+### 미승인 API (추후 승인 필요)
+- `VwsmTrdarSelngW` (상권 폴리곤) — districts boundary/center_point 없음
+- `VwsmTrdarStorW` (점포 상세정보)
+- `VwsmTrdarPopltnQq` (상주인구)
+
+---
+
+## 현재 실행 환경
+
+| 서비스 | 포트 | 모드 |
+|--------|------|------|
+| Next.js 프론트엔드 | 3000 | Mock (USE_MOCK=true) |
+| FastAPI 백엔드 | 8002 | Mock (USE_MOCK=true) |
+| PostGIS (Docker) | 5432 | 실데이터 적재 완료 |
+| Redis (Docker) | 6379 | 정상 |
+
+- Mock 모드: 5개 상권 폴리곤 + AI 챗봇 + Card UI 전체 동작
+- Real 모드: 1,650개 상권 데이터 + DB 쿼리 (폴리곤 경계선 없음)
 
 ---
 
 ## Next Items (우선순위 순)
 
-### 1. Phase 1A 마무리 — 폴리곤 클릭 자동 요약 + 대화 컨텍스트
-- 폴리곤 클릭 → `districtStore.selected` → `useMapSync` 자동 질의 → SummaryCard (현재는 채팅 입력 필요)
-- 대화 컨텍스트 유지: 이전에 선택된 상권을 후속 질문에서 자동 참조
+### 1. 미승인 API 서비스 승인 요청
+- 승인 후 ETL 재실행 → 폴리곤 지도 + 상주인구 적재
 
-### 2. Phase 1B — Real Data 연결
-- Docker Compose 기동 (PostGIS, Redis)
-- 서울 열린데이터 / data.go.kr API 키 발급 및 1개 분기 적재
-- `USE_MOCK=false` 전환 후 실제 데이터 기반 동작 확인
-- Redis 캐시 활성화 + 뷰포트 기반 폴리곤 로딩
-
-### 3. UX/UI 개선
+### 2. UX/UI 개선
 - 반응형 레이아웃 (모바일 기본 대응)
-- 에러 상태 UX (로딩 스피너, 스켈레톤)
 - 데이터 기준 시점 일관 표시
 
-### 4. Phase 2 — 프리미엄 기능
-- Tier 게이팅 인프라 (OAuth2, 결제)
+### 3. Phase 2 — 프리미엄 기능
+- Tier 게이팅 인프라 (OAuth2 인증, 결제)
 - 비교모드 복수 상권 하이라이트
 
 ---
 
-## Phase 1B — Real Data 연결 (Phase 1A 완료 후)
-
-### 기존 구현 (재활용)
-- [x] `docker-compose.yml` (PostGIS 16, Redis 7, backend, frontend)
-- [x] SQLAlchemy 모델 9개 테이블 + Alembic 마이그레이션
-- [x] ETL 스켈레톤 (BaseCollector, SeoulOpenDataCollector, Transformers, DataLoader, CLI)
-
-### 남은 작업
-- [ ] 서울 열린데이터 / data.go.kr API 키 발급 및 연동 테스트
-- [ ] 1개 분기 전체 적재 + 검증
-- [ ] data.go.kr 소상공인시장진흥공단 collector 구현
-- [ ] `USE_MOCK=false` 전환 후 실제 데이터 기반 동작 확인
-- [ ] Redis 캐시 활성화 (TTL 24h)
-- [ ] 뷰포트 기반 폴리곤 로딩 (ST_Intersects)
-- [ ] 실제 데이터 기반 Agent 응답 정확성 확인
-
----
-
-## Phase 2 — 프리미엄 (Phase 1B 완료 후)
+## Phase 2 — 프리미엄 (미착수)
 
 ### 코드 작성 완료
 - [x] F04 업종 심층 분석 (기존 Tool에 category 필터 지원)
@@ -192,7 +127,6 @@
 - [ ] Tier 게이팅 인프라 (OAuth2 인증, 결제 연동)
 - [ ] category_aliases 퍼지 검색 테이블 (pg_trgm)
 - [ ] 지도 비교모드에서 복수 상권 다른 색상 하이라이트
-- [ ] 비교모드에서 상권 선택 시 자동 비교 쿼리 전송
 
 ---
 
@@ -205,7 +139,7 @@
 
 ## 참고
 
+- Phase 1B 구현 계획: `docs/plan/phase1b-comprehensive-plan.md`
 - Card UI 구현 계획: `docs/plan/card-ui-integration.md`
-- E2E 테스트 상세 보고서: `docs/status/e2e_test_report.md`
 - 체크리스트: `docs/spec/checklist.md`
 - 아키텍처: `docs/architecture/overall-architecture.md`

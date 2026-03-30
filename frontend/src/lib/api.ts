@@ -1,6 +1,9 @@
 import { District, MapBounds, PolygonFeature } from './types';
 
 const API_BASE = '/api';
+const CHAT_API_BASE = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+  : '/api';
 
 export async function fetchDistricts(
   search?: string,
@@ -67,7 +70,7 @@ export async function sendChatMessage(
   sessionId: string,
   districtCode?: string
 ): Promise<Response> {
-  const res = await fetch(`${API_BASE}/chat`, {
+  const res = await fetch(`${CHAT_API_BASE}/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

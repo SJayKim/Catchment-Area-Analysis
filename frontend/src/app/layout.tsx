@@ -17,7 +17,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className="h-full">
-      <body className={`${inter.className} h-full`}>
+      <body className={`${inter.className} h-full`}
+        style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         {children}
       </body>
     </html>

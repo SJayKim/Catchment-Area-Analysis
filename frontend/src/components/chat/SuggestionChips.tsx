@@ -21,7 +21,12 @@ export default function SuggestionChips({
             key={index}
             onClick={() => onSelect(suggestion)}
             disabled={disabled}
-            className="text-xs px-3 py-1.5 bg-primary-50 text-primary-600 rounded-full border border-primary-200 hover:bg-primary-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+            className="text-xs px-3 py-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap hover:opacity-80"
+            style={{
+              backgroundColor: 'var(--thinking-bg)',
+              color: 'var(--bg-accent)',
+              border: '1px solid var(--border-color)',
+            }}
           >
             {suggestion}
           </button>

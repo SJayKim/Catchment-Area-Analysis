@@ -42,9 +42,7 @@ def upgrade() -> None:
         sa.Column("data_quarter", sa.String(10), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )
-    op.create_index(
-        "idx_districts_boundary", "districts", ["boundary"], postgresql_using="gist"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS idx_districts_boundary ON districts USING gist (boundary)")
 
     # --- floating_population ---
     op.create_table(

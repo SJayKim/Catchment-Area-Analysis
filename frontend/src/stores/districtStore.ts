@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 import { District } from '@/lib/types';
 
+export type SelectSource = 'map' | 'chat' | null;
+
 interface DistrictState {
   selected: District | null;
+  selectSource: SelectSource;
   isCompareMode: boolean;
   compareList: District[];
   hoveredCode: string | null;
-  select: (district: District) => void;
+  select: (district: District, source?: SelectSource) => void;
   deselect: () => void;
   setHovered: (code: string | null) => void;
   toggleCompareMode: () => void;
@@ -17,13 +20,15 @@ interface DistrictState {
 
 export const useDistrictStore = create<DistrictState>((set) => ({
   selected: null,
+  selectSource: null,
   isCompareMode: false,
   compareList: [],
   hoveredCode: null,
 
-  select: (district) => set({ selected: district }),
+  select: (district, source = null) =>
+    set({ selected: district, selectSource: source }),
 
-  deselect: () => set({ selected: null }),
+  deselect: () => set({ selected: null, selectSource: null }),
 
   setHovered: (code) => set({ hoveredCode: code }),
 

@@ -99,8 +99,17 @@ export interface RiskCardData {
   districtName?: string;
 }
 
+export type AgentStepStatus = 'pending' | 'in_progress' | 'completed';
+
+export interface AgentStep {
+  id: string;
+  label: string;
+  status: AgentStepStatus;
+  toolName?: string;
+}
+
 export interface SSEEvent {
-  type: 'thinking' | 'tool' | 'text' | 'card' | 'map_cmd' | 'suggestion' | 'done' | 'error';
+  type: 'thinking' | 'tool' | 'tool_end' | 'text' | 'card' | 'map_cmd' | 'suggestion' | 'done' | 'error';
   [key: string]: unknown;
 }
 

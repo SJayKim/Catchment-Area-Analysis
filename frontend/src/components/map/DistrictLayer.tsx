@@ -63,14 +63,17 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
           setHovered(null);
         });
 
-        // Click to select
+        // Click to select (source: 'map' for auto-query via useMapSync)
         window.kakao.maps.event.addListener(polygon, 'click', () => {
-          select({
-            code: feature.code,
-            name: feature.name,
-            type: feature.type,
-            center: feature.center,
-          });
+          select(
+            {
+              code: feature.code,
+              name: feature.name,
+              type: feature.type,
+              center: feature.center,
+            },
+            'map'
+          );
         });
 
         polygonsRef.current.set(feature.code, polygon);
