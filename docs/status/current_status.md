@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
 > 최종 갱신: 2026-03-30
-> **Phase 1B 완료 ✅ — Mock E2E + Real Data ETL + Streaming UX + E2E 32 PASS**
+> **Phase 1B 완료 ✅ — Mock E2E + Real Data ETL + Dark Theme + Streaming UX + E2E 32 PASS**
 
 ---
 
@@ -31,28 +31,36 @@
 ## Phase 1B — Real Data + Streaming UX ✅ 완료 (2026-03-30)
 
 ### Step 1: Agent Progress Indicator ✅
-- `AgentProgressIndicator.tsx` — 🟡→🟢 실시간 단계 표시
-- Tool name → 한국어 라벨 매핑 (8종)
-- `graph.py`에 `tool_end` SSE 이벤트 추가
+- `AgentProgressIndicator.tsx` — 🧠→🔍→📊→✅ 이모지 실시간 단계 표시
+- Tool name → 한국어 라벨 + 이모지 매핑 (8종)
+- `graph.py`에 `tool_end` SSE 이벤트 + `icon` 필드 추가
 - `chatStore.ts`에 `agentSteps` 상태 관리
-- `sendMessage` 시 즉시 초기 step 표시 ("질문 분석 중...")
-- card/tool/thinking 이벤트마다 step 추가/완료 업데이트
+- 접기/펼치기 토글 UI
 - 텍스트 응답 시작 후 1.5초간 완료 상태 유지 후 fade-out
 
 ### Step 2: Streaming Enhancement ✅
-- SSE 버퍼링 문제 해결 — Chat API를 Next.js rewrite 대신 직접 백엔드 호출 (`NEXT_PUBLIC_API_URL`)
-- `firstTextReceived` 변수 위치 버그 수정 (try 블록 전으로 이동)
+- SSE 버퍼링 문제 해결 — Chat API를 Next.js rewrite 대신 직접 백엔드 호출
+- `firstTextReceived` 변수 위치 버그 수정
 - Tool 없는 직접 응답, 에러 시 step 정리, 다중 tool 순차 처리
-- `done` 이벤트에서 agentSteps 즉시 clear 방지 (타이머에 위임)
 
-### Step 3: E2E 테스트 ✅ — 32/32 ALL PASSED
+### Step 3: Dark Theme + Streaming UX ✅
+- **CSS 변수 기반 다크 테마** — `globals.css`에 `:root` 변수 정의 (bg-primary: #0f172a, bot-bubble: #1e293b 등)
+- **Streaming 블링킹 커서** — `.streaming::after` CSS 애니메이션
+- **react-markdown + remark-gfm** — AI 응답 마크다운 렌더링
+- **메시지 애니메이션** — `animate-msg-in` (fade-in), `animate-step-in` (slide-in)
+- **다크 테마 적용 컴포넌트**: ChatPanel, ChatInput, SuggestionChips, Toolbar, MessageBubble, MessageList, AgentProgressIndicator
+- **서버 SSE icon 필드** — thinking(🧠), tool(🔍/📋/📊/💡), tool_end 이벤트에 icon 추가
+- `tailwind.config.ts`에 `msgIn`/`stepIn` 키프레임 추가
+- `layout.tsx` body에 CSS 변수 배경/텍스트 적용
+
+### Step 4: E2E 테스트 ✅ — 32/32 ALL PASSED
 - `feature4-progress-indicator.spec.ts` (6개)
 - `feature5-card-rendering.spec.ts` (5개)
 - `feature6-streaming-ux.spec.ts` (5개)
 - `feature7-error-handling.spec.ts` (4개)
 - 기존 feature1~3 (12개) 모두 통과
 
-### Step 4: 데이터 파이프라인 ✅
+### Step 5: 데이터 파이프라인 ✅
 - Docker Compose: PostGIS 16 + Redis 7 기동
 - Alembic migration: 9개 테이블 + 인덱스 생성
 - 서울 열린데이터 API 연동 (4개 서비스 승인)
@@ -72,11 +80,10 @@
 ### 해결한 버그들 (Phase 1B)
 - **SSE 버퍼링**: Next.js rewrite 프록시가 SSE 이벤트를 버퍼링 → Chat API 직접 연결로 해결
 - **텍스트 응답 누락**: `firstTextReceived` 변수가 `finally` 뒤에 선언 → `try` 앞으로 이동
-- **Progress Indicator 안 보임**: `isThinking && agentSteps.length > 0` 조건에서 text 이벤트 시 즉시 isThinking=false → agentSteps만으로 표시하도록 변경
-- **Progress 너무 빨리 사라짐**: 300ms → 1.5초로 연장, sendMessage 시 초기 step 즉시 추가
+- **Progress Indicator 안 보임**: text 이벤트 시 즉시 isThinking=false → agentSteps만으로 표시하도록 변경
+- **Progress 너무 빨리 사라짐**: 300ms → 1.5초로 연장
 - **ETL 쿼터 필터**: `STDR_YR_CD`/`STDR_QU_CD` 대신 `STDR_YYQU_CD` 사용하도록 통합 필터
-- **asyncpg 파라미터 제한**: batch_size 5000 → 1000으로 축소 (32767 파라미터 제한)
-- **폴리곤 API 미승인**: VwsmTrdarFlpopQq에서 district 정보 추출하는 fallback 구현
+- **asyncpg 파라미터 제한**: batch_size 5000 → 1000으로 축소
 - **Alembic GiST 인덱스 충돌**: `CREATE INDEX IF NOT EXISTS`로 변경
 
 ### 미승인 API (추후 승인 필요)
@@ -102,14 +109,20 @@
 
 ## Next Items (우선순위 순)
 
-### 1. 미승인 API 서비스 승인 요청
-- 승인 후 ETL 재실행 → 폴리곤 지도 + 상주인구 적재
+### 🔴 1. Card UI 4종 다크 테마 적용
+SummaryCard, CompareCard, RecommendCard, RiskCard에 `bg-white`, `text-gray-700` 등 라이트 모드 색상이 하드코딩되어 있음. CSS 변수(`var(--bg-secondary)`, `var(--text-primary)`)로 교체 필요. 각 컴포넌트 ~20줄 수정.
 
-### 2. UX/UI 개선
-- 반응형 레이아웃 (모바일 기본 대응)
-- 데이터 기준 시점 일관 표시
+### 🔴 2. .gitignore 정리
+- `frontend/test-results/` 추가
+- `.playwright-mcp/` 추가
 
-### 3. Phase 2 — 프리미엄 기능
+### 🟡 3. district_summary.py Real DB 지원
+현재 Mock 데이터만 사용. 다른 7개 Tool처럼 `settings.use_mock` 분기 + Real DB 쿼리 추가 필요.
+
+### 🟡 4. 미승인 API 서비스 승인 요청
+승인 후 ETL 재실행 → 폴리곤 지도 표시 + 상주인구 적재
+
+### 🟢 5. Phase 2 — 프리미엄 기능
 - Tier 게이팅 인프라 (OAuth2 인증, 결제)
 - 비교모드 복수 상권 하이라이트
 
@@ -140,6 +153,7 @@
 ## 참고
 
 - Phase 1B 구현 계획: `docs/plan/phase1b-comprehensive-plan.md`
+- Dark Theme 구현 계획: `docs/plan/streaming-ux-dark-theme.md`
 - Card UI 구현 계획: `docs/plan/card-ui-integration.md`
 - 체크리스트: `docs/spec/checklist.md`
 - 아키텍처: `docs/architecture/overall-architecture.md`
