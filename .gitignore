@@ -26,8 +26,11 @@ pgdata/
 .vscode/
 *.swp
 
-# Playwright MCP logs
-.playwright-mcp/*.log
+# Playwright MCP
+.playwright-mcp/
+
+# Test results
+frontend/test-results/
 
 # Screenshots (temp)
 map-loaded.png

@@ -7,19 +7,19 @@ interface RiskCardProps {
   data: RiskCardData | Record<string, unknown>;
 }
 
-const GRADE_STYLES: Record<string, string> = {
-  '매우 안정': 'text-green-600 bg-green-50',
-  '양호': 'text-blue-600 bg-blue-50',
-  '주의': 'text-yellow-600 bg-yellow-50',
-  '위험': 'text-red-600 bg-red-50',
-  '데이터 부족': 'text-gray-500 bg-gray-50',
+const GRADE_STYLES: Record<string, { color: string; bg: string }> = {
+  '매우 안정': { color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
+  '양호': { color: '#3b82f6', bg: 'rgba(59,130,246,0.15)' },
+  '주의': { color: '#eab308', bg: 'rgba(234,179,8,0.15)' },
+  '위험': { color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
+  '데이터 부족': { color: '#94a3b8', bg: 'rgba(148,163,184,0.15)' },
 };
 
 function StabilityGauge({ score, grade }: { score: number | null; grade: string }) {
   if (score === null) {
     return (
       <div className="text-center py-2">
-        <p className="text-sm text-gray-500">{grade}</p>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{grade}</p>
       </div>
     );
   }
@@ -33,18 +33,23 @@ function StabilityGauge({ score, grade }: { score: number | null; grade: string 
           ? 'bg-yellow-500'
           : 'bg-red-500';
 
+  const gradeStyle = GRADE_STYLES[grade] || GRADE_STYLES['양호'];
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-sm font-medium text-gray-700">상권 안정성</span>
+        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>상권 안정성</span>
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-gray-800">{score}점</span>
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${GRADE_STYLES[grade] || GRADE_STYLES['양호']}`}>
+          <span className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{score}점</span>
+          <span
+            className="text-xs font-medium px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: gradeStyle.bg, color: gradeStyle.color }}
+          >
             {grade}
           </span>
         </div>
       </div>
-      <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border-color)' }}>
         <div
           className={`h-full rounded-full transition-all ${color}`}
           style={{ width: `${score}%` }}
@@ -60,14 +65,14 @@ function SurvivalBar({ category, avgMonths, maxMonths }: { category: string; avg
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-600 w-20 truncate" title={category}>{category}</span>
-      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+      <span className="text-xs w-20 truncate" style={{ color: 'var(--text-secondary)' }} title={category}>{category}</span>
+      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
         <div
           className={`h-full rounded-full ${isLow ? 'bg-red-400' : 'bg-blue-400'}`}
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>
-      <span className={`text-xs font-medium w-16 text-right ${isLow ? 'text-red-500' : 'text-gray-600'}`}>
+      <span className={`text-xs font-medium w-16 text-right ${isLow ? 'text-red-500' : ''}`} style={isLow ? {} : { color: 'var(--text-secondary)' }}>
         {avgMonths.toFixed(1)}개월 {isLow ? '⚠' : ''}
       </span>
     </div>
@@ -79,8 +84,11 @@ export default function RiskCard({ data }: RiskCardProps) {
 
   if (!card.stability) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-        <p className="text-sm text-gray-500">리스크 데이터를 표시할 수 없습니다.</p>
+      <div
+        className="rounded-xl p-4"
+        style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}
+      >
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>리스크 데이터를 표시할 수 없습니다.</p>
       </div>
     );
   }
@@ -96,7 +104,10 @@ export default function RiskCard({ data }: RiskCardProps) {
   })) || [];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div
+      className="rounded-xl shadow-sm overflow-hidden"
+      style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+    >
       {/* Header */}
       <div className="bg-gradient-to-r from-red-500 to-rose-500 px-4 py-3">
         <h3 className="text-white font-semibold text-sm">
@@ -105,20 +116,20 @@ export default function RiskCard({ data }: RiskCardProps) {
       </div>
 
       {/* Stability Score */}
-      <div className="px-4 py-3 border-b border-gray-100">
+      <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
         <StabilityGauge score={card.stability.score} grade={card.stability.grade} />
         {card.stability.trend?.detail && (
-          <p className="text-xs text-gray-500 mt-1.5">📉 {card.stability.trend.detail}</p>
+          <p className="text-xs mt-1.5" style={{ color: 'var(--text-secondary)' }}>📉 {card.stability.trend.detail}</p>
         )}
         {card.stability.message && (
-          <p className="text-xs text-gray-500 mt-1">{card.stability.message}</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{card.stability.message}</p>
         )}
       </div>
 
       {/* Survival by Category */}
       {card.survival_by_category && card.survival_by_category.length > 0 && (
-        <div className="px-4 py-3 border-b border-gray-100">
-          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+        <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
+          <h4 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>
             📊 업종별 평균 생존 기간
           </h4>
           <div className="space-y-1.5">
@@ -136,14 +147,14 @@ export default function RiskCard({ data }: RiskCardProps) {
 
       {/* Risk Categories */}
       {card.risk_categories && card.risk_categories.length > 0 && (
-        <div className="px-4 py-3 border-b border-gray-100">
-          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+        <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
+          <h4 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>
             🚨 위험 업종
           </h4>
           <div className="space-y-1">
             {card.risk_categories.map((item, i) => (
               <div key={i} className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">• {item.category}</span>
+                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>• {item.category}</span>
                 <span className="text-xs text-red-500 font-medium">
                   폐업률 {item.close_rate.toFixed(1)}% ({item.warning})
                 </span>
@@ -155,8 +166,8 @@ export default function RiskCard({ data }: RiskCardProps) {
 
       {/* Quarterly Trend Chart */}
       {trendChartData.length > 0 && (
-        <div className="px-4 py-3 border-b border-gray-100">
-          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+        <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
+          <h4 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>
             📈 분기별 개폐업 추이
           </h4>
           <InlineChart
@@ -171,8 +182,8 @@ export default function RiskCard({ data }: RiskCardProps) {
       )}
 
       {/* Footer */}
-      <div className="px-4 py-2 bg-gray-50">
-        <p className="text-xs text-gray-400">
+      <div className="px-4 py-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           데이터 기준: {card.quarterly_trend?.[card.quarterly_trend.length - 1]?.quarter || '최신 분기'}
           {card.stability.quarters_analyzed > 0 && ` · ${card.stability.quarters_analyzed}분기 분석`}
         </p>

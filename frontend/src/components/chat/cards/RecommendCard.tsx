@@ -17,10 +17,10 @@ function ScoreBar({ score }: { score: number }) {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border-color)' }}>
         <div className={`h-full rounded-full ${color}`} style={{ width: `${score}%` }} />
       </div>
-      <span className="text-xs font-bold text-gray-700 w-10 text-right">{score.toFixed(0)}</span>
+      <span className="text-xs font-bold w-10 text-right" style={{ color: 'var(--text-primary)' }}>{score.toFixed(0)}</span>
     </div>
   );
 }
@@ -30,14 +30,20 @@ export default function RecommendCard({ data }: RecommendCardProps) {
 
   if (!card.recommendations || card.recommendations.length === 0) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-        <p className="text-sm text-gray-500">추천 데이터를 표시할 수 없습니다.</p>
+      <div
+        className="rounded-xl p-4"
+        style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}
+      >
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>추천 데이터를 표시할 수 없습니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div
+      className="rounded-xl shadow-sm overflow-hidden"
+      style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+    >
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
         <h3 className="text-white font-semibold text-sm">
@@ -47,19 +53,26 @@ export default function RecommendCard({ data }: RecommendCardProps) {
 
       {/* Message */}
       {card.message && (
-        <div className="px-4 py-2 bg-amber-50 border-b border-amber-100">
-          <p className="text-xs text-amber-700">{card.message}</p>
+        <div
+          className="px-4 py-2"
+          style={{ backgroundColor: 'rgba(245,158,11,0.1)', borderBottom: '1px solid rgba(245,158,11,0.2)' }}
+        >
+          <p className="text-xs" style={{ color: '#fbbf24' }}>{card.message}</p>
         </div>
       )}
 
       {/* Recommendations */}
-      <div className="divide-y divide-gray-100">
-        {card.recommendations.map((rec) => (
-          <div key={rec.rank} className="px-4 py-3">
+      <div style={{ borderColor: 'var(--border-color)' }}>
+        {card.recommendations.map((rec, recIdx) => (
+          <div
+            key={rec.rank}
+            className="px-4 py-3"
+            style={recIdx < card.recommendations.length - 1 ? { borderBottom: '1px solid var(--border-color)' } : {}}
+          >
             <div className="flex items-start justify-between mb-1.5">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-gray-400">{rec.rank}.</span>
-                <span className="text-sm font-semibold text-gray-800">{rec.category_name}</span>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-muted)' }}>{rec.rank}.</span>
+                <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{rec.category_name}</span>
               </div>
               <div className="w-24">
                 <ScoreBar score={rec.score} />
@@ -67,14 +80,14 @@ export default function RecommendCard({ data }: RecommendCardProps) {
             </div>
             <div className="ml-5 space-y-0.5">
               {rec.reasons.map((reason, i) => (
-                <p key={i} className="text-xs text-gray-500 flex items-start gap-1">
-                  <span className="text-gray-300 mt-0.5">├</span>
+                <p key={i} className="text-xs flex items-start gap-1" style={{ color: 'var(--text-secondary)' }}>
+                  <span style={{ color: 'var(--text-muted)' }} className="mt-0.5">├</span>
                   {reason}
                 </p>
               ))}
               {rec.startup_cost && (
-                <p className="text-xs text-gray-500 flex items-start gap-1">
-                  <span className="text-gray-300 mt-0.5">└</span>
+                <p className="text-xs flex items-start gap-1" style={{ color: 'var(--text-secondary)' }}>
+                  <span style={{ color: 'var(--text-muted)' }} className="mt-0.5">└</span>
                   평균 창업비용 {formatWon(rec.startup_cost * 10000)}
                 </p>
               )}
@@ -84,11 +97,11 @@ export default function RecommendCard({ data }: RecommendCardProps) {
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
-        <p className="text-xs text-gray-400">
+      <div className="px-4 py-2" style={{ backgroundColor: 'var(--bg-tertiary)', borderTop: '1px solid var(--border-color)' }}>
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           데이터 기준: {card.quarter} · 분석 업종 {card.total_categories_analyzed}개
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
           ⚠ 추정치이며 실제 결과와 다를 수 있습니다
         </p>
       </div>

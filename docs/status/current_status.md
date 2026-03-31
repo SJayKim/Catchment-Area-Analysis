@@ -1,6 +1,6 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-03-30
+> 최종 갱신: 2026-03-31
 > **Phase 1B 완료 ✅ — Mock E2E + Real Data ETL + Dark Theme + Streaming UX + E2E 32 PASS**
 
 ---
@@ -107,22 +107,29 @@
 
 ---
 
+## 완료 항목 (2026-03-31)
+
+### ✅ Card UI 4종 다크 테마 적용
+- SummaryCard, CompareCard, RecommendCard, RiskCard — `bg-white`/`text-gray-*` → CSS 변수(`var(--bg-secondary)`, `var(--text-primary)`) 교체
+- InlineChart — 그리드/축/툴팁 다크 색상 (#334155, #94a3b8, #1e293b)
+- 상태 뱃지/등급 뱃지 — `rgba()` 반투명 배경으로 변경
+- 그라디언트 헤더 유지 (primary/indigo/amber/red)
+
+### ✅ .gitignore 정리
+- `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
+- `frontend/test-results/` 추가
+
+---
+
 ## Next Items (우선순위 순)
 
-### 🔴 1. Card UI 4종 다크 테마 적용
-SummaryCard, CompareCard, RecommendCard, RiskCard에 `bg-white`, `text-gray-700` 등 라이트 모드 색상이 하드코딩되어 있음. CSS 변수(`var(--bg-secondary)`, `var(--text-primary)`)로 교체 필요. 각 컴포넌트 ~20줄 수정.
-
-### 🔴 2. .gitignore 정리
-- `frontend/test-results/` 추가
-- `.playwright-mcp/` 추가
-
-### 🟡 3. district_summary.py Real DB 지원
+### 🟡 1. district_summary.py Real DB 지원
 현재 Mock 데이터만 사용. 다른 7개 Tool처럼 `settings.use_mock` 분기 + Real DB 쿼리 추가 필요.
 
-### 🟡 4. 미승인 API 서비스 승인 요청
+### 🟡 2. 미승인 API 서비스 승인 요청
 승인 후 ETL 재실행 → 폴리곤 지도 표시 + 상주인구 적재
 
-### 🟢 5. Phase 2 — 프리미엄 기능
+### 🟢 3. Phase 2 — 프리미엄 기능
 - Tier 게이팅 인프라 (OAuth2 인증, 결제)
 - 비교모드 복수 상권 하이라이트
 

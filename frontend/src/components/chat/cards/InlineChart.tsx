@@ -36,15 +36,15 @@ export default function InlineChart({
       <ResponsiveContainer width="100%" height="100%">
         {type === 'bar' ? (
           <BarChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis
               dataKey={xKey}
-              tick={{ fontSize: 10, fill: '#9ca3af' }}
-              axisLine={{ stroke: '#e5e7eb' }}
+              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              axisLine={{ stroke: '#334155' }}
             />
             <YAxis
-              tick={{ fontSize: 10, fill: '#9ca3af' }}
-              axisLine={{ stroke: '#e5e7eb' }}
+              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              axisLine={{ stroke: '#334155' }}
               tickFormatter={(v: number) =>
                 v >= 10000 ? `${(v / 10000).toFixed(0)}만` : v.toLocaleString()
               }
@@ -53,7 +53,9 @@ export default function InlineChart({
               contentStyle={{
                 fontSize: 11,
                 borderRadius: 8,
-                border: '1px solid #e5e7eb',
+                backgroundColor: '#1e293b',
+                border: '1px solid #334155',
+                color: '#f8fafc',
               }}
               formatter={(value: number) => [value.toLocaleString(), dataKey]}
             />
@@ -61,15 +63,15 @@ export default function InlineChart({
           </BarChart>
         ) : (
           <LineChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis
               dataKey={xKey}
-              tick={{ fontSize: 10, fill: '#9ca3af' }}
-              axisLine={{ stroke: '#e5e7eb' }}
+              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              axisLine={{ stroke: '#334155' }}
             />
             <YAxis
-              tick={{ fontSize: 10, fill: '#9ca3af' }}
-              axisLine={{ stroke: '#e5e7eb' }}
+              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              axisLine={{ stroke: '#334155' }}
               tickFormatter={(v: number) =>
                 v >= 10000 ? `${(v / 10000).toFixed(0)}만` : v.toLocaleString()
               }
@@ -78,7 +80,9 @@ export default function InlineChart({
               contentStyle={{
                 fontSize: 11,
                 borderRadius: 8,
-                border: '1px solid #e5e7eb',
+                backgroundColor: '#1e293b',
+                border: '1px solid #334155',
+                color: '#f8fafc',
               }}
               formatter={(value: number) => [value.toLocaleString(), dataKey]}
             />
