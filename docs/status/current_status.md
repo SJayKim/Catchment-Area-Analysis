@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-03-31
-> **Phase 1B 완료 ✅ — Mock E2E + Real Data ETL + Dark Theme + Streaming UX + E2E 32 PASS**
+> 최종 갱신: 2026-04-01
+> **Phase 1B 완료 ✅ — Playwright E2E QA 22/26 PASS + 버그 2건 수정 + HARD FAIL 0건**
 
 ---
 
@@ -87,9 +87,9 @@
 - **Alembic GiST 인덱스 충돌**: `CREATE INDEX IF NOT EXISTS`로 변경
 
 ### 미승인 API (추후 승인 필요)
-- `VwsmTrdarSelngW` (상권 폴리곤) — districts boundary/center_point 없음
-- `VwsmTrdarStorW` (점포 상세정보)
-- `VwsmTrdarPopltnQq` (상주인구)
+- `VwsmTrdarSelngW` (상권 폴리곤) — **SHP 파일로 대체 완료**
+- `VwsmTrdarStorW` (점포 상세정보) — VwsmTrdarStorQq 폴백 동작 중
+- `VwsmTrdarPopltnQq` (상주인구) — 대체 소스 없음
 
 ---
 
@@ -97,13 +97,60 @@
 
 | 서비스 | 포트 | 모드 |
 |--------|------|------|
-| Next.js 프론트엔드 | 3000 | Mock (USE_MOCK=true) |
-| FastAPI 백엔드 | 8002 | Mock (USE_MOCK=true) |
-| PostGIS (Docker) | 5432 | 실데이터 적재 완료 |
+| Next.js 프론트엔드 | 3000 | Real (USE_MOCK=false) |
+| FastAPI 백엔드 | 8002 | Real (USE_MOCK=false) |
+| PostGIS (Docker) | 5432 | 실데이터 적재 완료 (폴리곤 100%) |
 | Redis (Docker) | 6379 | 정상 |
 
-- Mock 모드: 5개 상권 폴리곤 + AI 챗봇 + Card UI 전체 동작
-- Real 모드: 1,650개 상권 데이터 + DB 쿼리 (폴리곤 경계선 없음)
+- Mock 모드: 5개 상권 폴리곤 + AI 챗봇 + Card UI 전체 동작 (32/32 E2E PASS)
+- **Real 모드**: 1,650개 상권 + 실제 폴리곤 + 유동인구/매출/점포 데이터 전체 동작
+
+---
+
+## 완료 항목 (2026-04-01)
+
+### ✅ Playwright MCP 브라우저 E2E QA (26개 시나리오)
+- **결과**: 22 PASS / 4 SOFT FAIL / 0 HARD FAIL
+- **그룹 1** (지도/폴리곤/검색): 5/6 PASS
+- **그룹 2** (채팅/Card/답변품질): 8/10 PASS
+- **그룹 3** (UX/에러/개선점): 9/10 PASS
+- **수정 완료 버그 2건**:
+  - `store_info.py`: Top 5 업종에 점포 수 0개 업종 포함 → `store_count > 0` 필터 추가
+  - `chat.py`: 한국어 조사("은/는/이/가" 등) 포함 시 상권 DB 검색 실패 → `_strip_korean_particles()` 추가
+- **잔여 SOFT FAIL**: "여기 카페 많아?" 컨텍스트 불일치 (Agent LLM 수준, 낮은 심각도)
+- **상세 리포트**: `docs/status/e2e-qa-report.md`
+
+### ✅ SHP 폴리곤 적재 + Real 모드 전환
+- **OA-15560 SHP** 다운로드(data.seoul.go.kr) → geopandas 파싱 → PostGIS 적재
+- 1,650개 상권 boundary/center_point 100% 채워짐 (EPSG:5181→4326 변환)
+- `DISTRICT_TYPE_MAP`에 `U`(관광특구) 추가
+- Real 모드 지도에 실제 불규칙 폴리곤 표시 확인
+
+### ✅ Real 모드 차단 버그 2건 수정
+- **시스템 프롬프트**: Mock 코드(D3001~D3005) 하드코딩 제거 → `settings.use_mock` 분기
+- **채팅 라우트**: Real 모드 이름→코드 DB 감지 + center_point/district_type 조회 추가
+
+### ✅ district_summary.py Real DB 지원
+- Mock 직접 import 제거 → `asyncio.gather()`로 3개 하위 Tool 병렬 호출
+- `_get_district_meta()` Mock/Real 분기 + 캐시 레이어
+
+### ✅ Real 모드 E2E 검증 (수동 QA)
+| 시나리오 | 결과 |
+|----------|------|
+| 지도에 실제 폴리곤 표시 | PASS |
+| 자연어 "강남역 분석해줘" → SummaryCard | PASS (유동인구 745만, 매출 4187억, 피크 17시) |
+| 상권 비교 (강남역 vs 홍대입구) | PASS |
+| 업종 추천 Top 5 | PASS (편의점 100점, 서적 46점 등) |
+| 리스크 분석 | PASS (위험 업종 + 폐업률) |
+
+### ✅ Mock 모드 회귀 테스트
+- 32/32 ALL PASSED (14.3분)
+
+### ✅ floating_population ETL 버그 수정 + 재적재
+- **원인**: API 컬럼명이 `TMZON_00_06_FLPOP_CO` 형식인데, 변환 코드가 `TMZON_1_FLPOP_CO` 형식을 기대
+- **수정**: `transformers.py` TIME_SLOTS를 `"00_06"→0, "06_11"→6, ...` 형식으로 변경 + legacy fallback
+- **결과**: 9,885/9,888행 non-zero, 강남역 일 평균 유동인구 745만 3천명 정상 표시
+- SummaryCard 시간대별 바 차트 + 피크 시간(17시) 정상 동작
 
 ---
 
@@ -123,11 +170,16 @@
 
 ## Next Items (우선순위 순)
 
-### 🟡 1. district_summary.py Real DB 지원
-현재 Mock 데이터만 사용. 다른 7개 Tool처럼 `settings.use_mock` 분기 + Real DB 쿼리 추가 필요.
+### 🔴 1. Agent 아키텍처 전환 — Planner-Actor-Evaluator (계획 수립 완료)
+현재 `create_react_agent` (prebuilt ReAct) → **커스텀 Planner-Actor-Evaluator 그래프**로 전환
+- **목적**: 멀티턴 대화 지원, 의도 분류 정확성, 도구 호출 효율화, 결과 평가
+- **상세 계획**: `docs/plan/agent_improvement/` (10개 모듈, 70개 시나리오 테스트)
+- **구현 순서**: State확장 → 대화이력 → Planner → Actor → Evaluator → Respond → Graph조립 → Chat통합 → 프론트 → UX개선
+- **마이그레이션**: `agent_mode` 플래그로 react/pae 전환, 롤백 가능
+- 상태: **계획 완료, 구현 미착수**
 
-### 🟡 2. 미승인 API 서비스 승인 요청
-승인 후 ETL 재실행 → 폴리곤 지도 표시 + 상주인구 적재
+### 🟡 2. 미승인 API 서비스 (상주인구)
+VwsmTrdarPopltnQq 승인 후 상주인구 적재
 
 ### 🟢 3. Phase 2 — 프리미엄 기능
 - Tier 게이팅 인프라 (OAuth2 인증, 결제)
@@ -159,7 +211,11 @@
 
 ## 참고
 
+- **E2E QA 리포트**: `docs/status/e2e-qa-report.md`
+- **스크린샷**: `docs/screenshots/e2e-qa/` (20개), `docs/screenshots/real-mode/` (7개), `docs/screenshots/dev/` (5개)
+- **Agent 개선 계획**: `docs/plan/agent_improvement/` (10개 모듈, TODO 78개, Checklist 111개, 시나리오 테스트 70개)
 - Phase 1B 구현 계획: `docs/plan/phase1b-comprehensive-plan.md`
+- Real DB 마이그레이션 계획: `docs/plan/data-source-migration.md`
 - Dark Theme 구현 계획: `docs/plan/streaming-ux-dark-theme.md`
 - Card UI 구현 계획: `docs/plan/card-ui-integration.md`
 - 체크리스트: `docs/spec/checklist.md`

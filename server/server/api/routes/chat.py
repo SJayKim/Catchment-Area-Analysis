@@ -5,7 +5,7 @@ import logging
 import re
 import time
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
@@ -61,6 +61,82 @@ class ChatRequest(BaseModel):
     district_code: str | None = None
 
 
+async def _resolve_district_from_db(district_code: str) -> dict | None:
+    """Fetch district info (name, type, center, quarter) from DB."""
+    from geoalchemy2.functions import ST_X, ST_Y
+    from sqlalchemy import select
+
+    from server.api.deps import get_db
+    from server.models.district import District
+
+    async for db in get_db():
+        result = await db.execute(
+            select(
+                District.district_name,
+                District.district_type,
+                District.data_quarter,
+                ST_Y(District.center_point).label("lat"),
+                ST_X(District.center_point).label("lng"),
+            ).where(District.district_code == district_code)
+        )
+        row = result.first()
+        if row:
+            center = None
+            if row.lat is not None and row.lng is not None:
+                center = {"lat": float(row.lat), "lng": float(row.lng)}
+            return {
+                "name": row.district_name,
+                "type": row.district_type,
+                "quarter": row.data_quarter,
+                "center": center,
+            }
+    return None
+
+
+def _strip_korean_particles(word: str) -> list[str]:
+    """Strip common Korean particles and return candidate stems (longest first)."""
+    # Ordered longest-first so we strip the longest matching suffix
+    _PARTICLES = [
+        "에서는", "이랑은", "에서", "부터", "까지", "처럼", "만큼",
+        "이랑", "하고", "에게", "한테", "보다",
+        "은", "는", "이", "가", "을", "를", "에", "도", "로", "의",
+        "와", "과", "랑", "서",
+    ]
+    candidates = [word]
+    for p in _PARTICLES:
+        if word.endswith(p) and len(word) > len(p):
+            stem = word[: -len(p)]
+            if len(stem) >= 2:
+                candidates.append(stem)
+    return candidates
+
+
+async def _detect_district_from_message(message: str) -> dict | None:
+    """Search DB for a district name mentioned in the message text."""
+    from sqlalchemy import select
+
+    from server.api.deps import get_db
+    from server.models.district import District
+
+    # Extract potential district names: try each word/phrase
+    # Korean district names are typically 2-8 chars
+    words = re.findall(r"[\w가-힣]{2,10}", message)
+    async for db in get_db():
+        for word in words:
+            # Try original word + particle-stripped stems
+            candidates = _strip_korean_particles(word)
+            for candidate in candidates:
+                result = await db.execute(
+                    select(District.district_code, District.district_name)
+                    .where(District.district_name.ilike(f"%{candidate}%"))
+                    .limit(1)
+                )
+                row = result.first()
+                if row:
+                    return {"code": row.district_code, "name": row.district_name}
+    return None
+
+
 @router.post("/chat")
 async def chat(request: ChatRequest) -> EventSourceResponse:
     """Chat endpoint with SSE streaming via LangGraph ReAct agent."""
@@ -84,20 +160,12 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
                 district_center = d.get("center")
                 district_type = d.get("type", "발달상권")
         else:
-            from sqlalchemy import select
-            from server.api.deps import get_db
-            from server.models.district import District
-
-            async for db in get_db():
-                result = await db.execute(
-                    select(District.district_name, District.data_quarter).where(
-                        District.district_code == request.district_code
-                    )
-                )
-                row = result.first()
-                if row:
-                    district_name = row.district_name
-                    data_quarter = row.data_quarter
+            d = await _resolve_district_from_db(request.district_code)
+            if d:
+                district_name = d["name"]
+                data_quarter = d["quarter"]
+                district_center = d["center"]
+                district_type = d.get("type", "발달상권")
 
         # Update session with explicitly provided district
         session["last_district_code"] = request.district_code
@@ -117,6 +185,19 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
                 session["last_district_code"] = code
                 session["last_district_name"] = district_name
                 break
+    else:
+        # Real mode: detect district name from message via DB lookup
+        detected = await _detect_district_from_message(request.message)
+        if detected and detected["code"] != request.district_code:
+            request.district_code = detected["code"]
+            district_name = detected["name"]
+            d = await _resolve_district_from_db(detected["code"])
+            if d:
+                data_quarter = d["quarter"]
+                district_center = d["center"]
+                district_type = d.get("type", "발달상권")
+            session["last_district_code"] = detected["code"]
+            session["last_district_name"] = detected["name"]
 
     # Fallback: restore district from session if still not resolved
     if not request.district_code and session.get("last_district_code"):
@@ -128,6 +209,12 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
             if d:
                 data_quarter = d["quarter"]
                 district_center = d.get("center")
+                district_type = d.get("type", "발달상권")
+        else:
+            d = await _resolve_district_from_db(request.district_code)
+            if d:
+                data_quarter = d["quarter"]
+                district_center = d["center"]
                 district_type = d.get("type", "발달상권")
 
     # Determine if this is a summary-type request

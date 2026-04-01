@@ -73,6 +73,7 @@ async def get_store_info(
             .where(
                 Store.district_code == district_code,
                 Store.quarter == quarter,
+                Store.store_count > 0,
             )
             .order_by(Store.store_count.desc())
             .limit(5)

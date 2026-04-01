@@ -17,16 +17,30 @@ DISTRICT_TYPE_MAP = {
     "D": "발달상권",
     "R": "전통시장",
     "G": "관광특구",
+    "U": "관광특구",
 }
 
 # 시간대 매핑: API 컬럼 suffix → time_slot 값 (시간대 시작 시각)
+# API uses two naming patterns depending on the endpoint:
+#   Pattern A: TMZON_1_FLPOP_CO (VwsmTrdarFlpopQq with year/quarter split)
+#   Pattern B: TMZON_00_06_FLPOP_CO (VwsmTrdarFlpopQq with STDR_YYQU_CD)
 TIME_SLOTS = {
-    "1": 0,   # 00~06
-    "2": 6,   # 06~11
-    "3": 11,  # 11~14
-    "4": 14,  # 14~17
-    "5": 17,  # 17~21
-    "6": 21,  # 21~24
+    "00_06": 0,
+    "06_11": 6,
+    "11_14": 11,
+    "14_17": 14,
+    "17_21": 17,
+    "21_24": 21,
+}
+
+# Legacy pattern mapping (for backward compatibility)
+_LEGACY_TIME_SLOTS = {
+    "1": 0,
+    "2": 6,
+    "3": 11,
+    "4": 14,
+    "5": 17,
+    "6": 21,
 }
 
 
@@ -154,6 +168,11 @@ def transform_floating_pop(raw: dict) -> list[dict]:
     for slot_key, slot_value in TIME_SLOTS.items():
         col = f"TMZON_{slot_key}_FLPOP_CO"
         pop = _safe_int(raw.get(col))
+        # Fallback to legacy pattern (TMZON_1_FLPOP_CO)
+        if pop == 0:
+            legacy_key = {v: k for k, v in _LEGACY_TIME_SLOTS.items()}.get(slot_value)
+            if legacy_key:
+                pop = _safe_int(raw.get(f"TMZON_{legacy_key}_FLPOP_CO"))
         # Distribute demographics proportionally across time slots
         ratio = pop / total if total > 0 else 0
         rows.append({

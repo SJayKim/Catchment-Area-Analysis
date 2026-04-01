@@ -46,6 +46,7 @@ async def _run_pipeline(
     quarter: str,
     tables: list[str] | None,
     dry_run: bool,
+    shp_file: str | None = None,
 ) -> None:
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -69,9 +70,14 @@ async def _run_pipeline(
         # --- districts ---
         if "districts" in target_tables:
             t0 = time.time()
-            console.print("[bold blue]Collecting districts...[/]")
-            raw_districts = await collector.collect_districts()
-            transformed = [transformers.transform_district(r) for r in raw_districts]
+            if shp_file:
+                from server.data.etl.shp_collector import load_districts_from_shp
+                console.print(f"[bold blue]Loading districts from SHP: {shp_file}[/]")
+                transformed = load_districts_from_shp(shp_file, quarter)
+            else:
+                console.print("[bold blue]Collecting districts...[/]")
+                raw_districts = await collector.collect_districts()
+                transformed = [transformers.transform_district(r) for r in raw_districts]
             elapsed = time.time() - t0
             console.print(f"  Collected & transformed {len(transformed)} districts ({elapsed:.1f}s)")
 
@@ -223,6 +229,9 @@ def run(
     quarter: str = typer.Argument(..., help="Target quarter (e.g., 2025Q3)"),
     table: Optional[list[str]] = typer.Option(None, "--table", "-t", help="Specific tables to load"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Collect & transform only, skip DB load"),
+    shp_file: Optional[str] = typer.Option(
+        None, "--shp-file", help="SHP file for districts (overrides API)"
+    ),
 ) -> None:
     """Run ETL pipeline for a given quarter."""
     _parse_quarter(quarter)  # validate format
@@ -231,7 +240,44 @@ def run(
             if t not in VALID_TABLES:
                 raise typer.BadParameter(f"Unknown table: {t}. Valid: {VALID_TABLES}")
     console.print(f"[bold]Starting ETL for {quarter}[/]" + (" [DRY RUN]" if dry_run else ""))
-    asyncio.run(_run_pipeline(quarter, table, dry_run))
+    asyncio.run(_run_pipeline(quarter, table, dry_run, shp_file=shp_file))
+
+
+@app.command(name="load-shp")
+def load_shp(
+    shp_file: str = typer.Argument(..., help="Path to SHP file"),
+    quarter: str = typer.Argument(..., help="Data quarter (e.g., 2025Q4)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Parse and show sample, skip DB load"),
+) -> None:
+    """Load districts from SHP file into the database."""
+    from server.data.etl.shp_collector import load_districts_from_shp
+
+    _parse_quarter(quarter)
+    console.print(f"[bold]Loading SHP: {shp_file} for {quarter}[/]")
+
+    rows = load_districts_from_shp(shp_file, quarter)
+    console.print(f"  Parsed {len(rows)} districts")
+
+    if dry_run:
+        console.print("[yellow]DRY RUN — showing first 3 rows:[/]")
+        for r in rows[:3]:
+            console.print(f"  {r['district_code']} | {r['district_name']} | {r['district_type']}")
+            console.print(f"    boundary: {r['boundary_wkt'][:80]}...")
+        return
+
+    async def _load() -> None:
+        from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+        from server.data.etl.loader import DataLoader
+
+        engine = create_async_engine(settings.database_url, echo=False)
+        session_factory = async_sessionmaker(engine, expire_on_commit=False)
+        loader = DataLoader(session_factory)
+        count = await loader.upsert_districts(rows)
+        await engine.dispose()
+        console.print(f"[green]Upserted {count} districts[/]")
+
+    asyncio.run(_load())
 
 
 @app.command()

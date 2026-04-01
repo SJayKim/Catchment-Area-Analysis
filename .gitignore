@@ -34,3 +34,6 @@ frontend/test-results/
 
 # Screenshots (temp)
 map-loaded.png
+
+# SHP data files (large binaries)
+data/shp/

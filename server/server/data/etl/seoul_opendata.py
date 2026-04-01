@@ -20,6 +20,7 @@ BASE_URL = "http://openapi.seoul.go.kr:8088"
 # Service name → API endpoint name
 SERVICES = {
     "district_polygon": "VwsmTrdarSelngW",
+    "district_center": "TbgisTrdarRelm",
     "floating_pop": "VwsmTrdarFlpopQq",
     "worker_pop": "VwsmTrdarWrcPopltnQq",
     "resident_pop": "VwsmTrdarPopltnQq",
@@ -84,15 +85,36 @@ class SeoulOpenDataCollector(BaseCollector):
         self.log_progress(service_key, len(rows), total_count)
         return rows
 
+    async def collect_district_centers(self) -> list[dict]:
+        """Collect district center points from TbgisTrdarRelm API (EPSG:5181)."""
+        return await self._fetch_service("district_center", SERVICES["district_center"])
+
     async def collect_districts(self) -> list[dict]:
-        """Collect district info from polygon API, or fallback to store change API."""
+        """Collect district info with 3-tier fallback chain.
+
+        Tier 1: VwsmTrdarSelngW (polygon API) — ERROR-500 since 2026
+        Tier 2: TbgisTrdarRelm (center points, EPSG:5181) — verified working
+        Tier 3: Extract from floating pop API (no geometry)
+        """
+        # Tier 1: polygon API
         try:
             return await self._fetch_service("district_polygon", SERVICES["district_polygon"])
         except CollectorError as e:
-            if "ERROR-500" in str(e) or "Unexpected" in str(e):
-                logger.warning("district_polygon API unavailable, extracting districts from store change API")
-                return await self._extract_districts_from_store_change()
-            raise
+            if "ERROR-500" not in str(e) and "Unexpected" not in str(e):
+                raise
+            logger.warning("district_polygon API unavailable (Tier 1 failed)")
+
+        # Tier 2: center point API
+        try:
+            rows = await self.collect_district_centers()
+            logger.info(f"[districts] Tier 2 (TbgisTrdarRelm): {len(rows)} rows")
+            return rows
+        except CollectorError as e:
+            logger.warning(f"district_center API also failed (Tier 2): {e}")
+
+        # Tier 3: extract from floating pop
+        logger.warning("Falling back to floating pop extraction (Tier 3, no geometry)")
+        return await self._extract_districts_from_store_change()
 
     async def _extract_districts_from_store_change(self) -> list[dict]:
         """Extract unique district info from VwsmTrdarFlpopQq (floating pop API — much smaller)."""

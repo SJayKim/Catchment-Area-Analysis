@@ -1,13 +1,17 @@
-"""get_district_summary tool — aggregates mock data into SummaryCardData format."""
+"""get_district_summary tool — aggregates data into SummaryCardData format.
+
+Supports both Mock and Real DB modes via asyncio.gather() over existing tools.
+"""
 
 from __future__ import annotations
 
-from server.agent.tools.mock_data import (
-    DISTRICTS,
-    ESTIMATED_SALES,
-    FLOATING_POPULATION,
-    STORE_INFO,
-)
+import asyncio
+
+from server.agent.tools.estimated_sales import get_estimated_sales
+from server.agent.tools.floating_population import get_floating_population
+from server.agent.tools.store_info import get_store_info
+from server.config import settings
+from server.services.cache import cache_service
 
 
 def _format_population(pop: int) -> str:
@@ -32,66 +36,116 @@ def _format_sales(sales: int) -> str:
     return f"{sales:,}원"
 
 
+async def _get_district_meta(district_code: str) -> dict | None:
+    """Fetch district name/type. Mock → DISTRICTS dict, Real → DB query."""
+    if settings.use_mock:
+        from server.agent.tools.mock_data import DISTRICTS
+        return DISTRICTS.get(district_code)
+
+    from sqlalchemy import select
+
+    from server.models.base import async_session
+    from server.models.district import District
+
+    async with async_session() as session:
+        row = (await session.execute(
+            select(District.district_name, District.district_type)
+            .where(District.district_code == district_code)
+        )).one_or_none()
+        if row is None:
+            return None
+        return {"name": row.district_name, "type": row.district_type}
+
+
 async def get_district_summary(district_code: str) -> dict:
-    """Aggregate mock data for a district into SummaryCardData shape.
+    """Aggregate data for a district into SummaryCardData shape.
 
     Returns camelCase keys matching the frontend SummaryCardData interface.
     """
-    district = DISTRICTS.get(district_code)
-    fp = FLOATING_POPULATION.get(district_code)
-    sales = ESTIMATED_SALES.get(district_code)
-    store = STORE_INFO.get(district_code)
+    # Cache check — skips all 4 sub-calls if hit
+    cache_key = f"summary:{district_code}"
+    cached = await cache_service.get(cache_key)
+    if cached is not None:
+        return cached
 
-    if not district:
+    # 4 parallel calls
+    fp_result, sales_result, store_result, meta = await asyncio.gather(
+        get_floating_population(district_code),
+        get_estimated_sales(district_code),
+        get_store_info(district_code),
+        _get_district_meta(district_code),
+    )
+
+    if not meta:
         return {"error": f"상권 코드 '{district_code}'에 해당하는 데이터가 없습니다."}
+
+    # Check sub-results for errors
+    fp_ok = "error" not in fp_result
+    sales_ok = "error" not in sales_result
+    store_ok = "error" not in store_result
 
     # Build byHour array: rename time_slot→hour, population→pop
     by_hour = []
-    if fp:
-        for entry in fp.get("by_hour", []):
+    if fp_ok:
+        for entry in fp_result.get("by_hour", []):
             by_hour.append({"hour": entry["time_slot"], "pop": entry["population"]})
 
     # Top categories: rename category_name→name, store_count→count
     top_categories = []
-    if store:
-        for cat in store.get("top_categories", []):
+    if store_ok:
+        for cat in store_result.get("top_categories", []):
             top_categories.append({"name": cat["category_name"], "count": cat["store_count"]})
 
     # Determine status from sales trend
     status = "stable"
-    if sales:
-        status = sales.get("trend", "stable")
+    if sales_ok:
+        status = sales_result.get("trend", "stable")
 
     # Close rate
     close_rate = {"current": 0.0, "average": 6.5}
-    if store:
-        close_rate["current"] = store.get("close_rate", 0.0)
+    if store_ok:
+        close_rate["current"] = store_result.get("close_rate", 0.0)
 
     # Build summary text
-    daily_avg = fp["daily_avg"] if fp else 0
-    monthly_sales = sales["total_monthly_sales"] if sales else 0
+    daily_avg = fp_result.get("daily_avg", 0) if fp_ok else 0
+    monthly_sales = sales_result.get("total_monthly_sales", 0) if sales_ok else 0
     status_label = {"growing": "성장 중인", "stable": "안정적인", "declining": "위축 중인"}.get(
         status, "안정적인"
     )
     summary_text = (
         f"하루 평균 유동인구 {_format_population(daily_avg)}, "
         f"월 추정 매출 {_format_sales(monthly_sales)}의 "
-        f"{status_label} {district['type']}입니다."
+        f"{status_label} {meta['type']}입니다."
     )
 
-    quarter = fp["quarter"] if fp else sales["quarter"] if sales else "2025Q3"
+    # Determine quarter from available data
+    quarter = (
+        fp_result.get("quarter")
+        if fp_ok
+        else sales_result.get("quarter")
+        if sales_ok
+        else store_result.get("quarter")
+        if store_ok
+        else "N/A"
+    )
 
-    return {
-        "districtName": district["name"],
-        "districtType": district["type"],
+    # dataQuarter: append "(샘플)" in mock mode
+    data_quarter = f"{quarter} (샘플)" if settings.use_mock else quarter
+
+    result = {
+        "districtName": meta["name"],
+        "districtType": meta["type"],
         "summary": summary_text,
         "floatingPopulation": {
             "dailyAvg": daily_avg,
-            "peakHour": fp["peak_hour"] if fp else 0,
+            "peakHour": fp_result.get("peak_hour", 0) if fp_ok else 0,
             "byHour": by_hour,
         },
         "topCategories": top_categories,
         "status": status,
         "closeRate": close_rate,
-        "dataQuarter": f"{quarter} (샘플)",
+        "dataQuarter": data_quarter,
     }
+
+    await cache_service.set(cache_key, result, ttl=86400)
+    return result

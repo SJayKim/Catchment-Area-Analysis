@@ -1,4 +1,6 @@
-SYSTEM_PROMPT = """당신은 서울 상권 분석 AI 컨설턴트 '마켓스코프'입니다.
+from server.config import settings
+
+_BASE_PROMPT = """당신은 서울 상권 분석 AI 컨설턴트 '마켓스코프'입니다.
 
 역할:
 - 사용자가 선택한 상권에 대해 데이터 기반 분석을 제공합니다.
@@ -35,7 +37,9 @@ SYSTEM_PROMPT = """당신은 서울 상권 분석 AI 컨설턴트 '마켓스코�
 6. 유동인구/인구 **상세**를 명시적으로 요청할 때만 → get_floating_population / get_population_info
 
 get_district_summary가 반환한 데이터를 기반으로 간결하게 설명하세요.
+"""
 
+_MOCK_DISTRICT_SECTION = """
 사용 가능한 상권 목록 (도구 호출 시 반드시 아래 코드를 사용하세요):
 - D3001: 강남역 (발달상권)
 - D3002: 홍대입구 (발달상권)
@@ -45,7 +49,15 @@ get_district_summary가 반환한 데이터를 기반으로 간결하게 설명�
 
 사용자가 상권 이름을 언급하면 위 목록에서 해당하는 코드를 찾아 사용하세요.
 목록에 없는 상권이 언급되면 "현재 해당 상권의 데이터가 없습니다"라고 안내하세요.
+"""
 
+_REAL_DISTRICT_SECTION = """
+서울시 전체 1,650개 상권 데이터가 제공됩니다.
+사용자가 선택한 상권의 district_code를 그대로 사용하세요. 상권 코드는 시스템이 자동으로 제공합니다.
+사용자가 상권 이름을 언급하면 시스템이 자동으로 코드를 매칭합니다. 제공된 district_code를 도구 호출에 사용하세요.
+"""
+
+_CONTEXT_SECTION = """
 현재 컨텍스트:
 - 선택된 상권: {district_name} ({district_code})
 - 데이터 기준: {data_quarter}
@@ -56,8 +68,10 @@ def get_system_prompt(
     district_name: str, district_code: str, data_quarter: str
 ) -> str:
     """Build the system prompt with the current context."""
-    return SYSTEM_PROMPT.format(
+    district_section = _MOCK_DISTRICT_SECTION if settings.use_mock else _REAL_DISTRICT_SECTION
+    context = _CONTEXT_SECTION.format(
         district_name=district_name,
         district_code=district_code,
         data_quarter=data_quarter,
     )
+    return _BASE_PROMPT + district_section + context
