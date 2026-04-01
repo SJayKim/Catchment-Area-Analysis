@@ -86,10 +86,10 @@
 - **asyncpg 파라미터 제한**: batch_size 5000 → 1000으로 축소
 - **Alembic GiST 인덱스 충돌**: `CREATE INDEX IF NOT EXISTS`로 변경
 
-### 미승인 API (추후 승인 필요)
+### 비가용 API (서버 ERROR-500, 키 문제 아님)
 - `VwsmTrdarSelngW` (상권 폴리곤) — **SHP 파일로 대체 완료**
 - `VwsmTrdarStorW` (점포 상세정보) — VwsmTrdarStorQq 폴백 동작 중
-- `VwsmTrdarPopltnQq` (상주인구) — 대체 소스 없음
+- `VwsmTrdarPopltnQq` (상주인구) — 서버 ERROR-500 지속, **대안: 서울 열린데이터에서 CSV 파일 다운로드 → ETL 적재 검토 중**
 
 ---
 
