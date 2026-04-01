@@ -1,0 +1,437 @@
+# MarketScope AI - 상권분석 AI 서비스
+
+> 지도 기반 AI 챗봇으로 서울시 1,650개 상권을 분석하는 Freemium SaaS
+
+소상공인/부동산 투자자가 **"지도에서 상권 선택 → AI가 분석/추천"** 하는 서비스입니다.
+자연어 질문만으로 유동인구, 매출, 경쟁 현황, 업종 추천, 리스크 분석까지 한 번에 확인할 수 있습니다.
+
+---
+
+## 스크린샷
+
+### 다크 테마 (기본)
+![MarketScope AI - Dark Theme](docs/images/ui_image_dark.png)
+*강남역 상권 선택 → AI 자동 분석 → SummaryCard (유동인구 바 차트 + Top 5 업종)*
+
+### 라이트 테마
+![MarketScope AI - Light Theme](docs/images/url_image_light.png)
+*업종 추천 카드 — 점수 바 + 추천 근거*
+
+### 상권 비교
+![상권 비교](docs/screenshots/real-mode/real-mode-compare.png)
+*두 상권의 유동인구/매출/점포 수/폐업률을 비교표로 제공*
+
+### 업종 추천
+![업종 추천](docs/screenshots/real-mode/real-mode-recommend.png)
+*AI가 상권 데이터 기반으로 추천 업종 Top 5 + 근거 제시*
+
+---
+
+## 시스템 아키텍처
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        CLIENT (Browser)                             │
+│  ┌─────────────────────────┬───────────────────────────────────┐    │
+│  │     Map Panel (60%)     │       Chat Panel (40%)            │    │
+│  │  ┌───────────────────┐  │  ┌─────────────────────────────┐  │    │
+│  │  │  Kakao Map SDK    │  │  │  자연어 입력                 │  │    │
+│  │  │  + 상권 폴리곤     │  │  │  + SSE 스트리밍 응답        │  │    │
+│  │  │  + 히트맵 레이어   │  │  │  + Rich Card (차트/테이블)  │  │    │
+│  │  │  + 마커 레이어     │  │  │  + 추천 질문 칩             │  │    │
+│  │  └───────────────────┘  │  └─────────────────────────────┘  │    │
+│  └─────────────────────────┴───────────────────────────────────┘    │
+│                         Next.js 14 (App Router)                     │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │  REST + SSE (Server-Sent Events)
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        API Server (FastAPI)                         │
+│  POST /api/chat (SSE)  │  GET /api/districts  │  GET /api/map-data │
+└──────────┬──────────────────────────────────────────────────────────┘
+           │
+     ┌─────┴──────────────────────────────────┐
+     ▼                                        ▼
+┌──────────────────┐              ┌──────────────────────────────────┐
+│   AI Agent       │              │         Data Layer               │
+│  (LangGraph)     │              │                                  │
+│  ┌────────────┐  │   Tool 호출  │  ┌────────────┐ ┌────────────┐   │
+│  │  ReAct     │──┼─────────────►│  │ PostgreSQL │ │   Redis    │   │
+│  │  Agent     │  │              │  │ + PostGIS  │ │  (Cache)   │   │
+│  │  Loop      │  │              │  └────────────┘ └────────────┘   │
+│  └────────────┘  │              │                                  │
+│  Claude API      │              │  서울 열린데이터 (공공 API)       │
+└──────────────────┘              └──────────────────────────────────┘
+```
+
+---
+
+## 데이터 플로우
+
+### 1. 데이터 수집 (ETL)
+
+```
+서울 열린데이터 API ──── Batch ETL (분기별) ────► PostgreSQL + PostGIS
+  ├ 유동인구 (VwsmTrdarFlpopQq)                    ├ districts (1,650개)
+  ├ 추정매출 (VwsmTrdarSelngQq)                    ├ floating_population (9,888행)
+  ├ 점포현황 (VwsmTrdarStorQq)                     ├ estimated_sales (21,333행)
+  └ 직장인구 (VwsmTrdarWrcPopltnQq)                ├ stores (75,985행)
+                                                   └ resident_population (19,692행)
+SHP 폴리곤 파일 ───── geopandas 파싱 ─────────► districts.boundary (EPSG:4326)
+```
+
+### 2. 사용자 질의 처리 (실시간)
+
+```
+사용자 (브라우저)                  FastAPI                    LangGraph Agent
+  │                                 │                              │
+  │  "강남역 분석해줘"                │                              │
+  │ ───────────────────────────►    │                              │
+  │                                 │   invoke(AgentState)         │
+  │                                 │ ────────────────────────►    │
+  │                                 │                              │
+  │  SSE: {type: "thinking"}       │     ① REASON (Claude LLM)   │
+  │  ◄──────────────────────────   │  ◄────────────────────────   │
+  │                                 │                              │
+  │  SSE: {type: "tool",           │     ② ACT (Tool 호출)        │
+  │        name: "유동인구 조회"}    │  ◄────────────────────────   │
+  │  ◄──────────────────────────   │         │                     │
+  │                                 │         ▼                     │
+  │                                 │   PostgreSQL / Redis Cache    │
+  │                                 │         │                     │
+  │  SSE: {type: "tool_end"}       │     ③ OBSERVE (결과 해석)     │
+  │  ◄──────────────────────────   │  ◄────────────────────────   │
+  │                                 │                              │
+  │  SSE: {type: "text",           │     ④ END (최종 응답)         │
+  │        content: "강남역은..."}  │  ◄────────────────────────   │
+  │  ◄──────────────────────────   │                              │
+  │                                 │                              │
+  │  SSE: {type: "card",           │                              │
+  │        card_type: "summary"}   │                              │
+  │  ◄──────────────────────────   │                              │
+  │                                 │                              │
+  │  SSE: {type: "done"}           │                              │
+  │  ◄──────────────────────────   │                              │
+```
+
+### 3. 지도-채팅 양방향 동기화
+
+```
+┌──────────────┐                           ┌──────────────┐
+│   Map Panel  │                           │  Chat Panel  │
+│  (Kakao Map) │                           │  (AI 채팅)    │
+└──────┬───────┘                           └──────┬───────┘
+       │                                          │
+       │  폴리곤 클릭 (상권 선택)                    │  자연어 입력
+       ▼                                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Zustand Store                         │
+│  selectedDistrict: { code, name, polygon }               │
+│  mapView: { center, zoom, layers }                       │
+│  chatMessages: [...]                                     │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                    Agent API (SSE)
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+      map_cmd 이벤트          text/card 이벤트
+      → 지도 이동/하이라이트   → 메시지/카드 추가
+```
+
+**동기화 시나리오**:
+| 방향 | 트리거 | 결과 |
+|------|--------|------|
+| 지도 → 채팅 | 상권 폴리곤 클릭 | AI가 자동으로 해당 상권 분석 + SummaryCard |
+| 채팅 → 지도 | "홍대 보여줘" 입력 | 지도가 홍대로 이동 + 폴리곤 하이라이트 |
+| 양방향 | "시간대별 유동인구" | 채팅에 바 차트 + 지도에 히트맵 동시 표시 |
+
+---
+
+## 사용자 시나리오
+
+### 시나리오 1: 상권 탐색 및 기본 분석
+
+```
+1. 사용자가 서울 지도에서 "강남역" 상권 폴리곤을 클릭
+2. AI가 자동으로 유동인구/매출/점포 데이터를 조회
+3. SummaryCard 렌더링:
+   - 일 평균 유동인구 12만 4천명 (시간대별 바 차트)
+   - 월 추정 매출 85억원
+   - Top 5 업종: 한식, 카페/음료, 의류, 일식/중식
+4. 추천 질문 칩 노출: "여기서 뭐하면 좋을까?", "이 자리 위험해?"
+```
+
+### 시나리오 2: 업종 추천
+
+```
+1. 사용자: "여기서 뭐하면 좋을까?"
+2. AI가 recommend_business Tool로 상권 데이터 기반 업종 분석
+3. RecommendCard 렌더링:
+   - 1위: 편의점 (100점) — 유동인구 높고 생존율 96%
+   - 2위: 서적 (48점) — 경쟁 적고 학생 유입
+   - 3위: 골프/스포츠 (18점) — 틈새 시장
+   - 면책 조항 포함
+```
+
+### 시나리오 3: 상권 비교
+
+```
+1. 사용자: "강남역이랑 홍대 비교해줘"
+2. AI가 compare_districts Tool로 두 상권 데이터 병렬 조회
+3. CompareCard 렌더링:
+   - 유동인구: 강남역 12만 vs 홍대 8만
+   - 월 매출: 강남역 85억 vs 홍대 43억
+   - 폐업률, 안정성 등급 비교
+4. 지도에 두 상권 동시 하이라이트
+```
+
+### 시나리오 4: 리스크 분석
+
+```
+1. 사용자: "이 자리 위험하지 않아?"
+2. AI가 get_store_history Tool로 점포 이력/폐업 데이터 조회
+3. RiskCard 렌더링:
+   - 안정성 게이지 (안전/주의/위험)
+   - 업종별 평균 생존 기간 바 차트
+   - 최근 폐업 트렌드
+```
+
+---
+
+## 프로젝트 구조
+
+```
+MarketScope-AI/
+├── frontend/                          # Next.js 14 (App Router)
+│   └── src/
+│       ├── app/                       # 페이지 & API Routes
+│       │   ├── page.tsx               # 메인 (지도 + 채팅)
+│       │   └── api/kakao-sdk/         # Kakao SDK 프록시
+│       ├── components/
+│       │   ├── layout/                # SplitPanel, Toolbar, StatusBar
+│       │   ├── map/                   # MapContainer, DistrictLayer, MapControls
+│       │   └── chat/                  # ChatPanel, MessageList, ChatInput
+│       │       └── cards/             # SummaryCard, CompareCard, RecommendCard, RiskCard
+│       ├── stores/                    # Zustand (mapStore, chatStore, districtStore)
+│       ├── hooks/                     # useChat (SSE), useMapSync
+│       └── lib/                       # API 클라이언트, 타입 정의
+│
+├── server/                            # FastAPI (Python 3.12)
+│   └── server/
+│       ├── main.py                    # FastAPI 앱 진입점
+│       ├── config.py                  # 환경 설정 (Mock/Real 전환)
+│       ├── agent/                     # LangGraph AI Agent
+│       │   ├── graph.py              # ReAct Agent 그래프 정의
+│       │   ├── state.py              # AgentState 타입
+│       │   ├── prompts/system.py     # 시스템 프롬프트
+│       │   └── tools/                # Agent Tools (8종)
+│       │       ├── floating_population.py
+│       │       ├── estimated_sales.py
+│       │       ├── store_info.py
+│       │       ├── store_history.py
+│       │       ├── population_info.py
+│       │       ├── compare_districts.py
+│       │       ├── recommend_business.py
+│       │       ├── district_summary.py
+│       │       └── mock_data.py      # Mock 모드 데이터
+│       ├── api/routes/               # REST + SSE 엔드포인트
+│       │   ├── chat.py               # POST /api/chat (SSE 스트리밍)
+│       │   ├── districts.py          # GET /api/districts
+│       │   └── map_data.py           # GET /api/map-data/polygons
+│       ├── data/etl/                 # 공공데이터 ETL 파이프라인
+│       ├── models/                   # SQLAlchemy + PostGIS 모델
+│       └── services/cache.py        # Redis 캐싱
+│
+├── data/shp/                          # SHP 폴리곤 파일
+├── docs/
+│   ├── architecture/                  # 시스템 아키텍처 문서
+│   ├── spec/                          # 기능 스펙 (F01~F10, D01, B01)
+│   ├── plan/                          # 구현 계획서
+│   ├── status/                        # 진행 상황 리포트
+│   ├── screenshots/                   # 스크린샷 (dev, e2e-qa, real-mode)
+│   └── images/                        # README 이미지
+│
+├── docker-compose.yml                 # PostGIS + Redis + Backend + Frontend
+├── .env.example                       # 환경 변수 템플릿
+└── CLAUDE.md                          # AI 어시스턴트 개발 가이드
+```
+
+---
+
+## 기술 스택
+
+| 레이어 | 기술 | 역할 |
+|--------|------|------|
+| **Frontend** | Next.js 14 (App Router, TypeScript) | SSR, BFF |
+| **Map** | Kakao Map SDK | 서울 지도 + 상권 폴리곤 |
+| **상태 관리** | Zustand | 지도-채팅 양방향 동기화 |
+| **차트** | Recharts | SummaryCard 내 인라인 바 차트 |
+| **UI** | shadcn/ui + Tailwind CSS | 다크 테마 미니멀 디자인 |
+| **Backend** | FastAPI (Python 3.12, async) | REST + SSE 스트리밍 |
+| **AI Agent** | LangGraph (ReAct Loop) | Reason → Act → Observe 자동 추론 |
+| **LLM** | Claude API (Anthropic) | 한국어 상권 분석 + Tool Use |
+| **Database** | PostgreSQL 16 + PostGIS | 상권 폴리곤 + 매출/인구 시계열 |
+| **Cache** | Redis 7 | 쿼리 결과 캐싱 (TTL 24h) |
+| **Container** | Docker Compose | 개발 환경 통합 |
+
+---
+
+## AI Agent Tools
+
+LangGraph ReAct Agent가 사용하는 8개 Tool:
+
+| Tool | 기능 | 데이터 소스 |
+|------|------|-------------|
+| `get_floating_population` | 시간대/요일/연령/성별 유동인구 | floating_population |
+| `get_estimated_sales` | 업종별 추정 매출액 + 추이 | estimated_sales |
+| `get_store_info` | 점포 수, 개폐업 현황, Top 업종 | stores |
+| `get_population_info` | 상주/직장인구, 연령/성별 분포 | resident_population |
+| `get_store_history` | 점포 이력, 생존 기간, 폐업 분석 | store_history |
+| `compare_districts` | 2~3개 상권 주요 지표 비교 | 복합 조회 |
+| `recommend_business` | 추천 업종 Top 5 + 근거 | 복합 분석 |
+| `district_summary` | 상권 종합 요약 리포트 | 병렬 조회 |
+
+---
+
+## 빠른 시작
+
+### 사전 요구사항
+
+- Node.js 18+
+- Python 3.12+
+- Docker & Docker Compose (Real 모드 시)
+- API 키: Anthropic (Claude), Kakao Map, 서울 열린데이터 (Real 모드)
+
+### 1. 환경 변수 설정
+
+```bash
+cp .env.example .env
+# .env 파일에 API 키 입력
+```
+
+### 2A. Mock 모드 (DB 없이 빠른 실행)
+
+```bash
+# .env에서 USE_MOCK=true 확인
+
+# Backend
+cd server
+pip install -e ".[dev]"
+uvicorn server.main:app --reload --port 8002
+
+# Frontend (새 터미널)
+cd frontend
+npm install
+npm run dev
+```
+
+`http://localhost:3000` 접속 → 5개 샘플 상권 (강남역, 홍대, 건대, 명동, 서울역) 으로 전체 기능 체험
+
+### 2B. Real 모드 (실제 데이터)
+
+```bash
+# .env에서 USE_MOCK=false 설정 + 서울 열린데이터 API 키 입력
+
+# Docker (PostGIS + Redis)
+docker compose up -d db redis
+
+# DB 마이그레이션
+cd server
+alembic upgrade head
+
+# ETL 데이터 적재
+python -m server.data.etl.runner
+
+# Backend
+uvicorn server.main:app --reload --port 8002
+
+# Frontend (새 터미널)
+cd frontend
+npm run dev
+```
+
+`http://localhost:3000` 접속 → 서울시 1,650개 실제 상권 데이터로 분석
+
+---
+
+## SSE 이벤트 타입
+
+채팅 API(`POST /api/chat`)는 Server-Sent Events로 실시간 스트리밍합니다:
+
+| type | 설명 | data |
+|------|------|------|
+| `thinking` | Agent 추론 중 | `{step, icon}` |
+| `tool` | Tool 호출 시작 | `{name, input, icon}` |
+| `tool_end` | Tool 실행 완료 | `{name, icon}` |
+| `text` | 텍스트 응답 (토큰 단위) | `{content}` |
+| `card` | Rich Card 데이터 | `{card_type, data}` |
+| `map_cmd` | 지도 조작 명령 | `{action, params}` |
+| `suggestion` | 추천 질문 목록 | `{questions: [...]}` |
+| `done` | 응답 완료 | `{}` |
+
+---
+
+## DB 스키마 (핵심 테이블)
+
+```
+districts                 상권 영역 (PostGIS POLYGON, 1,650개)
+floating_population       유동인구 (시간대/요일/연령/성별, 분기별)
+estimated_sales           추정매출 (업종별, 분기별)
+stores                    점포 현황 (점포 수/개업/폐업/프랜차이즈)
+store_history             점포 이력 (영업 기간, 업종 변동)
+resident_population       상주/직장 인구 (연령/성별)
+chat_sessions             대화 세션
+chat_messages             대화 메시지 (JSONB)
+category_metadata         업종 코드 참조
+```
+
+---
+
+## 개발 로드맵
+
+```
+Phase 1A ✅  Mock E2E       지도 선택 → AI 챗봇 → Card UI (5개 샘플 상권)
+Phase 1B ✅  Real Data      공공데이터 ETL → PostGIS → 1,650개 상권 실데이터
+Phase 2  🔜  Premium        업종 심층 분석, Tier 게이팅 (OAuth2, 결제)
+Phase 3  📋  확장           시간대별 히트맵 (deck.gl), 매출 시뮬레이션, PDF 리포트
+```
+
+### 현재 상태 (2026-04-01)
+
+- Phase 1A/1B 완료 --- 32/32 E2E 테스트 통과, Real 모드 22/26 QA 시나리오 PASS
+- Agent Tools 8종 + Card UI 4종 + 다크 테마 + SSE 스트리밍 완성
+- Agent 아키텍처 고도화 계획 수립 완료 (Planner-Actor-Evaluator 전환)
+
+---
+
+## 개발 명령어
+
+```bash
+# 린트/포맷
+npx prettier --write .                   # TypeScript
+ruff check --fix . && ruff format .      # Python
+
+# 테스트
+cd frontend && npm test                  # E2E (Playwright)
+cd server && pytest                      # API 테스트
+
+# Docker
+docker compose up -d                     # 전체 서비스 기동
+docker compose up -d db redis            # DB + Redis만 기동
+```
+
+---
+
+## 데이터 소스
+
+| 소스 | 제공 데이터 | 갱신 주기 |
+|------|-------------|-----------|
+| [서울 열린데이터](https://data.seoul.go.kr) | 상권 폴리곤, 유동인구, 추정매출, 직장인구 | 분기 |
+| [공공데이터포털](https://data.go.kr) | 점포 정보, 점포 이력 | 분기 |
+
+---
+
+## 라이선스
+
+Private project.
