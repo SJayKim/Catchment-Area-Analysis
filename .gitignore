@@ -35,5 +35,9 @@ frontend/test-results/
 # Screenshots (temp)
 map-loaded.png
 
-# SHP data files (large binaries)
+# Data files (downloaded separately, large binaries)
 data/shp/
+data/csv/
+
+# Seed dump IS tracked via Git LFS
+!data/seed/

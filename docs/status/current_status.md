@@ -1,6 +1,6 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-01
+> 최종 갱신: 2026-04-02
 > **Phase 1B 완료 ✅ — Playwright E2E QA 22/26 PASS + 버그 2건 수정 + HARD FAIL 0건**
 
 ---
@@ -89,7 +89,14 @@
 ### 비가용 API (서버 ERROR-500, 키 문제 아님)
 - `VwsmTrdarSelngW` (상권 폴리곤) — **SHP 파일로 대체 완료**
 - `VwsmTrdarStorW` (점포 상세정보) — VwsmTrdarStorQq 폴백 동작 중
-- `VwsmTrdarPopltnQq` (상주인구) — 서버 ERROR-500 지속, **대안: 서울 열린데이터에서 CSV 파일 다운로드 → ETL 적재 검토 중**
+- `VwsmTrdarPopltnQq` (상주인구) — 서버 ERROR-500 지속, **CSV 다운로드 대안 확인 완료** (아래 참조)
+
+### 상주인구 CSV 대안 (검증 완료 2026-04-02)
+- **데이터셋**: [OA-15584 서울시 상권분석서비스(상주인구-상권)](https://data.seoul.go.kr/dataList/OA-15584/S/1/datasetView.do)
+- **다운로드**: Sheet 탭 → "내려받기(CSV)" 버튼 (`#btnCsv`)
+- **파일 정보**: 40,812행, EUC-KR 인코딩
+- **컬럼 (29개)**: 기준_년분기_코드, 상권_구분_코드, 상권_코드, 상권_코드_명, 총/남/여_상주인구_수, 연령대별(10~60+) 남/여 상주인구, 총/아파트/비아파트_가구_수
+- **구현 TODO**: `data/` 폴더에 CSV 저장 → ETL에 CSV 파싱 로더 추가 → `resident_population` 테이블 적재 (pop_type="resident")
 
 ---
 
@@ -168,6 +175,21 @@
 
 ---
 
+## 완료 항목 (2026-04-02)
+
+### ✅ DB 셋업 자동화
+- `scripts/setup_db.py` — 원커맨드 DB 프로비저닝 (`--quick`/`--full`/`--reset`)
+- `scripts/generate_seed.py` — 시드 덤프 재생성 유틸리티
+- `data/seed/marketscope_seed.dump` — pg_dump 시드 파일 (4.9MB, Git LFS)
+- `.gitattributes` — Git LFS 트래킹 설정
+- `server/server/data/etl/csv_collector.py` — 상주인구 CSV 로더 (OA-15584)
+- `server/server/data/etl/runner.py` — `load-csv` 커맨드 + `--csv-file` 옵션 + API 실패 시 CSV 폴백
+- `.env.example` — API 키 발급 가이드 주석 추가
+- `docs/setup/DATABASE_SETUP.md` — 셋업 가이드 문서
+- Quick Start 테스트 완료: DB 초기화 → `--quick` → 5개 테이블 전부 복원 확인
+
+---
+
 ## Next Items (우선순위 순)
 
 ### 🔴 1. Agent 아키텍처 전환 — Planner-Actor-Evaluator (계획 수립 완료)
@@ -178,8 +200,9 @@
 - **마이그레이션**: `agent_mode` 플래그로 react/pae 전환, 롤백 가능
 - 상태: **계획 완료, 구현 미착수**
 
-### 🟡 2. 미승인 API 서비스 (상주인구)
-VwsmTrdarPopltnQq 승인 후 상주인구 적재
+### 🟡 2. 상주인구 CSV 적재 (대안 검증 완료)
+API 서버 ERROR-500 → CSV 다운로드 대안 확인 완료 (OA-15584, 40,812행)
+- CSV를 `data/` 폴더에 저장 → ETL 로더에 CSV 파싱 추가 → `resident_population` 적재
 
 ### 🟢 3. Phase 2 — 프리미엄 기능
 - Tier 게이팅 인프라 (OAuth2 인증, 결제)

@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 
 VALID_TABLES = ["districts", "floating_pop", "estimated_sales", "stores", "resident_pop"]
 
+# Default CSV path for resident population fallback
+DEFAULT_RESIDENT_CSV = "data/csv/OA-15584.csv"
+
 
 def _parse_quarter(quarter: str) -> tuple[str, str]:
     """Parse quarter string like '2025Q3' into ('2025', '3')."""
@@ -47,6 +50,7 @@ async def _run_pipeline(
     tables: list[str] | None,
     dry_run: bool,
     shp_file: str | None = None,
+    csv_file: str | None = None,
 ) -> None:
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -137,15 +141,40 @@ async def _run_pipeline(
         # --- resident_population ---
         if "resident_pop" in target_tables:
             t0 = time.time()
-            console.print("[bold blue]Collecting resident population...[/]")
-            raw_rp = await collector.collect_resident_pop(raw_quarter)
             transformed = []
-            for r in raw_rp:
-                transformed.extend(transformers.transform_resident_pop(r, "resident"))
-            # Also collect worker population
-            raw_wp = await collector.collect_worker_pop(raw_quarter)
-            for r in raw_wp:
-                transformed.extend(transformers.transform_resident_pop(r, "worker"))
+
+            # Resident population: CSV or API
+            if csv_file:
+                from server.data.etl.csv_collector import load_resident_pop_csv
+                console.print(f"[bold blue]Loading resident population from CSV: {csv_file}[/]")
+                transformed.extend(load_resident_pop_csv(csv_file, quarter))
+            else:
+                console.print("[bold blue]Collecting resident population (API)...[/]")
+                try:
+                    raw_rp = await collector.collect_resident_pop(raw_quarter)
+                    for r in raw_rp:
+                        transformed.extend(transformers.transform_resident_pop(r, "resident"))
+                except Exception as e:
+                    console.print(f"  [yellow]API failed: {e}[/]")
+                    # Try CSV fallback
+                    from pathlib import Path
+                    fallback = Path(DEFAULT_RESIDENT_CSV)
+                    if fallback.exists():
+                        from server.data.etl.csv_collector import load_resident_pop_csv
+                        console.print(f"  [yellow]Falling back to CSV: {fallback}[/]")
+                        transformed.extend(load_resident_pop_csv(str(fallback), quarter))
+                    else:
+                        console.print(f"  [yellow]No CSV fallback at {fallback}. Skipping resident pop.[/]")
+
+            # Worker population (always from API)
+            console.print("[bold blue]Collecting worker population (API)...[/]")
+            try:
+                raw_wp = await collector.collect_worker_pop(raw_quarter)
+                for r in raw_wp:
+                    transformed.extend(transformers.transform_resident_pop(r, "worker"))
+            except Exception as e:
+                console.print(f"  [yellow]Worker pop API failed: {e}. Skipping.[/]")
+
             elapsed = time.time() - t0
             console.print(f"  Collected & transformed {len(transformed)} rows ({elapsed:.1f}s)")
 
@@ -232,6 +261,9 @@ def run(
     shp_file: Optional[str] = typer.Option(
         None, "--shp-file", help="SHP file for districts (overrides API)"
     ),
+    csv_file: Optional[str] = typer.Option(
+        None, "--csv-file", help="CSV file for resident population (overrides API)"
+    ),
 ) -> None:
     """Run ETL pipeline for a given quarter."""
     _parse_quarter(quarter)  # validate format
@@ -240,7 +272,7 @@ def run(
             if t not in VALID_TABLES:
                 raise typer.BadParameter(f"Unknown table: {t}. Valid: {VALID_TABLES}")
     console.print(f"[bold]Starting ETL for {quarter}[/]" + (" [DRY RUN]" if dry_run else ""))
-    asyncio.run(_run_pipeline(quarter, table, dry_run, shp_file=shp_file))
+    asyncio.run(_run_pipeline(quarter, table, dry_run, shp_file=shp_file, csv_file=csv_file))
 
 
 @app.command(name="load-shp")
@@ -276,6 +308,42 @@ def load_shp(
         count = await loader.upsert_districts(rows)
         await engine.dispose()
         console.print(f"[green]Upserted {count} districts[/]")
+
+    asyncio.run(_load())
+
+
+@app.command(name="load-csv")
+def load_csv(
+    csv_file: str = typer.Argument(..., help="Path to resident population CSV (OA-15584)"),
+    quarter: str = typer.Argument(..., help="Target quarter (e.g., 2025Q4)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Parse only, skip DB load"),
+) -> None:
+    """Load resident population from CSV file into the database."""
+    from server.data.etl.csv_collector import load_resident_pop_csv
+
+    _parse_quarter(quarter)
+    console.print(f"[bold]Loading resident population CSV: {csv_file} for {quarter}[/]")
+
+    rows = load_resident_pop_csv(csv_file, quarter)
+    console.print(f"  Parsed {len(rows)} rows")
+
+    if dry_run:
+        console.print("[yellow]DRY RUN — showing sample:[/]")
+        for r in rows[:6]:
+            console.print(f"  {r['district_code']} | {r['quarter']} | {r['pop_type']} | {r['age_group']} | {r['gender']} | {r['population']}")
+        return
+
+    async def _load() -> None:
+        from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+        from server.data.etl.loader import DataLoader
+
+        engine = create_async_engine(settings.database_url, echo=False)
+        session_factory = async_sessionmaker(engine, expire_on_commit=False)
+        loader = DataLoader(session_factory)
+        count = await loader.upsert_resident_pop(rows)
+        await engine.dispose()
+        console.print(f"[green]Upserted {count} rows into resident_population[/]")
 
     asyncio.run(_load())
 

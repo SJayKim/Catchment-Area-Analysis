@@ -125,7 +125,15 @@
       "Bash(mkdir -p docs/screenshots/dev)",
       "Bash(mv T1.1-first-screen.png T1.2-zoomed-in.png T1.2-zoomed-back.png T1.2-summary-card.png T1.3-myeongdong-search.png T1.4-hongdae-search.png T1.5-newyork-search.png T1.6-viewport-loading.png docs/screenshots/e2e-qa/)",
       "Bash(mv T2.1-gangnam-analysis.png T2.2-compare-hongdae.png T2.3-recommend.png T2.4-risk-analysis.png T2.5-cafe-analysis.png T2.6-floating-population-detail.png T2.7-myeongdong.png T2.7-myeongdong-response.png T2.10-suggestion-chip.png docs/screenshots/e2e-qa/)",
-      "Bash(mv t3-7-dark-theme-fullpage.png t3-7-dark-theme-viewport.png t3-final-state.png docs/screenshots/e2e-qa/)"
+      "Bash(mv t3-7-dark-theme-fullpage.png t3-7-dark-theme-viewport.png t3-final-state.png docs/screenshots/e2e-qa/)",
+      "Bash(find C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/frontend/src -type f -name *.ts -o -name *.tsx)",
+      "Bash(API_KEY=\"6d664b4a5863796f39304e56476947\" BASE=\"http://openapi.seoul.go.kr:8088/$API_KEY/json\" __NEW_LINE_9fa717da0ff750d3__ echo \"=== 1. VwsmTrdarFlpopQq \\(유동인구\\) ===\" curl -s \"$BASE/VwsmTrdarFlpopQq/1/1\")",
+      "Bash(API_KEY=\"6d664b4a5863796f39304e56476947\" BASE=\"http://openapi.seoul.go.kr:8088/$API_KEY/json\" __NEW_LINE_e928e21cd8cd5ebc__ echo \"=== 5. VwsmTrdarPopltnQq \\(상주인구\\) ===\" curl -s \"$BASE/VwsmTrdarPopltnQq/1/1\")",
+      "mcp__playwright__browser_handle_dialog",
+      "Bash(find C:/Users/cyon1 -maxdepth 4 -name *상주인구* -o -name *OA-15584*)",
+      "Bash(iconv -f euc-kr -t utf-8)",
+      "Bash(docker exec:*)",
+      "Bash(\"C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/data/seed/marketscope_seed.dump\")"
     ]
   }
 }
