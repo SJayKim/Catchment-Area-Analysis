@@ -223,7 +223,16 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 API 서버 ERROR-500 → CSV 다운로드 대안 확인 완료 (OA-15584, 40,812행)
 - CSV를 `data/` 폴더에 저장 → ETL 로더에 CSV 파싱 추가 → `resident_population` 적재
 
-### 🟢 5. Phase 2 — 프리미엄 기능
+### 🟢 5. 종합 QA 테스트 — 프로덕션 품질 평가 (계획 수립 완료 2026-04-02)
+9개 카테고리 150개 테스트 케이스를 3개 독립 Opus 4.6 Sub-Agent가 병렬 평가
+- **상세 계획**: `docs/qa/qa-test-plan.md`
+- **카테고리**: 기능 정확성(35) + 데이터 정확성(18) + AI 품질(42) + 성능(14) + 보안(16) + 에러 핸들링(12) + UX(15) + 인프라(10) + 회귀(8)
+- **Agent 구성**: A(기능+보안+에러=63개), B(데이터+AI=60개), C(성능+UX+인프라+회귀=47개)
+- **평가**: 1-5점 척도, A-F 등급, P0-P3 개선 우선순위
+- **산출물**: `docs/qa/` 하위 summary-report, detailed-results, improvements
+- 상태: **계획 완료, 실행 미착수**
+
+### 🟢 6. Phase 2 — 프리미엄 기능
 - Tier 게이팅 인프라 (OAuth2 인증, 결제)
 - 비교모드 복수 상권 하이라이트
 
@@ -253,6 +262,7 @@ API 서버 ERROR-500 → CSV 다운로드 대안 확인 완료 (OA-15584, 40,812
 
 ## 참고
 
+- **종합 QA 테스트 계획**: `docs/qa/qa-test-plan.md` (9개 카테고리, 150개 테스트, 3개 Sub-Agent)
 - **E2E QA 리포트**: `docs/status/e2e-qa-report.md`
 - **스크린샷**: `docs/screenshots/e2e-qa/` (20개), `docs/screenshots/real-mode/` (7개), `docs/screenshots/dev/` (5개)
 - **데이터 출처 표시 계획**: `docs/plan/data-source-citation.md` (Card footer 출처 표시, 10개 시나리오)
