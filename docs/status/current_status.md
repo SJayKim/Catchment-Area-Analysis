@@ -192,7 +192,26 @@
 
 ## Next Items (우선순위 순)
 
-### 🔴 1. Agent 아키텍처 전환 — Planner-Actor-Evaluator (계획 수립 완료)
+### 🔴 1. 데이터 출처 표시 기능 (계획 수립 완료 2026-04-02)
+Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선스) 표시. 현재 "데이터 기준: 2025Q4"만 있고 출처 정보 전무 → 신뢰성 부족 + 공공데이터 출처 표시 의무 미충족
+- **상세 계획**: `docs/plan/data-source-citation.md`
+- **UX**: Card footer 1줄에 `출처: 서울 열린데이터광장 (3) ▼` 표시, 클릭 시 데이터셋 목록/기관/라이선스 펼침
+- **Backend**: `data_sources.py` 정적 레지스트리 + Tool/SSE에 dataSources 필드 주입
+- **Frontend**: `SourcesCitation.tsx` 재사용 컴포넌트, 4개 Card footer 교체
+- **Scenario Test**: 10개 시나리오 (10점 만점, 10점만 통과), 독립 subagent 평가
+- **영향 범위**: 신규 2개, 수정 7개 파일
+- 상태: **계획 완료, 구현 미착수**
+
+### 🔴 2. 코드 리팩토링 — 안정성/범용성/확장성 개선 (계획 수립 완료 2026-04-02)
+12개 파일 22곳의 `if settings.use_mock:` 분기 → **Repository 패턴**으로 통합, Agent 매 요청 재생성 → **싱글턴**, chatStore 230줄 → **SSE Parser + Event Handler Registry 분리**
+- **상세 계획**: `docs/plan/refactoring-plan.md`
+- **Backend**: Repository Protocol + DataAccess 파사드, Mock/Real Repository, CacheService 분리, FastAPI Lifespan + Agent 싱글턴, CORS 환경변수화, Tool/Route 위임 전환, 세션 캐시화, 동적 Suggestion, 캐시 무효화
+- **Frontend**: SSEEvent discriminated union, SSE Parser 모듈, Event Handler Registry, chatStore 슬림화, Card Component Registry, console.log 정리, Kakao Map 타입
+- **Scenario Test**: 34개 시나리오 (R11 + E7 + F8 + P4), fail/normal/perfect 그레이딩, 독립 subagent 평가, 전체 perfect시 완료
+- **영향 범위**: 신규 ~31개 파일, 수정 ~27개 파일 (API 응답 형태/프론트 렌더링 변경 없음)
+- 상태: **계획 완료, 구현 미착수**
+
+### 🟡 3. Agent 아키텍처 전환 — Planner-Actor-Evaluator (계획 수립 완료)
 현재 `create_react_agent` (prebuilt ReAct) → **커스텀 Planner-Actor-Evaluator 그래프**로 전환
 - **목적**: 멀티턴 대화 지원, 의도 분류 정확성, 도구 호출 효율화, 결과 평가
 - **상세 계획**: `docs/plan/agent_improvement/` (10개 모듈, 70개 시나리오 테스트)
@@ -200,11 +219,11 @@
 - **마이그레이션**: `agent_mode` 플래그로 react/pae 전환, 롤백 가능
 - 상태: **계획 완료, 구현 미착수**
 
-### 🟡 2. 상주인구 CSV 적재 (대안 검증 완료)
+### 🟡 4. 상주인구 CSV 적재 (대안 검증 완료)
 API 서버 ERROR-500 → CSV 다운로드 대안 확인 완료 (OA-15584, 40,812행)
 - CSV를 `data/` 폴더에 저장 → ETL 로더에 CSV 파싱 추가 → `resident_population` 적재
 
-### 🟢 3. Phase 2 — 프리미엄 기능
+### 🟢 5. Phase 2 — 프리미엄 기능
 - Tier 게이팅 인프라 (OAuth2 인증, 결제)
 - 비교모드 복수 상권 하이라이트
 
@@ -236,6 +255,8 @@ API 서버 ERROR-500 → CSV 다운로드 대안 확인 완료 (OA-15584, 40,812
 
 - **E2E QA 리포트**: `docs/status/e2e-qa-report.md`
 - **스크린샷**: `docs/screenshots/e2e-qa/` (20개), `docs/screenshots/real-mode/` (7개), `docs/screenshots/dev/` (5개)
+- **데이터 출처 표시 계획**: `docs/plan/data-source-citation.md` (Card footer 출처 표시, 10개 시나리오)
+- **리팩토링 계획**: `docs/plan/refactoring-plan.md` (Backend/Frontend/Scenario Test 3단계, 34개 시나리오)
 - **Agent 개선 계획**: `docs/plan/agent_improvement/` (10개 모듈, TODO 78개, Checklist 111개, 시나리오 테스트 70개)
 - Phase 1B 구현 계획: `docs/plan/phase1b-comprehensive-plan.md`
 - Real DB 마이그레이션 계획: `docs/plan/data-source-migration.md`
