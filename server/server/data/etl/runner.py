@@ -184,6 +184,15 @@ async def _run_pipeline(
             else:
                 results.append({"table": "resident_population", "rows": len(transformed), "time": elapsed})
 
+    # --- category_metadata seeding (after stores) ---
+    if "stores" in target_tables and not dry_run:
+        t0 = time.time()
+        console.print("[bold blue]Seeding category_metadata from stores...[/]")
+        from server.data.etl.seed_category_metadata import seed_category_metadata
+        cat_count = await seed_category_metadata(session_factory)
+        elapsed = time.time() - t0
+        results.append({"table": "category_metadata", "rows": cat_count, "time": elapsed})
+
     await engine.dispose()
 
     # Summary table

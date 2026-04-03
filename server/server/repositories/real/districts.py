@@ -70,6 +70,16 @@ class RealDistrictRepository:
             "와", "과", "랑", "서",
         ]
 
+        # 상권명이 아닌 일반 키워드 (과잉 매칭 방지)
+        _STOPWORDS = {
+            "카페", "커피", "한식", "중식", "일식", "양식", "분식", "치킨",
+            "편의점", "미용", "약국", "주점", "제과", "음식점", "식당",
+            "서울", "서울시", "상권", "분석", "추천", "비교", "위험",
+            "리스크", "폐업", "매출", "유동인구", "인구", "업종",
+            "시뮬레이션", "히트맵", "리포트", "요약", "현황", "정보",
+            "안녕", "감사", "도움", "질문",
+        }
+
         words = re.findall(r"[\w가-힣]{2,10}", message)
         async with self._sf() as session:
             for word in words:
@@ -79,15 +89,32 @@ class RealDistrictRepository:
                         stem = word[: -len(p)]
                         if len(stem) >= 2:
                             candidates.append(stem)
+
                 for candidate in candidates:
+                    if candidate in _STOPWORDS:
+                        continue
+
+                    # 1순위: 정확 매칭
                     result = await session.execute(
                         select(District.district_code, District.district_name)
-                        .where(District.district_name.ilike(f"%{candidate}%"))
+                        .where(District.district_name == candidate)
                         .limit(1)
                     )
                     row = result.first()
                     if row:
                         return {"code": row.district_code, "name": row.district_name}
+
+                    # 2순위: prefix 매칭 (3글자 이상만)
+                    if len(candidate) >= 3:
+                        result = await session.execute(
+                            select(District.district_code, District.district_name)
+                            .where(District.district_name.ilike(f"{candidate}%"))
+                            .limit(1)
+                        )
+                        row = result.first()
+                        if row:
+                            return {"code": row.district_code, "name": row.district_name}
+
         return None
 
     async def list_districts(

@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     agent_mode: str = "react"  # "react" (legacy) | "pae" (Planner-Actor-Evaluator)
     agent_max_rounds: int = 3  # max Planner→Actor→Evaluator loops
 
+    # SQLAlchemy connection pool
+    db_pool_size: int = 10
+    db_max_overflow: int = 20
+
     # Conversation history
     max_history_turns: int = 10
     history_content_limit: int = 300  # truncate assistant responses in history

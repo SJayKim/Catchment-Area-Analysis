@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Protocol
+
+logger = logging.getLogger(__name__)
 
 
 class CacheService(Protocol):
@@ -43,7 +46,7 @@ class MemoryCacheService:
 
 
 class RedisCacheService:
-    """Redis-backed cache for real mode."""
+    """Redis-backed cache — graceful degradation on failure."""
 
     def __init__(self, redis_url: str) -> None:
         self._redis_url = redis_url
@@ -51,39 +54,77 @@ class RedisCacheService:
 
     async def _get_redis(self):
         if self._redis is None:
-            from redis.asyncio import Redis
-            self._redis = Redis.from_url(self._redis_url, decode_responses=True)
+            try:
+                from redis.asyncio import Redis
+                self._redis = Redis.from_url(
+                    self._redis_url, decode_responses=True,
+                    socket_connect_timeout=3, socket_timeout=3,
+                )
+                await self._redis.ping()
+            except Exception:
+                logger.warning("Redis connection failed — cache disabled", exc_info=True)
+                self._redis = None
+                return None
         return self._redis
 
     async def get(self, key: str) -> dict | None:
-        redis = await self._get_redis()
-        data = await redis.get(key)
-        return json.loads(data) if data else None
+        try:
+            redis = await self._get_redis()
+            if redis is None:
+                return None
+            data = await redis.get(key)
+            return json.loads(data) if data else None
+        except Exception:
+            logger.warning("Redis GET failed for key=%s", key)
+            self._redis = None  # 다음 호출 시 재연결
+            return None
 
     async def set(self, key: str, value: dict, ttl: int = 86400) -> None:
-        redis = await self._get_redis()
-        serialized = json.dumps(value, ensure_ascii=False, default=str)
-        await redis.set(key, serialized, ex=ttl)
+        try:
+            redis = await self._get_redis()
+            if redis is None:
+                return
+            serialized = json.dumps(value, ensure_ascii=False, default=str)
+            await redis.set(key, serialized, ex=ttl)
+        except Exception:
+            logger.warning("Redis SET failed for key=%s", key)
+            self._redis = None
 
     async def delete(self, key: str) -> None:
-        redis = await self._get_redis()
-        await redis.delete(key)
+        try:
+            redis = await self._get_redis()
+            if redis is None:
+                return
+            await redis.delete(key)
+        except Exception:
+            logger.warning("Redis DELETE failed for key=%s", key)
+            self._redis = None
 
     async def flush_by_prefix(self, prefix: str) -> int:
-        redis = await self._get_redis()
-        cursor, count = b"0", 0
-        while True:
-            cursor, keys = await redis.scan(cursor=cursor, match=f"{prefix}*", count=100)
-            if keys:
-                await redis.delete(*keys)
-                count += len(keys)
-            if cursor == 0:
-                break
-        return count
+        try:
+            redis = await self._get_redis()
+            if redis is None:
+                return 0
+            cursor, count = b"0", 0
+            while True:
+                cursor, keys = await redis.scan(cursor=cursor, match=f"{prefix}*", count=100)
+                if keys:
+                    await redis.delete(*keys)
+                    count += len(keys)
+                if cursor == 0:
+                    break
+            return count
+        except Exception:
+            logger.warning("Redis FLUSH failed for prefix=%s", prefix)
+            self._redis = None
+            return 0
 
     async def close(self) -> None:
         if self._redis:
-            await self._redis.aclose()
+            try:
+                await self._redis.aclose()
+            except Exception:
+                pass
             self._redis = None
 
 

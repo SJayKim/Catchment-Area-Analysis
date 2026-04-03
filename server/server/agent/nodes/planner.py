@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 INTENT_PATTERNS: dict[str, re.Pattern[str]] = {
+    "greeting": re.compile(r"^(안녕|하이|헬로|hi|hello|반갑|감사|고마워|ㅎㅇ)", re.IGNORECASE),
     "comparison": re.compile(r"(비교|vs|대비|차이)"),
     "recommendation": re.compile(r"(추천|뭐.*하면|어떤.*업종|창업|아이템)"),
     "risk": re.compile(r"(위험|리스크|폐업|안전|생존|실패)"),
@@ -72,6 +73,7 @@ INTENT_TO_PLAN: dict[str, list[dict[str, Any]]] = {
         {"tool_name": "get_estimated_sales", "args_template": {"district_code": "{district_code}", "category_code": "{category_code}"}, "reason": "업종별 매출 조회", "depends_on": []},
         {"tool_name": "get_store_info", "args_template": {"district_code": "{district_code}", "category_code": "{category_code}"}, "reason": "업종별 점포 현황 조회", "depends_on": []},
     ],
+    "greeting": [],  # 도구 불필요
     "general": [],
     "ambiguous": [],
 }

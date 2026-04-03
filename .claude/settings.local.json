@@ -133,7 +133,19 @@
       "Bash(find C:/Users/cyon1 -maxdepth 4 -name *상주인구* -o -name *OA-15584*)",
       "Bash(iconv -f euc-kr -t utf-8)",
       "Bash(docker exec:*)",
-      "Bash(\"C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/data/seed/marketscope_seed.dump\")"
+      "Bash(\"C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/data/seed/marketscope_seed.dump\")",
+      "Bash(find C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/docs/qa -type f -name *.md)",
+      "Bash(mkdir -p data/csv)",
+      "Bash(cp \".playwright-mcp/서울시-상권분석서비스-상주인구-상권-.csv\" data/csv/OA-15584.csv)",
+      "Bash(PYTHONIOENCODING=utf-8 AGENT_MODE=pae USE_MOCK=true python -c \":*)",
+      "Bash(PYTHONIOENCODING=utf-8 AGENT_MODE=react USE_MOCK=true python -c \":*)",
+      "Bash(docker-compose ps:*)",
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:martinfowler.com)",
+      "mcp__playwright__browser_resize",
+      "Bash(docker stats:*)",
+      "Bash(node -e \"const c = require\\(''./next.config.mjs''\\); console.log\\(''next.config.mjs loaded OK''\\)\")",
+      "Bash(node --input-type=module -e \"import\\(''./next.config.mjs''\\).then\\(m => console.log\\(''next.config.mjs OK''\\)\\)\")"
     ]
   }
 }
