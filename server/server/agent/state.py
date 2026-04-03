@@ -1,14 +1,65 @@
-from typing import Annotated, TypedDict
+from typing import Annotated, Optional, TypedDict, Union
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 
-class AgentState(TypedDict):
-    """State for the MarketScope ReAct agent graph."""
+# ---------------------------------------------------------------------------
+# PAE sub-types
+# ---------------------------------------------------------------------------
 
+
+class ToolPlanStep(TypedDict):
+    tool_name: str  # e.g. "get_district_summary"
+    args: dict  # e.g. {"district_code": "D3001"}
+    reason: str  # e.g. "상권 종합 요약 조회"
+    depends_on: list[int]  # indices of steps this depends on
+
+
+class EvaluationResult(TypedDict):
+    sufficient: bool
+    missing_info: list[str]
+    proactive_suggestions: list[str]
+    reasoning: str
+
+
+# ---------------------------------------------------------------------------
+# Agent State
+# ---------------------------------------------------------------------------
+
+
+class AgentState(TypedDict):
+    """State for the MarketScope agent graph (ReAct & PAE compatible)."""
+
+    # --- existing (ReAct) ---
     messages: Annotated[list[BaseMessage], add_messages]
     district_code: str
     district_name: str
     data_quarter: str
     iteration_count: int
+
+    # --- conversation (PAE) ---
+    conversation_history: list[dict]
+    session_id: str
+
+    # --- intent (PAE: set by Planner) ---
+    user_intent: str
+    intent_confidence: float
+    referenced_districts: list[str]
+    referenced_category: Optional[str]
+
+    # --- plan (PAE: set by Planner) ---
+    plan: list[ToolPlanStep]
+    plan_reasoning: str
+
+    # --- execution (PAE: set by Actor) ---
+    tool_results: dict[str, dict]
+    tool_errors: dict[str, str]
+    execution_round: int
+
+    # --- evaluation (PAE: set by Evaluator) ---
+    evaluation: Optional[EvaluationResult]
+
+    # --- response control (PAE) ---
+    response_mode: str  # "direct" | "tool_assisted"
+    card_emissions: list[dict]

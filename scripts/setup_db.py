@@ -23,6 +23,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SEED_DUMP = PROJECT_ROOT / "data" / "seed" / "marketscope_seed.dump"
 SHP_FILE = PROJECT_ROOT / "data" / "shp" / "OA-15560.shp"
+RESIDENT_CSV = PROJECT_ROOT / "data" / "csv" / "OA-15584.csv"
 ENV_FILE = PROJECT_ROOT / ".env"
 ENV_EXAMPLE = PROJECT_ROOT / ".env.example"
 DOCKER_COMPOSE = PROJECT_ROOT / "docker-compose.yml"
@@ -226,6 +227,8 @@ def run_full_etl(compose: list[str]) -> None:
     ]
     if SHP_FILE.exists():
         etl_cmd.extend(["--shp-file", str(SHP_FILE)])
+    if RESIDENT_CSV.exists():
+        etl_cmd.extend(["--csv-file", str(RESIDENT_CSV)])
 
     result = _run(etl_cmd, check=False, cwd=SERVER_DIR)
     if result.returncode != 0:

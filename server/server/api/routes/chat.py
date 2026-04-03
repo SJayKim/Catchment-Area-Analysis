@@ -10,13 +10,15 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from server.agent.graph import run_agent
+from server.agent.history import ConversationHistory
 from server.config import settings
+from server.repositories import get_data_access
 
 router = APIRouter(prefix="/api", tags=["chat"])
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# In-memory session storage for district context retention (Feature 2)
+# In-memory session storage for district context retention
 # ---------------------------------------------------------------------------
 
 _sessions: dict[str, dict] = {}
@@ -26,7 +28,6 @@ _SESSION_TTL = 1800  # 30 minutes
 def _get_session(session_id: str) -> dict:
     """Get or create session, pruning expired entries."""
     now = time.time()
-    # Prune expired sessions (lazy cleanup)
     expired = [k for k, v in _sessions.items() if now - v.get("last_active", 0) > _SESSION_TTL]
     for k in expired:
         del _sessions[k]
@@ -36,6 +37,10 @@ def _get_session(session_id: str) -> dict:
             "last_district_code": None,
             "last_district_name": None,
             "last_active": now,
+            "history": ConversationHistory(
+                max_turns=settings.max_history_turns,
+                content_limit=settings.history_content_limit,
+            ),
         }
     else:
         _sessions[session_id]["last_active"] = now
@@ -44,7 +49,7 @@ def _get_session(session_id: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Summary detection patterns
+# Summary detection patterns (used in ReAct mode only)
 # ---------------------------------------------------------------------------
 
 _SUMMARY_PATTERNS = re.compile(
@@ -61,88 +66,13 @@ class ChatRequest(BaseModel):
     district_code: str | None = None
 
 
-async def _resolve_district_from_db(district_code: str) -> dict | None:
-    """Fetch district info (name, type, center, quarter) from DB."""
-    from geoalchemy2.functions import ST_X, ST_Y
-    from sqlalchemy import select
-
-    from server.api.deps import get_db
-    from server.models.district import District
-
-    async for db in get_db():
-        result = await db.execute(
-            select(
-                District.district_name,
-                District.district_type,
-                District.data_quarter,
-                ST_Y(District.center_point).label("lat"),
-                ST_X(District.center_point).label("lng"),
-            ).where(District.district_code == district_code)
-        )
-        row = result.first()
-        if row:
-            center = None
-            if row.lat is not None and row.lng is not None:
-                center = {"lat": float(row.lat), "lng": float(row.lng)}
-            return {
-                "name": row.district_name,
-                "type": row.district_type,
-                "quarter": row.data_quarter,
-                "center": center,
-            }
-    return None
-
-
-def _strip_korean_particles(word: str) -> list[str]:
-    """Strip common Korean particles and return candidate stems (longest first)."""
-    # Ordered longest-first so we strip the longest matching suffix
-    _PARTICLES = [
-        "에서는", "이랑은", "에서", "부터", "까지", "처럼", "만큼",
-        "이랑", "하고", "에게", "한테", "보다",
-        "은", "는", "이", "가", "을", "를", "에", "도", "로", "의",
-        "와", "과", "랑", "서",
-    ]
-    candidates = [word]
-    for p in _PARTICLES:
-        if word.endswith(p) and len(word) > len(p):
-            stem = word[: -len(p)]
-            if len(stem) >= 2:
-                candidates.append(stem)
-    return candidates
-
-
-async def _detect_district_from_message(message: str) -> dict | None:
-    """Search DB for a district name mentioned in the message text."""
-    from sqlalchemy import select
-
-    from server.api.deps import get_db
-    from server.models.district import District
-
-    # Extract potential district names: try each word/phrase
-    # Korean district names are typically 2-8 chars
-    words = re.findall(r"[\w가-힣]{2,10}", message)
-    async for db in get_db():
-        for word in words:
-            # Try original word + particle-stripped stems
-            candidates = _strip_korean_particles(word)
-            for candidate in candidates:
-                result = await db.execute(
-                    select(District.district_code, District.district_name)
-                    .where(District.district_name.ilike(f"%{candidate}%"))
-                    .limit(1)
-                )
-                row = result.first()
-                if row:
-                    return {"code": row.district_code, "name": row.district_name}
-    return None
-
-
 @router.post("/chat")
 async def chat(request: ChatRequest) -> EventSourceResponse:
-    """Chat endpoint with SSE streaming via LangGraph ReAct agent."""
+    """Chat endpoint with SSE streaming via LangGraph agent."""
 
     session_id = request.session_id or "anonymous"
     session = _get_session(session_id)
+    da = get_data_access()
 
     # Resolve district info if code provided
     district_name = "미선택"
@@ -151,77 +81,49 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
     district_type: str = "발달상권"
 
     if request.district_code:
-        if settings.use_mock:
-            from server.agent.tools.mock_data import DISTRICTS
-            d = DISTRICTS.get(request.district_code)
-            if d:
-                district_name = d["name"]
-                data_quarter = d["quarter"]
-                district_center = d.get("center")
-                district_type = d.get("type", "발달상권")
-        else:
-            d = await _resolve_district_from_db(request.district_code)
-            if d:
-                district_name = d["name"]
-                data_quarter = d["quarter"]
-                district_center = d["center"]
-                district_type = d.get("type", "발달상권")
+        d = await da.districts.resolve_district(request.district_code)
+        if d:
+            district_name = d["name"]
+            data_quarter = d.get("quarter", "최신")
+            district_center = d.get("center")
+            district_type = d.get("type", "발달상권")
 
-        # Update session with explicitly provided district
         session["last_district_code"] = request.district_code
         session["last_district_name"] = district_name
 
-    # Auto-detect district from message text (even when district_code is provided,
-    # in case the user mentions a DIFFERENT district in their message)
-    if settings.use_mock:
-        from server.agent.tools.mock_data import DISTRICTS
-        for code, d in DISTRICTS.items():
-            if d["name"] in request.message and code != request.district_code:
-                request.district_code = code
-                district_name = d["name"]
-                data_quarter = d["quarter"]
-                district_center = d.get("center")
-                district_type = d.get("type", "발달상권")
-                session["last_district_code"] = code
-                session["last_district_name"] = district_name
-                break
-    else:
-        # Real mode: detect district name from message via DB lookup
-        detected = await _detect_district_from_message(request.message)
-        if detected and detected["code"] != request.district_code:
-            request.district_code = detected["code"]
-            district_name = detected["name"]
-            d = await _resolve_district_from_db(detected["code"])
-            if d:
-                data_quarter = d["quarter"]
-                district_center = d["center"]
-                district_type = d.get("type", "발달상권")
-            session["last_district_code"] = detected["code"]
-            session["last_district_name"] = detected["name"]
+    # Auto-detect district from message text
+    detected = await da.districts.detect_district_by_name(request.message)
+    if detected and detected["code"] != request.district_code:
+        request.district_code = detected["code"]
+        district_name = detected["name"]
+        d = await da.districts.resolve_district(detected["code"])
+        if d:
+            data_quarter = d.get("quarter", "최신")
+            district_center = d.get("center")
+            district_type = d.get("type", "발달상권")
+        session["last_district_code"] = detected["code"]
+        session["last_district_name"] = detected["name"]
 
     # Fallback: restore district from session if still not resolved
     if not request.district_code and session.get("last_district_code"):
         request.district_code = session["last_district_code"]
         district_name = session.get("last_district_name", "미선택")
-        if settings.use_mock:
-            from server.agent.tools.mock_data import DISTRICTS
-            d = DISTRICTS.get(request.district_code)
-            if d:
-                data_quarter = d["quarter"]
-                district_center = d.get("center")
-                district_type = d.get("type", "발달상권")
-        else:
-            d = await _resolve_district_from_db(request.district_code)
-            if d:
-                data_quarter = d["quarter"]
-                district_center = d["center"]
-                district_type = d.get("type", "발달상권")
+        d = await da.districts.resolve_district(request.district_code)
+        if d:
+            data_quarter = d.get("quarter", "최신")
+            district_center = d.get("center")
+            district_type = d.get("type", "발달상권")
 
-    # Determine if this is a summary-type request
+    # Summary pre-emit (ReAct mode only — PAE handles this via Planner+Actor)
+    is_pae = settings.agent_mode == "pae"
     is_summary_request = False
-    if request.district_code and _SUMMARY_PATTERNS.search(request.message):
+    if not is_pae and request.district_code and _SUMMARY_PATTERNS.search(request.message):
         if not _NON_SUMMARY_PATTERNS.search(request.message):
             is_summary_request = True
+
+    # Conversation history for PAE
+    history: ConversationHistory = session["history"]
+    conversation_history = history.get_recent() if is_pae else None
 
     async def event_generator():
         # Emit map_cmd to move map to the district being discussed
@@ -239,7 +141,7 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
                 "district_type": district_type,
             }, ensure_ascii=False)}
 
-        # Emit summary card directly when a summary request is detected
+        # Emit summary card directly (ReAct mode only)
         if is_summary_request and request.district_code:
             try:
                 from server.agent.tools.district_summary import get_district_summary
@@ -253,13 +155,20 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
             except Exception:
                 logger.exception("Failed to generate summary card")
 
+        collected_text = ""
+
         try:
             async for event in run_agent(
                 message=request.message,
                 district_code=request.district_code or "",
                 district_name=district_name,
                 data_quarter=data_quarter,
+                conversation_history=conversation_history,
             ):
+                # Collect text for history
+                if event.get("type") == "text":
+                    collected_text += event.get("content", "")
+
                 yield {"data": json.dumps(event, ensure_ascii=False, default=str)}
         except Exception:
             logger.exception("SSE event generation failed")
@@ -268,5 +177,19 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
                 ensure_ascii=False,
             )}
             yield {"data": json.dumps({"type": "done"}, ensure_ascii=False)}
+
+        # Save conversation turns (PAE mode)
+        if is_pae:
+            history.add_turn(
+                role="user",
+                content=request.message,
+                district_code=request.district_code,
+            )
+            if collected_text:
+                history.add_turn(
+                    role="assistant",
+                    content=collected_text,
+                    district_code=request.district_code,
+                )
 
     return EventSourceResponse(event_generator())

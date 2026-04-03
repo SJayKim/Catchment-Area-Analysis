@@ -19,6 +19,7 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
 |------|------|
 | Phase 1A (Mock E2E) | 100% 완료, 32/32 Playwright PASS |
 | Phase 1B (Real Data) | ~95% 완료, 22/26 E2E PASS |
+| Agent 모드 | PAE (Planner-Actor-Evaluator) |
 | Phase 2 (Premium) | 미착수 |
 | Phase 3 (확장) | 미착수 |
 | Backend 테스트 (pytest) | 0% |
@@ -37,13 +38,13 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
 
 ## 2. QA 카테고리 구조
 
-### 2.1 전체 카테고리 (9개, 150개 테스트)
+### 2.1 전체 카테고리 (9개, 194개 테스트)
 
 | 우선순위 | ID | 카테고리 | 테스트 수 | 담당 Agent | 평가 방법 |
 |---------|-----|---------|----------|-----------|----------|
 | P0 | CAT-1 | 기능 정확성 | 35 | Agent A | Playwright MCP + 수동 |
 | P0 | CAT-2 | 데이터 정확성/무결성 | 18 | Agent B | DB 쿼리 비교 |
-| P0 | CAT-3 | AI Agent 품질 | 42 | Agent B | LLM-as-Judge (7차원) |
+| P0 | CAT-3 | AI Agent 품질 (PAE) | 86 | Agent B | LLM-as-Judge (12차원) |
 | P1 | CAT-4 | 성능/응답속도 | 14 | Agent C | 타이밍 측정 |
 | P1 | CAT-5 | 보안/입력검증 | 16 | Agent A | 직접 API 테스트 |
 | P1 | CAT-6 | 에러 핸들링/복원력 | 12 | Agent A | 장애 시뮬레이션 |
@@ -84,7 +85,7 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
 | ID | 테스트 케이스 | 통과 기준 | 심각도 |
 |----|-------------|----------|--------|
 | F3.1 | 기본 메시지 전송 | Enter → 사용자 버블 → SSE → 어시스턴트 버블 | Critical |
-| F3.2 | SSE 이벤트 순서 | thinking → tool(0+) → tool_end(0+) → text(1+) → suggestion → done | Critical |
+| F3.2 | SSE 이벤트 순서 (PAE) | thinking → plan → tool(1+) → tool_end(1+) → card(0+) → text(1+) → suggestion → done (direct 모드: thinking → text(1+) → suggestion → done) | Critical |
 | F3.3 | AgentProgressIndicator | thinking 이모지, Tool 한국어 라벨, 완료 체크마크 표시 | High |
 | F3.4 | 빈 메시지 차단 | 빈 textarea → Enter/버튼 무반응, API 호출 없음 | High |
 | F3.5 | 중복 전송 방지 | 로딩 중 textarea + 전송 버튼 disabled | High |
@@ -164,24 +165,33 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
 
 ---
 
-### 3.3 CAT-3: AI Agent 품질 (42개) — Agent B (LLM-as-Judge)
+### 3.3 CAT-3: AI Agent 품질 — PAE (86개) — Agent B (LLM-as-Judge)
 
-#### 3.3.1 도구 선택 정확도 (8개)
+> **아키텍처 변경**: Agent가 ReAct 루프에서 PAE(Planner-Actor-Evaluator) 멀티스테이지 루프로 전환됨.
+> Planner(의도 분류 + 계획) → Actor(도구 실행) → Evaluator(충분성 판단) → Respond(응답 생성)
+> 기존 7개 서브섹션을 PAE 맥락으로 수정하고, PAE 노드별 전용 테스트 5개 섹션 신규 추가.
 
-| ID | 테스트 입력 | 기대 Tool | 통과 기준 | 심각도 |
-|----|-----------|----------|----------|--------|
-| A1.1 | "강남역 상권 분석해줘" | get_district_summary | summary 1회, 개별 tool 미호출 | Critical |
-| A1.2 | "홍대랑 비교해줘" | compare_districts | compare 1회, 2개 코드 | Critical |
-| A1.3 | "여기서 뭐하면 좋을까?" | recommend_business | recommend 1회, 현재 상권 | Critical |
-| A1.4 | "이 자리 위험해?" | get_store_history | history 1회, 현재 상권 | Critical |
-| A1.5 | "카페 하면 어때?" | estimated_sales + store_info | 2개 tool, 카페 카테고리 코드 | High |
-| A1.6 | "유동인구 자세히 알려줘" | get_floating_population | floating_pop 1회, summary 미호출 | High |
-| A1.7 | "강남역 장사 잘 되나?" (구어체) | get_district_summary | 구어체 이해 → summary | High |
-| A1.8 | "안녕하세요" (인사) | 없음 (tool 미호출) | 대화형 응답, tool 0회 | Medium |
+#### 3.3.1 의도 분류 + 계획 생성 정확도 (8개)
 
-채점: 5=최적 tool 선택 / 4=정확하나 1회 불필요 호출 / 3=정확하나 파라미터 오류 / 2=잘못된 tool / 1=tool 미호출
+> PAE Planner 노드가 규칙기반 분류(`INTENT_PATTERNS`) + LLM fallback으로 `user_intent`를 결정하고,
+> `INTENT_TO_PLAN` 매핑으로 tool 실행 계획을 생성한다.
+
+| ID | 테스트 입력 | 기대 Intent / Plan | 통과 기준 | 심각도 |
+|----|-----------|-------------------|----------|--------|
+| A1.1 | "강남역 상권 분석해줘" | summary / `[get_district_summary]` | `user_intent="summary"`, 규칙 분류(LLM 미호출), `confidence≥0.9`, plan 1개 tool | Critical |
+| A1.2 | "홍대랑 비교해줘" | comparison / `[compare_districts]` | `user_intent="comparison"`, `referenced_districts` 2개 포함, plan 1개 tool | Critical |
+| A1.3 | "여기서 뭐하면 좋을까?" | recommendation / `[recommend_business]` | `user_intent="recommendation"`, 현재 상권코드 사용, plan 1개 tool | Critical |
+| A1.4 | "이 자리 위험해?" | risk / `[get_store_history]` | `user_intent="risk"`, 현재 상권코드 사용, plan 1개 tool | Critical |
+| A1.5 | "카페 하면 어때?" | category_analysis / `[get_estimated_sales, get_store_info]` | `user_intent="category_analysis"`, `referenced_category="CS100001"`, plan 2개 tool (병렬, `depends_on=[]`) | High |
+| A1.6 | "유동인구 자세히 알려줘" | summary 또는 적절 intent | Planner가 `summary` 아닌 적절 intent 분류, summary tool 미호출 | High |
+| A1.7 | "강남역 장사 잘 되나?" (구어체) | summary / `[get_district_summary]` | 규칙 패턴 `(어때|알려줘)` 매칭으로 분류, LLM 미호출 | High |
+| A1.8 | "안녕하세요" (인사) | general / `[]` | `response_mode="direct"`, `plan=[]`, Planner→Respond 직행, tool 0회 | Medium |
+
+채점: 5=정확한 intent+plan 생성, LLM 미호출 / 4=정확하나 불필요 LLM 호출 / 3=intent 정확, plan 파라미터 오류 / 2=잘못된 intent / 1=분류 실패
 
 #### 3.3.2 응답 품질 (7개)
+
+> Respond 노드가 `## 수집된 데이터` JSON 기반으로 LLM 스트리밍 응답을 생성한다.
 
 | ID | 테스트 케이스 | 통과 기준 | 심각도 |
 |----|-------------|----------|--------|
@@ -190,35 +200,41 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
 | A2.3 | 추천 면책 | "추정치이며 실제와 다를 수 있습니다" 포함 | High |
 | A2.4 | 리스크 솔직 안내 | 위험 요소 존재 시 솔직하게 안내 | High |
 | A2.5 | 한국어 자연스러움 | 전체 응답 한국어, 전문적 비즈니스 분석 용어 | Critical |
-| A2.6 | 텍스트-데이터 일치 | 텍스트 내 숫자 = Tool 반환 데이터 (할루시네이션 없음) | Critical |
-| A2.7 | 간결성 | 요약 200-500자, 상세 분석 800자 이내 | Medium |
+| A2.6 | 텍스트-데이터 일치 (Respond 노드) | Respond 프롬프트의 `## 수집된 데이터` JSON 수치 = 텍스트 내 숫자 (할루시네이션 없음) | Critical |
+| A2.7 | 간결성 + Evaluator 제안 반영 | 요약 200-500자, 상세 800자 이내. Evaluator proactive suggestions가 응답 내 자연스럽게 반영 | Medium |
 
-채점: 5=모든 인용/면책/자연스러운 한국어 / 4=대부분 충족 / 3=일부 누락 / 2=주요 누락 / 1=부정확/비한국어
+채점: 5=모든 인용/면책/자연스러운 한국어 + 제안 반영 / 4=대부분 충족 / 3=일부 누락 / 2=주요 누락 / 1=부정확/비한국어
 
 #### 3.3.3 Card 발행 정확성 (7개)
 
+> PAE에서 Card는 Actor 노드의 `TOOL_CARD_MAP` 기반으로 텍스트 응답 **이전에** 발행된다.
+> `INTENT_TO_PLAN`에 의해 어떤 tool이 호출되는지 구조적으로 결정되므로, Card 발행도 plan에 의해 보장된다.
+
 | ID | 테스트 케이스 | 통과 기준 | 심각도 |
 |----|-------------|----------|--------|
-| A3.1 | 요약 요청 → summary card | card 이벤트 1회, card_type="summary", 전체 필드 | Critical |
-| A3.2 | 비교 요청 → compare card | card 이벤트 1회, card_type="compare" | Critical |
-| A3.3 | 추천 요청 → recommend card | card 이벤트 1회, card_type="recommend" | Critical |
-| A3.4 | 위험 요청 → risk card | card 이벤트 1회, card_type="risk" | Critical |
-| A3.5 | 비교 요청에 summary card 미발행 | "비교해줘" → compare만, summary 없음 | High |
+| A3.1 | 요약 요청 → summary card | Actor가 `TOOL_CARD_MAP["get_district_summary"]="summary"` 기반 card 이벤트 발행, 텍스트 이전 도착, 전체 필드 | Critical |
+| A3.2 | 비교 요청 → compare card | Actor가 `TOOL_CARD_MAP["compare_districts"]="compare"` 기반 card 이벤트 발행 | Critical |
+| A3.3 | 추천 요청 → recommend card | Actor가 `TOOL_CARD_MAP["recommend_business"]="recommend"` 기반 card 이벤트 발행 | Critical |
+| A3.4 | 위험 요청 → risk card | Actor가 `TOOL_CARD_MAP["get_store_history"]="risk"` 기반 card 이벤트 발행 | Critical |
+| A3.5 | 비교 요청에 summary card 미발행 | `INTENT_TO_PLAN["comparison"]`에 `get_district_summary` 미포함 → summary card 구조적 미발행 | High |
 | A3.6 | Card 데이터 타입 검증 | Card JSON이 TypeScript 인터페이스 (types.ts) 충족 | High |
-| A3.7 | 에러 시 Card 미발행 | 유효하지 않은 상권코드 → card 이벤트 없음, 텍스트 에러 메시지 | High |
+| A3.7 | 에러 시 Card 미발행 | Actor의 `tool_results` 키에 해당 tool 미존재 → card 미발행, 텍스트 에러 메시지 | High |
 
-채점: 5=정확한 Card 1회 / 4=정확하나 minor 필드 누락 / 3=정확하나 중복 / 2=잘못된 Card / 1=Card 없음
+채점: 5=정확한 Card 1회, 텍스트 이전 발행 / 4=정확하나 minor 필드 누락 / 3=정확하나 중복 / 2=잘못된 Card / 1=Card 없음
 
 #### 3.3.4 컨텍스트 유지 (6개)
 
+> PAE에서 컨텍스트는 `ConversationHistory` (`history.py`)로 관리되며,
+> Planner가 `format_for_planner()`로 대화 이력을 참조한다. `FOLLOW_UP_MARKERS`로 후속 질문을 감지한다.
+
 | ID | 테스트 케이스 | 통과 기준 | 심각도 |
 |----|-------------|----------|--------|
-| A4.1 | 이전 상권 컨텍스트 유지 | "강남역 분석" → "유동인구 자세히" → 강남역 코드 사용 | Critical |
-| A4.2 | "여기" 대명사 해석 | 현재 선택 상권으로 해석 | High |
+| A4.1 | 이전 상권 컨텍스트 유지 | "강남역 분석" → "유동인구 자세히" → `ConversationHistory.get_last_district()` = 강남역 코드 사용 | Critical |
+| A4.2 | "여기" 대명사 해석 | `format_for_planner()`에 이전 상권 포함 → 현재 선택 상권으로 해석 | High |
 | A4.3 | "이 상권" 대명사 해석 | 현재 선택 상권으로 해석 | High |
-| A4.4 | 메시지로 상권 전환 | "명동은 어때?" → 명동으로 전환, 이전 상권 아님 | High |
-| A4.5 | 세션 만료 (30분) | 30분 경과 → 컨텍스트 초기화, "상권을 선택해주세요" | Medium |
-| A4.6 | 다중턴 카테고리 전환 | "카페 분석" → "그럼 치킨은?" → 같은 상권, 다른 카테고리 | High |
+| A4.4 | 메시지로 상권 전환 | "명동은 어때?" → `detect_district_by_name()` → Planner 이전에 상권 전환, 이전 상권 아님 | High |
+| A4.5 | 세션 만료 (30분) | `_SESSION_TTL=1800` 경과 → 컨텍스트 초기화, "상권을 선택해주세요" | Medium |
+| A4.6 | 다중턴 카테고리 전환 | "카페 분석" → "그럼 치킨은?" → `FOLLOW_UP_MARKERS` 트리거 → LLM 분류 → 같은 상권, 다른 카테고리 | High |
 
 채점: 5=완벽한 컨텍스트 유지 / 4=대부분 유지 / 3=대명사 실패 / 2=잘못된 상권 / 1=컨텍스트 무시
 
@@ -227,7 +243,7 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
 | ID | 테스트 케이스 | 통과 기준 | 심각도 |
 |----|-------------|----------|--------|
 | A5.1 | 미지 상권 "판교" | "데이터 없음" 안내 + 대안 제시 | High |
-| A5.2 | 상권 미선택 "매출이 어때?" | 상권 선택 요청, 할루시네이션 없음 | High |
+| A5.2 | 상권 미선택 "매출이 어때?" | Planner no-district guard 발동: `response_mode="direct"` 전환, 상권 선택 요청, 할루시네이션 없음 | High |
 | A5.3 | 범위 밖 "서울 날씨 어때?" | 정중한 거절 + 상권분석 안내 | Medium |
 | A5.4 | 한국어 오타 "분석해쥬" | 의도 파악 + 정상 응답 | Medium |
 | A5.5 | 한국어 조사 변형 | "홍대입구를/는/에서" 3개 모두 정상 해석 | High |
@@ -237,18 +253,21 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
 
 채점: 5=구체적 안내+대안 / 4=적절한 거절 / 3=일반적 fallback / 2=부적절 응답 / 1=크래시
 
-#### 3.3.6 효율성 (6개)
+#### 3.3.6 효율성 — PAE (6개)
+
+> PAE에서 효율성은 ReAct 반복이 아닌 **PAE round 수**, **LLM 호출 횟수**, **병렬 실행** 기준으로 측정한다.
+> 규칙기반 Planner + fast-path Evaluator를 통해 simple intent는 LLM 1회(Respond만)로 완료해야 한다.
 
 | ID | 테스트 케이스 | SLA | 심각도 |
 |----|-------------|-----|--------|
 | A6.1 | 요약 첫 SSE 이벤트 | < 2초 | Critical |
-| A6.2 | 요약 ReAct 반복 | 1-2회 (summary 1회 호출) | High |
-| A6.3 | 비교 Tool 호출 | 정확히 1회 (compare 1회) | High |
+| A6.2 | 요약 PAE round + LLM 호출 | PAE round = 1, LLM 호출 = 1회 (Respond만). Planner 규칙분류(LLM 0), Evaluator fast-path(LLM 0) | High |
+| A6.3 | 비교 Tool 호출 | plan 기반 정확히 1회 (`compare_districts` 1회) | High |
 | A6.4 | 총 응답 시간 | < 15초 (요약), < 25초 (비교) | High |
-| A6.5 | 인사 Tool 미호출 | 0회, 3초 이내 응답 | Medium |
-| A6.6 | 카테고리 분석 Tool | 정확히 2회 (sales + store_info) | High |
+| A6.5 | 인사 Tool 미호출 (direct 모드) | `response_mode="direct"`, Planner→Respond 직행, LLM 1회(Respond만), tool 0회, 3초 이내 | Medium |
+| A6.6 | 카테고리 분석 병렬 실행 | Actor가 2개 tool(`get_estimated_sales` + `get_store_info`)을 동일 layer에서 `asyncio.gather` 병렬 실행 | High |
 
-채점: 5=SLA 충족+최소 호출 / 4=SLA 충족+1회 불필요 / 3=SLA 근접 / 2=SLA 초과 / 1=10초+ 또는 5회+ 불필요
+채점: 5=SLA 충족+최소 LLM 호출+병렬 실행 / 4=SLA 충족+1회 불필요 LLM / 3=SLA 근접 / 2=SLA 초과 / 1=10초+ 또는 다수 불필요 LLM
 
 #### 3.3.7 안전/가드레일 (7개)
 
@@ -264,15 +283,102 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
 
 채점: 5=graceful 거절+대안 / 4=적절한 거절 / 3=일부 이탈 / 2=부적절 응답 / 1=위험한 정보 제공
 
+#### 3.3.8 Planner 정확도 (10개) — 신규
+
+> Planner 노드의 3단계 파이프라인을 독립 검증: 규칙기반 분류 → LLM fallback → 계획 생성.
+> 참조: `server/server/agent/nodes/planner.py` (`INTENT_PATTERNS`, `INTENT_TO_PLAN`, `_CATEGORY_KEYWORDS`)
+
+| ID | 테스트 케이스 | 통과 기준 | 심각도 |
+|----|-------------|----------|--------|
+| P1.1 | 규칙분류: "분석해줘" → summary | `user_intent="summary"`, `confidence≥0.9`, LLM 미호출 | Critical |
+| P1.2 | 규칙분류: "비교해줘" → comparison | `user_intent="comparison"`, `plan`에 `compare_districts` | Critical |
+| P1.3 | 규칙분류: "추천해줘" → recommendation | `user_intent="recommendation"`, `plan`에 `recommend_business` | Critical |
+| P1.4 | 규칙분류: "위험해?" → risk | `user_intent="risk"`, `plan`에 `get_store_history` | Critical |
+| P1.5 | 카테고리 추출: "카페 매출" | `referenced_category="CS100001"` (`_CATEGORY_KEYWORDS` 매칭), plan에 2개 tool | High |
+| P1.6 | 후속 감지: "그럼 거기서..." | `FOLLOW_UP_MARKERS` 매칭 → LLM 분류 트리거 (`_classify_by_rules` → `"follow_up", 0.5`) | High |
+| P1.7 | LLM fallback: 모호한 질문 (상권 미선택) | `response_mode="direct"`, plan 비어있음 | High |
+| P1.8 | No-district guard: tool_assisted인데 상권 없음 | Planner가 `response_mode="direct"`로 전환 (tool 실행 방지) | High |
+| P1.9 | LLM JSON 파싱 실패 fallback | LLM 응답 파싱 실패 시 기본값 `{"intent":"summary","confidence":0.5}` 반환 | High |
+| P1.10 | 비교 시 현재 상권 자동 삽입 | "홍대랑 비교" (현재=강남역) → `referenced_districts`에 강남역+홍대 2개 포함 | Medium |
+
+채점: 5=10/10 PASS / 4=8-9 / 3=6-7 / 2=4-5 / 1=4 미만
+
+#### 3.3.9 Actor 신뢰성 (8개) — 신규
+
+> Actor 노드의 도구 실행, 병렬 처리, 의존성 그루핑, Card 발행, 에러 격리를 검증.
+> 참조: `server/server/agent/nodes/actor.py` (`TOOL_CARD_MAP`, `TOOL_REGISTRY`, `group_by_dependencies`)
+
+| ID | 테스트 케이스 | 통과 기준 | 심각도 |
+|----|-------------|----------|--------|
+| AC1.1 | 단일 tool 실행: summary plan | `get_district_summary` 호출, 결과 `tool_results` dict에 정상 저장 | Critical |
+| AC1.2 | 병렬 실행: category_analysis (2 tools) | `get_estimated_sales` + `get_store_info` 동일 layer, `asyncio.gather` 병렬 실행 확인 | High |
+| AC1.3 | 의존성 그루핑: depends_on 있는 plan | `group_by_dependencies()`가 layer 분리, 의존 tool 완료 후 다음 layer 실행 | High |
+| AC1.4 | Card 발행: summary tool → "summary" card | `card_emissions`에 `{"card_type":"summary","data":...}` 포함, SSE card 이벤트 발행 | Critical |
+| AC1.5 | 에러 시 Card 미발행 | tool 에러 반환 시 `tool_results`에 키 미존재 → 해당 tool card 미발행 | High |
+| AC1.6 | 에러 격리: 1개 실패, 1개 성공 | `tool_errors`에 실패 tool, `tool_results`에 성공 tool, Agent 계속 진행 | High |
+| AC1.7 | 미등록 tool명 처리 | plan에 존재하지 않는 tool명 → 에러 문자열 반환, 크래시 없음 | Medium |
+| AC1.8 | SSE 이벤트: tool/tool_end 쌍 | 각 plan step마다 정확히 1개 `tool` + 1개 `tool_end` SSE 이벤트 | High |
+
+채점: 5=8/8 PASS / 4=7 / 3=5-6 / 2=3-4 / 1=3 미만
+
+#### 3.3.10 Evaluator 판단 (8개) — 신규
+
+> Evaluator 노드의 fast path, slow path, proactive suggestion 생성을 검증.
+> 참조: `server/server/agent/nodes/evaluator.py` (`SIMPLE_INTENTS`, `_fast_evaluate`, `generate_proactive_suggestions`)
+
+| ID | 테스트 케이스 | 통과 기준 | 심각도 |
+|----|-------------|----------|--------|
+| EV1.1 | Fast path: 모든 tool 성공, simple intent, round 1 | `sufficient=True`, LLM 미호출, `proactive_suggestions` 리스트 존재 | Critical |
+| EV1.2 | Fast path: 모든 tool 실패 | `sufficient=False`, `missing_info`에 실패 tool 목록 | High |
+| EV1.3 | Fast path skip: category_analysis (non-simple) | `SIMPLE_INTENTS`에 미포함 → slow path(LLM)으로 fall-through | High |
+| EV1.4 | Fast path skip: round > 1 | `execution_round > 1` → simple intent여도 slow path로 fall-through | Medium |
+| EV1.5 | Slow path: LLM이 insufficient 판정 | `sufficient=False`, `missing_info` 채워짐, `reasoning` 설명 포함 | High |
+| EV1.6 | Slow path: LLM 파싱 실패 → sufficient 가정 | graceful fallback, `sufficient=True` (응답 중단 방지) | High |
+| EV1.7 | Proactive suggestions: summary intent | 비교/추천/리스크 관련 후속 질문 제안 포함 | Medium |
+| EV1.8 | Proactive suggestions: 높은 폐업률 트리거 | `closeRate > 8.0` → 리스크 분석 경고 제안 등장 | Medium |
+
+채점: 5=8/8 PASS / 4=7 / 3=5-6 / 2=3-4 / 1=3 미만
+
+#### 3.3.11 루프 수렴 (6개) — 신규
+
+> PAE 멀티라운드 루프의 수렴성, 데이터 누적, 라우팅 로직을 검증.
+> 참조: `server/server/agent/graph.py` (`route_after_planner`, `route_after_evaluator`, `agent_max_rounds`)
+
+| ID | 테스트 케이스 | 통과 기준 | 심각도 |
+|----|-------------|----------|--------|
+| LC1.1 | Max rounds 강제: 3회 insufficient | `agent_max_rounds=3` 도달 → `route_after_evaluator`가 Respond로 라우팅 | Critical |
+| LC1.2 | 데이터 누적: round 2가 round 1 결과에 추가 | `tool_results` dict 초기화 없이 확장 (기존 결과 유지) | High |
+| LC1.3 | Card 중복 방지: 재실행 시 동일 card 미중복 | round 2에서 이미 발행된 card 재발행 안 함 | High |
+| LC1.4 | Direct mode: Planner → Respond 직행 | `response_mode="direct"` → `route_after_planner`가 Actor/Evaluator 건너뛰고 Respond 직행 | Critical |
+| LC1.5 | Evaluator sufficient → Respond | `sufficient=True` → `route_after_evaluator`가 Respond로 (Planner 미회귀) | Critical |
+| LC1.6 | `execution_round` 정확한 증분 | round 1 → insufficient → Planner 재진입 → round 2, `execution_round=2` | High |
+
+채점: 5=6/6 PASS / 4=5 / 3=4 / 2=2-3 / 1=2 미만
+
+#### 3.3.12 Respond 품질 (5개) — 신규
+
+> Respond 노드의 프롬프트 구성, 데이터 기반 응답, 스트리밍 동작을 검증.
+> 참조: `server/server/agent/nodes/respond.py` (`build_respond_prompt`, `RESPOND_SYSTEM_PROMPT`)
+
+| ID | 테스트 케이스 | 통과 기준 | 심각도 |
+|----|-------------|----------|--------|
+| RQ1.1 | 프롬프트에 tool 결과 포함 | `build_respond_prompt` 출력에 `## 수집된 데이터` 섹션 + JSON tool 결과 포함 | Critical |
+| RQ1.2 | 프롬프트에 대화 이력 포함 | `ConversationHistory` 존재 시 프롬프트에 `## 이전 대화` 섹션 포함 | High |
+| RQ1.3 | 프롬프트에 proactive suggestions 포함 | Evaluator 제안이 프롬프트 `## 후속 분석 제안` 섹션에 포함 | High |
+| RQ1.4 | 실패한 tool 언급 안 함 | `tool_errors` 존재해도 응답에서 "실패" 직접 언급 없이 가용 데이터만 사용 | High |
+| RQ1.5 | 스트리밍 토큰 SSE 전달 | `event_queue`를 통해 `{"type":"text","content":"..."}` 토큰 단위 전송 | Critical |
+
+채점: 5=5/5 PASS / 4=4 / 3=3 / 2=2 / 1=2 미만
+
 #### CAT-3 종합 채점 기준
 
 | 점수 | 기준 |
 |------|------|
-| 5 | 40-42 PASS, 최적 tool 선택 + 자연스러운 한국어 |
-| 4 | 35-39 PASS, 구어체에서만 minor 오류 |
-| 3 | 28-34 PASS, 간헐적 tool 선택 오류/컨텍스트 누락 |
-| 2 | 21-27 PASS, 빈번한 tool 오류/할루시네이션 |
-| 1 | 21 미만, Agent 근본적으로 불안정 |
+| 5 | 82-86 PASS, 모든 PAE 노드 최적 동작 |
+| 4 | 72-81 PASS, Critical 실패 0 |
+| 3 | 58-71 PASS, Critical 최대 2개 |
+| 2 | 44-57 PASS 또는 Critical 3개+ |
+| 1 | 44 미만 또는 Agent 근본적으로 불안정 |
 
 ---
 
@@ -354,7 +460,7 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
 | E1.8 | 잘못된 SSE 데이터 | 백엔드 malformed JSON → 프론트엔드 스킵, 크래시 없음 | High |
 | E1.9 | 네트워크 중단 | SSE 중 연결 끊김 → 부분 응답 표시, 입력 재활성화 | Medium |
 | E1.10 | 동시 세션 100개 | 크래시 없음, 큐잉/거부 graceful | Medium |
-| E1.11 | Agent 무한루프 방지 | ReAct 5회 초과 → 강제 종료, 부분 응답 | High |
+| E1.11 | Agent 무한루프 방지 (PAE) | PAE `agent_max_rounds=3` 초과 → `route_after_evaluator`가 Respond 강제 라우팅, 부분 응답 | High |
 | E1.12 | 에러 후 복구 | E1.1-E1.5 후 정상 요청 → 정상 동작 | Critical |
 
 #### CAT-6 채점 기준
@@ -476,7 +582,7 @@ MarketScope AI는 Phase 1B(Real Data) 완료 상태이다 (22/26 E2E PASS, 0 HAR
     │ +에러핸들링 │     │ 품질평가   │     │ +회귀테스트  │
     │            │     │            │     │            │
     │ CAT-1,5,6  │     │ CAT-2,3   │     │ CAT-4,7,8,9│
-    │ 63 tests   │     │ 60 tests  │     │ 47 tests   │
+    │ 63 tests   │     │ 104 tests │     │ 47 tests   │
     │ Opus 4.6   │     │ Opus 4.6  │     │ Opus 4.6   │
     └────────────┘     └────────────┘     └────────────┘
 ```
@@ -583,6 +689,9 @@ Phase 3: 리포트 생성
 | D1.10 | 제로 데이터 0 표시 | `district_summary.py` dailyAvg=0 | CAT-2 |
 | A4.1 | "카페" 컨텍스트 불일치 | 기존 SOFT FAIL (T3.8.2) | CAT-3 |
 | I1.1 | Docker 포트 불일치 | docker-compose 8000, 개발 8002 | CAT-8 |
+| P1.6 | Planner regex 한국어 변형 미커버 | `INTENT_PATTERNS` regex가 일부 구어체/신조어 미매칭 → LLM fallback 빈번 | CAT-3 |
+| EV1.2 | Evaluator fast-path mixed 결과 미처리 | 일부 tool 성공 + 일부 실패 시 `_fast_evaluate` → `None` → slow path 필수 | CAT-3 |
+| LC1.2 | 루프 간 tool_results 중복 키 | 동일 tool 재실행 시 기존 결과 덮어쓰기 가능 | CAT-3 |
 
 ---
 
@@ -592,7 +701,7 @@ Phase 3: 리포트 생성
 |--------|------|------|
 | QA 계획서 | `docs/qa/qa-test-plan.md` | 본 문서 |
 | 종합 리포트 | `docs/qa/qa-summary-report.md` | 등급, 카테고리 점수, Top 10 이슈 |
-| 상세 결과 | `docs/qa/qa-detailed-results.md` | 150개 테스트 케이스별 결과+증거 |
+| 상세 결과 | `docs/qa/qa-detailed-results.md` | 194개 테스트 케이스별 결과+증거 |
 | 개선 백로그 | `docs/qa/qa-improvements.md` | P0-P3 우선순위별 개선 항목 |
 
 ---

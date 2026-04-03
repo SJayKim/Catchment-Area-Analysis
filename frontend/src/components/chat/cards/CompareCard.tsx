@@ -1,6 +1,7 @@
 'use client';
 
 import { CompareCardData } from '@/lib/types';
+import SourcesCitation from './SourcesCitation';
 
 interface CompareCardProps {
   data: CompareCardData | Record<string, unknown>;
@@ -148,11 +149,10 @@ export default function CompareCard({ data }: CompareCardProps) {
       )}
 
       {/* Footer */}
-      <div className="px-4 py-2" style={{ backgroundColor: 'var(--bg-tertiary)', borderTop: '1px solid var(--border-color)' }}>
-        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          데이터 기준: {districts[0]?.quarter || '최신 분기'}
-        </p>
-      </div>
+      <SourcesCitation
+        sources={card.dataSources}
+        quarter={districts[0]?.quarter || '최신 분기'}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-02
-> **Phase 1B 완료 ✅ — Playwright E2E QA 22/26 PASS + 버그 2건 수정 + HARD FAIL 0건**
+> 최종 갱신: 2026-04-03
+> **Agent 아키텍처 전환 완료 ✅ — Planner-Actor-Evaluator (PAE) 커스텀 그래프**
 
 ---
 
@@ -72,7 +72,7 @@
 | floating_population | 9,888 | 2025Q4 | VwsmTrdarFlpopQq |
 | estimated_sales | 21,333 | 2025Q4 | VwsmTrdarSelngQq |
 | stores | 75,985 | 2025Q4 | VwsmTrdarStorQq |
-| resident_population | 19,692 | 2025Q4 | VwsmTrdarWrcPopltnQq (직장인구) |
+| resident_population | 39,288 | 2025Q4 | VwsmTrdarWrcPopltnQq (직장인구) + OA-15584 CSV (상주인구) |
 
 - `USE_MOCK=false` 전환 → 실제 DB 데이터 API 반환 확인
 - Redis 연결 확인
@@ -91,12 +91,11 @@
 - `VwsmTrdarStorW` (점포 상세정보) — VwsmTrdarStorQq 폴백 동작 중
 - `VwsmTrdarPopltnQq` (상주인구) — 서버 ERROR-500 지속, **CSV 다운로드 대안 확인 완료** (아래 참조)
 
-### 상주인구 CSV 대안 (검증 완료 2026-04-02)
+### 상주인구 CSV 적재 완료 (2026-04-03)
 - **데이터셋**: [OA-15584 서울시 상권분석서비스(상주인구-상권)](https://data.seoul.go.kr/dataList/OA-15584/S/1/datasetView.do)
-- **다운로드**: Sheet 탭 → "내려받기(CSV)" 버튼 (`#btnCsv`)
-- **파일 정보**: 40,812행, EUC-KR 인코딩
-- **컬럼 (29개)**: 기준_년분기_코드, 상권_구분_코드, 상권_코드, 상권_코드_명, 총/남/여_상주인구_수, 연령대별(10~60+) 남/여 상주인구, 총/아파트/비아파트_가구_수
-- **구현 TODO**: `data/` 폴더에 CSV 저장 → ETL에 CSV 파싱 로더 추가 → `resident_population` 테이블 적재 (pop_type="resident")
+- **파일**: `data/csv/OA-15584.csv` (40,812행, EUC-KR, 2025Q4 필터 → 19,596행 적재)
+- **적재 방법**: `python -m server.data.etl.runner load-csv data/csv/OA-15584.csv 2025Q4`
+- **setup_db.py**: `--full` 모드에서 CSV 자동 감지 (`data/csv/OA-15584.csv` 존재 시 `--csv-file` 전달)
 
 ---
 
@@ -175,6 +174,95 @@
 
 ---
 
+## 완료 항목 (2026-04-03)
+
+### ✅ Agent 아키텍처 전환 — Planner-Actor-Evaluator (PAE)
+
+**아키텍처**:
+```
+START → PLANNER → ACTOR → EVALUATOR → RESPOND → END
+              ↑                  │
+              └── insufficient ──┘ (max 3회)
+        PLANNER → RESPOND (direct, 도구 불필요 시)
+```
+
+**신규 파일 (9개)**:
+- `server/server/agent/state.py` — `ToolPlanStep`, `EvaluationResult` TypedDict + `AgentState` 확장 (기존 5필드 + 신규 14필드)
+- `server/server/agent/history.py` — `ConversationHistory` 클래스 (멀티턴 대화 이력 관리, truncation, format_for_planner)
+- `server/server/agent/nodes/planner.py` — 3단계 의도 분류 (규칙→LLM→계획 생성), 8종 의도 패턴, INTENT_TO_PLAN 매핑
+- `server/server/agent/nodes/actor.py` — 병렬 도구 실행기 (LLM 미사용), `group_by_dependencies()` layer 분리, SSE 이벤트 큐 직접 push
+- `server/server/agent/nodes/evaluator.py` — Fast path (규칙 기반) / Slow path (LLM) 결과 충분성 판단 + `generate_proactive_suggestions()` 동적 suggestion
+- `server/server/agent/nodes/respond.py` — 수집 데이터+이력+제안 기반 LLM 스트리밍 응답, `build_respond_prompt()` 프롬프트 조립
+- `server/server/agent/prompts/planner.py` — Planner LLM 프롬프트 (도구 카탈로그, 의도 분류 가이드, JSON 스키마)
+- `server/server/agent/prompts/evaluator.py` — Evaluator LLM 프롬프트 (충분성 판단 기준, JSON 출력)
+- `server/server/agent/nodes/__init__.py`
+
+**수정 파일 (6개)**:
+- `server/server/config.py` — `agent_mode` (react/pae), `agent_max_rounds`, `max_history_turns`, `history_content_limit`, `evaluator_skip_simple` 설정 추가
+- `server/server/agent/graph.py` — 기존 `run_agent` → `run_agent_react` 보존 + `run_agent_pae` (asyncio.Queue 기반 실시간 스트리밍) + `_build_pae_graph()` + 통합 `run_agent` 분기
+- `server/server/api/routes/chat.py` — `ConversationHistory` 세션 연동, PAE 모드 분기, text 수집→이력 저장, summary 선발행 PAE 스킵
+- `server/server/main.py` — PAE 모드 시 ReAct 싱글턴 생성 스킵
+- `frontend/src/lib/types.ts` — SSEEvent union에 `plan` 타입 추가
+- `frontend/src/lib/eventHandlers.ts` — `plan` 이벤트 핸들러 (의도별 한국어 라벨 8종, pending step 추가)
+
+**핵심 설계 결정**:
+- `asyncio.Queue` 기반 실시간 SSE: Actor/Respond 노드가 큐에 직접 push → 노드 완료 전에 클라이언트에 이벤트 도달
+- `agent_mode` 플래그 (`react`/`pae`): `.env`에서 전환, 기존 ReAct 코드 100% 보존하여 즉시 롤백 가능
+- Planner 규칙 우선: 7가지 패턴이 0.9 확신도로 매칭 → LLM 미호출 (토큰 절약), 모호한 경우만 LLM fallback
+- Evaluator Fast path: 단순 의도 + 전체 성공 시 LLM 미호출로 즉시 `sufficient=True`
+
+**검증 결과**:
+| 시나리오 | 결과 | SSE 이벤트 흐름 |
+|----------|------|----------------|
+| PAE Summary (강남역 분석해줘) | PASS | thinking→plan→tool→tool_end→card(summary)→text→suggestion→done |
+| PAE Recommendation (뭐하면 좋을까?) | PASS | thinking→plan→tool→card(recommend)→text→done |
+| PAE Risk (위험하지 않아?) | PASS | thinking→plan→tool→card(risk)→text→done |
+| PAE Direct (안녕하세요) | PASS | thinking→text→suggestion→done (도구 미호출) |
+| PAE Multi-turn History (2턴) | PASS | 이력 4턴 누적, format_for_planner 정상 |
+| ReAct 모드 회귀 | PASS | 기존 SSE 이벤트 순서 동일 |
+| `tsc --noEmit` | 0 errors |
+| `npm run build` | 성공 |
+
+**전환 방법**: `.env`에 `AGENT_MODE=pae` 추가. 기본값은 `react` (기존 동작 유지).
+
+---
+
+### ✅ 코드 리팩토링 — Repository 패턴 + Frontend 분리
+
+**Backend 리팩토링 (Phase 1)**:
+- **Repository Protocol + DataAccess 파사드**: 7개 Protocol 정의 (`protocols.py`), `DataAccess` 파사드 클래스, 모듈 레벨 `get_data_access()` / `set_data_access()` 접근자
+- **Mock Repository (9개 파일)**: `mock_data.py` 위임, `build_mock_data_access()` 팩토리
+- **Real Repository (9개 파일)**: 기존 tool 파일의 SQL 쿼리 추출, `build_real_data_access(session_factory)` 팩토리
+- **CacheService 분리**: `MemoryCacheService` (mock) / `RedisCacheService` (real) + `flush_by_prefix()` 메서드 + 모듈 레벨 접근자
+- **FastAPI Lifespan**: Mock/Real 결정의 단일 진입점 (`main.py`), startup에서 DataAccess + CacheService + Agent 초기화, shutdown에서 정리
+- **Agent 싱글턴**: `create_agent()` 매 요청 호출 → `get_agent()` / `set_agent()` 싱글턴
+- **CORS 환경변수화**: 하드코딩 `["http://localhost:3000"]` → `settings.cors_origins`
+- **Tool 슬림화 (8개 파일)**: ~100줄 → ~20줄 (캐시 체크 + `get_data_access()` 위임만)
+- **Route 정리 (4개 파일)**: 모든 `if settings.use_mock` 분기 제거, `get_data_access()` 위임
+- **동적 Suggestion**: 선택된 상권명이 suggestion 질문에 자동 반영
+- **`settings.use_mock` 잔존**: main.py(lifespan 결정) + 표현 로직 3곳만 (tool/route에서 **0곳**)
+
+**Frontend 리팩토링 (Phase 2)**:
+- **SSEEvent discriminated union**: `[key: string]: unknown` 제거 → 9개 타입 union (타입 안전성 확보)
+- **SSE Parser 모듈** (`sseParser.ts`): AsyncGenerator 기반 스트림 파싱 분리
+- **Event Handler Registry** (`eventHandlers.ts`): 9개 핸들러 함수 + TOOL_LABELS + CARD_LABELS 추출
+- **chatStore 슬림화**: 351줄 → 139줄 (**60% 축소**), switch문/SSE 파싱 로직 완전 제거
+- **Card Component Registry** (`registry.ts`): 4단 ternary chain → 동적 `CARD_REGISTRY[cardType]` lookup
+- **console.log 제거**: MapContainer.tsx 5개 `console.log` 제거 (3개 `console.error`만 유지)
+- **Kakao Map 타입** (`kakao.maps.d.ts`): Map/LatLng/Polygon/event 타입 선언, `Window.kakao` any 제거
+
+**신규 파일**: 25개 | **수정 파일**: 20개
+**검증**: `tsc --noEmit` 0 errors, `npm run build` 성공 (243 kB), Mock API 4/4 PASS
+
+### ✅ 데이터 출처 표시 기능 (Card footer 출처 citation)
+- **신규 파일**: `server/server/agent/tools/data_sources.py` (출처 레지스트리), `frontend/src/components/chat/cards/SourcesCitation.tsx` (출처 UI)
+- **수정 파일**: `district_summary.py`, `graph.py`, `types.ts`, `SummaryCard.tsx`, `CompareCard.tsx`, `RecommendCard.tsx`, `RiskCard.tsx`
+- 4개 Card 모두 동일한 SourcesCitation 컴포넌트 사용, collapsed(1줄)/expanded(상세) 토글
+- Mock 모드: "출처: 샘플 데이터" 표시, Real 모드: "출처: 서울 열린데이터광장 (N)" + 펼침 시 데이터셋/기관/라이선스/URL
+- 공공데이터 이용 시 출처 표시 의무 충족 (공공누리 제1유형)
+
+---
+
 ## 완료 항목 (2026-04-02)
 
 ### ✅ DB 셋업 자동화
@@ -192,47 +280,68 @@
 
 ## Next Items (우선순위 순)
 
-### 🔴 1. 데이터 출처 표시 기능 (계획 수립 완료 2026-04-02)
-Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선스) 표시. 현재 "데이터 기준: 2025Q4"만 있고 출처 정보 전무 → 신뢰성 부족 + 공공데이터 출처 표시 의무 미충족
-- **상세 계획**: `docs/plan/data-source-citation.md`
-- **UX**: Card footer 1줄에 `출처: 서울 열린데이터광장 (3) ▼` 표시, 클릭 시 데이터셋 목록/기관/라이선스 펼침
-- **Backend**: `data_sources.py` 정적 레지스트리 + Tool/SSE에 dataSources 필드 주입
-- **Frontend**: `SourcesCitation.tsx` 재사용 컴포넌트, 4개 Card footer 교체
-- **Scenario Test**: 10개 시나리오 (10점 만점, 10점만 통과), 독립 subagent 평가
-- **영향 범위**: 신규 2개, 수정 7개 파일
-- 상태: **계획 완료, 구현 미착수**
+### ~~🔴 1. 데이터 출처 표시 기능~~ ✅ 완료 (2026-04-03)
+Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선스) 표시.
+- **Backend**: `data_sources.py` 정적 레지스트리 (6개 Seoul Open Data 소스 + MOCK_SOURCE + Tool→소스 매핑)
+- `district_summary.py` result에 `dataSources` 주입, `graph.py` on_tool_end에서 compare/recommend/risk card에 주입
+- **Frontend**: `SourcesCitation.tsx` 재사용 컴포넌트 (collapsed/expanded 토글), 4개 Card footer 교체
+- `types.ts`에 `DataSourceInfo` 인터페이스 + 4개 Card 타입 확장
+- **Collapsed**: `데이터 기준: 2025Q4  ·  출처: 서울 열린데이터광장 (3) ▼`
+- **Expanded**: 데이터셋 트리 + 기관명/라이선스 + 플랫폼 링크
+- **Mock 모드**: `출처: 샘플 데이터` (펼침 버튼 없음)
+- **하위 호환**: `dataSources` 없으면 기존 footer만 표시
+- `tsc --noEmit` + `npm run build` 통과
 
-### 🔴 2. 코드 리팩토링 — 안정성/범용성/확장성 개선 (계획 수립 완료 2026-04-02)
-12개 파일 22곳의 `if settings.use_mock:` 분기 → **Repository 패턴**으로 통합, Agent 매 요청 재생성 → **싱글턴**, chatStore 230줄 → **SSE Parser + Event Handler Registry 분리**
-- **상세 계획**: `docs/plan/refactoring-plan.md`
-- **Backend**: Repository Protocol + DataAccess 파사드, Mock/Real Repository, CacheService 분리, FastAPI Lifespan + Agent 싱글턴, CORS 환경변수화, Tool/Route 위임 전환, 세션 캐시화, 동적 Suggestion, 캐시 무효화
-- **Frontend**: SSEEvent discriminated union, SSE Parser 모듈, Event Handler Registry, chatStore 슬림화, Card Component Registry, console.log 정리, Kakao Map 타입
-- **Scenario Test**: 34개 시나리오 (R11 + E7 + F8 + P4), fail/normal/perfect 그레이딩, 독립 subagent 평가, 전체 perfect시 완료
-- **영향 범위**: 신규 ~31개 파일, 수정 ~27개 파일 (API 응답 형태/프론트 렌더링 변경 없음)
-- 상태: **계획 완료, 구현 미착수**
+### ~~🔴 2. 코드 리팩토링~~ ✅ 완료 (2026-04-03)
+12개 파일 22곳의 `if settings.use_mock:` 분기 → **Repository 패턴**으로 통합 완료.
+- **상세 결과**: 아래 "완료 항목 (2026-04-03) — 코드 리팩토링" 참조
+- 상태: **구현 완료** (`tsc --noEmit` 0 errors, `npm run build` 성공, Mock API 4/4 PASS)
 
-### 🟡 3. Agent 아키텍처 전환 — Planner-Actor-Evaluator (계획 수립 완료)
-현재 `create_react_agent` (prebuilt ReAct) → **커스텀 Planner-Actor-Evaluator 그래프**로 전환
-- **목적**: 멀티턴 대화 지원, 의도 분류 정확성, 도구 호출 효율화, 결과 평가
-- **상세 계획**: `docs/plan/agent_improvement/` (10개 모듈, 70개 시나리오 테스트)
-- **구현 순서**: State확장 → 대화이력 → Planner → Actor → Evaluator → Respond → Graph조립 → Chat통합 → 프론트 → UX개선
-- **마이그레이션**: `agent_mode` 플래그로 react/pae 전환, 롤백 가능
-- 상태: **계획 완료, 구현 미착수**
+### ~~🔴 3. Agent 아키텍처 전환 — Planner-Actor-Evaluator~~ ✅ 완료 (2026-04-03)
+`create_react_agent` (prebuilt ReAct) → **커스텀 Planner-Actor-Evaluator 그래프** 전환 완료.
+- **상세 결과**: 아래 "완료 항목 (2026-04-03) — PAE Agent 아키텍처" 참조
+- 상태: **구현 완료** (PAE 4/4 PASS, ReAct 회귀 PASS, `tsc --noEmit` 0 errors, `npm run build` 성공)
 
-### 🟡 4. 상주인구 CSV 적재 (대안 검증 완료)
-API 서버 ERROR-500 → CSV 다운로드 대안 확인 완료 (OA-15584, 40,812행)
-- CSV를 `data/` 폴더에 저장 → ETL 로더에 CSV 파싱 추가 → `resident_population` 적재
+### ~~🟡 4. 상주인구 CSV 적재~~ ✅ 완료 (2026-04-03)
+- `data/csv/OA-15584.csv` → `load-csv` → resident 19,596행 적재 (기존 worker 19,692 + 신규 resident 19,596 = 39,288행)
+- `setup_db.py --full` ETL에 `--csv-file` 자동 전달 반영
+- 시드 덤프 재생성 완료 (5.0MB)
 
-### 🟢 5. 종합 QA 테스트 — 프로덕션 품질 평가 (계획 수립 완료 2026-04-02)
-9개 카테고리 150개 테스트 케이스를 3개 독립 Opus 4.6 Sub-Agent가 병렬 평가
-- **상세 계획**: `docs/qa/qa-test-plan.md`
-- **카테고리**: 기능 정확성(35) + 데이터 정확성(18) + AI 품질(42) + 성능(14) + 보안(16) + 에러 핸들링(12) + UX(15) + 인프라(10) + 회귀(8)
-- **Agent 구성**: A(기능+보안+에러=63개), B(데이터+AI=60개), C(성능+UX+인프라+회귀=47개)
-- **평가**: 1-5점 척도, A-F 등급, P0-P3 개선 우선순위
-- **산출물**: `docs/qa/` 하위 summary-report, detailed-results, improvements
-- 상태: **계획 완료, 실행 미착수**
+### ~~🔴 4. 종합 QA 테스트~~ ✅ 완료 (2026-04-03)
+9개 카테고리 **194개** 테스트 케이스를 3개 독립 Opus 4.6 Sub-Agent가 병렬 평가
 
-### 🟢 6. Phase 2 — 프리미엄 기능
+**종합 등급: C (3.22/5.0)** — 134/194 PASS (69.1%)
+
+| 카테고리 | 점수 | Pass/Total |
+|---------|------|-----------|
+| CAT-1 기능 정확성 | 2/5 | 12/35 |
+| CAT-2 데이터 정확성 | 3/5 | 14/18 |
+| CAT-3 AI Agent 품질 | 3/5 | 55/86 |
+| CAT-4 성능/응답속도 | 3/5 | 9/14 |
+| CAT-5 보안/입력검증 | 4/5 | 12/16 |
+| CAT-6 에러 핸들링 | 3/5 | 6/12 |
+| CAT-7 UX/접근성 | 4/5 | 13/15 |
+| CAT-8 인프라/배포 | 4/5 | 8/10 |
+| CAT-9 회귀/크로스기능 | 3/5 | 5/8 |
+
+**Top P0 이슈**: (1) 3개 Tool 크래시(compare/recommend/risk), (2) 프롬프트 인젝션 취약점, (3) Frontend 404
+- **산출물**: `docs/qa/qa-summary-report.md`, `docs/qa/qa-detailed-results.md`, `docs/qa/qa-improvements.md`
+- **P0 수정 후 예상**: Grade B+ (4.2/5.0, 180/194)
+
+### 🔴 5. QA P0 버그 수정 (3건)
+- [ ] BUG-001: 3개 Tool 크래시 수정 (compare, recommend, store_history) — Repository SQL 디버깅
+- [ ] BUG-002: 프롬프트 인젝션 방어 — system.py 가드레일 추가
+- [ ] BUG-003: Frontend 404 해결 — Next.js 빌드 에러 확인
+
+### 🟡 6. QA P1 개선 (5건)
+- [ ] BUG-004: AGENT_MODE=pae .env 설정
+- [ ] BUG-005: 응답 시간 최적화 (요약 22s → 15s)
+- [ ] BUG-006: 상권 자동감지 우선순위 수정
+- [ ] BUG-007: Redis fallback try/except
+- [ ] BUG-008: 동시 사용자 성능 개선
+
+### 🟡 7. Phase 2 — 프리미엄 기능
+
 - Tier 게이팅 인프라 (OAuth2 인증, 결제)
 - 비교모드 복수 상권 하이라이트
 
@@ -262,12 +371,15 @@ API 서버 ERROR-500 → CSV 다운로드 대안 확인 완료 (OA-15584, 40,812
 
 ## 참고
 
-- **종합 QA 테스트 계획**: `docs/qa/qa-test-plan.md` (9개 카테고리, 150개 테스트, 3개 Sub-Agent)
+- **종합 QA 결과**: `docs/qa/qa-summary-report.md` (Grade C, 3.22/5.0, 134/194 PASS)
+- **종합 QA 상세**: `docs/qa/qa-detailed-results.md` (194개 테스트 개별 결과)
+- **종합 QA 개선**: `docs/qa/qa-improvements.md` (P0: 3건, P1: 5건, P2: 4건, P3: 6건)
+- **종합 QA 테스트 계획**: `docs/qa/qa-test-plan.md` (9개 카테고리, 194개 테스트, 3개 Sub-Agent — CAT-3 PAE 86개 포함)
 - **E2E QA 리포트**: `docs/status/e2e-qa-report.md`
 - **스크린샷**: `docs/screenshots/e2e-qa/` (20개), `docs/screenshots/real-mode/` (7개), `docs/screenshots/dev/` (5개)
 - **데이터 출처 표시 계획**: `docs/plan/data-source-citation.md` (Card footer 출처 표시, 10개 시나리오)
-- **리팩토링 계획**: `docs/plan/refactoring-plan.md` (Backend/Frontend/Scenario Test 3단계, 34개 시나리오)
-- **Agent 개선 계획**: `docs/plan/agent_improvement/` (10개 모듈, TODO 78개, Checklist 111개, 시나리오 테스트 70개)
+- **리팩토링 계획/결과**: `docs/plan/refactoring-plan.md` (계획) — 구현 완료: Repository 25개 신규 파일, 20개 수정
+- **Agent 개선 계획/결과**: `docs/plan/agent_improvement/` (10개 모듈) — 구현 완료: 9개 신규 파일, 6개 수정, PAE 4/4 PASS
 - Phase 1B 구현 계획: `docs/plan/phase1b-comprehensive-plan.md`
 - Real DB 마이그레이션 계획: `docs/plan/data-source-migration.md`
 - Dark Theme 구현 계획: `docs/plan/streaming-ux-dark-theme.md`

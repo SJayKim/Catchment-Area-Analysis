@@ -1,6 +1,7 @@
 'use client';
 
 import { RecommendCardData } from '@/lib/types';
+import SourcesCitation from './SourcesCitation';
 
 interface RecommendCardProps {
   data: RecommendCardData | Record<string, unknown>;
@@ -97,14 +98,11 @@ export default function RecommendCard({ data }: RecommendCardProps) {
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-2" style={{ backgroundColor: 'var(--bg-tertiary)', borderTop: '1px solid var(--border-color)' }}>
-        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          데이터 기준: {card.quarter} · 분석 업종 {card.total_categories_analyzed}개
-        </p>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-          ⚠ 추정치이며 실제 결과와 다를 수 있습니다
-        </p>
-      </div>
+      <SourcesCitation
+        sources={card.dataSources}
+        quarter={`${card.quarter} · 분석 업종 ${card.total_categories_analyzed}개`}
+        extraFooterText="⚠ 추정치이며 실제 결과와 다를 수 있습니다"
+      />
     </div>
   );
 }

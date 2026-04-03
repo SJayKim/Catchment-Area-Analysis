@@ -2,6 +2,7 @@
 
 import { RiskCardData } from '@/lib/types';
 import InlineChart from './InlineChart';
+import SourcesCitation from './SourcesCitation';
 
 interface RiskCardProps {
   data: RiskCardData | Record<string, unknown>;
@@ -182,12 +183,11 @@ export default function RiskCard({ data }: RiskCardProps) {
       )}
 
       {/* Footer */}
-      <div className="px-4 py-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          데이터 기준: {card.quarterly_trend?.[card.quarterly_trend.length - 1]?.quarter || '최신 분기'}
-          {card.stability.quarters_analyzed > 0 && ` · ${card.stability.quarters_analyzed}분기 분석`}
-        </p>
-      </div>
+      <SourcesCitation
+        sources={card.dataSources}
+        quarter={card.quarterly_trend?.[card.quarterly_trend.length - 1]?.quarter || '최신 분기'}
+        extraFooterText={card.stability.quarters_analyzed > 0 ? `${card.stability.quarters_analyzed}분기 분석` : undefined}
+      />
     </div>
   );
 }

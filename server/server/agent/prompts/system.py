@@ -65,10 +65,17 @@ _CONTEXT_SECTION = """
 
 
 def get_system_prompt(
-    district_name: str, district_code: str, data_quarter: str
+    district_name: str, district_code: str, data_quarter: str,
+    *, is_mock: bool | None = None,
 ) -> str:
-    """Build the system prompt with the current context."""
-    district_section = _MOCK_DISTRICT_SECTION if settings.use_mock else _REAL_DISTRICT_SECTION
+    """Build the system prompt with the current context.
+
+    Args:
+        is_mock: Override mock detection. Defaults to settings.use_mock.
+    """
+    if is_mock is None:
+        is_mock = settings.use_mock
+    district_section = _MOCK_DISTRICT_SECTION if is_mock else _REAL_DISTRICT_SECTION
     context = _CONTEXT_SECTION.format(
         district_name=district_name,
         district_code=district_code,

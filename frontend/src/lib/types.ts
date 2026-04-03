@@ -17,6 +17,17 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
+export interface DataSourceInfo {
+  id: string;
+  name: string;
+  organization: string;
+  platform: string;
+  api_endpoint: string;
+  url: string;
+  license: string;
+  collection_method: string;
+}
+
 export interface SummaryCardData {
   districtName: string;
   districtType: string;
@@ -30,6 +41,7 @@ export interface SummaryCardData {
   status: 'growing' | 'stable' | 'declining';
   closeRate: { current: number; average: number };
   dataQuarter: string;
+  dataSources?: DataSourceInfo[];
 }
 
 export interface CompareCardData {
@@ -48,6 +60,7 @@ export interface CompareCardData {
   district_codes: string[];
   districtNames?: Record<string, string>;
   aiSummary?: string;
+  dataSources?: DataSourceInfo[];
 }
 
 export interface RecommendCardData {
@@ -69,6 +82,7 @@ export interface RecommendCardData {
   total_categories_analyzed: number;
   message?: string;
   districtName?: string;
+  dataSources?: DataSourceInfo[];
 }
 
 export interface RiskCardData {
@@ -97,6 +111,7 @@ export interface RiskCardData {
     close: number;
   }[];
   districtName?: string;
+  dataSources?: DataSourceInfo[];
 }
 
 export type AgentStepStatus = 'pending' | 'in_progress' | 'completed';
@@ -108,10 +123,17 @@ export interface AgentStep {
   toolName?: string;
 }
 
-export interface SSEEvent {
-  type: 'thinking' | 'tool' | 'tool_end' | 'text' | 'card' | 'map_cmd' | 'suggestion' | 'done' | 'error';
-  [key: string]: unknown;
-}
+export type SSEEvent =
+  | { type: 'thinking'; step?: string; icon?: string }
+  | { type: 'plan'; intent?: string; steps?: string[] }
+  | { type: 'tool'; name: string; input?: Record<string, unknown>; icon?: string }
+  | { type: 'tool_end'; name: string; icon?: string }
+  | { type: 'text'; content: string }
+  | { type: 'card'; card_type: string; data: Record<string, unknown> }
+  | { type: 'map_cmd'; action: string; params?: Record<string, unknown>; district_code?: string; district_name?: string; district_type?: string }
+  | { type: 'suggestion'; questions: string[] }
+  | { type: 'done' }
+  | { type: 'error'; message?: string };
 
 export interface MapBounds {
   sw_lat: number;

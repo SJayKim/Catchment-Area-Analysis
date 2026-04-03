@@ -42,6 +42,20 @@ class Settings(BaseSettings):
     etl_max_concurrency: int = 3
     etl_batch_size: int = 1000
 
+    # CORS
+    cors_origins: list[str] = ["http://localhost:3000"]
+
+    # Agent architecture
+    agent_mode: str = "react"  # "react" (legacy) | "pae" (Planner-Actor-Evaluator)
+    agent_max_rounds: int = 3  # max Planner→Actor→Evaluator loops
+
+    # Conversation history
+    max_history_turns: int = 10
+    history_content_limit: int = 300  # truncate assistant responses in history
+
+    # Evaluator
+    evaluator_skip_simple: bool = True  # skip LLM eval for simple intents
+
     model_config = {
         "env_file": str(_ENV_FILE),
         "env_file_encoding": "utf-8",

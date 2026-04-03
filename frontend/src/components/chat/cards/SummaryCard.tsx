@@ -2,6 +2,7 @@
 
 import { SummaryCardData } from '@/lib/types';
 import InlineChart from './InlineChart';
+import SourcesCitation from './SourcesCitation';
 
 interface SummaryCardProps {
   data: SummaryCardData | Record<string, unknown>;
@@ -141,11 +142,10 @@ export default function SummaryCard({ data }: SummaryCardProps) {
       )}
 
       {/* Footer */}
-      <div className="px-4 py-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          데이터 기준: {card.dataQuarter || '2025년 4분기'}
-        </p>
-      </div>
+      <SourcesCitation
+        sources={card.dataSources}
+        quarter={card.dataQuarter || '2025년 4분기'}
+      />
     </div>
   );
 }

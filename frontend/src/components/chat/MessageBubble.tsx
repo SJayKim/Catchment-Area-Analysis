@@ -3,10 +3,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage } from '@/lib/types';
-import SummaryCard from './cards/SummaryCard';
-import CompareCard from './cards/CompareCard';
-import RecommendCard from './cards/RecommendCard';
-import RiskCard from './cards/RiskCard';
+import { CARD_REGISTRY } from './cards/registry';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -29,21 +26,19 @@ export default function MessageBubble({ message, isStreaming }: MessageBubblePro
           </svg>
         </div>
         <div className="flex-1 max-w-[90%]">
-          {message.cardType === 'summary' ? (
-            <SummaryCard data={message.cardData as any} />
-          ) : message.cardType === 'compare' ? (
-            <CompareCard data={message.cardData as any} />
-          ) : message.cardType === 'recommend' ? (
-            <RecommendCard data={message.cardData as any} />
-          ) : message.cardType === 'risk' ? (
-            <RiskCard data={message.cardData as any} />
-          ) : (
-            <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-              <pre className="text-xs whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
-                {JSON.stringify(message.cardData, null, 2)}
-              </pre>
-            </div>
-          )}
+          {(() => {
+            const CardComponent = message.cardType ? CARD_REGISTRY[message.cardType] : undefined;
+            if (CardComponent) {
+              return <CardComponent data={message.cardData as any} />;
+            }
+            return (
+              <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+                <pre className="text-xs whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
+                  {JSON.stringify(message.cardData, null, 2)}
+                </pre>
+              </div>
+            );
+          })()}
         </div>
       </div>
     );

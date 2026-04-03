@@ -20,8 +20,9 @@ export function useChat() {
   const sendMessage = useCallback(
     async (message: string) => {
       const onMapCmd = (event: SSEEvent) => {
-        const action = event.action as string;
-        if (action === 'move' && event.params) {
+        if (event.type !== 'map_cmd') return;
+
+        if (event.action === 'move' && event.params) {
           const params = event.params as { lat: number; lng: number; zoom?: number };
           setView(
             { lat: params.lat, lng: params.lng },
@@ -33,9 +34,9 @@ export function useChat() {
         if (event.district_code && event.district_name) {
           selectDistrict(
             {
-              code: event.district_code as string,
-              name: event.district_name as string,
-              type: (event.district_type as string) || '발달상권',
+              code: event.district_code,
+              name: event.district_name,
+              type: event.district_type || '발달상권',
               center: event.params
                 ? {
                     lat: (event.params as { lat: number; lng: number }).lat,

@@ -5,12 +5,6 @@ import { useMapStore } from '@/stores/mapStore';
 import DistrictLayer from './DistrictLayer';
 import MapControls from './MapControls';
 
-declare global {
-  interface Window {
-    kakao: any;
-  }
-}
-
 export default function MapContainer() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -22,7 +16,7 @@ export default function MapContainer() {
   useEffect(() => {
     // 이미 SDK가 로드된 경우
     if (window.kakao?.maps?.load) {
-      console.log('[KakaoMap] SDK already loaded, calling maps.load()');
+      // [KakaoMap] SDK already loaded, calling maps.load()');
       window.kakao.maps.load(() => initMap());
       return;
     }
@@ -30,7 +24,7 @@ export default function MapContainer() {
     // 프록시를 통해 SDK를 fetch → 실행 (외부 도메인 차단 우회)
     // SDK 내부에서 script[src] 매칭으로 appkey를 추출하므로,
     // 먼저 더미 script 태그를 삽입해 appkey를 제공한 뒤 SDK를 eval
-    console.log('[KakaoMap] Fetching SDK via proxy...');
+    // [KakaoMap] Fetching SDK via proxy...');
 
     // 1) SDK가 appkey를 찾을 수 있도록 더미 script src 삽입
     const dummy = document.createElement('script');
@@ -48,11 +42,11 @@ export default function MapContainer() {
         const script = document.createElement('script');
         script.textContent = sdkCode;
         document.head.appendChild(script);
-        console.log('[KakaoMap] SDK injected via proxy');
+        // [KakaoMap] SDK injected via proxy');
 
         if (window.kakao?.maps?.load) {
           window.kakao.maps.load(() => {
-            console.log('[KakaoMap] maps.load callback fired');
+            // [KakaoMap] maps.load callback fired');
             initMap();
           });
         } else {
@@ -81,7 +75,7 @@ export default function MapContainer() {
 
       mapInstanceRef.current = map;
       setMapReady(true);
-      console.log('[KakaoMap] Map initialized successfully');
+      // [KakaoMap] Map initialized successfully');
 
       window.kakao.maps.event.addListener(map, 'center_changed', () => {
         const latlng = map.getCenter();
