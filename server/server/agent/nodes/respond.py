@@ -126,7 +126,7 @@ async def respond_node(
     """Generate final streamed LLM response."""
     from server.agent.graph import _create_llm
 
-    llm = _create_llm()
+    llm = _create_llm(role="respond")
     prompt = build_respond_prompt(state)
 
     # Extract latest user message

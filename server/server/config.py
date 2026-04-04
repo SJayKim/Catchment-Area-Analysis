@@ -26,9 +26,13 @@ class Settings(BaseSettings):
     data_go_kr_api_key: str = ""
 
     # LLM
-    llm_provider: str = "anthropic"  # "anthropic" or "gemini"
+    llm_provider: str = "gemini"  # "anthropic" or "gemini"
     anthropic_api_key: str = ""
     google_api_key: str = ""
+
+    # Per-role Gemini model (pro for critical, flash for lightweight)
+    gemini_model_pro: str = "gemini-3.1-pro-preview"
+    gemini_model_flash: str = "gemini-3.1-flash-lite-preview"
 
     # Langfuse
     langfuse_public_key: str = ""

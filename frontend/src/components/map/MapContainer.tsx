@@ -12,45 +12,33 @@ export default function MapContainer() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const { center, zoom, setCenter, setZoom } = useMapStore();
 
-  // 동적 스크립트 로딩 → kakao.maps.load() → initMap
+  // 카카오맵 SDK 프록시 로딩 (ORB 우회)
   useEffect(() => {
-    // 이미 SDK가 로드된 경우
     if (window.kakao?.maps?.load) {
-      // [KakaoMap] SDK already loaded, calling maps.load()');
       window.kakao.maps.load(() => initMap());
       return;
     }
 
-    // 프록시를 통해 SDK를 fetch → 실행 (외부 도메인 차단 우회)
-    // SDK 내부에서 script[src] 매칭으로 appkey를 추출하므로,
-    // 먼저 더미 script 태그를 삽입해 appkey를 제공한 뒤 SDK를 eval
-    // [KakaoMap] Fetching SDK via proxy...');
-
     // 1) SDK가 appkey를 찾을 수 있도록 더미 script src 삽입
     const dummy = document.createElement('script');
     dummy.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`;
-    dummy.type = 'text/placeholder'; // 실제 로드하지 않음
+    dummy.type = 'text/placeholder';
     document.head.appendChild(dummy);
 
-    // 2) 프록시로 SDK 코드를 가져와 실행
+    // 2) 서버 프록시로 SDK 코드를 가져와 인라인 실행
     fetch('/api/kakao-sdk')
       .then((res) => {
-        if (!res.ok) throw new Error(`SDK proxy returned ${res.status}`);
+        if (!res.ok) throw new Error(`SDK proxy ${res.status}`);
         return res.text();
       })
       .then((sdkCode) => {
         const script = document.createElement('script');
         script.textContent = sdkCode;
         document.head.appendChild(script);
-        // [KakaoMap] SDK injected via proxy');
 
         if (window.kakao?.maps?.load) {
-          window.kakao.maps.load(() => {
-            // [KakaoMap] maps.load callback fired');
-            initMap();
-          });
+          window.kakao.maps.load(() => initMap());
         } else {
-          console.error('[KakaoMap] SDK loaded but kakao.maps.load not found');
           setLoadError('카카오맵 SDK 초기화 실패. 페이지를 새로고침해주세요.');
         }
       })

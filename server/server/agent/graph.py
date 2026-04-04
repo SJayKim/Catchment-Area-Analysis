@@ -173,13 +173,21 @@ TOOLS = [
 MAX_ITERATIONS = 5
 
 
-def _create_llm():
-    """Create the LLM instance based on configured provider."""
+def _create_llm(role: str = "default"):
+    """Create the LLM instance based on configured provider and role.
+
+    Role-based model selection (Gemini):
+      - "respond", "react" → gemini-2.5-pro  (user-facing, quality matters)
+      - "planner", "evaluator" → gemini-2.5-flash  (internal, speed matters)
+    """
     if LLM_PROVIDER == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
 
+        pro_roles = {"planner", "respond", "react", "default"}
+        model = settings.gemini_model_pro if role in pro_roles else settings.gemini_model_flash
+
         return ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro",
+            model=model,
             google_api_key=settings.google_api_key,  # type: ignore[arg-type]
             temperature=0.3,
             max_output_tokens=4096,
@@ -202,7 +210,7 @@ def _create_llm():
 
 def create_agent():
     """Build and return the compiled LangGraph ReAct agent."""
-    llm = _create_llm()
+    llm = _create_llm(role="react")
     return create_react_agent(model=llm, tools=TOOLS)
 
 

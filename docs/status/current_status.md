@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-03
-> **Agent 아키텍처 전환 완료 ✅ — Planner-Actor-Evaluator (PAE) 커스텀 그래프**
+> 최종 갱신: 2026-04-04
+> **QA P0+P1 버그 수정 완료 ✅ — 8건 전체 수정, 예상 Grade B+ (180/194)**
 
 ---
 
@@ -174,6 +174,42 @@
 
 ---
 
+## 완료 항목 (2026-04-04)
+
+### ✅ Frontend 환경변수 로딩 근본 수정
+- **문제**: `frontend/.env.local` 없으면 `NEXT_PUBLIC_KAKAO_MAP_KEY=undefined` → 카카오맵 로딩 실패
+- **원인**: Next.js는 자신의 프로젝트 루트(`frontend/`)에서만 `.env` 읽음, root `.env` 미참조
+- **해결**: `next.config.mjs`에서 `dotenv`로 root `.env` 자동 로드 (`override: false`)
+- **추가**: `.env.example`에 env 로딩 구조 문서화, `docker-compose.yml` frontend에 `NEXT_PUBLIC_API_URL` 추가
+- **카카오맵 SDK**: 브라우저 ORB 차단 확인 → 서버 프록시(`/api/kakao-sdk`) 방식 확정, `next.config.mjs` rewrite에서 제외 처리
+- **결과**: `frontend/.env.local` 불필요, root `.env` 하나로 모든 환경 동작
+
+### ✅ QA P0+P1 버그 수정 — 8건 전체 완료
+
+**기준**: 종합 QA 194개 테스트 (Grade C, 3.22/5.0, 134/194 PASS)
+**목표**: Grade B+ (4.2/5.0, 180/194 PASS)
+**계획 문서**: `docs/plan/qa-bugfix-plan.md`, `docs/qa/qa-improvements.md`
+
+| # | 버그 | 우선순위 | 수정 내용 | 수정 파일 |
+|---|------|---------|----------|----------|
+| 1 | BUG-001: 3개 Tool 크래시 | P0 | Repository 3개 try/except + district_name 조회 + ORDER BY cast/nullif + Tool 래퍼 3개 try/except + seed_category_metadata | comparison.py, recommendation.py, stores.py, compare_districts.py, recommend_business.py, store_history.py, seed_category_metadata.py |
+| 2 | BUG-002: 프롬프트 인젝션 | P0 | 시스템 프롬프트 가드레일(규칙9,10) + format-string 인젝션 방지(_sanitize) + respond.py 가드레일 | system.py, respond.py |
+| 3 | BUG-003: Frontend 404 | P0 | next.config.mjs rewrite destination 환경변수화 | next.config.mjs |
+| 4 | BUG-004: PAE 모드 미활성 | P1 | `.env`에 `AGENT_MODE=pae` 추가 | .env |
+| 5 | BUG-005: 응답 시간 초과 | P1 | 인사 단축(Agent 스킵, <1s) + planner greeting 패턴 + role-based Gemini 모델(pro→respond/react, flash→planner/evaluator) | chat.py, planner.py, graph.py, evaluator.py, respond.py, config.py |
+| 6 | BUG-006: 상권 자동감지 오작동 | P1 | 우선순위 재배치(explicit > session > auto-detect) + stopword 필터(30개) + prefix 매칭(3글자 이상) | chat.py, districts.py |
+| 7 | BUG-007: Redis fallback 없음 | P1 | RedisCacheService 전면 try/except + 자동 재연결 + graceful degradation | cache.py |
+| 8 | BUG-008: 동시 사용자 성능 | P1 | asyncio.Lock + 쓰로틀 pruning(60초) + Semaphore(20) + DB pool(10/20) | chat.py, config.py, main.py |
+
+**추가 최적화**: Gemini 모델 role-based 선택 (graph.py)
+- `pro_roles` (respond, react, planner, default) → `gemini-3.1-pro-preview`
+- `flash_roles` (evaluator) → `gemini-3.1-flash-lite-preview`
+- 각 노드가 `_create_llm(role=...)` 호출하여 자동 분기
+
+**총 수정**: P0 3건 + P1 5건 = 8건, 16개 수정 + 1개 신규 = 17개 파일
+
+---
+
 ## 완료 항목 (2026-04-03)
 
 ### ✅ Agent 아키텍처 전환 — Planner-Actor-Evaluator (PAE)
@@ -324,26 +360,34 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 | CAT-8 인프라/배포 | 4/5 | 8/10 |
 | CAT-9 회귀/크로스기능 | 3/5 | 5/8 |
 
-**Top P0 이슈**: (1) 3개 Tool 크래시(compare/recommend/risk), (2) 프롬프트 인젝션 취약점, (3) Frontend 404
+**Top P0 ���슈**: (1) 3개 Tool 크래시(compare/recommend/risk), (2) 프롬프트 인젝션 취약점, (3) Frontend 404
 - **산출물**: `docs/qa/qa-summary-report.md`, `docs/qa/qa-detailed-results.md`, `docs/qa/qa-improvements.md`
-- **P0 수정 후 예상**: Grade B+ (4.2/5.0, 180/194)
+- **P0+P1 수정 완료** (2026-04-04): 8건 전체 수정 → 예상 Grade B+ (4.2/5.0, 180/194)
 
-### 🔴 5. QA P0 버그 수정 (3건)
-- [ ] BUG-001: 3개 Tool 크래시 수정 (compare, recommend, store_history) — Repository SQL 디버깅
-- [ ] BUG-002: 프롬프트 인젝션 방어 — system.py 가드레일 추가
-- [ ] BUG-003: Frontend 404 해결 — Next.js 빌드 에러 확인
+### ~~🔴 5. QA P0 버그 수정 (3건)~~ ✅ 완료 (2026-04-04)
+- [x] BUG-001: 3개 Tool 크래시 수정 — Repository 3개 try/except + Tool 래퍼 3개 + seed_category_metadata
+- [x] BUG-002: 프롬프트 인젝션 방어 — system.py/respond.py 가드레일 + _sanitize()
+- [x] BUG-003: Frontend 404 해결 — next.config.mjs rewrite destination 환경변수화
 
-### 🟡 6. QA P1 개선 (5건)
-- [ ] BUG-004: AGENT_MODE=pae .env 설정
-- [ ] BUG-005: 응답 시간 최적화 (요약 22s → 15s)
-- [ ] BUG-006: 상권 자동감지 우선순위 수정
-- [ ] BUG-007: Redis fallback try/except
-- [ ] BUG-008: 동시 사용자 성능 개선
+### ~~🟡 6. QA P1 개선 (5건)~~ ✅ 완료 (2026-04-04)
+- [x] BUG-004: AGENT_MODE=pae .env 설정
+- [x] BUG-005: 응답 시간 최적화 — 인사 단축 + role-based Gemini 모델(pro/flash)
+- [x] BUG-006: 상권 자동감지 우선순위 수정 — explicit > session > auto-detect + stopword 필터
+- [x] BUG-007: Redis fallback — RedisCacheService 전면 try/except + 자동 재연결
+- [x] BUG-008: 동시 사용자 성능 — asyncio.Lock + Semaphore(20) + DB pool(10/20)
 
-### 🟡 7. Phase 2 — 프리미엄 기능
+### 🔴 7. Docker 통합 정비 — 계획 완료, 구현 대기
 
-- Tier 게이팅 인프라 (OAuth2 인증, 결제)
+- **계획 문서**: `docs/plan/docker-integration-plan.md`
+- **목표**: `docker compose up` 한 줄로 전체 서비스 기동 (현재는 DB/Redis만 Docker, 나머지 로컬)
+- **수정 범위**: 8개 파일 (Dockerfile 2개 재작성, docker-compose 재작성, .dockerignore 2개 신규 등)
+- 핵심: multi-stage Dockerfile, prod/dev 프로필, 서비스 간 네트워킹(localhost→service name), health check
+
+### 🟡 8. 기능 고도화
+
 - 비교모드 복수 상권 하이라이트
+- category_aliases 퍼지 검색 (pg_trgm)
+- F06 히트맵 / F09 시뮬레이션 / F10 PDF
 
 ---
 
@@ -356,7 +400,6 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 - [x] F08 이력/리스크 (get_store_history Tool + RiskCard)
 
 ### 미완료
-- [ ] Tier 게이팅 인프라 (OAuth2 인증, 결제 연동)
 - [ ] category_aliases 퍼지 검색 테이블 (pg_trgm)
 - [ ] 지도 비교모드에서 복수 상권 다른 색상 하이라이트
 
@@ -366,6 +409,14 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 - [ ] F06 시간대별 히트맵 (deck.gl + TimeSlider)
 - [ ] F09 간이 매출 시뮬레이션 (simulate_revenue Tool)
 - [ ] F10 리포트 저장 (PDF)
+
+---
+
+## Phase 4 — 수익화 (후순위)
+- [ ] Tier 게이팅 인프라 (OAuth2 인증, 결제 연동)
+- [ ] Free/Premium 접근 제어 미들웨어
+- [ ] 일일 사용 횟수 카운터 (Free: 5회)
+- [ ] 결제 연동 (Toss Payments / PortOne)
 
 ---
 

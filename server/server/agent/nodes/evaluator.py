@@ -83,7 +83,7 @@ async def _llm_evaluate(state: AgentState) -> EvaluationResult:
         tool_errors=state.get("tool_errors") or {},
     )
 
-    llm = _create_llm()
+    llm = _create_llm(role="evaluator")
     response = await llm.ainvoke(prompt)
     content = response.content if hasattr(response, "content") else str(response)
     if isinstance(content, list):

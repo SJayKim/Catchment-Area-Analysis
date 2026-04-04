@@ -146,7 +146,7 @@ async def _classify_with_llm(
         district_name=district_name or "(미선택)",
     )
 
-    llm = _create_llm()
+    llm = _create_llm(role="planner")
     try:
         response = await llm.ainvoke(prompt)
         content = response.content if hasattr(response, "content") else str(response)
