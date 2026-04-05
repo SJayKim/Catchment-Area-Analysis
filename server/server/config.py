@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     evaluator_skip_simple: bool = True  # skip LLM eval for simple intents
 
     model_config = {
-        "env_file": str(_ENV_FILE),
+        "env_file": str(_ENV_FILE) if _ENV_FILE.exists() else None,
         "env_file_encoding": "utf-8",
         "extra": "ignore",
     }

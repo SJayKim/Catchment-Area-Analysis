@@ -6,7 +6,6 @@
       "Bash(git pull:*)",
       "Bash(ls:*)",
       "Bash(mkdir -p docs/screenshots/ux)",
-      "Bash(mv ux-loading-state.png ux-recommend-complete.png ux-recommend-error.png ux-recommend-result.png ux-responsive-1024.png ux-responsive-1920.png docs/screenshots/ux/)",
       "Bash(curl:*)",
       "Bash(python3 -c ':*)",
       "Bash(node -e ':*)",
@@ -29,7 +28,24 @@
       "Bash(du -sh *.png)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npx @anthropic-ai/claude-code@latest --version)",
+      "Bash(npx:*)",
+      "Bash(claude mcp:*)",
+      "Bash(grep:*)",
+      "Bash(xargs cat:*)",
+      "Bash(xargs grep:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

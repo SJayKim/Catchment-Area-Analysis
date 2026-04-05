@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-04
-> **QA P0+P1 버그 수정 완료 ✅ — 8건 전체 수정, 예상 Grade B+ (180/194)**
+> 최종 갱신: 2026-04-05
+> **Docker 통합 구현 완료 ✅ — `docker compose up` 한 줄로 전체 서비스 기동**
 
 ---
 
@@ -171,6 +171,38 @@
 ### ✅ .gitignore 정리
 - `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
 - `frontend/test-results/` 추가
+
+---
+
+## 완료 항목 (2026-04-05)
+
+### ✅ Docker 통합 — `docker compose up` 원커맨드 기동
+
+**Before**: DB/Redis만 Docker, Backend/Frontend는 로컬 수동 실행
+**After**: `docker compose up`으로 DB → migrate → seed → backend → frontend 전체 자동 기동
+
+**주요 변경**:
+
+1. **Multi-stage Dockerfile (server)**: `builder` (컴파일 의존성) → `runner` (런타임만, curl 포함 health check)
+2. **Multi-stage Dockerfile (frontend)**: `deps` → `builder` (next build) → `runner` (standalone output)
+3. **docker-compose.yml 재작성**:
+   - `migrate` 서비스: Alembic migration (init container, 실행 후 종료)
+   - `seed` 서비스: `data/seed/marketscope_seed.dump` 자동 복원 (districts 행 수 체크하여 중복 방지)
+   - `backend` 서비스: health check + 환경변수 직접 주입 (service name 기반 DB/Redis URL)
+   - `frontend` 서비스: build-time ARG로 NEXT_PUBLIC 변수 주입, standalone 모드
+   - `backend-dev` / `frontend-dev`: `--profile dev`로 볼륨 마운트 + hot-reload 개발 모드
+4. **next.config.mjs**: `output: 'standalone'` 추가 (Docker production 빌드용)
+5. **server/pyproject.toml**: `psycopg2-binary` 추가 (Alembic sync migration용)
+6. **server/config.py**: `.env` 파일 미존재 시 `env_file: None` (Docker 환경변수 전용 모드)
+7. **.env.example**: Docker 환경 설명 업데이트, `GOOGLE_API_KEY`/`AGENT_MODE`/`LLM_PROVIDER` 추가, `USE_MOCK` 기본값 `false`
+8. **.dockerignore 2개 신규**: `frontend/.dockerignore`, `server/.dockerignore`
+
+**서비스 기동 순서**:
+```
+db (PostGIS) → redis → migrate (alembic) → seed (pg_restore) → backend → frontend
+```
+
+**개발 모드**: `docker compose --profile dev up` (소스 볼륨 마운트 + hot-reload)
 
 ---
 
@@ -376,12 +408,12 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 - [x] BUG-007: Redis fallback — RedisCacheService 전면 try/except + 자동 재연결
 - [x] BUG-008: 동시 사용자 성능 — asyncio.Lock + Semaphore(20) + DB pool(10/20)
 
-### 🔴 7. Docker 통합 정비 — 계획 완료, 구현 대기
+### ~~🔴 7. Docker 통합 정비~~ ✅ 완료 (2026-04-05)
 
 - **계획 문서**: `docs/plan/docker-integration-plan.md`
-- **목표**: `docker compose up` 한 줄로 전체 서비스 기동 (현재는 DB/Redis만 Docker, 나머지 로컬)
-- **수정 범위**: 8개 파일 (Dockerfile 2개 재작성, docker-compose 재작성, .dockerignore 2개 신규 등)
-- 핵심: multi-stage Dockerfile, prod/dev 프로필, 서비스 간 네트워킹(localhost→service name), health check
+- **구현 완료**: `docker compose up` 한 줄로 전체 서비스 기동
+- **수정 파일**: docker-compose.yml, server/Dockerfile, frontend/Dockerfile, frontend/next.config.mjs, server/pyproject.toml, server/server/config.py, .env.example + .dockerignore 2개 신규
+- 상세는 아래 "완료 항목 (2026-04-05)" 참조
 
 ### 🟡 8. 기능 고도화
 

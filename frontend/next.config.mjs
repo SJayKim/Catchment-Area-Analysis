@@ -13,6 +13,7 @@ if (existsSync(rootEnvPath)) {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone', // Docker production 빌드용
   // root .env에서 읽은 NEXT_PUBLIC_* 를 클라이언트에 노출
   env: {
     NEXT_PUBLIC_KAKAO_MAP_KEY: process.env.NEXT_PUBLIC_KAKAO_MAP_KEY || '',
