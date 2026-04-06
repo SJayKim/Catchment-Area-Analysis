@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
 > 최종 갱신: 2026-04-06
-> **Phase 3 구현 완료 ✅ — F09 매출 시뮬레이션 / F06 히트맵 / F10 PDF 리포트**
+> **하드코딩 개선 5건 완료 ✅ — Mock JSON / YAML 인텐트 / 카테고리 DB / Tool 레지스트리 / SSE 라벨**
 
 ---
 
@@ -175,6 +175,28 @@
 ---
 
 ## 완료 항목 (2026-04-06)
+
+### ✅ 버그 수정 — 지도 폴리곤 미표시 (CORS)
+
+**증상**: 프론트엔드 지도에 상권 폴리곤이 전혀 렌더링되지 않음.
+
+**원인**:
+- 프론트엔드가 포트 **3001**에서 실행 중이었으나 백엔드 CORS 허용 origin이 `http://localhost:3000`만 포함
+- `DistrictLayer.tsx`의 `catch {}` 블록이 에러를 **silent**하게 무시하여 콘솔에 단서 없음
+- Next.js `next.config.mjs`에 이미 `/api/:path*` → `http://localhost:8002/api/:path*` rewrite 프록시가 구성되어 있어, `API_BASE`는 상대 경로 `/api` 그대로 사용 시 CORS 우회 가능
+
+**수정 파일 (3개)**:
+- `server/server/config.py` — `cors_origins`에 `http://localhost:3001` 추가 (직접 호출 대비 보강)
+- `frontend/src/lib/api.ts` — `API_BASE`/`CHAT_API_BASE`를 `/api` 상대 경로로 통일 (Next.js rewrite 프록시 경유)
+- `frontend/src/components/map/DistrictLayer.tsx` — silent catch → `console.warn('[DistrictLayer] Failed to load polygons:', err)`로 변경
+
+**검증 (Playwright MCP 브라우저)**:
+- `http://localhost:3001/api/map-data/polygons?bounds=...` → 200 OK (GeoJSON 5개 Feature 반환)
+- 콘솔 에러 0건, 네트워크 탭 `/api/map-data/polygons` 200 OK 확인
+- `daum-maps-shape-*` 5개 컨테이너 생성 확인
+- "강남역 발달상권" 검색 → 클릭 → 파란색 하이라이트 폴리곤 시각 확인, 우측 채팅 패널 자동 SummaryCard 분석 트리거
+
+---
 
 ### ✅ Phase 3 — F09 매출 시뮬레이션 / F06 히트맵 / F10 PDF 리포트
 
@@ -476,6 +498,34 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 - 비교모드 복수 상권 하이라이트 (미완료, 후순위)
 - category_aliases 퍼지 검색 (미완료, 후순위)
 - ~~F06 히트맵 / F09 시뮬레이션 / F10 PDF~~ ✅ 완료
+
+### ~~🟢 9. 하드코딩 개선 (5건)~~ ✅ 완료 (2026-04-06)
+
+**계획 문서**: `docs/plan/hardcoding-improvement-plan.md`
+**목표**: 단일 진실 소스(SSOT) 확보 + 유지보수성 향상 — 새 업종/Tool 추가 시 한 곳만 수정
+
+| # | 개선 | 신규 | 수정 | 검증 |
+|---|------|-----:|-----:|------|
+| 1 | Mock 데이터 → JSON 파일 분리 | 8 | 1 | 5개 상권 데이터 assertion 통과 |
+| 2 | INTENT_PATTERNS → YAML 설정 | 3 | 1 | 7개 intent 패턴 매칭 동일 |
+| 3 | `_CATEGORY_KEYWORDS` → DB 동적 로딩 | 2 | 3 | Mock defaults 12개 키워드 resolve 통과 |
+| 4 | Tool 레지스트리 자동 등록 | 1 | 11 | 9개 tool 자동 discover, card_type 매핑 확인 |
+| 5 | Frontend 라벨 → Backend SSE 전달 | 0 | 2 | `tsc --noEmit` 0 errors |
+
+**주요 변경**:
+- `server/server/agent/tools/mock/` — 7개 JSON + `__init__.py` 로더 (`@lru_cache`)
+- `mock_data.py` — 1,138줄 → ~120줄 (public API 불변)
+- `server/server/agent/config/intents.yaml` + `intent_loader.py` — regex 패턴 + Tool 계획 YAML화
+- `server/server/services/category_resolver.py` — 싱글턴 서비스 (mock defaults + DB 로딩 + `aliases` 컬럼)
+- `server/server/agent/tools/registry.py` — `@register_tool` 데코레이터 + `ToolMeta`
+- 9개 tool 파일에 `@register_tool` 적용 (emoji, card_type, progress_label, done_label)
+- `actor.py` — `TOOL_REGISTRY`/`TOOL_CARD_MAP`/`TOOL_EMOJI` 제거, registry 사용
+- `graph.py` — 중복 emoji/card map 제거, `_get_react_meta()` 헬퍼 사용
+- SSE `tool`/`tool_end` 이벤트에 `progress_label`/`done_label` 추가
+- Frontend `eventHandlers.ts` — backend 값 우선, `TOOL_LABELS` fallback 유지
+- `CategoryMetadata` 모델에 `aliases: str | None` 컬럼 추가 (마이그레이션은 후속)
+
+**검증**: Python import 체인 통과, tool registry 9/9 자동 등록, TypeScript 0 errors
 
 ---
 

@@ -18,6 +18,7 @@ from langgraph.prebuilt import create_react_agent
 
 from server.agent.prompts.system import get_system_prompt
 from server.agent.tools.data_sources import get_sources_for_tool
+from server.agent.tools.registry import get_tool_registry
 from server.config import settings
 
 LLM_PROVIDER = settings.llm_provider
@@ -35,7 +36,7 @@ async def get_floating_population_tool(
 ) -> str:
     """상권의 유동인구 데이터를 조회합니다.
 
-    시간대별, 성별, 연령별 유동인구 분포를 반환합니다.
+    시간대별, 성별, 연령별 유동인구 ���포를 반환합니다.
     일평균 유동인구, 피크 시간대 등의 정보를 포함합니다.
 
     Args:
@@ -253,6 +254,16 @@ def set_agent(agent) -> None:
     _agent = agent
 
 
+def _get_react_meta(tool_name: str) -> tuple[str, str | None]:
+    """Get emoji and card_type for a ReAct tool name (may have _tool suffix)."""
+    reg = get_tool_registry()
+    base_name = tool_name.replace("_tool", "")
+    meta = reg.get(base_name) or reg.get(tool_name)
+    if meta:
+        return meta.emoji, meta.card_type
+    return "🔧", None
+
+
 async def run_agent_react(
     message: str,
     district_code: str,
@@ -273,24 +284,6 @@ async def run_agent_react(
         }
         config = {"recursion_limit": MAX_ITERATIONS * 2 + 1}
 
-        _TOOL_EMOJI = {
-            "get_floating_population_tool": "🔍",
-            "get_estimated_sales_tool": "🔍",
-            "get_store_info_tool": "🔍",
-            "get_population_info_tool": "🔍",
-            "get_district_summary_tool": "📋",
-            "compare_districts_tool": "📊",
-            "recommend_business_tool": "💡",
-            "get_store_history_tool": "📋",
-            "simulate_revenue_tool": "💰",
-        }
-        _TOOL_CARD_MAP = {
-            "compare_districts_tool": "compare",
-            "recommend_business_tool": "recommend",
-            "get_store_history_tool": "risk",
-            "simulate_revenue_tool": "simulation",
-        }
-
         async for event in agent.astream_events(input_state, version="v2", config=config):
             kind = event["event"]
 
@@ -302,18 +295,19 @@ async def run_agent_react(
             elif kind == "on_tool_start":
                 tool_name = event.get("name", "unknown")
                 tool_input = event.get("data", {}).get("input", {})
+                emoji, _ = _get_react_meta(tool_name)
                 yield {
                     "type": "tool",
                     "name": tool_name,
                     "input": tool_input,
-                    "icon": _TOOL_EMOJI.get(tool_name, "🔧"),
+                    "icon": emoji,
                 }
                 thinking_emitted = False
 
             elif kind == "on_tool_end":
                 tool_name = event.get("name", "")
-                yield {"type": "tool_end", "name": tool_name, "icon": _TOOL_EMOJI.get(tool_name, "🔧")}
-                card_type = _TOOL_CARD_MAP.get(tool_name)
+                emoji, card_type = _get_react_meta(tool_name)
+                yield {"type": "tool_end", "name": tool_name, "icon": emoji}
                 if card_type:
                     raw = event.get("data", {}).get("output", "")
                     if hasattr(raw, "content"):

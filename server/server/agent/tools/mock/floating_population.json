@@ -1,0 +1,582 @@
+{
+  "D3001": {
+    "district_code": "D3001",
+    "quarter": "2025Q3",
+    "daily_avg": 124350,
+    "peak_hour": 18,
+    "by_hour": [
+      {
+        "time_slot": 0,
+        "population": 8200
+      },
+      {
+        "time_slot": 1,
+        "population": 4100
+      },
+      {
+        "time_slot": 2,
+        "population": 2300
+      },
+      {
+        "time_slot": 3,
+        "population": 1500
+      },
+      {
+        "time_slot": 4,
+        "population": 1200
+      },
+      {
+        "time_slot": 5,
+        "population": 2800
+      },
+      {
+        "time_slot": 6,
+        "population": 12400
+      },
+      {
+        "time_slot": 7,
+        "population": 28500
+      },
+      {
+        "time_slot": 8,
+        "population": 35200
+      },
+      {
+        "time_slot": 9,
+        "population": 32100
+      },
+      {
+        "time_slot": 10,
+        "population": 29800
+      },
+      {
+        "time_slot": 11,
+        "population": 38500
+      },
+      {
+        "time_slot": 12,
+        "population": 45200
+      },
+      {
+        "time_slot": 13,
+        "population": 41300
+      },
+      {
+        "time_slot": 14,
+        "population": 35800
+      },
+      {
+        "time_slot": 15,
+        "population": 33200
+      },
+      {
+        "time_slot": 16,
+        "population": 36100
+      },
+      {
+        "time_slot": 17,
+        "population": 48500
+      },
+      {
+        "time_slot": 18,
+        "population": 52300
+      },
+      {
+        "time_slot": 19,
+        "population": 45800
+      },
+      {
+        "time_slot": 20,
+        "population": 38200
+      },
+      {
+        "time_slot": 21,
+        "population": 28900
+      },
+      {
+        "time_slot": 22,
+        "population": 19500
+      },
+      {
+        "time_slot": 23,
+        "population": 12800
+      }
+    ],
+    "gender": {
+      "male_ratio": 52.3,
+      "female_ratio": 47.7
+    },
+    "age_distribution": {
+      "10대": 5.2,
+      "20대": 28.5,
+      "30대": 32.1,
+      "40대": 18.7,
+      "50대": 10.3,
+      "60대 이상": 5.2
+    }
+  },
+  "D3002": {
+    "district_code": "D3002",
+    "quarter": "2025Q3",
+    "daily_avg": 98700,
+    "peak_hour": 20,
+    "by_hour": [
+      {
+        "time_slot": 0,
+        "population": 12500
+      },
+      {
+        "time_slot": 1,
+        "population": 8300
+      },
+      {
+        "time_slot": 2,
+        "population": 5100
+      },
+      {
+        "time_slot": 3,
+        "population": 2800
+      },
+      {
+        "time_slot": 4,
+        "population": 1500
+      },
+      {
+        "time_slot": 5,
+        "population": 2200
+      },
+      {
+        "time_slot": 6,
+        "population": 5800
+      },
+      {
+        "time_slot": 7,
+        "population": 10200
+      },
+      {
+        "time_slot": 8,
+        "population": 15600
+      },
+      {
+        "time_slot": 9,
+        "population": 18300
+      },
+      {
+        "time_slot": 10,
+        "population": 22500
+      },
+      {
+        "time_slot": 11,
+        "population": 28900
+      },
+      {
+        "time_slot": 12,
+        "population": 35200
+      },
+      {
+        "time_slot": 13,
+        "population": 38500
+      },
+      {
+        "time_slot": 14,
+        "population": 42100
+      },
+      {
+        "time_slot": 15,
+        "population": 45300
+      },
+      {
+        "time_slot": 16,
+        "population": 48200
+      },
+      {
+        "time_slot": 17,
+        "population": 52800
+      },
+      {
+        "time_slot": 18,
+        "population": 56200
+      },
+      {
+        "time_slot": 19,
+        "population": 58100
+      },
+      {
+        "time_slot": 20,
+        "population": 55800
+      },
+      {
+        "time_slot": 21,
+        "population": 42300
+      },
+      {
+        "time_slot": 22,
+        "population": 32100
+      },
+      {
+        "time_slot": 23,
+        "population": 18500
+      }
+    ],
+    "gender": {
+      "male_ratio": 45.8,
+      "female_ratio": 54.2
+    },
+    "age_distribution": {
+      "10대": 8.5,
+      "20대": 42.3,
+      "30대": 22.1,
+      "40대": 14.2,
+      "50대": 8.1,
+      "60대 이상": 4.8
+    }
+  },
+  "D3003": {
+    "district_code": "D3003",
+    "quarter": "2025Q3",
+    "daily_avg": 72500,
+    "peak_hour": 19,
+    "by_hour": [
+      {
+        "time_slot": 0,
+        "population": 6800
+      },
+      {
+        "time_slot": 1,
+        "population": 4200
+      },
+      {
+        "time_slot": 2,
+        "population": 2800
+      },
+      {
+        "time_slot": 3,
+        "population": 1500
+      },
+      {
+        "time_slot": 4,
+        "population": 1200
+      },
+      {
+        "time_slot": 5,
+        "population": 2500
+      },
+      {
+        "time_slot": 6,
+        "population": 8200
+      },
+      {
+        "time_slot": 7,
+        "population": 15300
+      },
+      {
+        "time_slot": 8,
+        "population": 22100
+      },
+      {
+        "time_slot": 9,
+        "population": 24500
+      },
+      {
+        "time_slot": 10,
+        "population": 26200
+      },
+      {
+        "time_slot": 11,
+        "population": 32100
+      },
+      {
+        "time_slot": 12,
+        "population": 35800
+      },
+      {
+        "time_slot": 13,
+        "population": 33200
+      },
+      {
+        "time_slot": 14,
+        "population": 30100
+      },
+      {
+        "time_slot": 15,
+        "population": 28500
+      },
+      {
+        "time_slot": 16,
+        "population": 31200
+      },
+      {
+        "time_slot": 17,
+        "population": 38500
+      },
+      {
+        "time_slot": 18,
+        "population": 42100
+      },
+      {
+        "time_slot": 19,
+        "population": 43200
+      },
+      {
+        "time_slot": 20,
+        "population": 38500
+      },
+      {
+        "time_slot": 21,
+        "population": 28200
+      },
+      {
+        "time_slot": 22,
+        "population": 18500
+      },
+      {
+        "time_slot": 23,
+        "population": 10800
+      }
+    ],
+    "gender": {
+      "male_ratio": 48.5,
+      "female_ratio": 51.5
+    },
+    "age_distribution": {
+      "10대": 7.8,
+      "20대": 38.2,
+      "30대": 25.5,
+      "40대": 15.3,
+      "50대": 8.7,
+      "60대 이상": 4.5
+    }
+  },
+  "D3004": {
+    "district_code": "D3004",
+    "quarter": "2025Q3",
+    "daily_avg": 156200,
+    "peak_hour": 14,
+    "by_hour": [
+      {
+        "time_slot": 0,
+        "population": 5200
+      },
+      {
+        "time_slot": 1,
+        "population": 2800
+      },
+      {
+        "time_slot": 2,
+        "population": 1500
+      },
+      {
+        "time_slot": 3,
+        "population": 800
+      },
+      {
+        "time_slot": 4,
+        "population": 600
+      },
+      {
+        "time_slot": 5,
+        "population": 3200
+      },
+      {
+        "time_slot": 6,
+        "population": 15800
+      },
+      {
+        "time_slot": 7,
+        "population": 32500
+      },
+      {
+        "time_slot": 8,
+        "population": 45200
+      },
+      {
+        "time_slot": 9,
+        "population": 52800
+      },
+      {
+        "time_slot": 10,
+        "population": 62300
+      },
+      {
+        "time_slot": 11,
+        "population": 72500
+      },
+      {
+        "time_slot": 12,
+        "population": 78200
+      },
+      {
+        "time_slot": 13,
+        "population": 75800
+      },
+      {
+        "time_slot": 14,
+        "population": 80100
+      },
+      {
+        "time_slot": 15,
+        "population": 72500
+      },
+      {
+        "time_slot": 16,
+        "population": 65200
+      },
+      {
+        "time_slot": 17,
+        "population": 58500
+      },
+      {
+        "time_slot": 18,
+        "population": 48200
+      },
+      {
+        "time_slot": 19,
+        "population": 35800
+      },
+      {
+        "time_slot": 20,
+        "population": 25200
+      },
+      {
+        "time_slot": 21,
+        "population": 18500
+      },
+      {
+        "time_slot": 22,
+        "population": 12800
+      },
+      {
+        "time_slot": 23,
+        "population": 8200
+      }
+    ],
+    "gender": {
+      "male_ratio": 44.2,
+      "female_ratio": 55.8
+    },
+    "age_distribution": {
+      "10대": 6.2,
+      "20대": 32.5,
+      "30대": 24.8,
+      "40대": 18.5,
+      "50대": 11.2,
+      "60대 이상": 6.8
+    }
+  },
+  "D3005": {
+    "district_code": "D3005",
+    "quarter": "2025Q3",
+    "daily_avg": 45800,
+    "peak_hour": 8,
+    "by_hour": [
+      {
+        "time_slot": 0,
+        "population": 3200
+      },
+      {
+        "time_slot": 1,
+        "population": 2100
+      },
+      {
+        "time_slot": 2,
+        "population": 1500
+      },
+      {
+        "time_slot": 3,
+        "population": 1200
+      },
+      {
+        "time_slot": 4,
+        "population": 2500
+      },
+      {
+        "time_slot": 5,
+        "population": 5800
+      },
+      {
+        "time_slot": 6,
+        "population": 12500
+      },
+      {
+        "time_slot": 7,
+        "population": 22300
+      },
+      {
+        "time_slot": 8,
+        "population": 28500
+      },
+      {
+        "time_slot": 9,
+        "population": 25200
+      },
+      {
+        "time_slot": 10,
+        "population": 18500
+      },
+      {
+        "time_slot": 11,
+        "population": 15200
+      },
+      {
+        "time_slot": 12,
+        "population": 18800
+      },
+      {
+        "time_slot": 13,
+        "population": 16500
+      },
+      {
+        "time_slot": 14,
+        "population": 14200
+      },
+      {
+        "time_slot": 15,
+        "population": 13500
+      },
+      {
+        "time_slot": 16,
+        "population": 15800
+      },
+      {
+        "time_slot": 17,
+        "population": 22500
+      },
+      {
+        "time_slot": 18,
+        "population": 25200
+      },
+      {
+        "time_slot": 19,
+        "population": 18500
+      },
+      {
+        "time_slot": 20,
+        "population": 12800
+      },
+      {
+        "time_slot": 21,
+        "population": 8500
+      },
+      {
+        "time_slot": 22,
+        "population": 5800
+      },
+      {
+        "time_slot": 23,
+        "population": 4200
+      }
+    ],
+    "gender": {
+      "male_ratio": 56.2,
+      "female_ratio": 43.8
+    },
+    "age_distribution": {
+      "10대": 3.5,
+      "20대": 18.2,
+      "30대": 22.5,
+      "40대": 25.8,
+      "50대": 18.5,
+      "60대 이상": 11.5
+    }
+  }
+}

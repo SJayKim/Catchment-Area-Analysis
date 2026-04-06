@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     etl_batch_size: int = 1000
 
     # CORS
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     # Agent architecture
     agent_mode: str = "react"  # "react" (legacy) | "pae" (Planner-Actor-Evaluator)

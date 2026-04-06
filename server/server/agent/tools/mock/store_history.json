@@ -1,0 +1,391 @@
+{
+  "D3001": {
+    "district_code": "D3001",
+    "stability": {
+      "score": 72,
+      "grade": "양호",
+      "trend": {
+        "direction": "slightly_decreasing",
+        "adjustment": 5,
+        "detail": "폐업이 소폭 감소 추세"
+      },
+      "quarters_analyzed": 4
+    },
+    "survival_by_category": [
+      {
+        "category": "한식",
+        "avg_months": 38.5,
+        "sample_count": 85
+      },
+      {
+        "category": "커피/음료",
+        "avg_months": 28.2,
+        "sample_count": 62
+      },
+      {
+        "category": "의류",
+        "avg_months": 22.8,
+        "sample_count": 48
+      },
+      {
+        "category": "일식/중식",
+        "avg_months": 32.1,
+        "sample_count": 35
+      },
+      {
+        "category": "미용/뷰티",
+        "avg_months": 42.5,
+        "sample_count": 28
+      }
+    ],
+    "risk_categories": [
+      {
+        "category": "의류",
+        "close_rate": 8.5,
+        "warning": "폐업률 높음"
+      },
+      {
+        "category": "커피/음료",
+        "close_rate": 7.6,
+        "warning": "폐업률 높음"
+      }
+    ],
+    "quarterly_trend": [
+      {
+        "quarter": "2024Q4",
+        "store_count": 1820,
+        "open": 105,
+        "close": 95
+      },
+      {
+        "quarter": "2025Q1",
+        "store_count": 1835,
+        "open": 115,
+        "close": 100
+      },
+      {
+        "quarter": "2025Q2",
+        "store_count": 1842,
+        "open": 120,
+        "close": 102
+      },
+      {
+        "quarter": "2025Q3",
+        "store_count": 1852,
+        "open": 125,
+        "close": 98
+      }
+    ]
+  },
+  "D3002": {
+    "district_code": "D3002",
+    "stability": {
+      "score": 52,
+      "grade": "주의",
+      "trend": {
+        "direction": "slightly_increasing",
+        "adjustment": -7,
+        "detail": "폐업이 소폭 증가 추세"
+      },
+      "quarters_analyzed": 4
+    },
+    "survival_by_category": [
+      {
+        "category": "한식",
+        "avg_months": 32.5,
+        "sample_count": 72
+      },
+      {
+        "category": "커피/음료",
+        "avg_months": 18.5,
+        "sample_count": 95
+      },
+      {
+        "category": "주점",
+        "avg_months": 14.2,
+        "sample_count": 68
+      },
+      {
+        "category": "의류",
+        "avg_months": 16.8,
+        "sample_count": 55
+      },
+      {
+        "category": "패스트푸드",
+        "avg_months": 25.5,
+        "sample_count": 22
+      }
+    ],
+    "risk_categories": [
+      {
+        "category": "주점",
+        "close_rate": 9.7,
+        "warning": "폐업률 높음"
+      },
+      {
+        "category": "의류",
+        "close_rate": 13.8,
+        "warning": "폐업률 높음"
+      },
+      {
+        "category": "커피/음료",
+        "close_rate": 9.5,
+        "warning": "폐업률 높음"
+      }
+    ],
+    "quarterly_trend": [
+      {
+        "quarter": "2024Q4",
+        "store_count": 1380,
+        "open": 128,
+        "close": 105
+      },
+      {
+        "quarter": "2025Q1",
+        "store_count": 1395,
+        "open": 135,
+        "close": 110
+      },
+      {
+        "quarter": "2025Q2",
+        "store_count": 1410,
+        "open": 138,
+        "close": 115
+      },
+      {
+        "quarter": "2025Q3",
+        "store_count": 1425,
+        "open": 142,
+        "close": 118
+      }
+    ]
+  },
+  "D3003": {
+    "district_code": "D3003",
+    "stability": {
+      "score": 65,
+      "grade": "양호",
+      "trend": {
+        "direction": "stable",
+        "adjustment": 0,
+        "detail": "폐업 추세 보합"
+      },
+      "quarters_analyzed": 4
+    },
+    "survival_by_category": [
+      {
+        "category": "한식",
+        "avg_months": 35.2,
+        "sample_count": 58
+      },
+      {
+        "category": "커피/음료",
+        "avg_months": 22.5,
+        "sample_count": 52
+      },
+      {
+        "category": "주점",
+        "avg_months": 16.8,
+        "sample_count": 42
+      },
+      {
+        "category": "미용/뷰티",
+        "avg_months": 38.2,
+        "sample_count": 25
+      },
+      {
+        "category": "편의점/슈퍼",
+        "avg_months": 52.5,
+        "sample_count": 18
+      }
+    ],
+    "risk_categories": [
+      {
+        "category": "주점",
+        "close_rate": 10.7,
+        "warning": "폐업률 높음"
+      }
+    ],
+    "quarterly_trend": [
+      {
+        "quarter": "2024Q4",
+        "store_count": 960,
+        "open": 82,
+        "close": 70
+      },
+      {
+        "quarter": "2025Q1",
+        "store_count": 968,
+        "open": 85,
+        "close": 72
+      },
+      {
+        "quarter": "2025Q2",
+        "store_count": 975,
+        "open": 86,
+        "close": 71
+      },
+      {
+        "quarter": "2025Q3",
+        "store_count": 985,
+        "open": 88,
+        "close": 72
+      }
+    ]
+  },
+  "D3004": {
+    "district_code": "D3004",
+    "stability": {
+      "score": 38,
+      "grade": "위험",
+      "trend": {
+        "direction": "increasing",
+        "adjustment": -15,
+        "detail": "폐업이 분기당 18% 증가 추세"
+      },
+      "quarters_analyzed": 4
+    },
+    "survival_by_category": [
+      {
+        "category": "한식",
+        "avg_months": 28.5,
+        "sample_count": 82
+      },
+      {
+        "category": "커피/음료",
+        "avg_months": 20.2,
+        "sample_count": 65
+      },
+      {
+        "category": "의류",
+        "avg_months": 12.5,
+        "sample_count": 120
+      },
+      {
+        "category": "화장품",
+        "avg_months": 15.8,
+        "sample_count": 85
+      },
+      {
+        "category": "잡화/액세서리",
+        "avg_months": 10.2,
+        "sample_count": 55
+      }
+    ],
+    "risk_categories": [
+      {
+        "category": "잡화/액세서리",
+        "close_rate": 13.3,
+        "warning": "폐업률 높음"
+      },
+      {
+        "category": "화장품",
+        "close_rate": 9.8,
+        "warning": "폐업률 높음"
+      },
+      {
+        "category": "의류",
+        "close_rate": 8.2,
+        "warning": "폐업률 높음"
+      },
+      {
+        "category": "커피/음료",
+        "close_rate": 8.2,
+        "warning": "폐업률 높음"
+      }
+    ],
+    "quarterly_trend": [
+      {
+        "quarter": "2024Q4",
+        "store_count": 2520,
+        "open": 110,
+        "close": 135
+      },
+      {
+        "quarter": "2025Q1",
+        "store_count": 2490,
+        "open": 95,
+        "close": 145
+      },
+      {
+        "quarter": "2025Q2",
+        "store_count": 2470,
+        "open": 90,
+        "close": 155
+      },
+      {
+        "quarter": "2025Q3",
+        "store_count": 2450,
+        "open": 85,
+        "close": 165
+      }
+    ]
+  },
+  "D3005": {
+    "district_code": "D3005",
+    "stability": {
+      "score": 78,
+      "grade": "양호",
+      "trend": {
+        "direction": "slightly_decreasing",
+        "adjustment": 5,
+        "detail": "폐업이 소폭 감소 추세"
+      },
+      "quarters_analyzed": 4
+    },
+    "survival_by_category": [
+      {
+        "category": "한식",
+        "avg_months": 42.5,
+        "sample_count": 35
+      },
+      {
+        "category": "커피/음료",
+        "avg_months": 32.8,
+        "sample_count": 22
+      },
+      {
+        "category": "편의점/슈퍼",
+        "avg_months": 58.2,
+        "sample_count": 15
+      },
+      {
+        "category": "일식/중식",
+        "avg_months": 35.5,
+        "sample_count": 12
+      },
+      {
+        "category": "미용/뷰티",
+        "avg_months": 45.2,
+        "sample_count": 10
+      }
+    ],
+    "risk_categories": [],
+    "quarterly_trend": [
+      {
+        "quarter": "2024Q4",
+        "store_count": 510,
+        "open": 28,
+        "close": 32
+      },
+      {
+        "quarter": "2025Q1",
+        "store_count": 512,
+        "open": 30,
+        "close": 30
+      },
+      {
+        "quarter": "2025Q2",
+        "store_count": 515,
+        "open": 31,
+        "close": 29
+      },
+      {
+        "quarter": "2025Q3",
+        "store_count": 520,
+        "open": 32,
+        "close": 28
+      }
+    ]
+  }
+}

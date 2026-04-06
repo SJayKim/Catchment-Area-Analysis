@@ -92,10 +92,11 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
     case 'tool': {
       get().updateAgentStepStatus('thinking', 'completed', '🧠 질문 분석 완료');
       const toolLabel = TOOL_LABELS[event.name];
-      const icon = toolLabel?.icon || '🔧';
+      const icon = event.icon || toolLabel?.icon || '🔧';
+      const progressText = event.progress_label || toolLabel?.progress || `${event.name} 실행 중...`;
       get().addAgentStep({
         id: `tool-${event.name}`,
-        label: `${icon} ${toolLabel?.progress || `${event.name} 실행 중...`}`,
+        label: `${icon} ${progressText}`,
         status: 'in_progress',
         toolName: event.name,
       });
@@ -104,10 +105,11 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
 
     case 'tool_end': {
       const endLabel = TOOL_LABELS[event.name];
-      const endIcon = endLabel?.icon || '🔧';
+      const endIcon = event.icon || endLabel?.icon || '🔧';
+      const doneText = event.done_label || endLabel?.done || `${event.name} 완료`;
       get().updateAgentStepStatus(
         `tool-${event.name}`, 'completed',
-        `${endIcon} ${endLabel?.done || `${event.name} 완료`}`
+        `${endIcon} ${doneText}`
       );
       break;
     }

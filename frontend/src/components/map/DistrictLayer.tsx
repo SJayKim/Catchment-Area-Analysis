@@ -100,8 +100,8 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
         });
 
         renderPolygons(map, features);
-      } catch {
-        // API not available yet - silent fail
+      } catch (err) {
+        console.warn('[DistrictLayer] Failed to load polygons:', err);
       }
     };
 

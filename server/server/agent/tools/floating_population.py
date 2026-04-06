@@ -1,7 +1,14 @@
+from server.agent.tools.registry import register_tool
 from server.repositories import get_data_access
 from server.services.cache import get_cache_service
 
 
+@register_tool(
+    "get_floating_population",
+    emoji="🔍",
+    progress_label="유동인구 데이터 조회 중...",
+    done_label="유동인구 조회 완료",
+)
 async def get_floating_population(
     district_code: str, quarter: str | None = None
 ) -> dict:

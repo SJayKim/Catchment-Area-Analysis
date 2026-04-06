@@ -7,80 +7,11 @@ import logging
 import re
 from typing import Any
 
+from server.agent.config.intent_loader import load_intent_config
 from server.agent.prompts.planner import PLANNER_CLASSIFICATION_PROMPT
 from server.agent.state import AgentState, ToolPlanStep
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Rule-based intent patterns
-# ---------------------------------------------------------------------------
-
-INTENT_PATTERNS: dict[str, re.Pattern[str]] = {
-    "greeting": re.compile(r"^(안녕|하이|헬로|hi|hello|반갑|감사|고마워|ㅎㅇ)", re.IGNORECASE),
-    "simulation": re.compile(r"(시뮬���이션|매출.*예상|매출.*얼마|매출.*시뮬|얼마.*벌|수익.*예상|장사.*되|매출.*전망|열면.*매출|하면.*매출)"),
-    "comparison": re.compile(r"(비교|vs|대비|차이)"),
-    "recommendation": re.compile(r"(추천|뭐.*하면|어떤.*업종|창업|아이���)"),
-    "risk": re.compile(r"(위험|리스크|폐업|안전|생존|실패)"),
-    "category_analysis": re.compile(
-        r"(카페|한식|���피|치킨|편의점|음식점|미용|병원|약국|중식|일식|양식|분식|주점|제과)"
-    ),
-    "summary": re.compile(r"(요약|분석|알려���|어때|보여줘|정보|현황|상권을?\s*선택)"),
-}
-
-FOLLOW_UP_MARKERS = re.compile(
-    r"(그러면|그럼|그래서|그리고|또|거기|아까|방금|그\s*상권|그\s*지역|그곳)"
-)
-
-NON_SUMMARY_OVERRIDES = re.compile(
-    r"(비교|추천|뭐.*하면|위험|리스크|폐업|히트맵|시뮬|매출.*예상|매출.*얼마|얼마.*벌|카페|한식|커피|치킨|편의점)"
-)
-
-# Map Korean category keywords → category_code (best-effort)
-_CATEGORY_KEYWORDS: dict[str, str] = {
-    "카페": "CS100001",
-    "커피": "CS100001",
-    "한식": "CS200001",
-    "중식": "CS200002",
-    "일식": "CS200003",
-    "양식": "CS200004",
-    "분식": "CS200006",
-    "치킨": "CS200010",
-    "편의점": "CS300001",
-    "미용": "CS400001",
-    "약국": "CS500001",
-    "주점": "CS200009",
-    "제과": "CS200014",
-}
-
-# ---------------------------------------------------------------------------
-# Intent → tool plan mapping
-# ---------------------------------------------------------------------------
-
-INTENT_TO_PLAN: dict[str, list[dict[str, Any]]] = {
-    "summary": [
-        {"tool_name": "get_district_summary", "args_template": {"district_code": "{district_code}"}, "reason": "상권 종합 요약 조회", "depends_on": []},
-    ],
-    "comparison": [
-        {"tool_name": "compare_districts", "args_template": {"district_codes": "{referenced_districts}"}, "reason": "상권 비교 분석", "depends_on": []},
-    ],
-    "recommendation": [
-        {"tool_name": "recommend_business", "args_template": {"district_code": "{district_code}"}, "reason": "업종 추천 분석", "depends_on": []},
-    ],
-    "risk": [
-        {"tool_name": "get_store_history", "args_template": {"district_code": "{district_code}"}, "reason": "점포 이력/리스크 분석", "depends_on": []},
-    ],
-    "category_analysis": [
-        {"tool_name": "get_estimated_sales", "args_template": {"district_code": "{district_code}", "category_code": "{category_code}"}, "reason": "업종별 매출 조회", "depends_on": []},
-        {"tool_name": "get_store_info", "args_template": {"district_code": "{district_code}", "category_code": "{category_code}"}, "reason": "업종별 점포 현황 조회", "depends_on": []},
-    ],
-    "simulation": [
-        {"tool_name": "simulate_revenue", "args_template": {"district_code": "{district_code}", "category_code": "{category_code}"}, "reason": "매출 시뮬레이션", "depends_on": []},
-    ],
-    "greeting": [],  # 도구 불필요
-    "general": [],
-    "ambiguous": [],
-}
 
 
 # ---------------------------------------------------------------------------
@@ -90,14 +21,16 @@ INTENT_TO_PLAN: dict[str, list[dict[str, Any]]] = {
 
 def _classify_by_rules(message: str) -> tuple[str | None, float]:
     """Fast rule-based intent classification. Returns (intent, confidence)."""
+    config = load_intent_config()
+
     # Follow-up markers → need LLM
-    if FOLLOW_UP_MARKERS.search(message):
+    if config.follow_up_markers.search(message):
         return "follow_up", 0.5
 
     # Non-summary overrides first
-    if NON_SUMMARY_OVERRIDES.search(message):
+    if config.non_summary_overrides.search(message):
         # Find which specific intent matches
-        for intent, pattern in INTENT_PATTERNS.items():
+        for intent, pattern in config.patterns.items():
             if intent == "summary":
                 continue
             if pattern.search(message):
@@ -106,7 +39,7 @@ def _classify_by_rules(message: str) -> tuple[str | None, float]:
 
     # Single-pattern match
     matched: list[str] = []
-    for intent, pattern in INTENT_PATTERNS.items():
+    for intent, pattern in config.patterns.items():
         if pattern.search(message):
             matched.append(intent)
 
@@ -120,18 +53,16 @@ def _classify_by_rules(message: str) -> tuple[str | None, float]:
 
 def _extract_category(message: str) -> str | None:
     """Extract category_code from message keywords."""
-    for keyword, code in _CATEGORY_KEYWORDS.items():
-        if keyword in message:
-            return code
-    return None
+    from server.services.category_resolver import get_category_resolver
+
+    return get_category_resolver().resolve(message)
 
 
 def _extract_category_name(message: str) -> str | None:
     """Extract the category keyword itself for display."""
-    for keyword in _CATEGORY_KEYWORDS:
-        if keyword in message:
-            return keyword
-    return None
+    from server.services.category_resolver import get_category_resolver
+
+    return get_category_resolver().resolve_name(message)
 
 
 async def _classify_with_llm(
@@ -176,7 +107,8 @@ def _build_plan(
     category_code: str | None,
 ) -> list[ToolPlanStep]:
     """Generate ToolPlanStep list from intent."""
-    templates = INTENT_TO_PLAN.get(intent, [])
+    config = load_intent_config()
+    templates = config.plans.get(intent, [])
     plan: list[ToolPlanStep] = []
 
     for tmpl in templates:

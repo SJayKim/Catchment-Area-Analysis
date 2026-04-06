@@ -1,0 +1,283 @@
+{
+  "districts": {
+    "D3001": {
+      "district_code": "D3001",
+      "quarter": "2025Q3",
+      "recommendations": [
+        {
+          "rank": 1,
+          "category_name": "미용/뷰티",
+          "category_code": "CS500",
+          "score": 100.0,
+          "per_store_sales": 5850000,
+          "store_count": 118,
+          "close_rate": 5.1,
+          "age_match": 72.5,
+          "monthly_sales": 690300000,
+          "reasons": [
+            "점포당 월매출 585만원",
+            "타겟 고객 매칭률 73%",
+            "경쟁 점포 118개 (밀집도 6.4%)",
+            "폐업률 낮음 (5.1%)"
+          ],
+          "startup_cost": 5000
+        },
+        {
+          "rank": 2,
+          "category_name": "일식/중식",
+          "category_code": "CS400",
+          "score": 85.2,
+          "per_store_sales": 7200000,
+          "store_count": 132,
+          "close_rate": 6.1,
+          "age_match": 65.3,
+          "monthly_sales": 950400000,
+          "reasons": [
+            "점포당 월매출 720만원",
+            "타겟 고객 매칭률 65%",
+            "경쟁 점포 132개 (밀집도 7.1%)"
+          ],
+          "startup_cost": 8000
+        },
+        {
+          "rank": 3,
+          "category_name": "한식",
+          "category_code": "CS100",
+          "score": 78.5,
+          "per_store_sales": 6500000,
+          "store_count": 245,
+          "close_rate": 4.9,
+          "age_match": 68.2,
+          "monthly_sales": 1592500000,
+          "reasons": [
+            "점포당 월매출 650만원",
+            "타겟 고객 매칭률 68%",
+            "경쟁 점포 245개 (밀집도 13.2%)",
+            "폐업률 낮음 (4.9%)"
+          ],
+          "startup_cost": 7000
+        },
+        {
+          "rank": 4,
+          "category_name": "패스트푸드",
+          "category_code": "CS700",
+          "score": 65.8,
+          "per_store_sales": 8500000,
+          "store_count": 52,
+          "close_rate": 3.8,
+          "age_match": 58.5,
+          "monthly_sales": 442000000,
+          "reasons": [
+            "점포당 월매출 850만원",
+            "타겟 고객 매칭률 59%",
+            "경쟁 점포 52개 (밀집도 2.8%)",
+            "폐업률 낮음 (3.8%)"
+          ],
+          "startup_cost": 15000
+        },
+        {
+          "rank": 5,
+          "category_name": "커피/음료",
+          "category_code": "CS200",
+          "score": 55.2,
+          "per_store_sales": 4200000,
+          "store_count": 198,
+          "close_rate": 7.6,
+          "age_match": 75.8,
+          "monthly_sales": 831600000,
+          "reasons": [
+            "점포당 월매출 420만원",
+            "타겟 고객 매칭률 76%",
+            "경쟁 점포 198개 (밀집도 10.7%)",
+            "폐업률 주의 (7.6%)"
+          ],
+          "startup_cost": 6000
+        }
+      ],
+      "total_categories_analyzed": 18
+    },
+    "D3002": {
+      "district_code": "D3002",
+      "quarter": "2025Q3",
+      "recommendations": [
+        {
+          "rank": 1,
+          "category_name": "패스트푸드",
+          "category_code": "CS700",
+          "score": 100.0,
+          "per_store_sales": 6800000,
+          "store_count": 95,
+          "close_rate": 5.3,
+          "age_match": 82.5,
+          "monthly_sales": 646000000,
+          "reasons": [
+            "점포당 월매출 680만원",
+            "타겟 고객 매칭률 83%",
+            "경쟁 점포 95개 (밀집도 6.7%)"
+          ],
+          "startup_cost": 15000
+        },
+        {
+          "rank": 2,
+          "category_name": "미용/뷰티",
+          "category_code": "CS500",
+          "score": 82.3,
+          "per_store_sales": 4850000,
+          "store_count": 78,
+          "close_rate": 5.1,
+          "age_match": 75.2,
+          "monthly_sales": 378300000,
+          "reasons": [
+            "점포당 월매출 485만원",
+            "타겟 고객 매칭률 75%",
+            "경쟁 점포 78개 (밀집도 5.5%)",
+            "폐업률 낮음 (5.1%)"
+          ],
+          "startup_cost": 5000
+        },
+        {
+          "rank": 3,
+          "category_name": "한식",
+          "category_code": "CS100",
+          "score": 72.1,
+          "per_store_sales": 5200000,
+          "store_count": 168,
+          "close_rate": 8.3,
+          "age_match": 62.5,
+          "monthly_sales": 873600000,
+          "reasons": [
+            "점포당 월매출 520만원",
+            "타겟 고객 매칭률 63%",
+            "경쟁 점포 168개 (밀집도 11.8%)",
+            "폐업률 주의 (8.3%)"
+          ],
+          "startup_cost": 7000
+        },
+        {
+          "rank": 4,
+          "category_name": "디저트/베이커리",
+          "category_code": "CS1100",
+          "score": 68.5,
+          "per_store_sales": 3800000,
+          "store_count": 65,
+          "close_rate": 6.2,
+          "age_match": 78.5,
+          "monthly_sales": 247000000,
+          "reasons": [
+            "점포당 월매출 380만원",
+            "타겟 고객 매칭률 79%",
+            "경쟁 점포 65개 (밀집도 4.6%)"
+          ],
+          "startup_cost": 5500
+        },
+        {
+          "rank": 5,
+          "category_name": "커피/음료",
+          "category_code": "CS200",
+          "score": 45.8,
+          "per_store_sales": 3500000,
+          "store_count": 232,
+          "close_rate": 9.5,
+          "age_match": 80.2,
+          "monthly_sales": 812000000,
+          "reasons": [
+            "점포당 월매출 350만원",
+            "타겟 고객 매칭률 80%",
+            "경쟁 점포 232개 (밀집도 16.3%)",
+            "폐업률 주의 (9.5%)"
+          ],
+          "startup_cost": 6000
+        }
+      ],
+      "total_categories_analyzed": 22
+    }
+  },
+  "default": {
+    "quarter": "2025Q3",
+    "recommendations": [
+      {
+        "rank": 1,
+        "category_name": "한식",
+        "category_code": "CS100",
+        "score": 100.0,
+        "per_store_sales": 5500000,
+        "store_count": 120,
+        "close_rate": 5.5,
+        "age_match": 68.0,
+        "monthly_sales": 660000000,
+        "reasons": [
+          "점포당 월매출 550만원",
+          "타겟 고객 매칭률 68%",
+          "안정적인 폐업률"
+        ],
+        "startup_cost": 7000
+      },
+      {
+        "rank": 2,
+        "category_name": "커피/음료",
+        "category_code": "CS200",
+        "score": 82.5,
+        "per_store_sales": 4000000,
+        "store_count": 85,
+        "close_rate": 7.2,
+        "age_match": 72.5,
+        "monthly_sales": 340000000,
+        "reasons": [
+          "점포당 월매출 400만원",
+          "타겟 고객 매칭률 73%"
+        ],
+        "startup_cost": 6000
+      },
+      {
+        "rank": 3,
+        "category_name": "미용/뷰티",
+        "category_code": "CS500",
+        "score": 75.2,
+        "per_store_sales": 4800000,
+        "store_count": 55,
+        "close_rate": 4.8,
+        "age_match": 65.0,
+        "monthly_sales": 264000000,
+        "reasons": [
+          "점포당 월매출 480만원",
+          "폐업률 낮음 (4.8%)",
+          "타겟 고객 매칭률 65%"
+        ],
+        "startup_cost": 5000
+      },
+      {
+        "rank": 4,
+        "category_name": "편의점/슈퍼",
+        "category_code": "CS800",
+        "score": 68.0,
+        "per_store_sales": 6200000,
+        "store_count": 45,
+        "close_rate": 3.5,
+        "age_match": 55.0,
+        "monthly_sales": 279000000,
+        "reasons": [
+          "점포당 월매출 620만원",
+          "폐업률 낮음 (3.5%)"
+        ],
+        "startup_cost": 12000
+      },
+      {
+        "rank": 5,
+        "category_name": "일식/중식",
+        "category_code": "CS400",
+        "score": 55.8,
+        "per_store_sales": 5800000,
+        "store_count": 38,
+        "close_rate": 6.5,
+        "age_match": 58.0,
+        "monthly_sales": 220400000,
+        "reasons": [
+          "점포당 월매출 580만원",
+          "타겟 고객 매칭률 58%"
+        ],
+        "startup_cost": 8000
+      }
+    ],
+    "total_categories_analyzed": 15
+  }
+}

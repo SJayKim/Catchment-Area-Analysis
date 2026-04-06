@@ -1,11 +1,19 @@
 import logging
 
+from server.agent.tools.registry import register_tool
 from server.repositories import get_data_access
 from server.services.cache import get_cache_service
 
 logger = logging.getLogger(__name__)
 
 
+@register_tool(
+    "compare_districts",
+    emoji="📊",
+    card_type="compare",
+    progress_label="상권 비교 분석 중...",
+    done_label="상권 비교 완료",
+)
 async def compare_districts(district_codes: list[str]) -> dict:
     """Compare key metrics across 2-3 districts."""
     if len(district_codes) < 2 or len(district_codes) > 3:

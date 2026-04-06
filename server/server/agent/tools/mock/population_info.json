@@ -1,0 +1,192 @@
+{
+  "D3001": {
+    "district_code": "D3001",
+    "quarter": "2025Q3",
+    "resident": {
+      "total": 32500,
+      "age_distribution": {
+        "10대": 2800,
+        "20대": 8500,
+        "30대": 9200,
+        "40대": 6500,
+        "50대": 3800,
+        "60대 이상": 1700
+      },
+      "gender": {
+        "male": 15600,
+        "female": 16900,
+        "male_ratio": 48.0,
+        "female_ratio": 52.0
+      }
+    },
+    "worker": {
+      "total": 185000,
+      "age_distribution": {
+        "10대": 1200,
+        "20대": 42000,
+        "30대": 62000,
+        "40대": 45000,
+        "50대": 25000,
+        "60대 이상": 9800
+      },
+      "gender": {
+        "male": 98000,
+        "female": 87000,
+        "male_ratio": 53.0,
+        "female_ratio": 47.0
+      }
+    }
+  },
+  "D3002": {
+    "district_code": "D3002",
+    "quarter": "2025Q3",
+    "resident": {
+      "total": 45200,
+      "age_distribution": {
+        "10대": 5200,
+        "20대": 15800,
+        "30대": 10500,
+        "40대": 7200,
+        "50대": 4500,
+        "60대 이상": 2000
+      },
+      "gender": {
+        "male": 21500,
+        "female": 23700,
+        "male_ratio": 47.6,
+        "female_ratio": 52.4
+      }
+    },
+    "worker": {
+      "total": 68000,
+      "age_distribution": {
+        "10대": 2500,
+        "20대": 25000,
+        "30대": 18500,
+        "40대": 12000,
+        "50대": 6800,
+        "60대 이상": 3200
+      },
+      "gender": {
+        "male": 31000,
+        "female": 37000,
+        "male_ratio": 45.6,
+        "female_ratio": 54.4
+      }
+    }
+  },
+  "D3003": {
+    "district_code": "D3003",
+    "quarter": "2025Q3",
+    "resident": {
+      "total": 38500,
+      "age_distribution": {
+        "10대": 4200,
+        "20대": 12500,
+        "30대": 8800,
+        "40대": 6500,
+        "50대": 4200,
+        "60대 이상": 2300
+      },
+      "gender": {
+        "male": 18800,
+        "female": 19700,
+        "male_ratio": 48.8,
+        "female_ratio": 51.2
+      }
+    },
+    "worker": {
+      "total": 52000,
+      "age_distribution": {
+        "10대": 1800,
+        "20대": 18200,
+        "30대": 14500,
+        "40대": 9800,
+        "50대": 5200,
+        "60대 이상": 2500
+      },
+      "gender": {
+        "male": 25000,
+        "female": 27000,
+        "male_ratio": 48.1,
+        "female_ratio": 51.9
+      }
+    }
+  },
+  "D3004": {
+    "district_code": "D3004",
+    "quarter": "2025Q3",
+    "resident": {
+      "total": 18200,
+      "age_distribution": {
+        "10대": 1200,
+        "20대": 3800,
+        "30대": 4200,
+        "40대": 3800,
+        "50대": 2800,
+        "60대 이상": 2400
+      },
+      "gender": {
+        "male": 8500,
+        "female": 9700,
+        "male_ratio": 46.7,
+        "female_ratio": 53.3
+      }
+    },
+    "worker": {
+      "total": 225000,
+      "age_distribution": {
+        "10대": 2500,
+        "20대": 52000,
+        "30대": 68000,
+        "40대": 55000,
+        "50대": 32000,
+        "60대 이상": 15500
+      },
+      "gender": {
+        "male": 105000,
+        "female": 120000,
+        "male_ratio": 46.7,
+        "female_ratio": 53.3
+      }
+    }
+  },
+  "D3005": {
+    "district_code": "D3005",
+    "quarter": "2025Q3",
+    "resident": {
+      "total": 12500,
+      "age_distribution": {
+        "10대": 800,
+        "20대": 2200,
+        "30대": 2800,
+        "40대": 3200,
+        "50대": 2100,
+        "60대 이상": 1400
+      },
+      "gender": {
+        "male": 6500,
+        "female": 6000,
+        "male_ratio": 52.0,
+        "female_ratio": 48.0
+      }
+    },
+    "worker": {
+      "total": 95000,
+      "age_distribution": {
+        "10대": 1200,
+        "20대": 18000,
+        "30대": 25000,
+        "40대": 28000,
+        "50대": 15000,
+        "60대 이상": 7800
+      },
+      "gender": {
+        "male": 52000,
+        "female": 43000,
+        "male_ratio": 54.7,
+        "female_ratio": 45.3
+      }
+    }
+  }
+}

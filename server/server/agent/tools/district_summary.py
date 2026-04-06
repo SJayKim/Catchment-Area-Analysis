@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 
 from server.agent.tools.data_sources import get_sources_for_tool
+from server.agent.tools.registry import register_tool
 from server.agent.tools.estimated_sales import get_estimated_sales
 from server.agent.tools.floating_population import get_floating_population
 from server.agent.tools.store_info import get_store_info
@@ -35,6 +36,13 @@ def _format_sales(sales: int) -> str:
     return f"{sales:,}원"
 
 
+@register_tool(
+    "get_district_summary",
+    emoji="📋",
+    card_type="summary",
+    progress_label="상권 요약 분석 중...",
+    done_label="상권 요약 완료",
+)
 async def get_district_summary(district_code: str) -> dict:
     """Aggregate data for a district into SummaryCardData shape."""
     cache = get_cache_service()

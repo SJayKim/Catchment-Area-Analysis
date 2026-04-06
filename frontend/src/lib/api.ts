@@ -1,9 +1,7 @@
 import { District, MapBounds, PolygonFeature } from './types';
 
 const API_BASE = '/api';
-const CHAT_API_BASE = process.env.NEXT_PUBLIC_API_URL
-  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
-  : '/api';
+const CHAT_API_BASE = '/api';
 
 export async function fetchDistricts(
   search?: string,

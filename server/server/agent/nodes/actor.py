@@ -4,71 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from server.agent.state import AgentState, ToolPlanStep
 from server.agent.tools.data_sources import get_sources_for_tool
+from server.agent.tools.registry import get_tool_registry
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Tool registry (maps plan names → actual async functions)
-# ---------------------------------------------------------------------------
-
-_registry_loaded = False
-TOOL_REGISTRY: dict[str, Callable[..., Any]] = {}
-
-TOOL_CARD_MAP: dict[str, str] = {
-    "get_district_summary": "summary",
-    "compare_districts": "compare",
-    "recommend_business": "recommend",
-    "get_store_history": "risk",
-    "simulate_revenue": "simulation",
-}
-
-TOOL_EMOJI: dict[str, str] = {
-    "get_floating_population": "🔍",
-    "get_estimated_sales": "🔍",
-    "get_store_info": "🔍",
-    "get_population_info": "🔍",
-    "get_district_summary": "📋",
-    "compare_districts": "📊",
-    "recommend_business": "💡",
-    "get_store_history": "📋",
-    "simulate_revenue": "💰",
-}
-
-
-def _ensure_registry() -> None:
-    """Lazy-load tool functions into the registry."""
-    global _registry_loaded
-    if _registry_loaded:
-        return
-
-    from server.agent.tools.compare_districts import compare_districts
-    from server.agent.tools.district_summary import get_district_summary
-    from server.agent.tools.estimated_sales import get_estimated_sales
-    from server.agent.tools.floating_population import get_floating_population
-    from server.agent.tools.population_info import get_population_info
-    from server.agent.tools.recommend_business import recommend_business
-    from server.agent.tools.simulate_revenue import simulate_revenue
-    from server.agent.tools.store_history import get_store_history
-    from server.agent.tools.store_info import get_store_info
-
-    TOOL_REGISTRY.update(
-        {
-            "get_district_summary": get_district_summary,
-            "get_floating_population": get_floating_population,
-            "get_estimated_sales": get_estimated_sales,
-            "get_store_info": get_store_info,
-            "get_population_info": get_population_info,
-            "compare_districts": compare_districts,
-            "recommend_business": recommend_business,
-            "get_store_history": get_store_history,
-            "simulate_revenue": simulate_revenue,
-        }
-    )
-    _registry_loaded = True
 
 
 # ---------------------------------------------------------------------------
@@ -114,15 +56,15 @@ def group_by_dependencies(plan: list[ToolPlanStep]) -> list[list[ToolPlanStep]]:
 
 async def execute_tool(step: ToolPlanStep) -> tuple[str, dict | None, str | None]:
     """Execute one tool. Returns (tool_name, result_dict, error_str)."""
-    _ensure_registry()
-    tool_fn = TOOL_REGISTRY.get(step["tool_name"])
-    if not tool_fn:
+    reg = get_tool_registry()
+    meta = reg.get(step["tool_name"])
+    if not meta:
         return step["tool_name"], None, f"Unknown tool: {step['tool_name']}"
 
     try:
         # Filter out None args
         args = {k: v for k, v in step["args"].items() if v is not None}
-        result = await tool_fn(**args)
+        result = await meta.fn(**args)
 
         if isinstance(result, dict) and "error" in result:
             return step["tool_name"], result, result["error"]
@@ -142,6 +84,7 @@ async def actor_node(
     event_queue: asyncio.Queue | None = None,
 ) -> dict:
     """Execute all planned tools. No LLM calls."""
+    reg = get_tool_registry()
     tool_results: dict[str, dict] = dict(state.get("tool_results") or {})
     tool_errors: dict[str, str] = dict(state.get("tool_errors") or {})
     card_emissions: list[dict] = list(state.get("card_emissions") or [])
@@ -151,13 +94,15 @@ async def actor_node(
     for layer in layers:
         # Emit tool-start events
         for step in layer:
+            meta = reg.get(step["tool_name"])
             if event_queue:
                 await event_queue.put(
                     {
                         "type": "tool",
                         "name": step["tool_name"],
                         "input": step["args"],
-                        "icon": TOOL_EMOJI.get(step["tool_name"], "🔧"),
+                        "icon": meta.emoji if meta else "🔧",
+                        "progress_label": meta.progress_label if meta else None,
                     }
                 )
 
@@ -179,18 +124,20 @@ async def actor_node(
                 if data:
                     tool_results[name] = data
 
+            meta = reg.get(step["tool_name"])
             # tool_end event
             if event_queue:
                 await event_queue.put(
                     {
                         "type": "tool_end",
                         "name": step["tool_name"],
-                        "icon": TOOL_EMOJI.get(step["tool_name"], "🔧"),
+                        "icon": meta.emoji if meta else "🔧",
+                        "done_label": meta.done_label if meta else None,
                     }
                 )
 
             # Card emission (skip if tool returned an error)
-            card_type = TOOL_CARD_MAP.get(step["tool_name"])
+            card_type = meta.card_type if meta else None
             if card_type and step["tool_name"] in tool_results:
                 card_data = tool_results[step["tool_name"]]
                 if "error" not in card_data:

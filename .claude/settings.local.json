@@ -45,7 +45,15 @@
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_click",
       "Bash(git checkout:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(npm ls:*)",
+      "Bash(docker ps:*)",
+      "mcp__playwright__browser_tabs",
+      "Bash(find /c/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/frontend/src/app/api -type f -name *.ts)",
+      "Bash(WMIC PROCESS WHERE ProcessId=27920 GET CommandLine)",
+      "Bash(tasklist:*)",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_press_key"
     ]
   }
 }

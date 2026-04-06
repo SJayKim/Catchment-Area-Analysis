@@ -1,0 +1,232 @@
+{
+  "D3001": {
+    "district_code": "D3001",
+    "quarter": "2025Q3",
+    "total_stores": 1852,
+    "open_count": 125,
+    "close_count": 98,
+    "close_rate": 5.3,
+    "franchise_count": 412,
+    "top_categories": [
+      {
+        "category_code": "CS100",
+        "category_name": "한식",
+        "store_count": 245,
+        "open_count": 18,
+        "close_count": 12
+      },
+      {
+        "category_code": "CS200",
+        "category_name": "커피/음료",
+        "store_count": 198,
+        "open_count": 22,
+        "close_count": 15
+      },
+      {
+        "category_code": "CS300",
+        "category_name": "의류",
+        "store_count": 165,
+        "open_count": 8,
+        "close_count": 14
+      },
+      {
+        "category_code": "CS400",
+        "category_name": "일식/중식",
+        "store_count": 132,
+        "open_count": 12,
+        "close_count": 8
+      },
+      {
+        "category_code": "CS500",
+        "category_name": "미용/뷰티",
+        "store_count": 118,
+        "open_count": 10,
+        "close_count": 6
+      }
+    ]
+  },
+  "D3002": {
+    "district_code": "D3002",
+    "quarter": "2025Q3",
+    "total_stores": 1425,
+    "open_count": 142,
+    "close_count": 118,
+    "close_rate": 8.3,
+    "franchise_count": 285,
+    "top_categories": [
+      {
+        "category_code": "CS200",
+        "category_name": "커피/음료",
+        "store_count": 232,
+        "open_count": 28,
+        "close_count": 22
+      },
+      {
+        "category_code": "CS600",
+        "category_name": "주점",
+        "store_count": 185,
+        "open_count": 15,
+        "close_count": 18
+      },
+      {
+        "category_code": "CS100",
+        "category_name": "한식",
+        "store_count": 168,
+        "open_count": 12,
+        "close_count": 14
+      },
+      {
+        "category_code": "CS300",
+        "category_name": "의류",
+        "store_count": 145,
+        "open_count": 18,
+        "close_count": 20
+      },
+      {
+        "category_code": "CS700",
+        "category_name": "패스트푸드",
+        "store_count": 95,
+        "open_count": 8,
+        "close_count": 5
+      }
+    ]
+  },
+  "D3003": {
+    "district_code": "D3003",
+    "quarter": "2025Q3",
+    "total_stores": 985,
+    "open_count": 88,
+    "close_count": 72,
+    "close_rate": 7.3,
+    "franchise_count": 215,
+    "top_categories": [
+      {
+        "category_code": "CS200",
+        "category_name": "커피/음료",
+        "store_count": 165,
+        "open_count": 18,
+        "close_count": 12
+      },
+      {
+        "category_code": "CS100",
+        "category_name": "한식",
+        "store_count": 142,
+        "open_count": 10,
+        "close_count": 8
+      },
+      {
+        "category_code": "CS600",
+        "category_name": "주점",
+        "store_count": 112,
+        "open_count": 8,
+        "close_count": 12
+      },
+      {
+        "category_code": "CS500",
+        "category_name": "미용/뷰티",
+        "store_count": 85,
+        "open_count": 6,
+        "close_count": 4
+      },
+      {
+        "category_code": "CS800",
+        "category_name": "편의점/슈퍼",
+        "store_count": 72,
+        "open_count": 5,
+        "close_count": 3
+      }
+    ]
+  },
+  "D3004": {
+    "district_code": "D3004",
+    "quarter": "2025Q3",
+    "total_stores": 2450,
+    "open_count": 85,
+    "close_count": 165,
+    "close_rate": 6.7,
+    "franchise_count": 580,
+    "top_categories": [
+      {
+        "category_code": "CS300",
+        "category_name": "의류",
+        "store_count": 425,
+        "open_count": 10,
+        "close_count": 35
+      },
+      {
+        "category_code": "CS900",
+        "category_name": "화장품",
+        "store_count": 285,
+        "open_count": 8,
+        "close_count": 28
+      },
+      {
+        "category_code": "CS200",
+        "category_name": "커피/음료",
+        "store_count": 220,
+        "open_count": 12,
+        "close_count": 18
+      },
+      {
+        "category_code": "CS100",
+        "category_name": "한식",
+        "store_count": 195,
+        "open_count": 8,
+        "close_count": 12
+      },
+      {
+        "category_code": "CS1000",
+        "category_name": "잡화/액세서리",
+        "store_count": 165,
+        "open_count": 5,
+        "close_count": 22
+      }
+    ]
+  },
+  "D3005": {
+    "district_code": "D3005",
+    "quarter": "2025Q3",
+    "total_stores": 520,
+    "open_count": 32,
+    "close_count": 28,
+    "close_rate": 5.4,
+    "franchise_count": 125,
+    "top_categories": [
+      {
+        "category_code": "CS100",
+        "category_name": "한식",
+        "store_count": 95,
+        "open_count": 5,
+        "close_count": 4
+      },
+      {
+        "category_code": "CS200",
+        "category_name": "커피/음료",
+        "store_count": 68,
+        "open_count": 6,
+        "close_count": 3
+      },
+      {
+        "category_code": "CS800",
+        "category_name": "편의점/슈퍼",
+        "store_count": 52,
+        "open_count": 3,
+        "close_count": 2
+      },
+      {
+        "category_code": "CS400",
+        "category_name": "일식/중식",
+        "store_count": 45,
+        "open_count": 4,
+        "close_count": 3
+      },
+      {
+        "category_code": "CS500",
+        "category_name": "미용/뷰티",
+        "store_count": 38,
+        "open_count": 2,
+        "close_count": 2
+      }
+    ]
+  }
+}

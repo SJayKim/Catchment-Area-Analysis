@@ -1,11 +1,19 @@
 import logging
 
+from server.agent.tools.registry import register_tool
 from server.repositories import get_data_access
 from server.services.cache import get_cache_service
 
 logger = logging.getLogger(__name__)
 
 
+@register_tool(
+    "recommend_business",
+    emoji="💡",
+    card_type="recommend",
+    progress_label="업종 추천 분석 중...",
+    done_label="업종 추천 완료",
+)
 async def recommend_business(
     district_code: str,
     budget: int | None = None,

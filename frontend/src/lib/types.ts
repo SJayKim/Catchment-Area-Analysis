@@ -161,8 +161,8 @@ export interface AgentStep {
 export type SSEEvent =
   | { type: 'thinking'; step?: string; icon?: string }
   | { type: 'plan'; intent?: string; steps?: string[] }
-  | { type: 'tool'; name: string; input?: Record<string, unknown>; icon?: string }
-  | { type: 'tool_end'; name: string; icon?: string }
+  | { type: 'tool'; name: string; input?: Record<string, unknown>; icon?: string; progress_label?: string }
+  | { type: 'tool_end'; name: string; icon?: string; done_label?: string }
   | { type: 'text'; content: string }
   | { type: 'card'; card_type: string; data: Record<string, unknown> }
   | { type: 'map_cmd'; action: string; params?: Record<string, unknown>; district_code?: string; district_name?: string; district_type?: string }

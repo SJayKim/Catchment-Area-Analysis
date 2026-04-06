@@ -24,6 +24,10 @@ async def lifespan(app: FastAPI):
         RedisCacheService,
         set_cache_service,
     )
+    from server.services.category_resolver import (
+        CategoryResolver,
+        set_category_resolver,
+    )
 
     # --- Cache ---
     if settings.use_mock:
@@ -49,6 +53,14 @@ async def lifespan(app: FastAPI):
         from server.repositories.real.factory import build_real_data_access
         da = build_real_data_access(session_factory)
     set_data_access(da)
+
+    # --- CategoryResolver ---
+    resolver = CategoryResolver()
+    if settings.use_mock:
+        resolver.load_defaults()
+    else:
+        await resolver.load_from_db(session_factory)
+    set_category_resolver(resolver)
 
     # --- Agent (singleton — only needed for ReAct mode) ---
     if settings.agent_mode != "pae":
