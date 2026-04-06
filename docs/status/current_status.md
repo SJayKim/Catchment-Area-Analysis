@@ -1,7 +1,8 @@
 # 현재 진행 상황
 
 > 최종 갱신: 2026-04-06
-> **하드코딩 개선 5건 완료 ✅ — Mock JSON / YAML 인텐트 / 카테고리 DB / Tool 레지스트리 / SSE 라벨**
+> **P0 Critical 8건 수정 완료 ✅ — Migration 003 / LLM timeout / SSE backpressure / disconnect / JSON fallback / sanitize / stale closure / AbortController**
+> **E2E QA 테스트 플랜 작성 완료 ✅ — 4-ring 계층 (pre-flight → feature → journey → P0 regression) + fresh subagent evaluator**
 
 ---
 
@@ -175,6 +176,66 @@
 ---
 
 ## 완료 항목 (2026-04-06)
+
+### ✅ 대규모 E2E QA 테스트 플랜 작성 (commit 예정)
+
+**문서**: `docs/qa/e2e-qa-test-plan.md` (약 500 lines)
+
+**범위**: 10개 섹션, M01 + F01~F10 전 기능, P0 8건 회귀 매트릭스, 5개 consumer journey, 15개 failure mode
+
+**구성**:
+1. **Section A — Test Strategy**: 4-ring 계층 (pre-flight → feature → journey → negative/P0), Mock/Real 매트릭스, evaluator loop
+2. **Section B — Test Suite 구조**: `frontend/e2e/ring0~ring3` 디렉토리 레이아웃, 7개 신규 helper (~270 LOC)
+3. **Section C — Per-feature Checklist**: M01/F01~F10 각 기능의 Purpose, Happy path, Edge case + 기계 검증 가능한 PASS 기준
+4. **Section D — Consumer Journeys**: J01 첫방문자 / J02 비교쇼퍼 / J03 리스크우선 / J04 에러복구 / J05 PDF공유
+5. **Section E — P0 Regression Matrix**: 8개 P0 × test 시나리오 × PASS 기준 (artifact 기반 검증)
+6. **Section F — Evaluation Protocol (Fresh Subagent)**: 시나리오별 fresh `general-purpose` subagent, evaluation packet(코드 금지), failure_class 5분류(code/llm_quality/flake/infra/criteria_unclear)
+7. **Section G — Reporting**: TaskCreate 라이브 추적, Consumer-experience score 0~100 가중 평균, 실패 공개 프로토콜
+8. **Section H — Execution Order**: 의존성 기반 순서(M01→F01→F02→F03→…), 2개 pause point
+9. **Section I — Helper LOC 예산**: sseCapture(60) + evalPacket(80) + modeGuard(25) + polygonClick(40) + waitSSE(30) + backendLogs(25) + setup 확장(10)
+10. **Section J — Trade-offs/리스크**: 7개 리스크 + 완화책
+
+**사용자 결정**:
+- Mode: **Mock + Real 풀 실행** (Real 블로커 3건 `districts.boundary` / `district_summary.py` Real 경로 / `store_history`는 명시 SKIP)
+- Instrumentation: **Full** (SSE 캡처 + backend 로그 수집 포함)
+- Evaluator: **시나리오별 fresh subagent** (Ring 1은 5개 배치, Ring 2/3는 per-scenario)
+
+**통과 조건**: Consumer-experience score ≥ 85/100 → "READY" 판정
+
+**다음 단계**: 사용자 승인 후 helper 구현 → ring별 실행 → fresh subagent 평가 → `docs/qa/e2e-run-{date}.md` 리포트
+
+---
+
+### ✅ P0 Critical 이슈 8건 수정 (commit d8c0155)
+
+**기준 문서**: `docs/qa/issue_report.md` (종합 감사 B- 6.8/10), `docs/plan/p0-critical-fix-plan.md`
+
+**수정 목록**:
+
+| # | 이슈 | 변경 파일 | 영향 |
+|---|------|-----------|------|
+| P0-1 | `category_metadata.aliases` 마이그레이션 | `alembic/versions/003_add_category_aliases.py` (신규, `IF NOT EXISTS` 가드) | USE_MOCK=false 블로커 해소 |
+| P0-2 | Planner/Evaluator/Respond LLM 타임아웃 | `config.py` (`llm_timeout_fast=15.0`, `llm_timeout_slow=60.0`), `planner.py`/`evaluator.py` `asyncio.wait_for`, `respond.py` `asyncio.timeout()` + 부분 응답 | 무한 hang 제거 |
+| P0-3 | SSE 이벤트 큐 백프레셔 | `config.py` (`sse_queue_maxsize=256`), `graph.py:424` | 느린 클라이언트에서 메모리 누수 제거 |
+| P0-4 | 클라이언트 disconnect 감지 | `api/routes/chat.py` — `Request` 주입, `body`로 param 이름 변경, 매 yield 전 `is_disconnected()` 체크 → 기존 `finally: task.cancel()` 체인 활용 | 탭 닫기 시 background task 자동 취소 |
+| P0-5 | LLM JSON 파싱 실패 시 rule fallback 재사용 | `planner.py` `_rule_fallback_result`, `evaluator.py` `_rule_based_evaluate` (parse fail + broad exception 두 경로) | hardcoded summary 제거, 의도 보존 |
+| P0-6 | DistrictLayer stale closure | `DistrictLayer.tsx` `selectedCodeRef` + `useEffect([selectedCode])`로 `setOptions` in-place 업데이트, `renderPolygons` deps에서 `selectedCode` 제거 | 빠른 폴리곤 전환 시 잔존 하이라이트 제거 |
+| P0-7 | Frontend SSE reader cleanup + AbortController | `chatStore.ts` `currentAbortController` 상태, `api.ts` `signal` 파라미터, `sseParser.ts` `finally releaseLock`, AbortError 비노출 | locked stream 에러 + 이중 스트림 제거 |
+| P0-8 | 프롬프트 sanitize 강화 | `agent/prompts/system.py` `sanitize_prompt_value` (`\n\r\t"'\\` + `{}` 스트립), `respond.py` + `planner.py` 값 보간 전 적용 | prompt injection 방어 |
+
+**검증**:
+- Python: `ast.parse` 전체 통과 (8개 파일)
+- TypeScript: `tsc --noEmit` 0 errors
+- Commit: `d8c0155` — 14 files changed, +896/-113
+
+**수정 파일 요약**:
+- Backend (8): `alembic/versions/003_add_category_aliases.py` (신규), `config.py`, `agent/prompts/system.py`, `agent/nodes/planner.py`, `agent/nodes/evaluator.py`, `agent/nodes/respond.py`, `agent/graph.py`, `api/routes/chat.py`
+- Frontend (4): `components/map/DistrictLayer.tsx`, `stores/chatStore.ts`, `lib/api.ts`, `lib/sseParser.ts`
+- Docs (2): `docs/plan/p0-critical-fix-plan.md`, `docs/qa/issue_report.md`
+
+**다음 단계**: E2E QA 테스트 플랜으로 P0 fix를 사용자 경험 수준에서 회귀 검증 (Section E — P0 Regression Matrix)
+
+---
 
 ### ✅ 버그 수정 — 지도 폴리곤 미표시 (CORS)
 
