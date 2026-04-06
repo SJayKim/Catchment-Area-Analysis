@@ -89,7 +89,8 @@ export async function fetchHeatmapAll(quarter?: string): Promise<HeatmapAllData>
 export async function sendChatMessage(
   message: string,
   sessionId: string,
-  districtCode?: string
+  districtCode?: string,
+  signal?: AbortSignal
 ): Promise<Response> {
   const res = await fetch(`${CHAT_API_BASE}/chat`, {
     method: 'POST',
@@ -101,6 +102,7 @@ export async function sendChatMessage(
       session_id: sessionId,
       district_code: districtCode,
     }),
+    signal,
   });
 
   if (!res.ok) {

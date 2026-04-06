@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -18,6 +19,50 @@ SIMPLE_INTENTS = {"summary", "comparison", "recommendation", "risk"}
 # ---------------------------------------------------------------------------
 # Fast path (no LLM)
 # ---------------------------------------------------------------------------
+
+
+def _rule_based_evaluate(state: AgentState) -> EvaluationResult:
+    """Deterministic evaluation from tool success/failure state.
+
+    Reused by LLM parse-failure and broad-exception paths so the evaluator
+    doesn't silently return sufficient=True on every LLM hiccup.
+    """
+    planned_tools = [step["tool_name"] for step in (state.get("plan") or [])]
+    succeeded = set((state.get("tool_results") or {}).keys())
+    failed = set((state.get("tool_errors") or {}).keys())
+
+    # No plan → nothing to evaluate; respond with whatever we have.
+    if not planned_tools:
+        return EvaluationResult(
+            sufficient=True,
+            missing_info=[],
+            proactive_suggestions=generate_proactive_suggestions(state),
+            reasoning="평가 기준 계획이 없어 수집된 컨텍스트로 응답.",
+        )
+
+    all_failed = all(t in failed for t in planned_tools) and bool(failed)
+    any_success = any(t in succeeded for t in planned_tools)
+
+    if all_failed:
+        return EvaluationResult(
+            sufficient=False,
+            missing_info=[f"{t} 실패" for t in failed],
+            proactive_suggestions=[],
+            reasoning="모든 도구 실행이 실패하여 응답을 생성할 데이터가 없음.",
+        )
+
+    # Mixed or all-success → sufficient, surface missing tools in missing_info.
+    missing_info = [t for t in planned_tools if t not in succeeded]
+    return EvaluationResult(
+        sufficient=any_success,
+        missing_info=missing_info,
+        proactive_suggestions=generate_proactive_suggestions(state),
+        reasoning=(
+            "규칙 기반 평가: 확보된 도구 결과로 응답 진행."
+            if any_success
+            else "수집된 데이터 없음."
+        ),
+    )
 
 
 def _fast_evaluate(state: AgentState) -> EvaluationResult | None:
@@ -84,30 +129,31 @@ async def _llm_evaluate(state: AgentState) -> EvaluationResult:
     )
 
     llm = _create_llm(role="evaluator")
-    response = await llm.ainvoke(prompt)
+    response = await asyncio.wait_for(
+        llm.ainvoke(prompt), timeout=settings.llm_timeout_fast
+    )
     content = response.content if hasattr(response, "content") else str(response)
     if isinstance(content, list):
         content = "".join(
             b.get("text", "") if isinstance(b, dict) else str(b) for b in content
         )
 
-    json_match = re.search(r"\{.*\}", content, re.DOTALL)
-    if json_match:
-        parsed = json.loads(json_match.group())
-        return EvaluationResult(
-            sufficient=parsed.get("sufficient", True),
-            missing_info=parsed.get("missing_info", []),
-            proactive_suggestions=[],
-            reasoning=parsed.get("reasoning", ""),
-        )
+    try:
+        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        if json_match:
+            parsed = json.loads(json_match.group())
+            return EvaluationResult(
+                sufficient=parsed.get("sufficient", True),
+                missing_info=parsed.get("missing_info", []),
+                proactive_suggestions=[],
+                reasoning=parsed.get("reasoning", ""),
+            )
+    except json.JSONDecodeError:
+        logger.warning("Evaluator LLM returned invalid JSON, using rule fallback")
 
-    # Parse failure → assume sufficient
-    return EvaluationResult(
-        sufficient=True,
-        missing_info=[],
-        proactive_suggestions=[],
-        reasoning="LLM 응답 파싱 실패 — 기본값으로 진행.",
-    )
+    # Parse failure → deterministic rule-based evaluation instead of
+    # optimistic sufficient=True.
+    return _rule_based_evaluate(state)
 
 
 # ---------------------------------------------------------------------------
@@ -198,12 +244,5 @@ async def evaluator_node(state: AgentState) -> dict:
             )
         return {"evaluation": llm_result}
     except Exception:
-        logger.warning("Evaluator LLM failed, assuming sufficient", exc_info=True)
-        return {
-            "evaluation": EvaluationResult(
-                sufficient=True,
-                missing_info=[],
-                proactive_suggestions=generate_proactive_suggestions(state),
-                reasoning="Evaluator 오류 — 수집된 데이터로 응답 진행.",
-            )
-        }
+        logger.warning("Evaluator LLM failed, using rule fallback", exc_info=True)
+        return {"evaluation": _rule_based_evaluate(state)}

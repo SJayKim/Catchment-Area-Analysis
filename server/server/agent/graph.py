@@ -421,7 +421,11 @@ async def run_agent_pae(
     """PAE agent — asyncio.Queue based real-time SSE streaming."""
     from server.agent.state import AgentState
 
-    event_queue: asyncio.Queue[dict | None] = asyncio.Queue()
+    # Bounded queue so a slow/disconnected SSE consumer naturally blocks the
+    # LLM/tool producers (backpressure) instead of growing memory unbounded.
+    event_queue: asyncio.Queue[dict | None] = asyncio.Queue(
+        maxsize=settings.sse_queue_maxsize
+    )
 
     initial_state: AgentState = {  # type: ignore[typeddict-item]
         "messages": [HumanMessage(content=message)],

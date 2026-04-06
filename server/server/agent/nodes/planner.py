@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -9,7 +10,9 @@ from typing import Any
 
 from server.agent.config.intent_loader import load_intent_config
 from server.agent.prompts.planner import PLANNER_CLASSIFICATION_PROMPT
+from server.agent.prompts.system import sanitize_prompt_value
 from server.agent.state import AgentState, ToolPlanStep
+from server.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +68,22 @@ def _extract_category_name(message: str) -> str | None:
     return get_category_resolver().resolve_name(message)
 
 
+def _rule_fallback_result(message: str, district_code: str) -> dict:
+    """Rule-based fallback shared by LLM failure/parse-fail paths.
+
+    Reuses _classify_by_rules so LLM timeouts/parse errors don't silently
+    degrade to "summary" for every query (e.g. risk / comparison).
+    """
+    rule_intent, rule_conf = _classify_by_rules(message)
+    intent = rule_intent or "general"
+    return {
+        "intent": intent,
+        "confidence": rule_conf if rule_intent else 0.4,
+        "referenced_districts": [district_code] if district_code else [],
+        "referenced_category": None,
+    }
+
+
 async def _classify_with_llm(
     message: str,
     history_text: str,
@@ -75,15 +94,18 @@ async def _classify_with_llm(
     from server.agent.graph import _create_llm
 
     prompt = PLANNER_CLASSIFICATION_PROMPT.format(
-        message=message,
+        message=sanitize_prompt_value(message),
         history=history_text or "(없음)",
-        district_code=district_code or "(미선택)",
-        district_name=district_name or "(미선택)",
+        district_code=sanitize_prompt_value(district_code or "(미선택)"),
+        district_name=sanitize_prompt_value(district_name or "(미선택)"),
     )
 
     llm = _create_llm(role="planner")
     try:
-        response = await llm.ainvoke(prompt)
+        # Bound LLM latency — langchain 0.2+ ainvoke honours cancellation.
+        response = await asyncio.wait_for(
+            llm.ainvoke(prompt), timeout=settings.llm_timeout_fast
+        )
         content = response.content if hasattr(response, "content") else str(response)
         if isinstance(content, list):
             content = "".join(
@@ -93,11 +115,16 @@ async def _classify_with_llm(
         json_match = re.search(r"\{.*\}", content, re.DOTALL)
         if json_match:
             return json.loads(json_match.group())
+        logger.warning("LLM classification returned no JSON, using rule fallback")
+    except asyncio.TimeoutError:
+        logger.warning(
+            "LLM classification timed out after %.1fs, using rule fallback",
+            settings.llm_timeout_fast,
+        )
     except Exception:
         logger.warning("LLM classification failed, falling back to rules", exc_info=True)
 
-    # Fallback
-    return {"intent": "summary", "confidence": 0.5, "referenced_districts": [district_code], "referenced_category": None}
+    return _rule_fallback_result(message, district_code)
 
 
 def _build_plan(

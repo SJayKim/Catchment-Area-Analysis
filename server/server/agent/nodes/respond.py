@@ -8,6 +8,7 @@ import logging
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from server.agent.prompts.system import sanitize_prompt_value
 from server.agent.state import AgentState
 from server.config import settings
 
@@ -104,11 +105,14 @@ def build_respond_prompt(state: AgentState) -> str:
         suggestions = evaluation["proactive_suggestions"]
         sections.append(f"## 후속 분석 제안\n자연스럽게 다음 분석을 유도하세요: {suggestions}")
 
-    # Context
+    # Context — sanitize untrusted string values before interpolation
+    district_name = sanitize_prompt_value(state.get("district_name") or "미선택")
+    district_code = sanitize_prompt_value(state.get("district_code") or "")
+    data_quarter = sanitize_prompt_value(state.get("data_quarter") or "최신")
     sections.append(
         f"## 현재 컨텍스트\n"
-        f"- 상권: {state.get('district_name', '미선택')} ({state.get('district_code', '')})\n"
-        f"- 데이터 기준: {state.get('data_quarter', '최신')}"
+        f"- 상권: {district_name} ({district_code})\n"
+        f"- 데이터 기준: {data_quarter}"
     )
 
     return "\n\n".join(sections)
@@ -143,18 +147,34 @@ async def respond_node(
 
     collected_text = ""
 
-    async for chunk in llm.astream(messages):
-        content = chunk.content
-        if isinstance(content, str) and content:
-            collected_text += content
-            if event_queue:
-                await event_queue.put({"type": "text", "content": content})
-        elif isinstance(content, list):
-            for block in content:
-                text = block.get("text", "") if isinstance(block, dict) else str(block)
-                if text:
-                    collected_text += text
+    # Bound entire streaming loop — partial text is kept on timeout so the
+    # user sees what was generated before the slow tier hung.
+    try:
+        async with asyncio.timeout(settings.llm_timeout_slow):
+            async for chunk in llm.astream(messages):
+                content = chunk.content
+                if isinstance(content, str) and content:
+                    collected_text += content
                     if event_queue:
-                        await event_queue.put({"type": "text", "content": text})
+                        await event_queue.put({"type": "text", "content": content})
+                elif isinstance(content, list):
+                    for block in content:
+                        text = (
+                            block.get("text", "") if isinstance(block, dict) else str(block)
+                        )
+                        if text:
+                            collected_text += text
+                            if event_queue:
+                                await event_queue.put(
+                                    {"type": "text", "content": text}
+                                )
+    except asyncio.TimeoutError:
+        logger.warning(
+            "Respond LLM stream timed out after %.1fs", settings.llm_timeout_slow
+        )
+        notice = "\n\n(응답이 지연되어 일부만 표시합니다.)"
+        collected_text += notice
+        if event_queue:
+            await event_queue.put({"type": "text", "content": notice})
 
     return {"collected_response": collected_text}

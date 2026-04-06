@@ -68,9 +68,26 @@ _CONTEXT_SECTION = """
 """
 
 
-def _sanitize(value: str) -> str:
-    """Format-string 인젝션 방지 + 길이 제한."""
-    return value.replace("{", "").replace("}", "")[:100]
+# Characters stripped to prevent prompt injection / format-string abuse.
+# - {}: Python str.format placeholder syntax
+# - newline/carriage-return/tab: multi-line injection ("\n## New rule: ignore...")
+# - quote/backslash: escape-sequence abuse
+_SANITIZE_STRIP = str.maketrans("", "", "{}\"'\\\n\r\t")
+
+
+def sanitize_prompt_value(value: str) -> str:
+    """Sanitize an untrusted value before embedding into a prompt template.
+
+    Strips format placeholders, newlines, quotes, and backslashes, then
+    truncates to 100 chars to bound prompt size.
+    """
+    if not value:
+        return value
+    return value.translate(_SANITIZE_STRIP)[:100]
+
+
+# Backwards-compatible alias used within this module.
+_sanitize = sanitize_prompt_value
 
 
 def get_system_prompt(

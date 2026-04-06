@@ -6,7 +6,7 @@ import logging
 import re
 import time
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
@@ -84,10 +84,10 @@ class ChatRequest(BaseModel):
 
 
 @router.post("/chat")
-async def chat(request: ChatRequest) -> EventSourceResponse:
+async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
     """Chat endpoint with SSE streaming via LangGraph agent."""
 
-    session_id = request.session_id or "anonymous"
+    session_id = body.session_id or "anonymous"
     session = await _get_session(session_id)
     da = get_data_access()
 
@@ -97,34 +97,34 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
     district_center: dict | None = None
     district_type: str = "발달상권"
 
-    if request.district_code:
-        d = await da.districts.resolve_district(request.district_code)
+    if body.district_code:
+        d = await da.districts.resolve_district(body.district_code)
         if d:
             district_name = d["name"]
             data_quarter = d.get("quarter", "최신")
             district_center = d.get("center")
             district_type = d.get("type", "발달상권")
 
-        session["last_district_code"] = request.district_code
+        session["last_district_code"] = body.district_code
         session["last_district_name"] = district_name
 
     # Auto-detect district from message text — ONLY when no explicit code
-    if not request.district_code:
+    if not body.district_code:
         # 먼저 세션 컨텍스트 복원 시도
         if session.get("last_district_code"):
-            request.district_code = session["last_district_code"]
+            body.district_code = session["last_district_code"]
             district_name = session.get("last_district_name", "미선택")
-            d = await da.districts.resolve_district(request.district_code)
+            d = await da.districts.resolve_district(body.district_code)
             if d:
                 data_quarter = d.get("quarter", "최신")
                 district_center = d.get("center")
                 district_type = d.get("type", "발달상권")
 
         # 세션에도 없으면 자동감지
-        if not request.district_code:
-            detected = await da.districts.detect_district_by_name(request.message)
+        if not body.district_code:
+            detected = await da.districts.detect_district_by_name(body.message)
             if detected:
-                request.district_code = detected["code"]
+                body.district_code = detected["code"]
                 district_name = detected["name"]
                 d = await da.districts.resolve_district(detected["code"])
                 if d:
@@ -137,8 +137,8 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
     # Summary pre-emit (ReAct mode only — PAE handles this via Planner+Actor)
     is_pae = settings.agent_mode == "pae"
     is_summary_request = False
-    if not is_pae and request.district_code and _SUMMARY_PATTERNS.search(request.message):
-        if not _NON_SUMMARY_PATTERNS.search(request.message):
+    if not is_pae and body.district_code and _SUMMARY_PATTERNS.search(body.message):
+        if not _NON_SUMMARY_PATTERNS.search(body.message):
             is_summary_request = True
 
     # Conversation history for PAE
@@ -147,8 +147,13 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
 
     async def event_generator():
         async with _chat_semaphore:
+            # Early bail-out: client already gone before we started.
+            if await request.is_disconnected():
+                logger.info("Client disconnected before chat stream started")
+                return
+
             # 인사 단축 (Agent 파이프라인 스킵 → <1s)
-            if _GREETING_PATTERN.match(request.message.strip()):
+            if _GREETING_PATTERN.match(body.message.strip()):
                 yield {"data": json.dumps({
                     "type": "text",
                     "content": "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다.\n지도에서 상권을 선택하시거나, 분석할 상권명을 알려주세요!",
@@ -162,6 +167,8 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
 
             # Emit map_cmd to move map to the district being discussed
             if district_center:
+                if await request.is_disconnected():
+                    return
                 yield {"data": json.dumps({
                     "type": "map_cmd",
                     "action": "move",
@@ -170,16 +177,18 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
                         "lng": district_center["lng"],
                         "zoom": 4,
                     },
-                    "district_code": request.district_code,
+                    "district_code": body.district_code,
                     "district_name": district_name,
                     "district_type": district_type,
                 }, ensure_ascii=False)}
 
             # Emit summary card directly (ReAct mode only)
-            if is_summary_request and request.district_code:
+            if is_summary_request and body.district_code:
+                if await request.is_disconnected():
+                    return
                 try:
                     from server.agent.tools.district_summary import get_district_summary
-                    summary_data = await get_district_summary(request.district_code)
+                    summary_data = await get_district_summary(body.district_code)
                     if "error" not in summary_data:
                         yield {"data": json.dumps({
                             "type": "card",
@@ -193,12 +202,19 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
 
             try:
                 async for event in run_agent(
-                    message=request.message,
-                    district_code=request.district_code or "",
+                    message=body.message,
+                    district_code=body.district_code or "",
                     district_name=district_name,
                     data_quarter=data_quarter,
                     conversation_history=conversation_history,
                 ):
+                    # Check for client disconnect each iteration — drops the
+                    # generator which triggers run_agent's finally: task.cancel()
+                    # so the background LangGraph task is cancelled promptly.
+                    if await request.is_disconnected():
+                        logger.info("Client disconnected mid-stream, cancelling agent")
+                        return
+
                     # Collect text for history
                     if event.get("type") == "text":
                         collected_text += event.get("content", "")
@@ -216,14 +232,14 @@ async def chat(request: ChatRequest) -> EventSourceResponse:
             if is_pae:
                 history.add_turn(
                     role="user",
-                    content=request.message,
-                    district_code=request.district_code,
+                    content=body.message,
+                    district_code=body.district_code,
                 )
                 if collected_text:
                     history.add_turn(
                         role="assistant",
                         content=collected_text,
-                        district_code=request.district_code,
+                        district_code=body.district_code,
                     )
 
     return EventSourceResponse(event_generator())

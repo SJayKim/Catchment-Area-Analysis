@@ -24,6 +24,7 @@ interface ChatState {
   suggestions: string[];
   lastDistrictCode: string | null;
   agentSteps: AgentStep[];
+  currentAbortController: AbortController | null;
 
   addMessage: (message: ChatMessage) => void;
   updateLastAssistantMessage: (content: string) => void;
@@ -55,6 +56,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   ],
   lastDistrictCode: null,
   agentSteps: [],
+  currentAbortController: null,
 
   addMessage: (message) =>
     set((state) => ({ messages: [...state.messages, message] })),
@@ -164,25 +166,66 @@ export const useChatStore = create<ChatState>((set, get) => ({
       onMapCmd,
     };
 
+    // Abort any in-flight request so a new send cancels the old stream
+    // cleanly on both network (fetch signal) and reader (finally cancel)
+    // sides. The server-side disconnect detection (P0-4) then cancels the
+    // LangGraph task.
+    const prior = get().currentAbortController;
+    if (prior) {
+      prior.abort();
+    }
+    const controller = new AbortController();
+    set({ currentAbortController: controller });
+
+    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
     try {
-      const response = await sendChatMessage(message.trim(), state.sessionId, resolvedDistrictCode);
-      const reader = response.body?.getReader();
+      const response = await sendChatMessage(
+        message.trim(),
+        state.sessionId,
+        resolvedDistrictCode,
+        controller.signal
+      );
+      reader = response.body?.getReader();
       if (!reader) throw new Error('No response body');
 
       for await (const event of parseSSEStream(reader)) {
         handleSSEEvent(event, ctx);
       }
-    } catch {
-      const errorMessage: ChatMessage = {
-        id: generateId(),
-        role: 'assistant',
-        content: '죄송합니다. 요청을 처리하는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
-        type: 'error',
-        timestamp: new Date(),
-      };
-      set((s) => ({ messages: [...s.messages, errorMessage] }));
+    } catch (err) {
+      // Intentional cancellation from a subsequent sendMessage — don't
+      // surface as an error bubble.
+      const isAbort =
+        err instanceof DOMException && err.name === 'AbortError';
+      if (!isAbort) {
+        const errorMessage: ChatMessage = {
+          id: generateId(),
+          role: 'assistant',
+          content:
+            '죄송합니다. 요청을 처리하는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+          type: 'error',
+          timestamp: new Date(),
+        };
+        set((s) => ({ messages: [...s.messages, errorMessage] }));
+      }
     } finally {
-      set({ isLoading: false, isThinking: false, agentSteps: [] });
+      // Release network resources even on abort / error.
+      if (reader) {
+        try {
+          await reader.cancel();
+        } catch {
+          /* already cancelled — ignore */
+        }
+      }
+      // Only clear the controller if it's still ours — a newer send may
+      // have replaced it already.
+      if (get().currentAbortController === controller) {
+        set({
+          currentAbortController: null,
+          isLoading: false,
+          isThinking: false,
+          agentSteps: [],
+        });
+      }
     }
   },
 }));

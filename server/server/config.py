@@ -64,6 +64,15 @@ class Settings(BaseSettings):
     # Evaluator
     evaluator_skip_simple: bool = True  # skip LLM eval for simple intents
 
+    # LLM call timeouts (seconds)
+    # Fast-tier models (planner/evaluator, flash) — classification/judgement
+    llm_timeout_fast: float = 15.0
+    # Slow-tier models (respond, pro) — final streaming answer
+    llm_timeout_slow: float = 60.0
+
+    # SSE event queue backpressure (graph.py)
+    sse_queue_maxsize: int = 256
+
     model_config = {
         "env_file": str(_ENV_FILE) if _ENV_FILE.exists() else None,
         "env_file_encoding": "utf-8",

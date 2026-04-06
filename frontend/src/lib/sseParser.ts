@@ -10,24 +10,34 @@ export async function* parseSSEStream(
   const decoder = new TextDecoder();
   let buffer = '';
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || '';
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
 
-    for (const line of lines) {
-      const event = parseLine(line);
+      for (const line of lines) {
+        const event = parseLine(line);
+        if (event) yield event;
+      }
+    }
+
+    // Process remaining buffer
+    if (buffer) {
+      const event = parseLine(buffer);
       if (event) yield event;
     }
-  }
-
-  // Process remaining buffer
-  if (buffer) {
-    const event = parseLine(buffer);
-    if (event) yield event;
+  } finally {
+    // Release the lock so the underlying stream can be cancelled/GC'd
+    // even if the consumer aborts mid-iteration.
+    try {
+      reader.releaseLock();
+    } catch {
+      // Already released or in an invalid state — safe to swallow.
+    }
   }
 }
 

@@ -10,12 +10,35 @@ interface DistrictLayerProps {
   mapInstance: MutableRefObject<any>;
 }
 
+// Style presets so selection-change updates stay in sync with creation.
+const SELECTED_STYLE = {
+  strokeWeight: 3,
+  strokeColor: '#2563eb',
+  strokeOpacity: 0.8,
+  fillColor: '#3b82f6',
+  fillOpacity: 0.4,
+};
+const DEFAULT_STYLE = {
+  strokeWeight: 1,
+  strokeColor: '#3b82f6',
+  strokeOpacity: 0.8,
+  fillColor: '#60a5fa',
+  fillOpacity: 0.15,
+};
+
 export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
   const polygonsRef = useRef<Map<string, any>>(new Map());
   const select = useDistrictStore((s) => s.select);
   const setHovered = useDistrictStore((s) => s.setHovered);
   const selectedCode = useDistrictStore((s) => s.selected?.code);
   const activeLayers = useMapStore((s) => s.activeLayers);
+
+  // Mirror selectedCode in a ref so event listeners always see the latest
+  // value without needing to re-create polygons (see P0-6).
+  const selectedCodeRef = useRef<string | undefined>(selectedCode);
+  useEffect(() => {
+    selectedCodeRef.current = selectedCode;
+  }, [selectedCode]);
 
   const renderPolygons = useCallback(
     (map: any, features: PolygonFeature[]) => {
@@ -25,26 +48,26 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
 
       if (!activeLayers.includes('polygon')) return;
 
+      const currentSelected = selectedCodeRef.current;
+
       features.forEach((feature) => {
         const path = feature.coordinates.map(
           ([lng, lat]: number[]) => new window.kakao.maps.LatLng(lat, lng)
         );
 
-        const isSelected = feature.code === selectedCode;
+        const isSelected = feature.code === currentSelected;
+        const baseStyle = isSelected ? SELECTED_STYLE : DEFAULT_STYLE;
 
         const polygon = new window.kakao.maps.Polygon({
           map,
           path,
-          strokeWeight: isSelected ? 3 : 1,
-          strokeColor: isSelected ? '#2563eb' : '#3b82f6',
-          strokeOpacity: 0.8,
-          fillColor: isSelected ? '#3b82f6' : '#60a5fa',
-          fillOpacity: isSelected ? 0.4 : 0.15,
+          ...baseStyle,
         });
 
-        // Hover effects
+        // Hover effects — read from ref so a selection change after mount
+        // is still respected without re-creating listeners.
         window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
-          if (feature.code !== selectedCode) {
+          if (feature.code !== selectedCodeRef.current) {
             polygon.setOptions({
               fillOpacity: 0.3,
               strokeWeight: 2,
@@ -54,10 +77,10 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
         });
 
         window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
-          if (feature.code !== selectedCode) {
+          if (feature.code !== selectedCodeRef.current) {
             polygon.setOptions({
-              fillOpacity: 0.15,
-              strokeWeight: 1,
+              fillOpacity: DEFAULT_STYLE.fillOpacity,
+              strokeWeight: DEFAULT_STYLE.strokeWeight,
             });
           }
           setHovered(null);
@@ -79,8 +102,17 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
         polygonsRef.current.set(feature.code, polygon);
       });
     },
-    [activeLayers, selectedCode, select, setHovered]
+    [activeLayers, select, setHovered]
   );
+
+  // On selection change: update polygon styles in-place without re-creating
+  // them. Iterating ~1,650 polygons with setOptions is cheap (~1ms).
+  useEffect(() => {
+    polygonsRef.current.forEach((polygon, code) => {
+      const style = code === selectedCode ? SELECTED_STYLE : DEFAULT_STYLE;
+      polygon.setOptions(style);
+    });
+  }, [selectedCode]);
 
   useEffect(() => {
     const map = mapInstance.current;
