@@ -1,7 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-05
-> **Docker 통합 구현 완료 ✅ — `docker compose up` 한 줄로 전체 서비스 기동**
+> 최종 갱신: 2026-04-06
+> **Phase 3 구현 완료 ✅ — F09 매출 시뮬레이션 / F06 히트맵 / F10 PDF 리포트**
 
 ---
 
@@ -171,6 +171,62 @@
 ### ✅ .gitignore 정리
 - `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
 - `frontend/test-results/` 추가
+
+---
+
+## 완료 항목 (2026-04-06)
+
+### ✅ Phase 3 — F09 매출 시뮬레이션 / F06 히트맵 / F10 PDF 리포트
+
+**F09 매출 시뮬레이션** (simulate_revenue Tool + SimulationCard):
+- `SimulationRepository` Protocol + Mock/Real 구현 (서울 전체 per-store 매출 분위수 p25/p50/p75)
+- `simulate_revenue` Tool: 점포당 평균 → 분위수 적용 → 객단가 보정 → 서울 평균 비교
+- PAE Planner: `simulation` intent 패턴 (`시뮬레이션|매출.*예상|매출.*얼마|열면.*매출` 등)
+- `SimulationCard.tsx`: low/avg/high 바차트 (Recharts) + 서울 평균 기준선 + 산출 근거 + disclaimer
+- Alembic 마이그레이션: `category_metadata.default_unit_price` 컬럼 + major_category별 시드값
+
+**F06 시간대별 히트맵** (deck.gl + TimeSlider):
+- `HeatmapRepository` Protocol + Mock/Real 구현 (PostGIS center_point + floating_population JOIN)
+- `GET /api/map-data/heatmap?time_slot=N` + `GET /api/map-data/heatmap/all` API (Redis 캐시)
+- deck.gl `HeatmapLayer` + Kakao Map viewport 동기화 (center_changed/zoom_changed/idle 이벤트)
+- `TimeSlider`: 0-23시 슬라이더 + play/pause 1초 애니메이션 + 프리로드 (네트워크 요청 없이 전환)
+- `MapControls`: 히트맵 토글 버튼 (🔥 아이콘)
+- 패키지: `@deck.gl/core`, `@deck.gl/layers`, `@deck.gl/aggregation-layers`, `@deck.gl/react`
+
+**F10 PDF 리포트** (@react-pdf/renderer + html2canvas):
+- `ReportDocument.tsx`: 표지 (MarketScope AI + 상권명 + 분석일) + 대화 이력 + 차트 이미지 + 면책
+- `useReportExport` Hook: html2canvas 차트 캡처 → @react-pdf/renderer PDF 생성 → Blob 다운로드
+- 한글 폰트: Spoqa Han Sans Neo (Regular + Bold)
+- ChatPanel 상단 PDF 버튼 + "PDF로 저장해줘" 채팅 패턴 감지 (로컬 처리, 서버 미전송)
+- 패키지: `@react-pdf/renderer`, `html2canvas`
+
+**신규 파일 (13개)**:
+- `server/alembic/versions/002_add_default_unit_price.py`
+- `server/server/repositories/mock/simulation.py`, `mock/heatmap.py`
+- `server/server/repositories/real/simulation.py`, `real/heatmap.py`
+- `server/server/agent/tools/simulate_revenue.py`
+- `frontend/src/components/chat/cards/SimulationCard.tsx`
+- `frontend/src/components/map/HeatmapLayer.tsx`, `TimeSlider.tsx`
+- `frontend/src/components/report/ReportDocument.tsx`
+- `frontend/src/hooks/useReportExport.ts`
+- `frontend/public/fonts/SpoqaHanSansNeo-Regular.ttf`, `SpoqaHanSansNeo-Bold.ttf`
+
+**수정 파일 (18개)**:
+- Backend: `protocols.py`, `data_access.py`, `mock/factory.py`, `real/factory.py`, `category.py`, `actor.py`, `planner.py`, `graph.py`, `data_sources.py`, `map_data.py`, `planner.py` (prompt)
+- Frontend: `types.ts`, `eventHandlers.ts`, `registry.ts`, `api.ts`, `mapStore.ts`, `MapContainer.tsx`, `MapControls.tsx`, `ChatPanel.tsx`, `chatStore.ts`
+
+**검증**: `tsc --noEmit` 0 errors, `npm run build` 성공 (428 kB)
+
+**E2E 테스트 (Playwright)**: `phase3-scenario.spec.ts` — **12/12 ALL PASSED** (1.6m)
+
+| Suite | Tests | Result |
+|-------|-------|--------|
+| F09: Revenue Simulation | S9-1 SimulationCard, S9-4 상권미선택, S9-5 Disclaimer, S9-6 서울평균 | 4/4 PASS |
+| F06: Heatmap API | B6-1 단일시간, B6-2 프리로드, B6-3 범위초과422, B6-4 캐시일관성 | 4/4 PASS |
+| F06: Heatmap UI | S6-1 토글버튼, S6-5 ON/OFF | 2/2 PASS |
+| F10: PDF Report | S10-1 PDF버튼, S10-5 빈채팅 | 2/2 PASS |
+
+**API 수준 테스트 (Sub-Agent)**: 12/12 ALL PASSED — 전체 결과 포함 S9-2(경쟁추가), S9-3(한식매핑), B6-3b(음수), B6-5(시간별가중치)
 
 ---
 
@@ -415,11 +471,11 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 - **수정 파일**: docker-compose.yml, server/Dockerfile, frontend/Dockerfile, frontend/next.config.mjs, server/pyproject.toml, server/server/config.py, .env.example + .dockerignore 2개 신규
 - 상세는 아래 "완료 항목 (2026-04-05)" 참조
 
-### 🟡 8. 기능 고도화
+### ~~🟡 8. 기능 고도화~~ ✅ Phase 3 완료 (2026-04-06)
 
-- 비교모드 복수 상권 하이라이트
-- category_aliases 퍼지 검색 (pg_trgm)
-- F06 히트맵 / F09 시뮬레이션 / F10 PDF
+- 비교모드 복수 상권 하이라이트 (미완료, 후순위)
+- category_aliases 퍼지 검색 (미완료, 후순위)
+- ~~F06 히트맵 / F09 시뮬레이션 / F10 PDF~~ ✅ 완료
 
 ---
 
@@ -437,10 +493,10 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 
 ---
 
-## Phase 3 — 확장 (미착수)
-- [ ] F06 시간대별 히트맵 (deck.gl + TimeSlider)
-- [ ] F09 간이 매출 시뮬레이션 (simulate_revenue Tool)
-- [ ] F10 리포트 저장 (PDF)
+## Phase 3 — 확장 ✅ 완료 (2026-04-06)
+- [x] F09 간이 매출 시뮬레이션 (simulate_revenue Tool + SimulationCard)
+- [x] F06 시간대별 히트맵 (deck.gl HeatmapLayer + TimeSlider)
+- [x] F10 리포트 저장 (PDF — @react-pdf/renderer + html2canvas)
 
 ---
 

@@ -7,8 +7,10 @@ from server.repositories.protocols import (
     DistrictRepository,
     EstimatedSalesRepository,
     FloatingPopulationRepository,
+    HeatmapRepository,
     PopulationRepository,
     RecommendationRepository,
+    SimulationRepository,
     StoreRepository,
 )
 
@@ -26,6 +28,8 @@ class DataAccess:
         population: PopulationRepository,
         comparison: ComparisonRepository,
         recommendation: RecommendationRepository,
+        simulation: SimulationRepository,
+        heatmap: HeatmapRepository,
     ) -> None:
         self.districts = districts
         self.floating_pop = floating_pop
@@ -34,3 +38,5 @@ class DataAccess:
         self.population = population
         self.comparison = comparison
         self.recommendation = recommendation
+        self.simulation = simulation
+        self.heatmap = heatmap

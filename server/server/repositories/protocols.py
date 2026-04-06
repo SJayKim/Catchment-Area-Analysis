@@ -47,3 +47,19 @@ class RecommendationRepository(Protocol):
     async def recommend_business(
         self, district_code: str, budget: int | None = None, preference: str | None = None
     ) -> dict: ...
+
+
+class SimulationRepository(Protocol):
+    async def get_sales_percentiles(
+        self, category_code: str, quarter: str | None = None
+    ) -> dict: ...
+
+    async def get_default_unit_price(self, category_code: str) -> int | None: ...
+
+
+class HeatmapRepository(Protocol):
+    async def get_heatmap_data(
+        self, time_slot: int, quarter: str | None = None
+    ) -> dict: ...
+
+    async def get_heatmap_all(self, quarter: str | None = None) -> dict: ...

@@ -14,9 +14,10 @@ PLANNER_CLASSIFICATION_PROMPT = """\
 | compare_districts | 상권 비교 (2~3개) | district_codes[] |
 | recommend_business | 업종 추천 Top5 | district_code |
 | get_store_history | 리스크 분석 | district_code |
+| simulate_revenue | 매출 시뮬레이션 | district_code, category_code |
 
 ## 의도 유형
-summary, comparison, recommendation, risk, category_analysis, follow_up, general, ambiguous
+summary, comparison, recommendation, risk, category_analysis, simulation, follow_up, general, ambiguous
 
 ## 대화 이력
 {history}

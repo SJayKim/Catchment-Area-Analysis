@@ -11,3 +11,4 @@ class CategoryMetadata(Base):
     category_name: Mapped[str] = mapped_column(String(100), nullable=False)
     major_category: Mapped[str | None] = mapped_column(String(50))  # 외식/서비스/소매
     avg_startup_cost: Mapped[int | None] = mapped_column()  # 평균 창업비용 (만원)
+    default_unit_price: Mapped[int | None] = mapped_column()  # 기본 객단가 (원)

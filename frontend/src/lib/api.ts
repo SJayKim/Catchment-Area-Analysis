@@ -65,6 +65,29 @@ export async function fetchPolygons(bounds: MapBounds): Promise<PolygonFeature[]
   }));
 }
 
+export interface HeatmapPoint {
+  lat: number;
+  lng: number;
+  weight: number;
+}
+
+export interface HeatmapAllData {
+  quarter: string;
+  slots: Record<string, HeatmapPoint[]>;
+}
+
+export async function fetchHeatmapAll(quarter?: string): Promise<HeatmapAllData> {
+  const params = new URLSearchParams();
+  if (quarter) params.set('quarter', quarter);
+
+  const query = params.toString();
+  const res = await fetch(`${API_BASE}/map-data/heatmap/all${query ? `?${query}` : ''}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch heatmap data: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function sendChatMessage(
   message: string,
   sessionId: string,

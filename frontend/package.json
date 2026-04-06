@@ -9,7 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@deck.gl/aggregation-layers": "^9.2.11",
+    "@deck.gl/core": "^9.2.11",
+    "@deck.gl/layers": "^9.2.11",
+    "@deck.gl/react": "^9.2.11",
+    "@react-pdf/renderer": "^4.3.3",
     "dotenv": "^17.4.0",
+    "html2canvas": "^1.4.1",
     "next": "14.2.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

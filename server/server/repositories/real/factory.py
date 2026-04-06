@@ -9,8 +9,10 @@ from server.repositories.real.comparison import RealComparisonRepository
 from server.repositories.real.districts import RealDistrictRepository
 from server.repositories.real.estimated_sales import RealEstimatedSalesRepository
 from server.repositories.real.floating_population import RealFloatingPopulationRepository
+from server.repositories.real.heatmap import RealHeatmapRepository
 from server.repositories.real.population import RealPopulationRepository
 from server.repositories.real.recommendation import RealRecommendationRepository
+from server.repositories.real.simulation import RealSimulationRepository
 from server.repositories.real.stores import RealStoreRepository
 
 
@@ -24,4 +26,6 @@ def build_real_data_access(session_factory: async_sessionmaker[AsyncSession]) ->
         population=RealPopulationRepository(session_factory),
         comparison=RealComparisonRepository(session_factory),
         recommendation=RealRecommendationRepository(session_factory),
+        simulation=RealSimulationRepository(session_factory),
+        heatmap=RealHeatmapRepository(session_factory),
     )

@@ -156,37 +156,37 @@
 
 ## Phase 3 — 확장 (Premium)
 
-### F06. 시간대별 히트맵 ⭐ Premium
-- [ ] deck.gl 설치 및 Kakao Map 통합
-- [ ] `GET /api/map-data/heatmap` API
-- [ ] `GET /api/map-data/heatmap/all` 프리로드 API
-- [ ] HeatmapLayer 컴포넌트
-- [ ] TimeSlider 컴포넌트 (0~23시)
-- [ ] 평일/주말 토글
-- [ ] 재생 애니메이션 (1초/시간)
-- [ ] 히트맵 ON/OFF 토글
-- [ ] 줌/팬 동기화 확인
-- [ ] 슬라이더 전환 200ms 이내 반응
+### F06. 시간대별 히트맵 ⭐ Premium ✅
+- [x] deck.gl 설치 및 Kakao Map 통합
+- [x] `GET /api/map-data/heatmap` API
+- [x] `GET /api/map-data/heatmap/all` 프리로드 API
+- [x] HeatmapLayer 컴포넌트
+- [x] TimeSlider 컴포넌트 (0~23시)
+- [ ] 평일/주말 토글 (MVP: day_type 없음, 후순위)
+- [x] 재생 애니메이션 (1초/시간)
+- [x] 히트맵 ON/OFF 토글
+- [x] 줌/팬 동기화 확인
+- [x] 슬라이더 전환 200ms 이내 반응 (프리로드 방식)
 
-### F09. 간이 매출 시뮬레이션 ⭐ Premium
-- [ ] `simulate_revenue` Tool 구현
-- [ ] 매출 분위수(p25/p75) 산출 로직
-- [ ] 경쟁 증가 비례 분배 로직
-- [ ] SimulationCard 컴포넌트
-- [ ] 하위/평균/상위 범위 시각화
-- [ ] 서울 평균 비교 표시
-- [ ] 산출 근거 명시
-- [ ] What-If "경쟁 N개 추가" 시뮬레이션
-- [ ] 면책 안내 표시
+### F09. 간이 매출 시뮬레이션 ⭐ Premium ✅
+- [x] `simulate_revenue` Tool 구현
+- [x] 매출 분위수(p25/p75) 산출 로직
+- [x] 경쟁 증가 비례 분배 로직
+- [x] SimulationCard 컴포넌트
+- [x] 하위/평균/상위 범위 시각화
+- [x] 서울 평균 비교 표시
+- [x] 산출 근거 명시
+- [ ] What-If "경쟁 N개 추가" 시뮬레이션 (Tool은 지원, UI 버튼 후순위)
+- [x] 면책 안내 표시
 
-### F10. 리포트 저장 (PDF) ⭐ Premium
-- [ ] `@react-pdf/renderer` 설치
-- [ ] ReportPDF 컴포넌트 (표지, 요약, 대화, 차트)
-- [ ] 한글 폰트 설정
-- [ ] 차트 → 이미지 캡처 (`html2canvas`)
-- [ ] PDF 다운로드 트리거 (챗봇 명령 + UI 버튼)
-- [ ] 면책 조항 포함
-- [ ] PDF 생성 5초 이내 확인
+### F10. 리포트 저장 (PDF) ⭐ Premium ✅
+- [x] `@react-pdf/renderer` 설치
+- [x] ReportPDF 컴포넌트 (표지, 요약, 대화, 차트)
+- [x] 한글 폰트 설정 (Spoqa Han Sans Neo)
+- [x] 차트 → 이미지 캡처 (`html2canvas`)
+- [x] PDF 다운로드 트리거 (챗봇 명령 + UI 버튼)
+- [x] 면책 조항 포함
+- [ ] PDF 생성 5초 이내 확인 (브라우저 테스트 필요)
 
 ---
 

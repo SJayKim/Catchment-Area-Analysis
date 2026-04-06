@@ -23,6 +23,7 @@ TOOL_CARD_MAP: dict[str, str] = {
     "compare_districts": "compare",
     "recommend_business": "recommend",
     "get_store_history": "risk",
+    "simulate_revenue": "simulation",
 }
 
 TOOL_EMOJI: dict[str, str] = {
@@ -34,6 +35,7 @@ TOOL_EMOJI: dict[str, str] = {
     "compare_districts": "📊",
     "recommend_business": "💡",
     "get_store_history": "📋",
+    "simulate_revenue": "💰",
 }
 
 
@@ -49,6 +51,7 @@ def _ensure_registry() -> None:
     from server.agent.tools.floating_population import get_floating_population
     from server.agent.tools.population_info import get_population_info
     from server.agent.tools.recommend_business import recommend_business
+    from server.agent.tools.simulate_revenue import simulate_revenue
     from server.agent.tools.store_history import get_store_history
     from server.agent.tools.store_info import get_store_info
 
@@ -62,6 +65,7 @@ def _ensure_registry() -> None:
             "compare_districts": compare_districts,
             "recommend_business": recommend_business,
             "get_store_history": get_store_history,
+            "simulate_revenue": simulate_revenue,
         }
     )
     _registry_loaded = True

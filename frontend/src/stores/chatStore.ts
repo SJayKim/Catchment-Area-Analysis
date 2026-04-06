@@ -105,6 +105,32 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const state = get();
     if (!message.trim() || state.isLoading) return;
 
+    // PDF export pattern detection — handle locally, don't send to server
+    const PDF_PATTERNS = /pdf|리포트.*저장|보고서.*내보|리포트.*만들|보고서.*만들|리포트.*내려|pdf.*저장/i;
+    if (PDF_PATTERNS.test(message.trim())) {
+      const userMsg: ChatMessage = {
+        id: generateId(),
+        role: 'user',
+        content: message.trim(),
+        type: 'text',
+        timestamp: new Date(),
+      };
+      set((s) => ({ messages: [...s.messages, userMsg] }));
+
+      const assistantMsg: ChatMessage = {
+        id: generateId(),
+        role: 'assistant',
+        content: 'PDF 리포트를 생성 중입니다... 상단의 PDF 버튼을 클릭하시면 다운로드됩니다.',
+        type: 'text',
+        timestamp: new Date(),
+      };
+      set((s) => ({ messages: [...s.messages, assistantMsg] }));
+
+      // Trigger PDF generation via custom event
+      window.dispatchEvent(new CustomEvent('marketscope:generate-pdf'));
+      return;
+    }
+
     const resolvedDistrictCode = districtCode ?? state.lastDistrictCode ?? undefined;
 
     // Add user message

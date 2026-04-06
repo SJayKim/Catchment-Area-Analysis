@@ -18,13 +18,14 @@ logger = logging.getLogger(__name__)
 
 INTENT_PATTERNS: dict[str, re.Pattern[str]] = {
     "greeting": re.compile(r"^(안녕|하이|헬로|hi|hello|반갑|감사|고마워|ㅎㅇ)", re.IGNORECASE),
+    "simulation": re.compile(r"(시뮬���이션|매출.*예상|매출.*얼마|매출.*시뮬|얼마.*벌|수익.*예상|장사.*되|매출.*전망|열면.*매출|하면.*매출)"),
     "comparison": re.compile(r"(비교|vs|대비|차이)"),
-    "recommendation": re.compile(r"(추천|뭐.*하면|어떤.*업종|창업|아이템)"),
+    "recommendation": re.compile(r"(추천|뭐.*하면|어떤.*업종|창업|아이���)"),
     "risk": re.compile(r"(위험|리스크|폐업|안전|생존|실패)"),
     "category_analysis": re.compile(
-        r"(카페|한식|커피|치킨|편의점|음식점|미용|병원|약국|중식|일식|양식|분식|주점|제과)"
+        r"(카페|한식|���피|치킨|편의점|음식점|미용|병원|약국|중식|일식|양식|분식|주점|제과)"
     ),
-    "summary": re.compile(r"(요약|분석|알려줘|어때|보여줘|정보|현황|상권을?\s*선택)"),
+    "summary": re.compile(r"(요약|분석|알려���|어때|보여줘|정보|현황|상권을?\s*선택)"),
 }
 
 FOLLOW_UP_MARKERS = re.compile(
@@ -32,7 +33,7 @@ FOLLOW_UP_MARKERS = re.compile(
 )
 
 NON_SUMMARY_OVERRIDES = re.compile(
-    r"(비교|추천|뭐.*하면|위험|리스크|폐업|히트맵|시뮬|카페|한식|커피|치킨|편의점)"
+    r"(비교|추천|뭐.*하면|위험|리스크|폐업|히트맵|시뮬|매출.*예상|매출.*얼마|얼마.*벌|카페|한식|커피|치킨|편의점)"
 )
 
 # Map Korean category keywords → category_code (best-effort)
@@ -72,6 +73,9 @@ INTENT_TO_PLAN: dict[str, list[dict[str, Any]]] = {
     "category_analysis": [
         {"tool_name": "get_estimated_sales", "args_template": {"district_code": "{district_code}", "category_code": "{category_code}"}, "reason": "업종별 매출 조회", "depends_on": []},
         {"tool_name": "get_store_info", "args_template": {"district_code": "{district_code}", "category_code": "{category_code}"}, "reason": "업종별 점포 현황 조회", "depends_on": []},
+    ],
+    "simulation": [
+        {"tool_name": "simulate_revenue", "args_template": {"district_code": "{district_code}", "category_code": "{category_code}"}, "reason": "매출 시뮬레이션", "depends_on": []},
     ],
     "greeting": [],  # 도구 불필요
     "general": [],

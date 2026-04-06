@@ -9,6 +9,8 @@ export const TOOL_LABELS: Record<string, { progress: string; done: string; icon:
   compare_districts_tool: { progress: '상권 비교 분석 중...', done: '상권 비교 분석 완료', icon: '📊' },
   recommend_business_tool: { progress: '업종 추천 분석 중...', done: '업종 추천 분석 완료', icon: '💡' },
   get_store_history_tool: { progress: '점포 이력 분석 중...', done: '점포 이력 분석 완료', icon: '📋' },
+  simulate_revenue_tool: { progress: '매출 시뮬레이션 중...', done: '매출 시뮬레이션 완료', icon: '💰' },
+  simulate_revenue: { progress: '매출 시뮬레이션 중...', done: '매출 시뮬레이션 완료', icon: '💰' },
 };
 
 const CARD_LABELS: Record<string, string> = {
@@ -16,6 +18,7 @@ const CARD_LABELS: Record<string, string> = {
   compare: '비교 분석 카드',
   recommend: '업종 추천 카드',
   risk: '리스크 분석 카드',
+  simulation: '매출 시뮬레이션 카드',
 };
 
 function generateId(): string {
@@ -61,6 +64,7 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
         recommendation: '💡 업종 추천 분석',
         risk: '⚠ 리스크 분석',
         category_analysis: '🔍 업종별 상세 분석',
+        simulation: '💰 매출 시뮬레이션',
         follow_up: '💬 추가 분석',
         general: '💬 일반 응답',
         ambiguous: '❓ 질문 확인',

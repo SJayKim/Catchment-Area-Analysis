@@ -13,7 +13,7 @@ export interface ChatMessage {
   content: string;
   type?: 'text' | 'card' | 'error';
   cardType?: string;
-  cardData?: SummaryCardData | CompareCardData | RecommendCardData | RiskCardData | Record<string, unknown>;
+  cardData?: SummaryCardData | CompareCardData | RecommendCardData | RiskCardData | SimulationCardData | Record<string, unknown>;
   timestamp: Date;
 }
 
@@ -110,6 +110,41 @@ export interface RiskCardData {
     open: number;
     close: number;
   }[];
+  districtName?: string;
+  dataSources?: DataSourceInfo[];
+}
+
+export interface SimulationCardData {
+  district_code: string;
+  category_code: string;
+  category_name: string;
+  quarter: string;
+  simulation: {
+    low: number;
+    avg: number;
+    high: number;
+  };
+  basis: {
+    total_monthly_sales: number;
+    store_count: number;
+    additional_competitors: number;
+    effective_stores: number;
+    unit_price: number | null;
+    default_unit_price: number | null;
+    price_ratio: number;
+  };
+  percentiles: {
+    p25_ratio: number;
+    p75_ratio: number;
+    sample_count: number;
+    reliable: boolean;
+  };
+  seoul_comparison: {
+    seoul_avg: number;
+    diff_percent: number;
+    label: string;
+  } | null;
+  disclaimer: string;
   districtName?: string;
   dataSources?: DataSourceInfo[];
 }

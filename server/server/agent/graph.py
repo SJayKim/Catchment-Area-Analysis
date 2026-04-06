@@ -155,6 +155,29 @@ async def get_store_history_tool(district_code: str) -> str:
     return json.dumps(result, ensure_ascii=False, default=str)
 
 
+@tool
+async def simulate_revenue_tool(
+    district_code: str,
+    category_code: str,
+    unit_price: int | None = None,
+    additional_competitors: int = 0,
+) -> str:
+    """상권에서 특정 업종 매출을 시뮬레이션합니다.
+
+    하위(p25)/평균/상위(p75) 예상 월매출 범위와 서울 평균 비교를 반환합니다.
+
+    Args:
+        district_code: 상권코드
+        category_code: 업종코드
+        unit_price: 객단가 (원, 선택). 생략 시 기본 객단가 적용.
+        additional_competitors: 추가 경쟁점 수 (기본 0)
+    """
+    from server.agent.tools.simulate_revenue import simulate_revenue
+
+    result = await simulate_revenue(district_code, category_code, unit_price, additional_competitors)
+    return json.dumps(result, ensure_ascii=False, default=str)
+
+
 # ===================================================================
 # Shared helpers
 # ===================================================================
@@ -168,6 +191,7 @@ TOOLS = [
     compare_districts_tool,
     recommend_business_tool,
     get_store_history_tool,
+    simulate_revenue_tool,
 ]
 
 MAX_ITERATIONS = 5
@@ -258,11 +282,13 @@ async def run_agent_react(
             "compare_districts_tool": "📊",
             "recommend_business_tool": "💡",
             "get_store_history_tool": "📋",
+            "simulate_revenue_tool": "💰",
         }
         _TOOL_CARD_MAP = {
             "compare_districts_tool": "compare",
             "recommend_business_tool": "recommend",
             "get_store_history_tool": "risk",
+            "simulate_revenue_tool": "simulation",
         }
 
         async for event in agent.astream_events(input_state, version="v2", config=config):

@@ -120,6 +120,7 @@ TOOL_SOURCES: dict[str, list[DataSource]] = {
     "get_district_summary": [SEOUL_FLOATING_POP, SEOUL_ESTIMATED_SALES, SEOUL_STORE_INFO],
     "compare_districts": [SEOUL_FLOATING_POP, SEOUL_ESTIMATED_SALES, SEOUL_STORE_INFO],
     "recommend_business": [SEOUL_ESTIMATED_SALES, SEOUL_STORE_INFO, SEOUL_FLOATING_POP],
+    "simulate_revenue": [SEOUL_ESTIMATED_SALES, SEOUL_STORE_INFO],
 }
 
 

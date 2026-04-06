@@ -4,6 +4,8 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useMapStore } from '@/stores/mapStore';
 import DistrictLayer from './DistrictLayer';
 import MapControls from './MapControls';
+import HeatmapLayer from './HeatmapLayer';
+import TimeSlider from './TimeSlider';
 
 export default function MapContainer() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -141,7 +143,9 @@ export default function MapContainer() {
       )}
 
       {mapReady && <DistrictLayer mapInstance={mapInstanceRef} />}
+      {mapReady && <HeatmapLayer mapInstance={mapInstanceRef} />}
       <MapControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
+      <TimeSlider />
     </div>
   );
 }

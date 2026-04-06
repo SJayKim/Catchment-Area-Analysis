@@ -7,8 +7,10 @@ from server.repositories.mock.comparison import MockComparisonRepository
 from server.repositories.mock.districts import MockDistrictRepository
 from server.repositories.mock.estimated_sales import MockEstimatedSalesRepository
 from server.repositories.mock.floating_population import MockFloatingPopulationRepository
+from server.repositories.mock.heatmap import MockHeatmapRepository
 from server.repositories.mock.population import MockPopulationRepository
 from server.repositories.mock.recommendation import MockRecommendationRepository
+from server.repositories.mock.simulation import MockSimulationRepository
 from server.repositories.mock.stores import MockStoreRepository
 
 
@@ -22,4 +24,6 @@ def build_mock_data_access() -> DataAccess:
         population=MockPopulationRepository(),
         comparison=MockComparisonRepository(),
         recommendation=MockRecommendationRepository(),
+        simulation=MockSimulationRepository(),
+        heatmap=MockHeatmapRepository(),
     )
