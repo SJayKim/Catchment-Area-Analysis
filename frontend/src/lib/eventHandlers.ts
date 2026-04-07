@@ -94,8 +94,12 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
       const toolLabel = TOOL_LABELS[event.name];
       const icon = event.icon || toolLabel?.icon || '🔧';
       const progressText = event.progress_label || toolLabel?.progress || `${event.name} 실행 중...`;
+      // Use a unique id per tool invocation so the same tool firing multiple
+      // times (e.g. compare_districts for 3-way comparison) does not collide
+      // and produce React duplicate-key warnings.
+      const uniqueId = `tool-${event.name}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       get().addAgentStep({
-        id: `tool-${event.name}`,
+        id: uniqueId,
         label: `${icon} ${progressText}`,
         status: 'in_progress',
         toolName: event.name,
@@ -107,10 +111,15 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
       const endLabel = TOOL_LABELS[event.name];
       const endIcon = event.icon || endLabel?.icon || '🔧';
       const doneText = event.done_label || endLabel?.done || `${event.name} 완료`;
-      get().updateAgentStepStatus(
-        `tool-${event.name}`, 'completed',
-        `${endIcon} ${doneText}`
-      );
+      // Find the latest in_progress step matching this tool name and complete it.
+      // This is robust against multiple invocations of the same tool.
+      const steps = get().agentSteps;
+      const target = [...steps]
+        .reverse()
+        .find((s) => s.toolName === event.name && s.status === 'in_progress');
+      if (target) {
+        get().updateAgentStepStatus(target.id, 'completed', `${endIcon} ${doneText}`);
+      }
       break;
     }
 

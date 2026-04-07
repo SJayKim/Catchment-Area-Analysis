@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "playwright test",
+    "test:e2e:ring0": "playwright test ring0-preflight",
+    "test:e2e:ring1": "playwright test ring1-features",
+    "test:e2e:ring2": "playwright test ring2-journeys",
+    "test:e2e:ring3": "playwright test ring3-negative"
   },
   "dependencies": {
     "@deck.gl/aggregation-layers": "^9.2.11",

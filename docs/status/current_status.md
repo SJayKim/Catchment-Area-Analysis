@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-06
+> 최종 갱신: 2026-04-07
+> **E2E QA Run 2026-04-07 완료 ✅ — 42 시나리오 / 41 PASS / 1 SOFT FAIL / Consumer-experience score 94/100 (READY)**
 > **P0 Critical 8건 수정 완료 ✅ — Migration 003 / LLM timeout / SSE backpressure / disconnect / JSON fallback / sanitize / stale closure / AbortController**
 > **E2E QA 테스트 플랜 작성 완료 ✅ — 4-ring 계층 (pre-flight → feature → journey → P0 regression) + fresh subagent evaluator**
 
@@ -172,6 +173,71 @@
 ### ✅ .gitignore 정리
 - `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
 - `frontend/test-results/` 추가
+
+---
+
+## 완료 항목 (2026-04-07)
+
+### ✅ E2E QA Run 실행 — 42 시나리오 / 94점 / READY
+
+**상세 리포트**: `docs/qa/e2e-run-2026-04-07.md`
+
+**범위**: Plan(`docs/qa/e2e-qa-test-plan.md`)의 4-ring 전략 전부 실행
+- Ring 0 (pre-flight): 4/4 PASS — 백엔드/프론트엔드/폴리곤/모드 검출
+- Ring 1 (per-feature): 25/26 PASS — M01 + F01~F10
+- Ring 2 (consumer journeys): 5/5 PASS — J01 첫방문자 / J02 비교쇼퍼 / J03 리스크우선 / J04 에러복구 / J05 PDF공유
+- Ring 3 (negative + P0 regression): 7/7 PASS (P0-1 Real-only / P0-2 env-override SKIP)
+
+**Helper 인프라 구축** (~270 LOC):
+- `frontend/e2e/helpers/`: evalPacket, sseCapture, modeGuard, polygonClick, waitSSE, backendLogs (6 신규)
+- `frontend/playwright.config.ts` E2E_BASE_URL env 지원
+- `frontend/package.json` test:e2e:ring0~3 scripts
+- `.gitignore` `frontend/e2e/artifacts/` 추가
+
+**Test suite 신규** (22 spec 파일, 42 시나리오):
+- ring0-preflight (1 spec / 4 tests)
+- ring1-features (11 spec / 26 tests)
+- ring2-journeys (5 spec / 5 tests)
+- ring3-negative (3 spec / 7 tests)
+- 기존 32개 feature*.spec.ts + phase3 보존
+
+**Fresh subagent 평가** (4 batches in parallel):
+- Ring 0+M01+F01 (12), F02+F03+F04 (9), F05~F10 (9), Ring 2+Ring 3 (12)
+- 초기: 35 PASS / 7 FAIL (auto-verdict보다 엄격 — fresh subagent가 console.log 라인 단위 검사)
+- 발견된 진짜 버그: React duplicate-key in AgentProgressIndicator
+
+**버그 수정**:
+1. **React duplicate-key 버그** (`frontend/src/lib/eventHandlers.ts`)
+   - 증상: `compare_districts` tool이 여러 번 호출될 때 React key 충돌 (console에 23개+ 경고)
+   - 수정: `tool` 이벤트가 unique id (`tool-{name}-{Date.now()}-{rand}`) 사용, `tool_end`는 `toolName`으로 latest in_progress 검색
+   - 검증: F05-E1, F05-H2, J02 모두 console errors 0으로 회복
+2. **F06 test selector** — 히트맵 버튼이 `title="유동인구 히트맵"` 사용 (text/aria-label 아님)
+3. **F02 SSE parser** — MarketScope SSE는 `data: {"type":"..."}` 포맷 (event: 라인 없음), 직접 backend POST + JSON 파싱으로 변경
+
+**P0 회귀 검증** (8건 중 6건 PASS, 2건 SKIP):
+- P0-3 SSE 백프레셔 ✅
+- P0-4 client disconnect ✅
+- P0-5 rule fallback ✅ (리스크 질문 → RiskCard, NOT SummaryCard)
+- P0-6 fast switch stale closure ✅
+- P0-7 AbortController ✅
+- P0-8 prompt injection sanitize ✅
+- P0-1 Migration 003 — Real mode only, SKIP
+- P0-2 LLM timeout — env override 필요, SKIP
+
+**잔여 SOFT FAIL**:
+- F05-H1: "강남역과 홍대입구를 비교해줘" (Korean particles 과/를)이 LLM planner에서 compare 의도로 라우팅되지 않음. Comma-separated 형식("강남역, 홍대입구 비교해줘")은 정상 동작. **권장**: `intents.yaml` 또는 planner regex 패턴 보강. 영향도 낮음 (대체 phrasing 존재).
+
+**Consumer-experience score**: 94/100 (Ring 1 96% × 0.40 + Ring 2 100% × 0.30 + Ring 3 100% × 0.20 + P0 75% × 0.10 - 2pt for Real not exercised) → **READY**
+
+**Real mode 미실행**:
+- 백엔드가 USE_MOCK=true(Mock 모드, 5개 상권 D3001~D3005)로 운영 중
+- Real 모드 실행하려면: backend 재기동 + Docker DB+Redis up + Migration 003 + USE_MOCK=false
+- F03 Real (district_summary.py) / F08 Real (store_history empty) / P0-1 검증은 Real 모드 후속 run에서
+
+**산출물**:
+- `docs/qa/e2e-run-2026-04-07.md` — 종합 리포트
+- `frontend/e2e/artifacts/run-2026-04-07/` — 42개 시나리오 artifact (gitignored, scenario.md/criteria.md/dom.txt/sse.log/screenshot/auto-verdict.json/verdict.json)
+- 신규 helper 6개 + spec 22개 + bug fix 3건
 
 ---
 

@@ -52,3 +52,10 @@ export const useDistrictStore = create<DistrictState>((set) => ({
 
   clearCompare: () => set({ compareList: [], isCompareMode: false }),
 }));
+
+// Expose for E2E tests (Playwright). Test harness uses this to drive
+// district selection without depending on flaky DOM polygon clicks.
+if (typeof window !== 'undefined') {
+  (window as unknown as { __districtStore?: typeof useDistrictStore }).__districtStore =
+    useDistrictStore;
+}

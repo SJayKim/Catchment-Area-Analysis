@@ -31,6 +31,7 @@ pgdata/
 
 # Test results
 frontend/test-results/
+frontend/e2e/artifacts/
 
 # Screenshots (temp)
 map-loaded.png
