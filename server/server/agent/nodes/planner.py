@@ -214,10 +214,30 @@ async def planner_node(state: AgentState) -> dict:
     if not referenced_districts and district_code:
         referenced_districts = [district_code]
 
-    # For comparison, ensure at least 2 districts
-    if intent == "comparison" and len(referenced_districts) < 2 and district_code:
-        if district_code not in referenced_districts:
-            referenced_districts.insert(0, district_code)
+    # For comparison, run a deterministic multi-district extraction over the
+    # message. The rule classifier returns confidence 0.9 (skips LLM), so the
+    # initial referenced_districts only contains the explicitly selected one.
+    # detect_districts_in_message scans every district name in the message
+    # (with Korean particle stripping + stopwords), enabling queries like
+    # "강남역과 홍대입구를 비교해줘" to populate both codes.
+    if intent == "comparison":
+        try:
+            from server.repositories import get_data_access
+
+            multi = await get_data_access().districts.detect_districts_in_message(message)
+        except Exception:
+            logger.warning("detect_districts_in_message failed", exc_info=True)
+            multi = []
+
+        if multi:
+            multi_codes = [m["code"] for m in multi]
+            # Priority: explicit selection first, then message-discovered
+            if district_code and district_code not in multi_codes:
+                multi_codes.insert(0, district_code)
+            referenced_districts = multi_codes[:3]  # CompareCard caps at 3
+        elif len(referenced_districts) < 2 and district_code:
+            if district_code not in referenced_districts:
+                referenced_districts.insert(0, district_code)
 
     # 3. Build plan
     plan = _build_plan(intent, district_code, referenced_districts, referenced_category)

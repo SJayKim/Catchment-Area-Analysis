@@ -33,6 +33,18 @@ class MockDistrictRepository:
                 return {"code": code, "name": d["name"]}
         return None
 
+    async def detect_districts_in_message(self, message: str) -> list[dict]:
+        """Find all districts whose names appear in the message (deduped, max 5)."""
+        found: list[dict] = []
+        seen: set[str] = set()
+        for code, d in DISTRICTS.items():
+            if d["name"] in message and code not in seen:
+                found.append({"code": code, "name": d["name"]})
+                seen.add(code)
+                if len(found) >= 5:
+                    break
+        return found
+
     async def list_districts(
         self, search: str | None, district_type: str | None, limit: int, offset: int
     ) -> tuple[int, list[dict]]:

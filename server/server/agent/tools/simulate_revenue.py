@@ -16,7 +16,7 @@ from server.services.cache import get_cache_service
 )
 async def simulate_revenue(
     district_code: str,
-    category_code: str,
+    category_code: str | None = None,
     unit_price: int | None = None,
     additional_competitors: int = 0,
 ) -> dict:
@@ -30,6 +30,14 @@ async def simulate_revenue(
     5. Adjust for user-provided unit price vs default
     6. Compare against Seoul average
     """
+    if not category_code:
+        return {
+            "error": "어떤 업종의 매출을 예상해드릴까요? (예: 카페, 한식)",
+            "district_code": district_code,
+            "category_code": None,
+            "needs_category": True,
+        }
+
     cache = get_cache_service()
     cache_key = f"simulation:{district_code}:{category_code}:{unit_price or 'default'}:{additional_competitors}"
     cached = await cache.get(cache_key)

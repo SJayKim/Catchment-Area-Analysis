@@ -6,6 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
+import { requireMode } from '../helpers/modeGuard';
 
 const BACKEND = process.env.E2E_BACKEND_URL || 'http://localhost:8002';
 
@@ -13,6 +14,7 @@ test.beforeAll(() => ensureRunDir());
 
 test.describe('Ring 1 — M01 Mock Data', () => {
   test('M01-H1 polygons GeoJSON ≥5 mock features', async ({ page }) => {
+    await requireMode('mock');
     const packet = new EvalPacket({
       id: 'M01-H1-polygons-mock',
       title: 'Mock polygons GeoJSON ≥5',
@@ -76,6 +78,7 @@ test.describe('Ring 1 — M01 Mock Data', () => {
   });
 
   test('M01-H3 mock summary endpoint returns numbers', async ({ page }) => {
+    await requireMode('mock');
     const packet = new EvalPacket({
       id: 'M01-H3-summary-numbers',
       title: 'Summary tool returns non-empty data',

@@ -4,7 +4,7 @@
 
 import { test, expect } from '@playwright/test';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
+import { waitForMapReady, sendChatMessage, waitForResponseComplete } from '../helpers/setup';
 import { waitForCardText } from '../helpers/waitSSE';
 
 test.beforeAll(() => ensureRunDir());
@@ -70,6 +70,7 @@ test.describe('Ring 1 — F05 Compare', () => {
   });
 
   test('F05-E1 4개 비교 → 안내 메시지', async ({ page }) => {
+    test.setTimeout(180000); // Real-mode 4-way compare can be slow
     const packet = new EvalPacket({
       id: 'F05-E1-over-3',
       title: '4개 상권 비교 거부 또는 제한',
@@ -82,7 +83,7 @@ test.describe('Ring 1 — F05 Compare', () => {
     });
     packet.attach(page);
     await sendChatMessage(page, '강남역, 홍대입구, 건대입구, 명동 비교해줘');
-    await page.waitForTimeout(3000);
+    await waitForResponseComplete(page, 120000);
     const errors = packet.consoleEntries.filter((e) => e.startsWith('[error]')).length;
     const ta = page.locator('textarea[placeholder*="물어보세요"]');
     const enabled = !(await ta.isDisabled());

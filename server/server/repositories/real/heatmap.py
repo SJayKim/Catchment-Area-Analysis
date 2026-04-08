@@ -32,7 +32,7 @@ class RealHeatmapRepository:
                 select(
                     func.ST_Y(District.center_point).label("lat"),
                     func.ST_X(District.center_point).label("lng"),
-                    func.sum(FloatingPopulation.population).label("weight"),
+                    func.sum(FloatingPopulation.total_pop).label("weight"),
                 )
                 .join(
                     District,
@@ -84,7 +84,7 @@ class RealHeatmapRepository:
                     FloatingPopulation.time_slot,
                     func.ST_Y(District.center_point).label("lat"),
                     func.ST_X(District.center_point).label("lng"),
-                    func.sum(FloatingPopulation.population).label("weight"),
+                    func.sum(FloatingPopulation.total_pop).label("weight"),
                 )
                 .join(
                     District,

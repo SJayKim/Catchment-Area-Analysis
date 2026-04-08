@@ -41,6 +41,7 @@ test.describe('Ring 1 — F02 Agent Chat', () => {
   });
 
   test('F02-H1 SSE flow has thinking + tool + done', async ({ page }) => {
+    test.setTimeout(120000);
     const packet = new EvalPacket({
       id: 'F02-H1-sse-flow',
       title: 'SSE 이벤트 thinking/tool/done 순서',
@@ -56,13 +57,14 @@ test.describe('Ring 1 — F02 Agent Chat', () => {
     });
     packet.attach(page);
 
+    // Let backend auto-detect district from message ("강남역") instead of
+    // hard-coding D3001 (which only exists in Mock mode).
     const resp = await page.request.post(`${BACKEND}/api/chat`, {
       data: {
         message: '강남역 상권 분석해줘',
-        district_code: 'D3001',
         session_id: 'f02-h1',
       },
-      timeout: 60000,
+      timeout: 90000,
     });
     expect(resp.status()).toBe(200);
     const raw = await resp.text();
@@ -152,6 +154,7 @@ test.describe('Ring 1 — F02 Agent Chat', () => {
   });
 
   test('F02-H4 컨텍스트 유지 (강남 → "홍대랑 비교")', async ({ page }) => {
+    test.setTimeout(180000); // 2 LLM turns × Real-mode latency
     const packet = new EvalPacket({
       id: 'F02-H4-context',
       title: 'Multi-turn 컨텍스트 유지',

@@ -6,7 +6,7 @@
 
 import { test, expect } from '@playwright/test';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
+import { waitForMapReady, sendChatMessage, waitForResponseComplete } from '../helpers/setup';
 import { waitForCardText } from '../helpers/waitSSE';
 
 test.beforeAll(() => ensureRunDir());
@@ -46,6 +46,7 @@ test.describe('Ring 1 — F04 Category Deep Analysis', () => {
   });
 
   test('F04-E1 없는 업종 → 정중한 폴백', async ({ page }) => {
+    test.setTimeout(120000);
     const packet = new EvalPacket({
       id: 'F04-E1-unknown-category',
       title: '없는 업종 ("우주선 매장")',
@@ -58,7 +59,7 @@ test.describe('Ring 1 — F04 Category Deep Analysis', () => {
     });
     packet.attach(page);
     await sendChatMessage(page, '강남역에서 우주선 매장 하면 어때?');
-    await page.waitForTimeout(3000);
+    await waitForResponseComplete(page, 90000);
     const errors = packet.consoleEntries.filter((e) => e.startsWith('[error]')).length;
     const ta = page.locator('textarea[placeholder*="물어보세요"]');
     const enabled = !(await ta.isDisabled());

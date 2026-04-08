@@ -58,64 +58,106 @@ class RealDistrictRepository:
                 "center": center,
             }
 
+    # 상권명이 아닌 일반 키워드 (과잉 매칭 방지)
+    _STOPWORDS = frozenset({
+        "카페", "커피", "한식", "중식", "일식", "양식", "분식", "치킨",
+        "편의점", "미용", "약국", "주점", "제과", "음식점", "식당",
+        "서울", "서울시", "상권", "분석", "추천", "비교", "위험",
+        "리스크", "폐업", "매출", "유동인구", "인구", "업종",
+        "시뮬레이션", "히트맵", "리포트", "요약", "현황", "정보",
+        "안녕", "감사", "도움", "질문",
+    })
+
+    _PARTICLES = (
+        "에서는", "이랑은", "에서", "부터", "까지", "처럼", "만큼",
+        "이랑", "하고", "에게", "한테", "보다",
+        "은", "는", "이", "가", "을", "를", "에", "도", "로", "의",
+        "와", "과", "랑", "서",
+    )
+
+    @classmethod
+    def _candidate_words(cls, message: str) -> list[str]:
+        """Extract candidate words with Korean particle stripping + stopword filtering."""
+        words = re.findall(r"[\w가-힣]{2,10}", message)
+        candidates: list[str] = []
+        seen: set[str] = set()
+        for word in words:
+            for cand in (word, *(word[: -len(p)] for p in cls._PARTICLES if word.endswith(p) and len(word) > len(p) and len(word) - len(p) >= 2)):
+                if cand in cls._STOPWORDS or cand in seen:
+                    continue
+                seen.add(cand)
+                candidates.append(cand)
+        return candidates
+
     async def detect_district_by_name(self, message: str) -> dict | None:
         from sqlalchemy import select
 
         from server.models.district import District
 
-        _PARTICLES = [
-            "에서는", "이랑은", "에서", "부터", "까지", "처럼", "만큼",
-            "이랑", "하고", "에게", "한테", "보다",
-            "은", "는", "이", "가", "을", "를", "에", "도", "로", "의",
-            "와", "과", "랑", "서",
-        ]
-
-        # 상권명이 아닌 일반 키워드 (과잉 매칭 방지)
-        _STOPWORDS = {
-            "카페", "커피", "한식", "중식", "일식", "양식", "분식", "치킨",
-            "편의점", "미용", "약국", "주점", "제과", "음식점", "식당",
-            "서울", "서울시", "상권", "분석", "추천", "비교", "위험",
-            "리스크", "폐업", "매출", "유동인구", "인구", "업종",
-            "시뮬레이션", "히트맵", "리포트", "요약", "현황", "정보",
-            "안녕", "감사", "도움", "질문",
-        }
-
-        words = re.findall(r"[\w가-힣]{2,10}", message)
         async with self._sf() as session:
-            for word in words:
-                candidates = [word]
-                for p in _PARTICLES:
-                    if word.endswith(p) and len(word) > len(p):
-                        stem = word[: -len(p)]
-                        if len(stem) >= 2:
-                            candidates.append(stem)
+            for candidate in self._candidate_words(message):
+                # 1순위: 정확 매칭
+                row = (await session.execute(
+                    select(District.district_code, District.district_name)
+                    .where(District.district_name == candidate)
+                    .limit(1)
+                )).first()
+                if row:
+                    return {"code": row.district_code, "name": row.district_name}
 
-                for candidate in candidates:
-                    if candidate in _STOPWORDS:
-                        continue
-
-                    # 1순위: 정확 매칭
-                    result = await session.execute(
+                # 2순위: prefix 매칭 (3글자 이상만)
+                if len(candidate) >= 3:
+                    row = (await session.execute(
                         select(District.district_code, District.district_name)
-                        .where(District.district_name == candidate)
+                        .where(District.district_name.ilike(f"{candidate}%"))
                         .limit(1)
-                    )
-                    row = result.first()
+                    )).first()
                     if row:
                         return {"code": row.district_code, "name": row.district_name}
 
-                    # 2순위: prefix 매칭 (3글자 이상만)
-                    if len(candidate) >= 3:
-                        result = await session.execute(
-                            select(District.district_code, District.district_name)
-                            .where(District.district_name.ilike(f"{candidate}%"))
-                            .limit(1)
-                        )
-                        row = result.first()
-                        if row:
-                            return {"code": row.district_code, "name": row.district_name}
-
         return None
+
+    async def detect_districts_in_message(self, message: str) -> list[dict]:
+        """Find all districts whose names match candidates from the message.
+
+        Returns a deduped list (max 5) of {"code", "name"}, preserving discovery
+        order. Used by the planner for multi-district intents (comparison).
+        """
+        from sqlalchemy import select
+
+        from server.models.district import District
+
+        found: list[dict] = []
+        seen_codes: set[str] = set()
+
+        async with self._sf() as session:
+            for candidate in self._candidate_words(message):
+                if len(found) >= 5:
+                    break
+
+                # 1순위: 정확 매칭
+                row = (await session.execute(
+                    select(District.district_code, District.district_name)
+                    .where(District.district_name == candidate)
+                    .limit(1)
+                )).first()
+                if row and row.district_code not in seen_codes:
+                    found.append({"code": row.district_code, "name": row.district_name})
+                    seen_codes.add(row.district_code)
+                    continue
+
+                # 2순위: prefix 매칭 (3글자 이상만)
+                if len(candidate) >= 3:
+                    row = (await session.execute(
+                        select(District.district_code, District.district_name)
+                        .where(District.district_name.ilike(f"{candidate}%"))
+                        .limit(1)
+                    )).first()
+                    if row and row.district_code not in seen_codes:
+                        found.append({"code": row.district_code, "name": row.district_name})
+                        seen_codes.add(row.district_code)
+
+        return found
 
     async def list_districts(
         self, search: str | None, district_type: str | None, limit: int, offset: int

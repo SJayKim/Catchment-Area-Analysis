@@ -74,11 +74,14 @@ test.describe('Ring 0 — Pre-flight', () => {
   });
 
   test('R0-3 polygons smoke (Mock or Real)', async ({ page }) => {
+    // Backend bounds format: sw_lat,sw_lng,ne_lat,ne_lng (lat first)
+    // Mock ignores bounds; Real applies ST_MakeEnvelope.
+    const bounds = '37.5,126.9,37.6,127.1';
     const packet = new EvalPacket({
       id: 'R0-3-polygons-smoke',
       title: 'Polygons GeoJSON ≥1 feature',
       story: '/api/map-data/polygons가 GeoJSON FeatureCollection을 200으로 리턴해야 한다.',
-      steps: [`GET ${BACKEND}/api/map-data/polygons?bounds=126.9,37.5,127.1,37.6`],
+      steps: [`GET ${BACKEND}/api/map-data/polygons?bounds=${bounds}`],
       mode: 'Mock',
       ring: 0,
       criteria: [
@@ -89,7 +92,7 @@ test.describe('Ring 0 — Pre-flight', () => {
     });
     packet.attach(page);
     const resp = await page.request.get(
-      `${BACKEND}/api/map-data/polygons?bounds=126.9,37.5,127.1,37.6`
+      `${BACKEND}/api/map-data/polygons?bounds=${bounds}`
     );
     expect(resp.status()).toBe(200);
     const data = await resp.json();
