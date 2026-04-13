@@ -5,7 +5,6 @@ from server.services.cache import get_cache_service
 
 @register_tool(
     "get_population_info",
-    emoji="🔍",
     progress_label="인구 데이터 조회 중...",
     done_label="인구 조회 완료",
 )

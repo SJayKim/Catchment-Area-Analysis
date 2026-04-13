@@ -1,16 +1,16 @@
 import { ChatMessage, SSEEvent, AgentStep } from './types';
 
-export const TOOL_LABELS: Record<string, { progress: string; done: string; icon: string }> = {
-  get_floating_population_tool: { progress: '유동인구 조회 중...', done: '유동인구 조회 완료', icon: '🔍' },
-  get_estimated_sales_tool: { progress: '추정매출 조회 중...', done: '추정매출 조회 완료', icon: '🔍' },
-  get_store_info_tool: { progress: '점포 현황 조회 중...', done: '점포 현황 조회 완료', icon: '🔍' },
-  get_population_info_tool: { progress: '인구 데이터 조회 중...', done: '인구 데이터 조회 완료', icon: '🔍' },
-  get_district_summary_tool: { progress: '상권 요약 생성 중...', done: '상권 요약 생성 완료', icon: '📋' },
-  compare_districts_tool: { progress: '상권 비교 분석 중...', done: '상권 비교 분석 완료', icon: '📊' },
-  recommend_business_tool: { progress: '업종 추천 분석 중...', done: '업종 추천 분석 완료', icon: '💡' },
-  get_store_history_tool: { progress: '점포 이력 분석 중...', done: '점포 이력 분석 완료', icon: '📋' },
-  simulate_revenue_tool: { progress: '매출 시뮬레이션 중...', done: '매출 시뮬레이션 완료', icon: '💰' },
-  simulate_revenue: { progress: '매출 시뮬레이션 중...', done: '매출 시뮬레이션 완료', icon: '💰' },
+export const TOOL_LABELS: Record<string, { progress: string; done: string }> = {
+  get_floating_population_tool: { progress: '유동인구 조회 중...', done: '유동인구 조회 완료' },
+  get_estimated_sales_tool: { progress: '추정매출 조회 중...', done: '추정매출 조회 완료' },
+  get_store_info_tool: { progress: '점포 현황 조회 중...', done: '점포 현황 조회 완료' },
+  get_population_info_tool: { progress: '인구 데이터 조회 중...', done: '인구 데이터 조회 완료' },
+  get_district_summary_tool: { progress: '상권 요약 생성 중...', done: '상권 요약 생성 완료' },
+  compare_districts_tool: { progress: '상권 비교 분석 중...', done: '상권 비교 분석 완료' },
+  recommend_business_tool: { progress: '업종 추천 분석 중...', done: '업종 추천 분석 완료' },
+  get_store_history_tool: { progress: '점포 이력 분석 중...', done: '점포 이력 분석 완료' },
+  simulate_revenue_tool: { progress: '매출 시뮬레이션 중...', done: '매출 시뮬레이션 완료' },
+  simulate_revenue: { progress: '매출 시뮬레이션 중...', done: '매출 시뮬레이션 완료' },
 };
 
 const CARD_LABELS: Record<string, string> = {
@@ -45,14 +45,13 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
     case 'thinking': {
       set({ isThinking: true });
       const currentSteps = get().agentSteps;
-      const thinkIcon = (event as { icon?: string }).icon || '🧠';
       const thinkStep = (event as { step?: string }).step;
       if (currentSteps.length === 0) {
-        get().addAgentStep({ id: 'thinking', label: `${thinkIcon} ${thinkStep || '질문 분석 중...'}`, status: 'in_progress' });
+        get().addAgentStep({ id: 'thinking', label: thinkStep || '질문 분석 중...', status: 'in_progress' });
       } else {
         const hasResponseStep = currentSteps.some((s) => s.id === 'response');
         if (!hasResponseStep) {
-          get().addAgentStep({ id: 'response', label: `${thinkIcon} ${thinkStep || '응답 작성 중...'}`, status: 'in_progress' });
+          get().addAgentStep({ id: 'response', label: thinkStep || '응답 작성 중...', status: 'in_progress' });
         }
       }
       break;
@@ -61,15 +60,15 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
     case 'plan': {
       // PAE mode: Planner has classified intent and generated a tool plan
       const intentLabels: Record<string, string> = {
-        summary: '📋 상권 요약 분석',
-        comparison: '📊 상권 비교 분석',
-        recommendation: '💡 업종 추천 분석',
-        risk: '⚠ 리스크 분석',
-        category_analysis: '🔍 업종별 상세 분석',
-        simulation: '💰 매출 시뮬레이션',
-        follow_up: '💬 추가 분석',
-        general: '💬 일반 응답',
-        ambiguous: '❓ 질문 확인',
+        summary: '상권 요약 분석',
+        comparison: '상권 비교 분석',
+        recommendation: '업종 추천 분석',
+        risk: '리스크 분석',
+        category_analysis: '업종별 상세 분석',
+        simulation: '매출 시뮬레이션',
+        follow_up: '추가 분석',
+        general: '일반 응답',
+        ambiguous: '질문 확인',
       };
       const intent = (event as { intent?: string }).intent || '';
       const steps = (event as { steps?: string[] }).steps || [];
@@ -84,7 +83,7 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
       steps.forEach((label, i) => {
         get().addAgentStep({
           id: `plan-step-${Date.now()}-${i}`,
-          label: `📋 ${label}`,
+          label,
           status: 'pending',
         });
       });
@@ -92,9 +91,8 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
     }
 
     case 'tool': {
-      get().updateAgentStepStatus('thinking', 'completed', '🧠 질문 분석 완료');
+      get().updateAgentStepStatus('thinking', 'completed', '질문 분석 완료');
       const toolLabel = TOOL_LABELS[event.name];
-      const icon = event.icon || toolLabel?.icon || '🔧';
       const progressText = event.progress_label || toolLabel?.progress || `${event.name} 실행 중...`;
       // Use a unique id per tool invocation so the same tool firing multiple
       // times (e.g. compare_districts for 3-way comparison) does not collide
@@ -102,7 +100,7 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
       const uniqueId = `tool-${event.name}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       get().addAgentStep({
         id: uniqueId,
-        label: `${icon} ${progressText}`,
+        label: progressText,
         status: 'in_progress',
         toolName: event.name,
       });
@@ -111,7 +109,6 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
 
     case 'tool_end': {
       const endLabel = TOOL_LABELS[event.name];
-      const endIcon = event.icon || endLabel?.icon || '🔧';
       const doneText = event.done_label || endLabel?.done || `${event.name} 완료`;
       // Find the latest in_progress step matching this tool name and complete it.
       // This is robust against multiple invocations of the same tool.
@@ -120,7 +117,7 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
         .reverse()
         .find((s) => s.toolName === event.name && s.status === 'in_progress');
       if (target) {
-        get().updateAgentStepStatus(target.id, 'completed', `${endIcon} ${doneText}`);
+        get().updateAgentStepStatus(target.id, 'completed', doneText);
       }
       break;
     }
@@ -134,7 +131,7 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
             get().updateAgentStepStatus(step.id, 'completed');
           }
         }
-        get().addAgentStep({ id: 'final', label: '✅ 분석 완료', status: 'completed' });
+        get().addAgentStep({ id: 'final', label: '분석 완료', status: 'completed' });
         setTimeout(() => { set({ agentSteps: [], isThinking: false }); }, 1500);
       }
       get().updateLastAssistantMessage(event.content);
@@ -142,11 +139,11 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
     }
 
     case 'card': {
-      get().updateAgentStepStatus('thinking', 'completed', '🧠 질문 분석 완료');
+      get().updateAgentStepStatus('thinking', 'completed', '질문 분석 완료');
       const cardLabel = CARD_LABELS[event.card_type] || '분석 카드';
       get().addAgentStep({
         id: `card-${event.card_type}`,
-        label: `📊 ${cardLabel} 생성 완료`,
+        label: `${cardLabel} 생성 완료`,
         status: 'completed',
       });
       const cardMessage: ChatMessage = {

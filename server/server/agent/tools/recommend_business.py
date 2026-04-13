@@ -40,7 +40,6 @@ def _enrich_recommendations(result: dict) -> dict:
 
 @register_tool(
     "recommend_business",
-    emoji="💡",
     card_type="recommend",
     progress_label="업종 추천 분석 중...",
     done_label="업종 추천 완료",

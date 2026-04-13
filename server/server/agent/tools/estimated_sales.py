@@ -57,7 +57,6 @@ def _enrich_sales(result: dict) -> dict:
 
 @register_tool(
     "get_estimated_sales",
-    emoji="🔍",
     progress_label="매출 데이터 조회 중...",
     done_label="매출 조회 완료",
 )

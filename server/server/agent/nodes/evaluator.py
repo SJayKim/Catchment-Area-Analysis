@@ -179,7 +179,7 @@ def generate_proactive_suggestions(state: AgentState) -> list[str]:
         summary = results.get("get_district_summary", {})
         close_rate = summary.get("closeRate", {}).get("current", 0)
         if close_rate and close_rate > 8.0:
-            suggestions[1] = f"⚠ {name} 폐업률이 높아요 — 리스크 분석해볼까요?"
+            suggestions[1] = f"{name} 폐업률이 높아요 — 리스크 분석해볼까요?"
 
     elif intent == "comparison":
         suggestions = [

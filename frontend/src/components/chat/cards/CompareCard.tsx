@@ -7,10 +7,10 @@ interface CompareCardProps {
   data: CompareCardData | Record<string, unknown>;
 }
 
-const STATUS_LABEL: Record<string, { label: string; icon: string }> = {
-  growing: { label: '성장', icon: '🟢' },
-  stable: { label: '안정', icon: '🟡' },
-  declining: { label: '침체', icon: '🔴' },
+const STATUS_LABEL: Record<string, { label: string; color: string }> = {
+  growing: { label: '성장', color: '#10b981' },
+  stable: { label: '안정', color: '#eab308' },
+  declining: { label: '침체', color: '#ef4444' },
 };
 
 function formatSales(value: number): string {
@@ -83,7 +83,7 @@ export default function CompareCard({ data }: CompareCardProps) {
       values: districts.map((d) => d.status),
       format: (v: string) => {
         const s = STATUS_LABEL[v] || STATUS_LABEL.stable;
-        return `${s.icon} ${s.label}`;
+        return s.label;
       },
       isText: true,
     },
@@ -97,7 +97,7 @@ export default function CompareCard({ data }: CompareCardProps) {
       {/* Header */}
       <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-3">
         <h3 className="text-white font-semibold text-sm">
-          📊 상권 비교: {names.join(' vs ')}
+          상권 비교: {names.join(' vs ')}
         </h3>
       </div>
 
@@ -143,7 +143,7 @@ export default function CompareCard({ data }: CompareCardProps) {
       {/* AI Summary */}
       {card.aiSummary && (
         <div className="px-4 py-3" style={{ borderTop: '1px solid var(--border-color)' }}>
-          <h4 className="text-xs font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>💬 AI 종합 의견</h4>
+          <h4 className="text-xs font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>종합 의견</h4>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{card.aiSummary}</p>
         </div>
       )}

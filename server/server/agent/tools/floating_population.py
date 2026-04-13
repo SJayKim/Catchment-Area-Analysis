@@ -5,7 +5,6 @@ from server.services.cache import get_cache_service
 
 @register_tool(
     "get_floating_population",
-    emoji="🔍",
     progress_label="유동인구 데이터 조회 중...",
     done_label="유동인구 조회 완료",
 )

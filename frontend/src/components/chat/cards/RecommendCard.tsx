@@ -48,7 +48,7 @@ export default function RecommendCard({ data }: RecommendCardProps) {
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
         <h3 className="text-white font-semibold text-sm">
-          💡 {card.districtName || '상권'} 업종 추천 Top {card.recommendations.length}
+          {card.districtName || '상권'} 업종 추천 Top {card.recommendations.length}
         </h3>
       </div>
 
@@ -101,7 +101,7 @@ export default function RecommendCard({ data }: RecommendCardProps) {
       <SourcesCitation
         sources={card.dataSources}
         quarter={`${card.quarter} · 분석 업종 ${card.total_categories_analyzed}개`}
-        extraFooterText="⚠ 추정치이며 실제 결과와 다를 수 있습니다"
+        extraFooterText="추정치이며 실제 결과와 다를 수 있습니다"
       />
     </div>
   );

@@ -191,7 +191,7 @@ export default function ReportDocument({
         {/* Disclaimer */}
         <View style={styles.disclaimer}>
           <Text style={styles.disclaimerText}>
-            ⚠ 본 리포트는 카드매출 기반 추정치 및 AI 분석 결과를 포함하고 있으며, 실제 상권
+            본 리포트는 카드매출 기반 추정치 및 AI 분석 결과를 포함하고 있으며, 실제 상권
             현황과 다를 수 있습니다. 투자, 창업 등 중요한 의사결정 시 반드시 현장 조사 및 전문가
             상담을 병행하시기 바랍니다. 데이터 기준 시점: {dataQuarter || '-'}
           </Text>

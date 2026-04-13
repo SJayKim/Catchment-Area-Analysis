@@ -59,7 +59,7 @@ export default function SimulationCard({ data }: SimulationCardProps) {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3">
         <h3 className="text-white font-semibold text-sm">
-          💰 {card.districtName || '상권'} {card.category_name || '업종'} 매출 시뮬레이션
+          {card.districtName || '상권'} {card.category_name || '업종'} 매출 시뮬레이션
         </h3>
       </div>
 
@@ -169,7 +169,7 @@ export default function SimulationCard({ data }: SimulationCardProps) {
         </div>
         {!percentiles.reliable && (
           <p className="text-xs" style={{ color: '#f59e0b' }}>
-            ⚠ 표본 수 부족 ({percentiles.sample_count}개) — 참고용 범위
+            표본 수 부족 ({percentiles.sample_count}개) — 참고용 범위
           </p>
         )}
       </div>
@@ -180,7 +180,7 @@ export default function SimulationCard({ data }: SimulationCardProps) {
         style={{ backgroundColor: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}
       >
         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          ⚠ {card.disclaimer || '본 시��레이션은 카드매출 기반 추정치이며, 실제 매출과 다를 수 있습니다.'}
+          {card.disclaimer || '본 시뮬레이션은 카드매출 기반 추정치이며, 실제 매출과 다를 수 있습니다.'}
         </p>
       </div>
 

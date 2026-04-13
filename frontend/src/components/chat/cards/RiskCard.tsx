@@ -74,7 +74,7 @@ function SurvivalBar({ category, avgMonths, maxMonths }: { category: string; avg
         />
       </div>
       <span className={`text-xs font-medium w-16 text-right ${isLow ? 'text-red-500' : ''}`} style={isLow ? {} : { color: 'var(--text-secondary)' }}>
-        {avgMonths.toFixed(1)}개월 {isLow ? '⚠' : ''}
+        {avgMonths.toFixed(1)}개월
       </span>
     </div>
   );
@@ -112,7 +112,7 @@ export default function RiskCard({ data }: RiskCardProps) {
       {/* Header */}
       <div className="bg-gradient-to-r from-red-500 to-rose-500 px-4 py-3">
         <h3 className="text-white font-semibold text-sm">
-          ⚠ {card.districtName || '상권'} 리스크 분석
+          {card.districtName || '상권'} 리스크 분석
         </h3>
       </div>
 
@@ -120,7 +120,7 @@ export default function RiskCard({ data }: RiskCardProps) {
       <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
         <StabilityGauge score={card.stability.score} grade={card.stability.grade} />
         {card.stability.trend?.detail && (
-          <p className="text-xs mt-1.5" style={{ color: 'var(--text-secondary)' }}>📉 {card.stability.trend.detail}</p>
+          <p className="text-xs mt-1.5" style={{ color: 'var(--text-secondary)' }}>{card.stability.trend.detail}</p>
         )}
         {card.stability.message && (
           <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{card.stability.message}</p>
@@ -131,7 +131,7 @@ export default function RiskCard({ data }: RiskCardProps) {
       {card.survival_by_category && card.survival_by_category.length > 0 && (
         <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
           <h4 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>
-            📊 업종별 평균 생존 기간
+            업종별 평균 생존 기간
           </h4>
           <div className="space-y-1.5">
             {card.survival_by_category.slice(0, 8).map((item, i) => (
@@ -150,7 +150,7 @@ export default function RiskCard({ data }: RiskCardProps) {
       {card.risk_categories && card.risk_categories.length > 0 && (
         <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
           <h4 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>
-            🚨 위험 업종
+            위험 업종
           </h4>
           <div className="space-y-1">
             {card.risk_categories.map((item, i) => (
@@ -169,7 +169,7 @@ export default function RiskCard({ data }: RiskCardProps) {
       {trendChartData.length > 0 && (
         <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
           <h4 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }}>
-            📈 분기별 개폐업 추이
+            분기별 개폐업 추이
           </h4>
           <InlineChart
             data={trendChartData}

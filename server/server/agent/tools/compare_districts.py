@@ -42,7 +42,6 @@ def _enrich_comparison(result: dict) -> dict:
 
 @register_tool(
     "compare_districts",
-    emoji="📊",
     card_type="compare",
     progress_label="상권 비교 분석 중...",
     done_label="상권 비교 완료",

@@ -5,7 +5,6 @@ from server.services.cache import get_cache_service
 
 @register_tool(
     "get_store_info",
-    emoji="🔍",
     progress_label="점포 현황 조회 중...",
     done_label="점포 현황 조회 완료",
 )

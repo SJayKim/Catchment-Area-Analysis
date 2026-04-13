@@ -39,7 +39,6 @@ def _format_sales(sales: int) -> str:
 
 @register_tool(
     "get_district_summary",
-    emoji="📋",
     card_type="summary",
     progress_label="상권 요약 분석 중...",
     done_label="상권 요약 완료",

@@ -9,7 +9,6 @@ from server.services.cache import get_cache_service
 
 @register_tool(
     "simulate_revenue",
-    emoji="💰",
     card_type="simulation",
     progress_label="매출 시뮬레이션 중...",
     done_label="매출 시뮬레이션 완료",

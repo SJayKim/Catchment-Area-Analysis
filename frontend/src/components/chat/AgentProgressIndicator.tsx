@@ -8,9 +8,9 @@ interface AgentProgressIndicatorProps {
 }
 
 const STATUS_ICON: Record<string, string> = {
-  pending: '⏳',
-  in_progress: '⏳',
-  completed: '✅',
+  pending: '·',
+  in_progress: '·',
+  completed: '—',
 };
 
 export default function AgentProgressIndicator({ steps }: AgentProgressIndicatorProps) {

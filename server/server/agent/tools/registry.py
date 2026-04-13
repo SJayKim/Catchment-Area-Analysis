@@ -17,7 +17,6 @@ class ToolMeta:
 
     name: str
     fn: Callable[..., Any]
-    emoji: str
     card_type: str | None
     progress_label: str
     done_label: str
@@ -30,7 +29,7 @@ _REGISTRY: dict[str, ToolMeta] = {}
 def register_tool(
     name: str,
     *,
-    emoji: str = "🔧",
+    emoji: str = "",
     card_type: str | None = None,
     progress_label: str = "",
     done_label: str = "",
@@ -41,7 +40,6 @@ def register_tool(
         _REGISTRY[name] = ToolMeta(
             name=name,
             fn=fn,
-            emoji=emoji,
             card_type=card_type,
             progress_label=progress_label or f"{name} 실행 중...",
             done_label=done_label or f"{name} 완료",

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
 
 from server.agent.state import AgentState, ToolPlanStep
 from server.agent.tools.data_sources import get_sources_for_tool
@@ -101,8 +100,7 @@ async def actor_node(
                         "type": "tool",
                         "name": step["tool_name"],
                         "input": step["args"],
-                        "icon": meta.emoji if meta else "🔧",
-                        "progress_label": meta.progress_label if meta else None,
+                                                "progress_label": meta.progress_label if meta else None,
                     }
                 )
 
@@ -131,8 +129,7 @@ async def actor_node(
                     {
                         "type": "tool_end",
                         "name": step["tool_name"],
-                        "icon": meta.emoji if meta else "🔧",
-                        "done_label": meta.done_label if meta else None,
+                                                "done_label": meta.done_label if meta else None,
                     }
                 )
 

@@ -28,7 +28,6 @@ async def _enrich_history(result: dict, district_code: str) -> dict:
 
 @register_tool(
     "get_store_history",
-    emoji="📋",
     card_type="risk",
     progress_label="리스크 분석 중...",
     done_label="리스크 분석 완료",

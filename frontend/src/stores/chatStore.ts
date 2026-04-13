@@ -145,7 +145,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     };
     set((s) => ({ messages: [...s.messages, userMessage] }));
     set({ isLoading: true, isThinking: true, agentSteps: [
-      { id: 'thinking', label: '🧠 질문 분석 중...', status: 'in_progress' },
+      { id: 'thinking', label: '질문 분석 중...', status: 'in_progress' },
     ] });
 
     // Add empty assistant message placeholder
