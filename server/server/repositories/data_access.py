@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from server.repositories.protocols import (
+    BenchmarkRepository,
     ComparisonRepository,
     DistrictRepository,
     EstimatedSalesRepository,
@@ -30,6 +31,7 @@ class DataAccess:
         recommendation: RecommendationRepository,
         simulation: SimulationRepository,
         heatmap: HeatmapRepository,
+        benchmarks: BenchmarkRepository | None = None,
     ) -> None:
         self.districts = districts
         self.floating_pop = floating_pop
@@ -40,3 +42,4 @@ class DataAccess:
         self.recommendation = recommendation
         self.simulation = simulation
         self.heatmap = heatmap
+        self.benchmarks = benchmarks

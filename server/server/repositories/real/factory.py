@@ -5,6 +5,7 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from server.repositories.data_access import DataAccess
+from server.repositories.real.benchmarks import RealBenchmarkRepository
 from server.repositories.real.comparison import RealComparisonRepository
 from server.repositories.real.districts import RealDistrictRepository
 from server.repositories.real.estimated_sales import RealEstimatedSalesRepository
@@ -28,4 +29,5 @@ def build_real_data_access(session_factory: async_sessionmaker[AsyncSession]) ->
         recommendation=RealRecommendationRepository(session_factory),
         simulation=RealSimulationRepository(session_factory),
         heatmap=RealHeatmapRepository(session_factory),
+        benchmarks=RealBenchmarkRepository(session_factory),
     )

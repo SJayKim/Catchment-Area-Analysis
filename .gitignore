@@ -40,5 +40,10 @@ map-loaded.png
 data/shp/
 data/csv/
 
+# Load test results
+loadtest/results/
+
 # Seed dump IS tracked via Git LFS
 !data/seed/
+server/server-debug.log
+test-results/

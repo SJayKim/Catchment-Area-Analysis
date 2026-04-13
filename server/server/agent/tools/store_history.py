@@ -1,10 +1,29 @@
 import logging
 
+from server.agent.tools.benchmarks import get_district_benchmarks
 from server.agent.tools.registry import register_tool
 from server.repositories import get_data_access
 from server.services.cache import get_cache_service
 
 logger = logging.getLogger(__name__)
+
+
+async def _enrich_history(result: dict, district_code: str) -> dict:
+    """Add benchmark context to store history for risk comparison."""
+    try:
+        da = get_data_access()
+        meta = await da.districts.get_district_meta(district_code)
+        if meta:
+            district_type = meta.get("type", "발달상권")
+            bench = await get_district_benchmarks(district_type)
+            if bench:
+                result["benchmarks"] = {
+                    "districtType": district_type,
+                    "seoulAvgCloseRate": bench.get("seoulAvg", {}).get("close_rate"),
+                }
+    except Exception:
+        pass  # Best effort
+    return result
 
 
 @register_tool(
@@ -27,6 +46,7 @@ async def get_store_history(district_code: str) -> dict:
         result = await da.stores.get_store_history(district_code)
 
         if "error" not in result:
+            result = await _enrich_history(result, district_code)
             await cache.set(cache_key, result, ttl=86400)
         return result
     except Exception as exc:

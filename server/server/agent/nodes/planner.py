@@ -121,8 +121,13 @@ async def _classify_with_llm(
             "LLM classification timed out after %.1fs, using rule fallback",
             settings.llm_timeout_fast,
         )
-    except Exception:
+    except Exception as exc:
         logger.warning("LLM classification failed, falling back to rules", exc_info=True)
+        # Disable Anthropic for future calls if the key is invalid
+        if "AuthenticationError" in type(exc).__name__ or "authentication" in str(exc).lower():
+            import server.agent.graph as _graph_mod
+            _graph_mod._anthropic_valid = False
+            logger.warning("Anthropic API key invalid — disabled for this session")
 
     return _rule_fallback_result(message, district_code)
 
@@ -239,10 +244,23 @@ async def planner_node(state: AgentState) -> dict:
             if district_code not in referenced_districts:
                 referenced_districts.insert(0, district_code)
 
-    # 3. Build plan
+    # 3. Greeting → skip entire agent pipeline (no LLM call needed)
+    if intent == "greeting":
+        return {
+            "user_intent": "greeting",
+            "intent_confidence": 1.0,
+            "referenced_districts": [],
+            "referenced_category": None,
+            "plan": [],
+            "plan_reasoning": "인사 → Agent 파이프라인 스킵",
+            "response_mode": "greeting_direct",
+            "execution_round": 0,
+        }
+
+    # 4. Build plan
     plan = _build_plan(intent, district_code, referenced_districts, referenced_category)
 
-    # 4. Determine response mode
+    # 5. Determine response mode
     response_mode = "direct" if intent in ("general", "ambiguous") or not plan else "tool_assisted"
 
     # If no district selected and tool-assisted → ambiguous

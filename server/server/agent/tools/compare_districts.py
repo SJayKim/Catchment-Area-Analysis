@@ -7,6 +7,39 @@ from server.services.cache import get_cache_service
 logger = logging.getLogger(__name__)
 
 
+def _enrich_comparison(result: dict) -> dict:
+    """Add winners and efficiency metrics to comparison result."""
+    districts = result.get("districts", {})
+    items = [d for d in districts.values() if "error" not in d]
+    if len(items) < 2:
+        return result
+
+    # Per-store efficiency for each district
+    for d in items:
+        ms = d.get("monthly_sales", 0)
+        sc = d.get("store_count", 0)
+        fp = d.get("floating_pop", 0)
+        if sc > 0:
+            d["sales_per_store"] = round(ms / sc)
+            d["pop_per_store"] = round(fp / sc)
+
+    # Winners by metric
+    winners: dict = {}
+    for metric, label, lower_is_better in [
+        ("floating_pop", "highest_pop", False),
+        ("monthly_sales", "highest_sales", False),
+        ("close_rate", "lowest_close_rate", True),
+        ("sales_per_store", "best_efficiency", False),
+    ]:
+        valid = [d for d in items if metric in d]
+        if valid:
+            best = min(valid, key=lambda d: d[metric]) if lower_is_better else max(valid, key=lambda d: d[metric])
+            winners[label] = best.get("district_name", best.get("district_code"))
+
+    result["winners"] = winners
+    return result
+
+
 @register_tool(
     "compare_districts",
     emoji="📊",
@@ -30,6 +63,7 @@ async def compare_districts(district_codes: list[str]) -> dict:
         result = await da.comparison.compare_districts(district_codes)
 
         if "error" not in result:
+            result = _enrich_comparison(result)
             await cache.set(cache_key, result, ttl=86400)
         return result
     except Exception as exc:

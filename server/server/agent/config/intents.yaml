@@ -3,7 +3,7 @@
 
 intents:
   greeting:
-    pattern: "^(안녕|하이|헬로|hi|hello|반갑|감사|고마워|ㅎㅇ)"
+    pattern: "^(안녕하세요|안녕|하이|헬로|hi|hello|반갑습니다|반갑|감사합니다|감사|고마워|ㅎㅇ|좋은\\s*아침|좋은\\s*저녁)[!?.ㅎㅋ요]*$"
     flags: IGNORECASE
     plan: []
 

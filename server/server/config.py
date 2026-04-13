@@ -26,13 +26,15 @@ class Settings(BaseSettings):
     data_go_kr_api_key: str = ""
 
     # LLM
-    llm_provider: str = "gemini"  # "anthropic" or "gemini"
+    llm_provider: str = "gemini"  # "anthropic" | "gemini" | "mock"
     anthropic_api_key: str = ""
     google_api_key: str = ""
 
     # Per-role Gemini model (pro for critical, flash for lightweight)
-    gemini_model_pro: str = "gemini-3.1-pro-preview"
-    gemini_model_flash: str = "gemini-3.1-flash-lite-preview"
+    # NOTE: 3.1-preview models have very high TTFT (~16-45s).
+    # 2.5 stable models are dramatically faster (1-8s TTFT).
+    gemini_model_pro: str = "gemini-2.5-pro"
+    gemini_model_flash: str = "gemini-2.5-flash"
 
     # Langfuse
     langfuse_public_key: str = ""

@@ -45,12 +45,14 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
     case 'thinking': {
       set({ isThinking: true });
       const currentSteps = get().agentSteps;
+      const thinkIcon = (event as { icon?: string }).icon || '🧠';
+      const thinkStep = (event as { step?: string }).step;
       if (currentSteps.length === 0) {
-        get().addAgentStep({ id: 'thinking', label: '🧠 질문 분석 중...', status: 'in_progress' });
+        get().addAgentStep({ id: 'thinking', label: `${thinkIcon} ${thinkStep || '질문 분석 중...'}`, status: 'in_progress' });
       } else {
         const hasResponseStep = currentSteps.some((s) => s.id === 'response');
         if (!hasResponseStep) {
-          get().addAgentStep({ id: 'response', label: '💬 응답 작성 중...', status: 'in_progress' });
+          get().addAgentStep({ id: 'response', label: `${thinkIcon} ${thinkStep || '응답 작성 중...'}`, status: 'in_progress' });
         }
       }
       break;

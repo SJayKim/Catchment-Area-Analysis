@@ -25,6 +25,9 @@ LLM_PROVIDER = settings.llm_provider
 
 logger = logging.getLogger(__name__)
 
+# Flag to skip Anthropic after first auth failure (avoids repeated 401 roundtrips)
+_anthropic_valid = True
+
 # ===================================================================
 # LangChain @tool wrappers (used by ReAct mode only)
 # ===================================================================
@@ -204,11 +207,50 @@ def _create_llm(role: str = "default"):
     Role-based model selection (Gemini):
       - "respond", "react" → gemini-2.5-pro  (user-facing, quality matters)
       - "planner", "evaluator" → gemini-2.5-flash  (internal, speed matters)
+
+    Provider "mock" returns a FakeListChatModel for load testing (no API cost).
     """
+    if LLM_PROVIDER == "mock":
+        from langchain_core.language_models.fake_chat_models import FakeListChatModel
+
+        # Planner expects JSON with intent/plan; other roles get plain Korean text
+        if role in ("planner",):
+            responses = [
+                '{"intent": "summary", "confidence": 0.95, '
+                '"plan": [{"tool": "district_summary", "input": {"district_code": "%(district_code)s"}, "depends_on": []}], '
+                '"direct_response": false, "reasoning": "상권 요약 요청"}'
+            ]
+        elif role in ("evaluator",):
+            responses = [
+                '{"sufficient": true, "reasoning": "모든 도구 결과가 정상 반환됨", "missing": []}'
+            ]
+        else:
+            responses = [
+                "강남역 상권은 서울 주요 상권 중 하나입니다. "
+                "일평균 유동인구는 약 100만 명이며, 피크 시간대는 18시입니다. "
+                "주요 업종은 한식, 커피, 편의점 순이고, "
+                "최근 분기 추정 매출은 약 500억 원입니다. "
+                "폐업률은 5.2%로 서울 평균 대비 양호한 수준입니다.",
+            ]
+
+        return FakeListChatModel(responses=responses, sleep=0.02)
+
+    # Planner uses Anthropic Claude Sonnet for superior intent classification.
+    # Guarded by _anthropic_valid flag to avoid retrying a known-bad key.
+    if role == "planner" and settings.anthropic_api_key and _anthropic_valid:
+        from langchain_anthropic import ChatAnthropic
+
+        return ChatAnthropic(
+            model="claude-sonnet-4-20250514",
+            api_key=settings.anthropic_api_key,  # type: ignore[arg-type]
+            max_tokens=4096,
+            temperature=0.3,
+        )
+
     if LLM_PROVIDER == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
 
-        pro_roles = {"planner", "respond", "react", "default"}
+        pro_roles = {"respond", "react", "default"}
         model = settings.gemini_model_pro if role in pro_roles else settings.gemini_model_flash
 
         return ChatGoogleGenerativeAI(
@@ -374,6 +416,19 @@ def _build_pae_graph(event_queue: asyncio.Queue):
     async def _planner(state: AgentState) -> dict:
         return await planner_node(state)
 
+    async def _greeting(state: AgentState) -> dict:
+        """Emit greeting response directly — no LLM call needed."""
+        await event_queue.put({
+            "type": "text",
+            "content": "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다.\n"
+                       "지도에서 상권을 선택하시거나, 분석할 상권명을 알려주세요!",
+        })
+        await event_queue.put({
+            "type": "suggestion",
+            "questions": ["강남역 상권 분석해줘", "홍대 어때?", "업종 추천해줘", "상권 비교하고 싶어"],
+        })
+        return {"final_response": "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다."}
+
     async def _actor(state: AgentState) -> dict:
         return await actor_node(state, event_queue)
 
@@ -384,6 +439,8 @@ def _build_pae_graph(event_queue: asyncio.Queue):
         return await respond_node(state, event_queue)
 
     def route_after_planner(state) -> str:
+        if state.get("response_mode") == "greeting_direct":
+            return "greeting"
         if state.get("response_mode") == "direct" or not state.get("plan"):
             return "respond"
         return "actor"
@@ -398,12 +455,17 @@ def _build_pae_graph(event_queue: asyncio.Queue):
 
     graph = StateGraph(AgentState)
     graph.add_node("planner", _planner)
+    graph.add_node("greeting", _greeting)
     graph.add_node("actor", _actor)
     graph.add_node("evaluator", _evaluator)
     graph.add_node("respond", _respond)
 
     graph.set_entry_point("planner")
-    graph.add_conditional_edges("planner", route_after_planner, {"actor": "actor", "respond": "respond"})
+    graph.add_conditional_edges(
+        "planner", route_after_planner,
+        {"actor": "actor", "respond": "respond", "greeting": "greeting"},
+    )
+    graph.add_edge("greeting", END)
     graph.add_edge("actor", "evaluator")
     graph.add_conditional_edges("evaluator", route_after_evaluator, {"respond": "respond", "planner": "planner"})
     graph.add_edge("respond", END)

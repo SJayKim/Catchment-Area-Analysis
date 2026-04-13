@@ -65,7 +65,7 @@ async def _get_session(session_id: str) -> dict:
 # ---------------------------------------------------------------------------
 
 _GREETING_PATTERN = re.compile(
-    r"^(안녕|하이|헬로|hi|hello|반갑|감사합니다|고마워|ㅎㅇ|좋은\s*아침|좋은\s*저녁)\s*[!?.ㅎㅋ]*\s*$",
+    r"^(안녕하세요|안녕|하이|헬로|hi|hello|반갑습니다|반갑|감사합니다|감사|고마워|ㅎㅇ|좋은\s*아침|좋은\s*저녁)[!?.ㅎㅋ요]*\s*$",
     re.IGNORECASE,
 )
 
@@ -81,6 +81,46 @@ class ChatRequest(BaseModel):
     message: str
     session_id: str | None = None
     district_code: str | None = None
+
+
+@router.get("/health/detail")
+async def health_detail(request: Request) -> dict:
+    """Expose runtime metrics for load testing & monitoring."""
+    from server.services.cache import get_cache_service
+
+    # DB pool stats
+    engine = getattr(request.app.state, "db_engine", None)
+    if engine is not None:
+        pool = engine.pool
+        db_info = {
+            "db_pool_size": pool.size(),
+            "db_pool_checkedout": pool.checkedout(),
+            "db_pool_overflow": pool.overflow(),
+            "db_pool_checkedin": pool.checkedin(),
+        }
+    else:
+        db_info = {"db_pool_size": 0, "db_pool_checkedout": 0, "db_pool_overflow": 0, "db_pool_checkedin": 0}
+
+    # Redis status
+    cache = get_cache_service()
+    redis_connected = False
+    if hasattr(cache, "_redis") and cache._redis is not None:
+        try:
+            await cache._redis.ping()
+            redis_connected = True
+        except Exception:
+            pass
+
+    return {
+        "semaphore_available": _chat_semaphore._value,
+        "semaphore_max": _MAX_CONCURRENT_CHATS,
+        "active_sessions": len(_sessions),
+        **db_info,
+        "redis_connected": redis_connected,
+        "agent_mode": settings.agent_mode,
+        "llm_provider": settings.llm_provider,
+        "use_mock": settings.use_mock,
+    }
 
 
 @router.post("/chat")

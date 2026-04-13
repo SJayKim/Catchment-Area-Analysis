@@ -40,6 +40,10 @@ dev = [
     "ruff>=0.8",
     "mypy>=1.13",
 ]
+loadtest = [
+    "locust>=2.29",
+    "httpx>=0.27",
+]
 
 [project.scripts]
 etl = "server.data.etl.runner:app"

@@ -67,6 +67,9 @@ async def lifespan(app: FastAPI):
         agent = create_agent()
         set_agent(agent)
 
+    # Store engine reference for health/detail metrics
+    app.state.db_engine = engine
+
     mode = "Mock" if settings.use_mock else "Real"
     logger.info(f"MarketScope AI started in {mode} mode")
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from server.repositories.data_access import DataAccess
+from server.repositories.mock.benchmarks import MockBenchmarkRepository
 from server.repositories.mock.comparison import MockComparisonRepository
 from server.repositories.mock.districts import MockDistrictRepository
 from server.repositories.mock.estimated_sales import MockEstimatedSalesRepository
@@ -26,4 +27,5 @@ def build_mock_data_access() -> DataAccess:
         recommendation=MockRecommendationRepository(),
         simulation=MockSimulationRepository(),
         heatmap=MockHeatmapRepository(),
+        benchmarks=MockBenchmarkRepository(),
     )
