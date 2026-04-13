@@ -40,11 +40,16 @@ class CategoryResolver:
     async def load_from_db(self, session_factory) -> None:
         """Load keywords from category_metadata table (real mode).
 
-        Falls back to defaults if the table is empty.
+        Starts with default keywords as a base, then merges DB keywords on top.
+        This ensures common keywords like "카페" are always available even if
+        the DB table lacks them.
         """
         from sqlalchemy import select
 
         from server.models.category import CategoryMetadata
+
+        # Always start with defaults as base
+        self._keywords = dict(_DEFAULT_KEYWORDS)
 
         try:
             async with session_factory() as session:
@@ -72,25 +77,28 @@ class CategoryResolver:
                                 count += 1
 
                 if count == 0:
-                    logger.warning("category_metadata table is empty, using defaults")
-                    self.load_defaults()
+                    logger.info("category_metadata table is empty, using defaults only")
                 else:
-                    logger.info(f"Loaded {count} category keywords from DB")
+                    logger.info(
+                        "Loaded %d category keywords from DB (merged with %d defaults)",
+                        count, len(_DEFAULT_KEYWORDS),
+                    )
         except Exception:
-            logger.warning("Failed to load categories from DB, using defaults", exc_info=True)
-            self.load_defaults()
+            logger.warning("Failed to load categories from DB, using defaults only", exc_info=True)
 
     def resolve(self, message: str) -> str | None:
         """Return the first matching category_code, or None."""
+        msg_lower = message.lower()
         for kw, code in self._keywords.items():
-            if kw in message:
+            if kw.lower() in msg_lower:
                 return code
         return None
 
     def resolve_name(self, message: str) -> str | None:
         """Return the first matching keyword string, or None."""
+        msg_lower = message.lower()
         for kw in self._keywords:
-            if kw in message:
+            if kw.lower() in msg_lower:
                 return kw
         return None
 

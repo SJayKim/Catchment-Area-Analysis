@@ -75,9 +75,16 @@ class RealDistrictRepository:
         "와", "과", "랑", "서",
     )
 
+    # Common location suffixes in Korean place names
+    _LOCATION_SUFFIXES = ("입구", "역", "앞", "사거리", "네거리")
+
     @classmethod
     def _candidate_words(cls, message: str) -> list[str]:
-        """Extract candidate words with Korean particle stripping + stopword filtering."""
+        """Extract candidate words with Korean particle stripping + stopword filtering.
+
+        Also generates shortened forms by stripping location suffixes
+        (e.g. "홍대입구" -> "홍대") to match DB names that may differ.
+        """
         words = re.findall(r"[\w가-힣]{2,10}", message)
         candidates: list[str] = []
         seen: set[str] = set()
@@ -87,10 +94,21 @@ class RealDistrictRepository:
                     continue
                 seen.add(cand)
                 candidates.append(cand)
+
+        # Generate extra candidates by stripping location suffixes
+        extra: list[str] = []
+        for cand in list(candidates):
+            for suffix in cls._LOCATION_SUFFIXES:
+                if cand.endswith(suffix) and len(cand) - len(suffix) >= 2:
+                    short = cand[: -len(suffix)]
+                    if short not in cls._STOPWORDS and short not in seen:
+                        seen.add(short)
+                        extra.append(short)
+        candidates.extend(extra)
         return candidates
 
     async def detect_district_by_name(self, message: str) -> dict | None:
-        from sqlalchemy import select
+        from sqlalchemy import select, literal
 
         from server.models.district import District
 
@@ -115,6 +133,26 @@ class RealDistrictRepository:
                     if row:
                         return {"code": row.district_code, "name": row.district_name}
 
+                # 3순위: contains 매칭 (2글자 이상)
+                if len(candidate) >= 2:
+                    row = (await session.execute(
+                        select(District.district_code, District.district_name)
+                        .where(District.district_name.ilike(f"%{candidate}%"))
+                        .limit(1)
+                    )).first()
+                    if row:
+                        return {"code": row.district_code, "name": row.district_name}
+
+                # 4순위: 역방향 prefix (DB 이름이 candidate의 prefix인 경우)
+                if len(candidate) >= 3:
+                    row = (await session.execute(
+                        select(District.district_code, District.district_name)
+                        .where(literal(candidate).ilike(District.district_name + "%"))
+                        .limit(1)
+                    )).first()
+                    if row:
+                        return {"code": row.district_code, "name": row.district_name}
+
         return None
 
     async def detect_districts_in_message(self, message: str) -> list[dict]:
@@ -122,8 +160,10 @@ class RealDistrictRepository:
 
         Returns a deduped list (max 5) of {"code", "name"}, preserving discovery
         order. Used by the planner for multi-district intents (comparison).
+
+        Matching priority: exact > prefix > contains > reverse-prefix.
         """
-        from sqlalchemy import select
+        from sqlalchemy import select, literal
 
         from server.models.district import District
 
@@ -151,6 +191,30 @@ class RealDistrictRepository:
                     row = (await session.execute(
                         select(District.district_code, District.district_name)
                         .where(District.district_name.ilike(f"{candidate}%"))
+                        .limit(1)
+                    )).first()
+                    if row and row.district_code not in seen_codes:
+                        found.append({"code": row.district_code, "name": row.district_name})
+                        seen_codes.add(row.district_code)
+                        continue
+
+                # 3순위: contains 매칭 (2글자 이상)
+                if len(candidate) >= 2:
+                    row = (await session.execute(
+                        select(District.district_code, District.district_name)
+                        .where(District.district_name.ilike(f"%{candidate}%"))
+                        .limit(1)
+                    )).first()
+                    if row and row.district_code not in seen_codes:
+                        found.append({"code": row.district_code, "name": row.district_name})
+                        seen_codes.add(row.district_code)
+                        continue
+
+                # 4순위: 역방향 prefix (DB 이름이 candidate의 prefix인 경우)
+                if len(candidate) >= 3:
+                    row = (await session.execute(
+                        select(District.district_code, District.district_name)
+                        .where(literal(candidate).ilike(District.district_name + "%"))
                         .limit(1)
                     )).first()
                     if row and row.district_code not in seen_codes:
