@@ -24,7 +24,9 @@ docs/
 ├── status/          개발 진행 상태 (마스터: current-status.md)
 │   └── e2e/         E2E 테스트 리포트 이력
 ├── setup/           개발환경 셋업 가이드
-├── archive/         구 버전 문서 (⚠ 참고 금지, 이력 보존용)
+├── archive/         구 버전 문서 + 완료된 plan/QA (⚠ 참고 금지, 이력 보존용)
+│   ├── completed-plans/  완료된 구현 계획 12개
+│   └── qa-history/       Phase 1B QA 히스토리 리포트 6개
 ├── screenshots/     UI 스크린샷 (dev/e2e-qa/real-mode/ux)
 ├── images/          README에서 참조하는 이미지
 └── demo_video/      데모 영상
@@ -39,7 +41,8 @@ docs/
 | 개발 체크리스트 | [spec/checklist.md](spec/checklist.md) |
 | 현재 개발 상태 | [status/current-status.md](status/current-status.md) |
 | QA 마스터 플랜 | [qa/qa-test-plan.md](qa/qa-test-plan.md) |
-| Phase 1 구현 계획 | [plan/phase/phase-1-implementation.md](plan/phase/phase-1-implementation.md) |
+| Phase 2/3 구현 계획 | [plan/phase/](plan/phase/) |
+| Agent 고도화 계획 | [plan/agent-improvement/00-overview.md](plan/agent-improvement/00-overview.md) |
 
 ## 명명 규칙
 

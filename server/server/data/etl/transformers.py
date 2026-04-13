@@ -7,7 +7,6 @@ Coordinate transform (EPSG:5181→4326) is done in SQL via PostGIS ST_Transform.
 from __future__ import annotations
 
 import logging
-import re
 
 logger = logging.getLogger(__name__)
 

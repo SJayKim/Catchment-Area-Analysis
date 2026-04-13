@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     # Agent architecture
-    agent_mode: str = "react"  # "react" (legacy) | "pae" (Planner-Actor-Evaluator)
+    agent_mode: str = "pae"  # Planner-Actor-Evaluator
     agent_max_rounds: int = 3  # max Planner→Actor→Evaluator loops
 
     # SQLAlchemy connection pool

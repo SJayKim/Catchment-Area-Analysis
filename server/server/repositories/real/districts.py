@@ -162,7 +162,7 @@ class RealDistrictRepository:
     async def list_districts(
         self, search: str | None, district_type: str | None, limit: int, offset: int
     ) -> tuple[int, list[dict]]:
-        from geoalchemy2.functions import ST_AsGeoJSON, ST_X, ST_Y
+        from geoalchemy2.functions import ST_X, ST_Y
         from sqlalchemy import func, select
 
         from server.models.district import District

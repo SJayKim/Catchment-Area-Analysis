@@ -146,7 +146,3 @@ def set_cache_service(cs: MemoryCacheService | RedisCacheService) -> None:
     """Set the global cache service (called once at startup)."""
     global _cache_service
     _cache_service = cs
-
-
-# Backward compatibility — legacy singleton used by existing code during migration
-cache_service = MemoryCacheService()

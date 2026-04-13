@@ -1,7 +1,13 @@
 import { District, MapBounds, PolygonFeature } from './types';
 
 const API_BASE = '/api';
-const CHAT_API_BASE = '/api';
+// SSE streaming MUST bypass the Next.js rewrite proxy — it buffers the
+// entire response, killing the streaming effect.  Chat goes directly to
+// the FastAPI backend; all other endpoints are fine through the proxy.
+const CHAT_API_BASE =
+  process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+    : 'http://localhost:8002/api';
 
 export async function fetchDistricts(
   search?: string,
@@ -30,14 +36,6 @@ export async function fetchDistricts(
     center: { lat: item.center_lat, lng: item.center_lng },
     dataQuarter: item.data_quarter,
   }));
-}
-
-export async function fetchDistrictDetail(code: string): Promise<District> {
-  const res = await fetch(`${API_BASE}/districts/${code}`);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch district detail: ${res.status}`);
-  }
-  return res.json();
 }
 
 export async function fetchPolygons(bounds: MapBounds): Promise<PolygonFeature[]> {

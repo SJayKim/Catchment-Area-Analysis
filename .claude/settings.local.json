@@ -108,7 +108,23 @@
       "Bash(/dev/null sleep:*)",
       "Bash(find /c/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/frontend/src -type f -name *.ts -o -name *.tsx)",
       "Bash(PYTHONIOENCODING=utf-8 python test-results/quality-eval.py)",
-      "Bash(find \"C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/server\" -type d -name __pycache__ -exec rm -rf {} +)"
+      "Bash(find \"C:/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/server\" -type d -name __pycache__ -exec rm -rf {} +)",
+      "Bash(find /c/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/frontend/e2e/ring* -name \"*.spec.ts\" -type f)",
+      "Bash(ruff check:*)",
+      "Read(//c/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis/**)",
+      "Bash(bash /tmp/check.sh)",
+      "Bash(bash /tmp/check_files.sh)",
+      "Bash(bash /tmp/check_imports_better.sh)",
+      "Bash(mv plan/phase/phase-1-implementation.md archive/completed-plans/)",
+      "Bash(mv plan/phase/phase-1b-implementation.md archive/completed-plans/)",
+      "Bash(mv plan/fix/p0-critical-fix-plan.md archive/completed-plans/)",
+      "Bash(mv plan/fix/qa-bugfix-plan.md archive/completed-plans/)",
+      "Bash(mv plan/fix/f05h1-realmode-plan.md archive/completed-plans/)",
+      "Bash(mv qa/qa-bugfix-verification.md archive/qa-history/)",
+      "Bash(mv qa/qa-detailed-results.md archive/qa-history/)",
+      "Bash(mv qa/qa-improvements.md archive/qa-history/)",
+      "Bash(mv qa/qa-issue-report.md archive/qa-history/)",
+      "Bash(mv qa/qa-sub-agent-b-results.md archive/qa-history/)"
     ]
   }
 }

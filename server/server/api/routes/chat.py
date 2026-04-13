@@ -61,19 +61,12 @@ async def _get_session(session_id: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Summary detection patterns (used in ReAct mode only)
+# Greeting shortcut pattern
 # ---------------------------------------------------------------------------
 
 _GREETING_PATTERN = re.compile(
     r"^(안녕하세요|안녕|하이|헬로|hi|hello|반갑습니다|반갑|감사합니다|감사|고마워|ㅎㅇ|좋은\s*아침|좋은\s*저녁)[!?.ㅎㅋ요]*\s*$",
     re.IGNORECASE,
-)
-
-_SUMMARY_PATTERNS = re.compile(
-    r"(요약|분석|알려줘|어때|보여줘|정보|현황|상권을? 선택)"
-)
-_NON_SUMMARY_PATTERNS = re.compile(
-    r"(비교|추천|뭐.*하면|위험|리스크|폐업|히트맵|시뮬|카페|한식|커피|치킨)"
 )
 
 
@@ -174,16 +167,9 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                 session["last_district_code"] = detected["code"]
                 session["last_district_name"] = detected["name"]
 
-    # Summary pre-emit (ReAct mode only — PAE handles this via Planner+Actor)
-    is_pae = settings.agent_mode == "pae"
-    is_summary_request = False
-    if not is_pae and body.district_code and _SUMMARY_PATTERNS.search(body.message):
-        if not _NON_SUMMARY_PATTERNS.search(body.message):
-            is_summary_request = True
-
-    # Conversation history for PAE
+    # Conversation history
     history: ConversationHistory = session["history"]
-    conversation_history = history.get_recent() if is_pae else None
+    conversation_history = history.get_recent()
 
     async def event_generator():
         async with _chat_semaphore:
@@ -222,22 +208,6 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                     "district_type": district_type,
                 }, ensure_ascii=False)}
 
-            # Emit summary card directly (ReAct mode only)
-            if is_summary_request and body.district_code:
-                if await request.is_disconnected():
-                    return
-                try:
-                    from server.agent.tools.district_summary import get_district_summary
-                    summary_data = await get_district_summary(body.district_code)
-                    if "error" not in summary_data:
-                        yield {"data": json.dumps({
-                            "type": "card",
-                            "card_type": "summary",
-                            "data": summary_data,
-                        }, ensure_ascii=False)}
-                except Exception:
-                    logger.exception("Failed to generate summary card")
-
             collected_text = ""
 
             try:
@@ -268,18 +238,17 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                 )}
                 yield {"data": json.dumps({"type": "done"}, ensure_ascii=False)}
 
-            # Save conversation turns (PAE mode)
-            if is_pae:
+            # Save conversation turns
+            history.add_turn(
+                role="user",
+                content=body.message,
+                district_code=body.district_code,
+            )
+            if collected_text:
                 history.add_turn(
-                    role="user",
-                    content=body.message,
+                    role="assistant",
+                    content=collected_text,
                     district_code=body.district_code,
                 )
-                if collected_text:
-                    history.add_turn(
-                        role="assistant",
-                        content=collected_text,
-                        district_code=body.district_code,
-                    )
 
     return EventSourceResponse(event_generator())

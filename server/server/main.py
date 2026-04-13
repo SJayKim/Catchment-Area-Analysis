@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Initialize DataAccess, CacheService, and Agent singleton at startup."""
 
-    from server.agent.graph import create_agent, set_agent
     from server.repositories import set_data_access
     from server.services.cache import (
         MemoryCacheService,
@@ -61,11 +60,6 @@ async def lifespan(app: FastAPI):
     else:
         await resolver.load_from_db(session_factory)
     set_category_resolver(resolver)
-
-    # --- Agent (singleton — only needed for ReAct mode) ---
-    if settings.agent_mode != "pae":
-        agent = create_agent()
-        set_agent(agent)
 
     # Store engine reference for health/detail metrics
     app.state.db_engine = engine

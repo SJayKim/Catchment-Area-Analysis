@@ -9,4 +9,4 @@ class MockRecommendationRepository:
     async def recommend_business(
         self, district_code: str, budget: int | None = None, preference: str | None = None
     ) -> dict:
-        return get_recommendations(district_code, budget, preference)
+        return get_recommendations(district_code, budget)

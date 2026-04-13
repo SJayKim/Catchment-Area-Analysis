@@ -75,7 +75,7 @@ def get_compare_data(district_codes: list[str]) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def get_recommendations(district_code: str, budget: int | None = None, preference: str | None = None) -> dict:
+def get_recommendations(district_code: str, budget: int | None = None) -> dict:
     """Return mock recommendations for a district."""
     if district_code in MOCK_RECOMMENDATIONS:
         result = {**MOCK_RECOMMENDATIONS[district_code]}
