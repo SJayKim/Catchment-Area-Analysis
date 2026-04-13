@@ -197,14 +197,14 @@ npx playwright test ring0-preflight ring1-features ring2-journeys ring3-negative
 
 | 파일 | 내용 |
 |------|------|
-| `docs/plan/f05h1-realmode-plan.md` | (본 문서) |
+| `docs/plan/fix/f05h1-realmode-plan.md` | (본 문서) |
 | `server/server/repositories/protocols.py` | `detect_districts_in_message` 추가 |
 | `server/server/repositories/mock/districts.py` | Mock impl |
 | `server/server/repositories/real/districts.py` | Real impl |
 | `server/server/agent/nodes/planner.py` | comparison multi-extract 호출 |
 | `frontend/e2e/artifacts/run-2026-04-07-real/` | 42개 시나리오 artifact |
-| `docs/qa/e2e-run-2026-04-07-real.md` | Real mode run 리포트 |
-| `docs/status/current_status.md` | 두 작업 결과 반영 |
+| `docs/qa/runs/e2e-run-2026-04-07-real.md` | Real mode run 리포트 |
+| `docs/status/current-status.md` | 두 작업 결과 반영 |
 
 ---
 

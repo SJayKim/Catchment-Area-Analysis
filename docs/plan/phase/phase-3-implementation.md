@@ -366,5 +366,5 @@ chatStore (메시지 + Card 데이터) + districtStore (선택 상권)
 - F06 Scenario 6/6 PASS
 - F10 Scenario 6/6 PASS
 - 기존 기능 회귀 없음 (Mock E2E 32/32 PASS)
-- `docs/status/current_status.md` 업데이트
+- `docs/status/current-status.md` 업데이트
 - `docs/spec/checklist.md` Phase 3 항목 체크

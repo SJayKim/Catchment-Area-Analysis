@@ -32,7 +32,7 @@
 
 ## 수익 모델 (Freemium)
 
-> 상세 정책은 `docs/spec/B01-business-model.md` 참조
+> 상세 정책은 `docs/spec/business/B01-business-model.md` 참조
 
 | 구분 | Free | Premium |
 |------|------|---------|

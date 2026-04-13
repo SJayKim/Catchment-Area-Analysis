@@ -376,13 +376,13 @@ server/tests/
 | 전체 아키텍처 | `docs/architecture/overall-architecture.md` |
 | 기능 목록 | `docs/spec/feature-list.md` |
 | 체크리스트 | `docs/spec/checklist.md` |
-| F01 지도 선택 | `docs/spec/F01-map-district-selection.md` |
-| F02 AI 챗봇 | `docs/spec/F02-ai-chatbot-agent.md` |
-| F03 기본 리포트 | `docs/spec/F03-basic-report.md` |
-| F05 상권 비교 | `docs/spec/F05-district-comparison.md` |
-| F07 업종 추천 | `docs/spec/F07-business-recommendation.md` |
-| F08 이력/리스크 | `docs/spec/F08-store-history-risk.md` |
-| D01 데이터 파이프라인 | `docs/spec/D01-data-pipeline.md` |
-| B01 비즈니스 모델 | `docs/spec/B01-business-model.md` |
-| Phase 1B 계획 | `docs/plan/phase1b-comprehensive-plan.md` |
-| 진행 상황 (운영) | `docs/status/current_status.md` |
+| F01 지도 선택 | `docs/spec/features/F01-map-district-selection.md` |
+| F02 AI 챗봇 | `docs/spec/features/F02-ai-chatbot-agent.md` |
+| F03 기본 리포트 | `docs/spec/features/F03-basic-report.md` |
+| F05 상권 비교 | `docs/spec/features/F05-district-comparison.md` |
+| F07 업종 추천 | `docs/spec/features/F07-business-recommendation.md` |
+| F08 이력/리스크 | `docs/spec/features/F08-store-history-risk.md` |
+| D01 데이터 파이프라인 | `docs/spec/data/D01-data-pipeline.md` |
+| B01 비즈니스 모델 | `docs/spec/business/B01-business-model.md` |
+| Phase 1B 계획 | `docs/plan/phase/phase-1b-implementation.md` |
+| 진행 상황 (운영) | `docs/status/current-status.md` |

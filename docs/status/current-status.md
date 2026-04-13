@@ -322,7 +322,7 @@
 
 ### ✅ P0 Critical 이슈 8건 수정 (commit d8c0155)
 
-**기준 문서**: `docs/qa/issue_report.md` (종합 감사 B- 6.8/10), `docs/plan/p0-critical-fix-plan.md`
+**기준 문서**: `docs/qa/qa-issue-report.md` (종합 감사 B- 6.8/10), `docs/plan/fix/p0-critical-fix-plan.md`
 
 **수정 목록**:
 
@@ -345,7 +345,7 @@
 **수정 파일 요약**:
 - Backend (8): `alembic/versions/003_add_category_aliases.py` (신규), `config.py`, `agent/prompts/system.py`, `agent/nodes/planner.py`, `agent/nodes/evaluator.py`, `agent/nodes/respond.py`, `agent/graph.py`, `api/routes/chat.py`
 - Frontend (4): `components/map/DistrictLayer.tsx`, `stores/chatStore.ts`, `lib/api.ts`, `lib/sseParser.ts`
-- Docs (2): `docs/plan/p0-critical-fix-plan.md`, `docs/qa/issue_report.md`
+- Docs (2): `docs/plan/fix/p0-critical-fix-plan.md`, `docs/qa/qa-issue-report.md`
 
 **다음 단계**: E2E QA 테스트 플랜으로 P0 fix를 사용자 경험 수준에서 회귀 검증 (Section E — P0 Regression Matrix)
 
@@ -594,7 +594,7 @@ START → PLANNER → ACTOR → EVALUATOR → RESPOND → END
 - `server/server/data/etl/csv_collector.py` — 상주인구 CSV 로더 (OA-15584)
 - `server/server/data/etl/runner.py` — `load-csv` 커맨드 + `--csv-file` 옵션 + API 실패 시 CSV 폴백
 - `.env.example` — API 키 발급 가이드 주석 추가
-- `docs/setup/DATABASE_SETUP.md` — 셋업 가이드 문서
+- `docs/setup/database-setup.md` — 셋업 가이드 문서
 - Quick Start 테스트 완료: DB 초기화 → `--quick` → 5개 테이블 전부 복원 확인
 
 ---
@@ -746,14 +746,14 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 - **종합 QA 상세**: `docs/qa/qa-detailed-results.md` (194개 테스트 개별 결과)
 - **종합 QA 개선**: `docs/qa/qa-improvements.md` (P0: 3건, P1: 5건, P2: 4건, P3: 6건)
 - **종합 QA 테스트 계획**: `docs/qa/qa-test-plan.md` (9개 카테고리, 194개 테스트, 3개 Sub-Agent — CAT-3 PAE 86개 포함)
-- **E2E QA 리포트**: `docs/status/e2e-qa-report.md`
+- **E2E QA 리포트**: `docs/status/e2e/e2e-qa-report.md`
 - **스크린샷**: `docs/screenshots/e2e-qa/` (20개), `docs/screenshots/real-mode/` (7개), `docs/screenshots/dev/` (5개)
-- **데이터 출처 표시 계획**: `docs/plan/data-source-citation.md` (Card footer 출처 표시, 10개 시나리오)
-- **리팩토링 계획/결과**: `docs/plan/refactoring-plan.md` (계획) — 구현 완료: Repository 25개 신규 파일, 20개 수정
-- **Agent 개선 계획/결과**: `docs/plan/agent_improvement/` (10개 모듈) — 구현 완료: 9개 신규 파일, 6개 수정, PAE 4/4 PASS
-- Phase 1B 구현 계획: `docs/plan/phase1b-comprehensive-plan.md`
-- Real DB 마이그레이션 계획: `docs/plan/data-source-migration.md`
-- Dark Theme 구현 계획: `docs/plan/streaming-ux-dark-theme.md`
-- Card UI 구현 계획: `docs/plan/card-ui-integration.md`
+- **데이터 출처 표시 계획**: `docs/plan/data/data-source-citation.md` (Card footer 출처 표시, 10개 시나리오)
+- **리팩토링 계획/결과**: `docs/plan/fix/refactoring-plan.md` (계획) — 구현 완료: Repository 25개 신규 파일, 20개 수정
+- **Agent 개선 계획/결과**: `docs/plan/agent-improvement/` (10개 모듈) — 구현 완료: 9개 신규 파일, 6개 수정, PAE 4/4 PASS
+- Phase 1B 구현 계획: `docs/plan/phase/phase-1b-implementation.md`
+- Real DB 마이그레이션 계획: `docs/plan/data/data-source-migration.md`
+- Dark Theme 구현 계획: `docs/plan/ui/streaming-ux-dark-theme.md`
+- Card UI 구현 계획: `docs/plan/ui/card-ui-integration.md`
 - 체크리스트: `docs/spec/checklist.md`
 - 아키텍처: `docs/architecture/overall-architecture.md`

@@ -216,7 +216,7 @@ print(len(gdf))               # ~1,650개 예상
 | `server/server/data/etl/shp_collector.py` | **신규** — SHP → loader-compatible dict 변환 | ~70줄 |
 | `server/server/data/etl/runner.py` | `load-shp` 커맨드 추가 + `run`에 `--shp-file` 옵션 | ~50줄 |
 | `server/server/data/etl/seoul_opendata.py` | TbgisTrdarRelm 서비스 추가 + collect_districts() 폴백 체인 개선 | ~25줄 |
-| `docs/status/current_status.md` | 진행상황 반영 | 갱신 |
+| `docs/status/current-status.md` | 진행상황 반영 | 갱신 |
 
 **변경하지 않는 파일**:
 - `loader.py` — `upsert_districts()`가 이미 `ST_Transform(ST_GeomFromText(:boundary_wkt, 5181), 4326)` 처리, 그대로 호환
@@ -362,7 +362,7 @@ curl http://localhost:8002/api/map-data/polygons?bounds=37.4,126.8,37.7,127.2
 - [ ] 기존 Mock 모드 정상 동작 확인 (회귀 없음)
 
 #### 문서
-- [ ] `docs/status/current_status.md` 업데이트
+- [ ] `docs/status/current-status.md` 업데이트
 
 ---
 
@@ -458,7 +458,7 @@ curl http://localhost:8002/api/map-data/polygons?bounds=37.4,126.8,37.7,127.2
 3. **수정 반복 상한**: 동일 테스트 5회 연속 FAIL 시 근본 원인 재검토
 4. **회귀 방지**: 수정 시 이전 PASS 항목 FAIL 여부 확인
 5. **테스트 자동화**: T0~T4는 pytest, T5는 Playwright 또는 수동
-6. **결과 기록**: `docs/status/current_status.md`에 날짜와 함께 기록
+6. **결과 기록**: `docs/status/current-status.md`에 날짜와 함께 기록
 
 ---
 

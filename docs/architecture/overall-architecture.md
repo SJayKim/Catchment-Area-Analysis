@@ -1,7 +1,7 @@
 # Overall Architecture — 상권분석 AI 서비스
 
 > 지도 + AI 챗봇 기반 상권분석 서비스의 전체 시스템 아키텍처
-> 기준 문서: `a_drafts/merged_features.md` (Merged v1.0)
+> 기준 문서: `archive/merged-features.md` (Merged v1.0, archive — 참고용)
 
 ---
 
@@ -722,4 +722,4 @@ services:
 
 *작성일: 2026-03-24*
 *버전: v1.0*
-*기준 문서: a_drafts/merged_features.md (Merged v1.0)*
+*기준 문서: archive/merged-features.md (Merged v1.0, archive)*

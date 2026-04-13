@@ -19,12 +19,16 @@
 
 ```
 docs/
+  README.md                              # docs 전체 네비게이션 인덱스
   architecture/overall-architecture.md   # 시스템 아키텍처 (필독)
   spec/feature-list.md                   # 기능 목록 + Phase 계획
   spec/checklist.md                      # 개발 체크리스트 (~150항목)
-  spec/B01-business-model.md             # Freemium 수익 모델
-  spec/D01-data-pipeline.md              # ETL 파이프라인 설계
-  spec/F01~F10-*.md                      # 각 기능 상세 스펙
+  spec/business/B01-business-model.md    # Freemium 수익 모델
+  spec/data/D01-data-pipeline.md         # ETL 파이프라인 설계
+  spec/features/F01~F10-*.md             # 각 기능 상세 스펙
+  plan/{phase,fix,infra,data,ui,business,agent-improvement}/  # 구현 계획 (카테고리별)
+  qa/qa-test-plan.md                     # QA 마스터 테스트 플랜
+  status/current-status.md               # 현재 개발 상태 (마스터)
 ```
 
 ## 빌드 & 실행
@@ -86,11 +90,11 @@ resident_population, chat_sessions, chat_messages, category_metadata
 코드 구현 시 반드시 아래 순서를 따를 것:
 
 1. **스펙 확인**: `docs/spec/` 폴더의 해당 기능 정의서를 먼저 읽고 요구사항 파악
-   - 기능별 스펙: `docs/spec/F01~F10-*.md`, `docs/spec/D01-*.md`, `docs/spec/B01-*.md`
+   - 기능별 스펙: `docs/spec/features/F01~F10-*.md`, `docs/spec/data/D01-*.md`, `docs/spec/business/B01-*.md`
    - 체크리스트: `docs/spec/checklist.md`
-2. **계획 작성**: `docs/plan/` 폴더에 구현 계획 문서 작성 (접근 방식, 변경 범위, 의존성 정리)
+2. **계획 작성**: `docs/plan/<category>/` 폴더(phase/fix/infra/data/ui/business/agent-improvement)에 구현 계획 문서 작성 (접근 방식, 변경 범위, 의존성 정리)
 3. **구현**: 스펙과 계획에 따라 코드 작성
-4. **상태 업데이트**: 구현 완료 후 `docs/status/current_status.md`에 진행 상황 반영
+4. **상태 업데이트**: 구현 완료 후 `docs/status/current-status.md`에 진행 상황 반영
 
 ## 참고 문서
 

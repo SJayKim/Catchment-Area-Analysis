@@ -587,8 +587,8 @@ Ring 1 모든 기능에 verdict 나온 후. 5개 journey를 Mock 먼저, Real �
 - `frontend/playwright.config.ts` — 모든 신규 spec이 기존 config 준수 (headless, chromium, sequential, 60s timeout).
 - `docker-compose.yml` — Ring 0 pre-flight 의존.
 - `server/alembic/versions/003_add_category_aliases.py` — P0-1 검증 대상.
-- `docs/qa/issue_report.md` — P0 8건 원문 + 파일 위치.
-- `docs/plan/p0-critical-fix-plan.md` — P0 수정 계획 (이미 commit d8c0155에 적용됨).
+- `docs/qa/qa-issue-report.md` — P0 8건 원문 + 파일 위치.
+- `docs/plan/fix/p0-critical-fix-plan.md` — P0 수정 계획 (이미 commit d8c0155에 적용됨).
 
 ### 참조 (재사용 패턴)
 - `frontend/e2e/feature1-polygon-summary.spec.ts` — 모든 Ring 1 spec의 레퍼런스 패턴 (beforeEach, sendChatMessage, assertion 스타일).

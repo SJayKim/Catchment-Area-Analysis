@@ -1,7 +1,7 @@
 # 데이터 준비 계획 (Data Preparation Plan)
 
 > 최종 갱신: 2026-03-24
-> 참고 문서: `docs/plan/document_plan.md`, `docs/spec/D01-data-pipeline.md`, `docs/architecture/overall-architecture.md`
+> 참고 문서: `docs/spec/data/D01-data-pipeline.md`, `docs/architecture/overall-architecture.md`
 
 ---
 

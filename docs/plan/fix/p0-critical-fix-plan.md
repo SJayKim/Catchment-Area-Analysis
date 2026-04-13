@@ -1,12 +1,12 @@
 # P0 Critical 이슈 8건 개선 계획
 
 > **작성일**: 2026-04-06
-> **기준 문서**: `docs/qa/issue_report.md` (종합 감사 B- 6.8/10)
+> **기준 문서**: `docs/qa/qa-issue-report.md` (종합 감사 B- 6.8/10)
 > **범위**: Backend Python + Frontend TypeScript + Agent/LLM
 
 ## Context
 
-`docs/qa/issue_report.md`의 종합 감사 결과에서 도출된 **P0 8건**을 재검증하고 개선 계획을 수립한다. 모든 이슈는 현재 코드에서 실제 재현됨을 Explore 에이전트로 확인했다.
+`docs/qa/qa-issue-report.md`의 종합 감사 결과에서 도출된 **P0 8건**을 재검증하고 개선 계획을 수립한다. 모든 이슈는 현재 코드에서 실제 재현됨을 Explore 에이전트로 확인했다.
 
 **동기:**
 - `USE_MOCK=false` 전환 시 즉시 서비스가 깨지는 **blocker 1건** (P0-1) 존재

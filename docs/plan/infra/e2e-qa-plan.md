@@ -221,6 +221,6 @@ SOFT FAIL → 개선 아이디어로 기록 (docs/status/improvement-ideas.md)
 
 | 파일 | 내용 |
 |------|------|
-| `docs/status/e2e-qa-report.md` | 전체 시나리오 PASS/FAIL 결과표 + 개선 아이디어 |
-| `docs/status/current_status.md` | 진행상황 반영 |
+| `docs/status/e2e/e2e-qa-report.md` | 전체 시나리오 PASS/FAIL 결과표 + 개선 아이디어 |
+| `docs/status/current-status.md` | 진행상황 반영 |
 | 코드 수정 (HARD FAIL 시) | 발견된 버그 수정 |
