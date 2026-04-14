@@ -31,6 +31,15 @@ const BAR_LABELS = ['하위 (p25)', '평균', '상위 (p75)'];
 function SimulationCard({ data }: SimulationCardProps) {
   const card = data as SimulationCardData;
 
+  const chartData = useMemo(
+    () => [
+      { name: '하위', value: card.simulation?.low ?? 0, label: BAR_LABELS[0] },
+      { name: '평균', value: card.simulation?.avg ?? 0, label: BAR_LABELS[1] },
+      { name: '상위', value: card.simulation?.high ?? 0, label: BAR_LABELS[2] },
+    ],
+    [card.simulation?.low, card.simulation?.avg, card.simulation?.high]
+  );
+
   if (!card.simulation) {
     return (
       <div
@@ -44,16 +53,7 @@ function SimulationCard({ data }: SimulationCardProps) {
     );
   }
 
-  const { simulation, basis, percentiles, seoul_comparison } = card;
-
-  const chartData = useMemo(
-    () => [
-      { name: '하위', value: simulation.low, label: BAR_LABELS[0] },
-      { name: '평균', value: simulation.avg, label: BAR_LABELS[1] },
-      { name: '상위', value: simulation.high, label: BAR_LABELS[2] },
-    ],
-    [simulation.low, simulation.avg, simulation.high]
-  );
+  const { basis, percentiles, seoul_comparison } = card;
 
   return (
     <div

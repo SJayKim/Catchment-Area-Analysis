@@ -65,6 +65,8 @@ services:
         else
           echo 'Seed: loading seed data...'
           pg_restore --no-owner --no-acl -U marketscope -d marketscope -h db /seed/marketscope_seed.dump || true
+          echo 'Seed: cleaning stale alembic_version rows from dump...'
+          psql -U marketscope -d marketscope -h db -c \"DELETE FROM alembic_version WHERE version_num NOT IN (SELECT version_num FROM alembic_version ORDER BY version_num DESC LIMIT 1);\"
           echo 'Seed: done'
         fi
       "
@@ -115,10 +117,12 @@ services:
       target: runner
       args:
         NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY:-}
-        NEXT_PUBLIC_API_URL: http://backend:8000
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        BACKEND_INTERNAL_URL: http://backend:8000
     ports: ["3000:3000"]
     environment:
-      NEXT_PUBLIC_API_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      BACKEND_INTERNAL_URL: http://backend:8000
       NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY:-}
     depends_on:
       backend: { condition: service_healthy }

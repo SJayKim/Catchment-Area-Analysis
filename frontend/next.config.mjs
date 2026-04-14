@@ -20,7 +20,13 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '',
   },
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
+    // Next.js 서버(컨테이너 내부)에서 백엔드로 프록시할 때 쓰는 URL.
+    // 브라우저 fetch용 NEXT_PUBLIC_API_URL(예: http://localhost:8000)과 달리
+    // 도커 내부 네트워크 호스트명(backend:8000)이어야 하므로 별도 변수를 사용.
+    const backendUrl =
+      process.env.BACKEND_INTERNAL_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://localhost:8002';
     return {
       beforeFiles: [
         // kakao-sdk 프록시는 Next.js API route가 직접 처리 (ORB 우회)

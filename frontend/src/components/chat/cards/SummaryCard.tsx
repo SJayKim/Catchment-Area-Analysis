@@ -18,6 +18,15 @@ const STATUS_CONFIG = {
 function SummaryCard({ data }: SummaryCardProps) {
   const card = data as SummaryCardData;
 
+  const chartData = useMemo(
+    () =>
+      card.floatingPopulation?.byHour?.map((item) => ({
+        hour: `${item.hour}시`,
+        pop: item.pop,
+      })) || [],
+    [card.floatingPopulation?.byHour]
+  );
+
   if (!card.districtName) {
     return (
       <div
@@ -30,15 +39,6 @@ function SummaryCard({ data }: SummaryCardProps) {
   }
 
   const statusConfig = STATUS_CONFIG[card.status] || STATUS_CONFIG.stable;
-
-  const chartData = useMemo(
-    () =>
-      card.floatingPopulation?.byHour?.map((item) => ({
-        hour: `${item.hour}시`,
-        pop: item.pop,
-      })) || [],
-    [card.floatingPopulation?.byHour]
-  );
 
   return (
     <div

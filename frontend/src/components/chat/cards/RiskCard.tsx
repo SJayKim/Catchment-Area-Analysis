@@ -84,17 +84,6 @@ function SurvivalBar({ category, avgMonths, maxMonths }: { category: string; avg
 function RiskCard({ data }: RiskCardProps) {
   const card = data as RiskCardData;
 
-  if (!card.stability) {
-    return (
-      <div
-        className="rounded-xl p-4"
-        style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}
-      >
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>리스크 데이터를 표시할 수 없습니다.</p>
-      </div>
-    );
-  }
-
   const maxSurvival = useMemo(
     () =>
       card.survival_by_category?.length
@@ -112,6 +101,17 @@ function RiskCard({ data }: RiskCardProps) {
       })) || [],
     [card.quarterly_trend]
   );
+
+  if (!card.stability) {
+    return (
+      <div
+        className="rounded-xl p-4"
+        style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}
+      >
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>리스크 데이터를 표시할 수 없습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div
