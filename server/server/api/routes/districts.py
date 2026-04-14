@@ -1,9 +1,14 @@
 """District search and detail API routes."""
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+from sqlalchemy.exc import OperationalError
 
 from server.repositories import get_data_access
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["districts"])
 
@@ -54,19 +59,33 @@ async def list_districts(
     offset: int = Query(0, ge=0),
 ) -> DistrictListResponse:
     """Search / list districts with optional keyword and type filter."""
-    da = get_data_access()
-    total, items = await da.districts.list_districts(search, type, limit, offset)
-    return DistrictListResponse(
-        total=total,
-        items=[DistrictSummary(**item) for item in items],
-    )
+    try:
+        da = get_data_access()
+        total, items = await da.districts.list_districts(search, type, limit, offset)
+        return DistrictListResponse(
+            total=total,
+            items=[DistrictSummary(**item) for item in items],
+        )
+    except OperationalError:
+        logger.exception("Database unavailable in list_districts")
+        raise HTTPException(
+            status_code=503, detail="Database temporarily unavailable",
+        ) from None
 
 
 @router.get("/districts/{code}", response_model=DistrictDetail)
 async def get_district(code: str) -> DistrictDetail:
     """Get district detail including polygon GeoJSON."""
-    da = get_data_access()
-    detail = await da.districts.get_district_detail(code)
-    if detail is None:
-        raise HTTPException(status_code=404, detail=f"District '{code}' not found")
-    return DistrictDetail(**detail)
+    try:
+        da = get_data_access()
+        detail = await da.districts.get_district_detail(code)
+        if detail is None:
+            raise HTTPException(status_code=404, detail=f"District '{code}' not found")
+        return DistrictDetail(**detail)
+    except HTTPException:
+        raise
+    except OperationalError:
+        logger.exception("Database unavailable in get_district")
+        raise HTTPException(
+            status_code=503, detail="Database temporarily unavailable",
+        ) from None

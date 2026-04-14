@@ -4,15 +4,17 @@ import asyncio
 import json
 import logging
 import re
+import secrets
 import time
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 from server.agent.graph import run_agent
 from server.agent.history import ConversationHistory
 from server.config import settings
+from server.middleware.metrics import sse_connection_closed, sse_connection_opened
 from server.repositories import get_data_access
 
 router = APIRouter(prefix="/api", tags=["chat"])
@@ -39,12 +41,24 @@ async def _get_session(session_id: str) -> dict:
     async with _sessions_lock:
         # 쓰로틀 pruning (60초에 1회)
         if now - _last_prune_time > _PRUNE_INTERVAL:
-            expired = [k for k, v in _sessions.items() if now - v.get("last_active", 0) > _SESSION_TTL]
+            expired = [
+                k for k, v in _sessions.items()
+                if now - v.get("last_active", 0) > _SESSION_TTL
+            ]
             for k in expired:
                 del _sessions[k]
             _last_prune_time = now
 
         if session_id not in _sessions:
+            # Evict oldest session if at capacity
+            if len(_sessions) >= settings.session_max_count:
+                oldest_key = min(_sessions, key=lambda k: _sessions[k].get("last_active", 0))
+                del _sessions[oldest_key]
+                logger.info(
+                    "Session evicted (max_count=%d): %s",
+                    settings.session_max_count, oldest_key,
+                )
+
             _sessions[session_id] = {
                 "last_district_code": None,
                 "last_district_name": None,
@@ -71,9 +85,9 @@ _GREETING_PATTERN = re.compile(
 
 
 class ChatRequest(BaseModel):
-    message: str
-    session_id: str | None = None
-    district_code: str | None = None
+    message: str = Field(..., min_length=1, max_length=settings.chat_message_max_length)
+    session_id: str | None = Field(None, max_length=64)
+    district_code: str | None = Field(None, max_length=20)
 
 
 @router.get("/health/detail")
@@ -92,7 +106,10 @@ async def health_detail(request: Request) -> dict:
             "db_pool_checkedin": pool.checkedin(),
         }
     else:
-        db_info = {"db_pool_size": 0, "db_pool_checkedout": 0, "db_pool_overflow": 0, "db_pool_checkedin": 0}
+        db_info = {
+            "db_pool_size": 0, "db_pool_checkedout": 0,
+            "db_pool_overflow": 0, "db_pool_checkedin": 0,
+        }
 
     # Redis status
     cache = get_cache_service()
@@ -120,7 +137,7 @@ async def health_detail(request: Request) -> dict:
 async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
     """Chat endpoint with SSE streaming via LangGraph agent."""
 
-    session_id = body.session_id or "anonymous"
+    session_id = body.session_id or secrets.token_urlsafe(32)
     session = await _get_session(session_id)
     da = get_data_access()
 
@@ -172,6 +189,14 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
     conversation_history = history.get_recent()
 
     async def event_generator():
+        sse_connection_opened()
+        try:
+            async for event in _event_generator_inner():
+                yield event
+        finally:
+            sse_connection_closed()
+
+    async def _event_generator_inner():
         async with _chat_semaphore:
             # Early bail-out: client already gone before we started.
             if await request.is_disconnected():
@@ -182,11 +207,17 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
             if _GREETING_PATTERN.match(body.message.strip()):
                 yield {"data": json.dumps({
                     "type": "text",
-                    "content": "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다.\n지도에서 상권을 선택하시거나, 분석할 상권명을 알려주세요!",
+                    "content": (
+                        "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다.\n"
+                        "지도에서 상권을 선택하시거나, 분석할 상권명을 알려주세요!"
+                    ),
                 }, ensure_ascii=False)}
                 yield {"data": json.dumps({
                     "type": "suggestion",
-                    "questions": ["강남역 상권 분석해줘", "홍대 어때?", "업종 추천해줘", "상권 비교하고 싶어"],
+                    "questions": [
+                        "강남역 상권 분석해줘", "홍대 어때?",
+                        "업종 추천해줘", "상권 비교하고 싶어",
+                    ],
                 }, ensure_ascii=False)}
                 yield {"data": json.dumps({"type": "done"}, ensure_ascii=False)}
                 return
@@ -211,29 +242,39 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
             collected_text = ""
 
             try:
-                async for event in run_agent(
-                    message=body.message,
-                    district_code=body.district_code or "",
-                    district_name=district_name,
-                    data_quarter=data_quarter,
-                    conversation_history=conversation_history,
-                ):
-                    # Check for client disconnect each iteration — drops the
-                    # generator which triggers run_agent's finally: task.cancel()
-                    # so the background LangGraph task is cancelled promptly.
-                    if await request.is_disconnected():
-                        logger.info("Client disconnected mid-stream, cancelling agent")
-                        return
+                async with asyncio.timeout(settings.sse_connection_max_duration):
+                    async for event in run_agent(
+                        message=body.message,
+                        district_code=body.district_code or "",
+                        district_name=district_name,
+                        data_quarter=data_quarter,
+                        conversation_history=conversation_history,
+                    ):
+                        # Check for client disconnect each iteration
+                        if await request.is_disconnected():
+                            logger.info("Client disconnected mid-stream, cancelling agent")
+                            return
 
-                    # Collect text for history
-                    if event.get("type") == "text":
-                        collected_text += event.get("content", "")
+                        # Collect text for history
+                        if event.get("type") == "text":
+                            collected_text += event.get("content", "")
 
-                    yield {"data": json.dumps(event, ensure_ascii=False, default=str)}
+                        yield {"data": json.dumps(event, ensure_ascii=False, default=str)}
+
+            except TimeoutError:
+                logger.warning(
+                    "SSE connection exceeded max duration (%.0fs)",
+                    settings.sse_connection_max_duration,
+                )
+                yield {"data": json.dumps(
+                    {"type": "text", "content": "\n\n(응답 시간이 초과되어 종료합니다.)"},
+                    ensure_ascii=False,
+                )}
+                yield {"data": json.dumps({"type": "done"}, ensure_ascii=False)}
             except Exception:
                 logger.exception("SSE event generation failed")
                 yield {"data": json.dumps(
-                    {"type": "text", "content": "죄송합니다. 서비스에 일시적인 오류가 발생했습니다."},
+                    {"type": "text", "content": "죄송합니다. 서비스에 오류가 발생했습니다."},
                     ensure_ascii=False,
                 )}
                 yield {"data": json.dumps({"type": "done"}, ensure_ascii=False)}
@@ -251,4 +292,7 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                     district_code=body.district_code,
                 )
 
-    return EventSourceResponse(event_generator())
+    return EventSourceResponse(
+        event_generator(),
+        ping=int(settings.sse_heartbeat_interval),  # keep-alive interval (seconds)
+    )

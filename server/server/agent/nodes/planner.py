@@ -91,7 +91,8 @@ async def _classify_with_llm(
     district_name: str,
 ) -> dict:
     """LLM-based intent classification for ambiguous cases."""
-    from server.agent.graph import _create_llm
+    from server.agent.graph import _create_llm, invoke_llm_with_retry
+    from server.services.circuit_breaker import CircuitOpenError
 
     prompt = PLANNER_CLASSIFICATION_PROMPT.format(
         message=sanitize_prompt_value(message),
@@ -102,9 +103,8 @@ async def _classify_with_llm(
 
     llm = _create_llm(role="planner")
     try:
-        # Bound LLM latency — langchain 0.2+ ainvoke honours cancellation.
-        response = await asyncio.wait_for(
-            llm.ainvoke(prompt), timeout=settings.llm_timeout_fast
+        response = await invoke_llm_with_retry(
+            llm, prompt, timeout=settings.llm_timeout_fast
         )
         content = response.content if hasattr(response, "content") else str(response)
         if isinstance(content, list):
@@ -116,7 +116,9 @@ async def _classify_with_llm(
         if json_match:
             return json.loads(json_match.group())
         logger.warning("LLM classification returned no JSON, using rule fallback")
-    except asyncio.TimeoutError:
+    except CircuitOpenError:
+        logger.warning("LLM circuit breaker is OPEN, using rule fallback for planner")
+    except (asyncio.TimeoutError, TimeoutError):
         logger.warning(
             "LLM classification timed out after %.1fs, using rule fallback",
             settings.llm_timeout_fast,

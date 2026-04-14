@@ -9,6 +9,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from server.config import settings
+from server.logging_config import setup_logging
+
+# Initialize structured logging before anything else
+setup_logging(json_output=(settings.log_format == "json"))
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +50,14 @@ async def lifespan(app: FastAPI):
             settings.database_url, echo=False,
             pool_size=settings.db_pool_size,
             max_overflow=settings.db_max_overflow,
+            pool_pre_ping=settings.db_pool_pre_ping,
+            pool_recycle=settings.db_pool_recycle,
+            pool_timeout=settings.db_pool_timeout,
+            connect_args={
+                "server_settings": {
+                    "statement_timeout": str(settings.db_statement_timeout_ms),
+                },
+            },
         )
         session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -83,6 +95,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# --- Middleware (order matters: last added = first executed) ---
+
+# 1. CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -90,6 +105,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 2. Security headers
+from server.api.middleware import (
+    RequestIdMiddleware,
+    SecurityHeadersMiddleware,
+    register_global_exception_handler,
+)
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestIdMiddleware)
+
+# 3. Global exception handler (non-SSE routes)
+register_global_exception_handler(app)
+
+# 4. Rate limiting
+from server.api.rate_limiter import register_rate_limiter
+
+register_rate_limiter(app)
+
+# 5. Metrics (lightweight, no external dependency)
+from server.middleware.metrics import MetricsMiddleware, metrics_router
+
+app.add_middleware(MetricsMiddleware)
 
 # Register routers
 from server.api.routes.chat import router as chat_router
@@ -99,6 +137,7 @@ from server.api.routes.map_data import router as map_data_router
 app.include_router(districts_router)
 app.include_router(map_data_router)
 app.include_router(chat_router)
+app.include_router(metrics_router)
 
 
 @app.get("/health")

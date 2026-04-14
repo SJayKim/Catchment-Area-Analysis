@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import {
   BarChart,
   Bar,
@@ -21,7 +22,7 @@ interface InlineChartProps {
   height?: number;
 }
 
-export default function InlineChart({
+function InlineChart({
   data,
   type = 'bar',
   dataKey,
@@ -99,3 +100,5 @@ export default function InlineChart({
     </div>
   );
 }
+
+export default memo(InlineChart);

@@ -11,6 +11,7 @@ export default function SplitPanel({ left, right }: SplitPanelProps) {
   const [leftRatio, setLeftRatio] = useState(60);
   const isDragging = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
 
   const handleMouseDown = useCallback(() => {
     isDragging.current = true;
@@ -21,14 +22,24 @@ export default function SplitPanel({ left, right }: SplitPanelProps) {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const ratio = (x / rect.width) * 100;
-      setLeftRatio(Math.min(Math.max(ratio, 30), 80));
+      // Skip if a rAF is already pending (cap at 60fps)
+      if (rafRef.current !== null) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        if (!isDragging.current || !containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const ratio = (x / rect.width) * 100;
+        setLeftRatio(Math.min(Math.max(ratio, 30), 80));
+      });
     };
 
     const handleMouseUp = () => {
       isDragging.current = false;
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
@@ -39,6 +50,10 @@ export default function SplitPanel({ left, right }: SplitPanelProps) {
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
     };
   }, []);
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { RecommendCardData } from '@/lib/types';
 import SourcesCitation from './SourcesCitation';
 
@@ -26,7 +27,7 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-export default function RecommendCard({ data }: RecommendCardProps) {
+function RecommendCard({ data }: RecommendCardProps) {
   const card = data as RecommendCardData;
 
   if (!card.recommendations || card.recommendations.length === 0) {
@@ -106,3 +107,5 @@ export default function RecommendCard({ data }: RecommendCardProps) {
     </div>
   );
 }
+
+export default memo(RecommendCard);

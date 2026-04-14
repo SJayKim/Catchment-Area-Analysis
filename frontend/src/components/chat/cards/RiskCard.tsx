@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { RiskCardData } from '@/lib/types';
 import InlineChart from './InlineChart';
 import SourcesCitation from './SourcesCitation';
@@ -80,7 +81,7 @@ function SurvivalBar({ category, avgMonths, maxMonths }: { category: string; avg
   );
 }
 
-export default function RiskCard({ data }: RiskCardProps) {
+function RiskCard({ data }: RiskCardProps) {
   const card = data as RiskCardData;
 
   if (!card.stability) {
@@ -94,15 +95,23 @@ export default function RiskCard({ data }: RiskCardProps) {
     );
   }
 
-  const maxSurvival = card.survival_by_category?.length
-    ? Math.max(...card.survival_by_category.map((s) => s.avg_months))
-    : 1;
+  const maxSurvival = useMemo(
+    () =>
+      card.survival_by_category?.length
+        ? Math.max(...card.survival_by_category.map((s) => s.avg_months))
+        : 1,
+    [card.survival_by_category]
+  );
 
-  const trendChartData = card.quarterly_trend?.map((q) => ({
-    quarter: q.quarter,
-    open: q.open,
-    close: q.close,
-  })) || [];
+  const trendChartData = useMemo(
+    () =>
+      card.quarterly_trend?.map((q) => ({
+        quarter: q.quarter,
+        open: q.open,
+        close: q.close,
+      })) || [],
+    [card.quarterly_trend]
+  );
 
   return (
     <div
@@ -191,3 +200,5 @@ export default function RiskCard({ data }: RiskCardProps) {
     </div>
   );
 }
+
+export default memo(RiskCard);

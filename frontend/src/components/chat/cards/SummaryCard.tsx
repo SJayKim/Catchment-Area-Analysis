@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { SummaryCardData } from '@/lib/types';
 import InlineChart from './InlineChart';
 import SourcesCitation from './SourcesCitation';
@@ -14,7 +15,7 @@ const STATUS_CONFIG = {
   declining: { label: '침체', bg: 'rgba(239,68,68,0.15)', color: '#ef4444' },
 };
 
-export default function SummaryCard({ data }: SummaryCardProps) {
+function SummaryCard({ data }: SummaryCardProps) {
   const card = data as SummaryCardData;
 
   if (!card.districtName) {
@@ -30,10 +31,14 @@ export default function SummaryCard({ data }: SummaryCardProps) {
 
   const statusConfig = STATUS_CONFIG[card.status] || STATUS_CONFIG.stable;
 
-  const chartData = card.floatingPopulation?.byHour?.map((item) => ({
-    hour: `${item.hour}시`,
-    pop: item.pop,
-  })) || [];
+  const chartData = useMemo(
+    () =>
+      card.floatingPopulation?.byHour?.map((item) => ({
+        hour: `${item.hour}시`,
+        pop: item.pop,
+      })) || [],
+    [card.floatingPopulation?.byHour]
+  );
 
   return (
     <div
@@ -149,3 +154,5 @@ export default function SummaryCard({ data }: SummaryCardProps) {
     </div>
   );
 }
+
+export default memo(SummaryCard);

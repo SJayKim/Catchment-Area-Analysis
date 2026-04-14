@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { CompareCardData } from '@/lib/types';
 import SourcesCitation from './SourcesCitation';
 
@@ -27,7 +28,7 @@ function Winner({ values, higherIsBetter = true }: { values: number[]; higherIsB
   return <span className="text-xs font-medium" style={{ color: '#10b981' }}>#{idx + 1} ▲</span>;
 }
 
-export default function CompareCard({ data }: CompareCardProps) {
+function CompareCard({ data }: CompareCardProps) {
   const card = data as CompareCardData;
 
   if (!card.districts || !card.district_codes) {
@@ -156,3 +157,5 @@ export default function CompareCard({ data }: CompareCardProps) {
     </div>
   );
 }
+
+export default memo(CompareCard);

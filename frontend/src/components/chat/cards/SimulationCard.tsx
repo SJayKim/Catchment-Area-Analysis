@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { SimulationCardData } from '@/lib/types';
 import SourcesCitation from './SourcesCitation';
 import {
@@ -27,7 +28,7 @@ function formatSales(value: number): string {
 const BAR_COLORS = ['#f59e0b', '#3b82f6', '#10b981'];
 const BAR_LABELS = ['하위 (p25)', '평균', '상위 (p75)'];
 
-export default function SimulationCard({ data }: SimulationCardProps) {
+function SimulationCard({ data }: SimulationCardProps) {
   const card = data as SimulationCardData;
 
   if (!card.simulation) {
@@ -45,11 +46,14 @@ export default function SimulationCard({ data }: SimulationCardProps) {
 
   const { simulation, basis, percentiles, seoul_comparison } = card;
 
-  const chartData = [
-    { name: '하위', value: simulation.low, label: BAR_LABELS[0] },
-    { name: '평균', value: simulation.avg, label: BAR_LABELS[1] },
-    { name: '상위', value: simulation.high, label: BAR_LABELS[2] },
-  ];
+  const chartData = useMemo(
+    () => [
+      { name: '하위', value: simulation.low, label: BAR_LABELS[0] },
+      { name: '평균', value: simulation.avg, label: BAR_LABELS[1] },
+      { name: '상위', value: simulation.high, label: BAR_LABELS[2] },
+    ],
+    [simulation.low, simulation.avg, simulation.high]
+  );
 
   return (
     <div
@@ -192,3 +196,5 @@ export default function SimulationCard({ data }: SimulationCardProps) {
     </div>
   );
 }
+
+export default memo(SimulationCard);

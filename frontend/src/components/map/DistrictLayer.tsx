@@ -28,6 +28,7 @@ const DEFAULT_STYLE = {
 
 export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
   const polygonsRef = useRef<Map<string, any>>(new Map());
+  const lastBoundsRef = useRef<string>('');
   const select = useDistrictStore((s) => s.select);
   const setHovered = useDistrictStore((s) => s.setHovered);
   const selectedCode = useDistrictStore((s) => s.selected?.code);
@@ -123,6 +124,17 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
         const bounds = map.getBounds();
         const sw = bounds.getSouthWest();
         const ne = bounds.getNorthEast();
+
+        // Round coordinates to 3 decimal places (~111m) to deduplicate
+        const boundsKey = [
+          sw.getLat().toFixed(3),
+          sw.getLng().toFixed(3),
+          ne.getLat().toFixed(3),
+          ne.getLng().toFixed(3),
+        ].join(',');
+
+        if (boundsKey === lastBoundsRef.current) return;
+        lastBoundsRef.current = boundsKey;
 
         const features = await fetchPolygons({
           sw_lat: sw.getLat(),

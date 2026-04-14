@@ -4,11 +4,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from langchain_core.messages import HumanMessage
+from tenacity import (
+    retry,
+    retry_if_not_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from server.config import settings
+from server.services.circuit_breaker import CircuitBreaker, CircuitOpenError
 
 LLM_PROVIDER = settings.llm_provider
 
@@ -16,6 +24,13 @@ logger = logging.getLogger(__name__)
 
 # Flag to skip Anthropic after first auth failure (avoids repeated 401 roundtrips)
 _anthropic_valid = True
+
+# Module-level circuit breaker for all LLM calls
+_llm_circuit_breaker = CircuitBreaker(
+    failure_threshold=settings.circuit_breaker_failure_threshold,
+    recovery_timeout=settings.circuit_breaker_recovery_timeout,
+    name="llm",
+)
 
 
 def _create_llm(role: str = "default"):
@@ -85,6 +100,46 @@ def _create_llm(role: str = "default"):
             max_tokens=4096,
             temperature=0.3,
         )
+
+
+# ===================================================================
+# LLM retry wrapper (circuit breaker + tenacity)
+# ===================================================================
+
+
+async def invoke_llm_with_retry(llm, prompt, *, timeout: float | None = None):
+    """Invoke LLM with circuit breaker + automatic retry.
+
+    Combines:
+      1. Circuit breaker — fast-fail when LLM is consistently down
+      2. Tenacity retry  — 2 attempts, exponential backoff 1-4s
+
+    Raises CircuitOpenError if circuit is open.
+    Raises the underlying LLM error after retries are exhausted.
+    """
+
+    @retry(
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(multiplier=1, min=1, max=4),
+        retry=retry_if_not_exception_type(CircuitOpenError),
+        reraise=True,
+    )
+    async def _attempt():
+        _llm_circuit_breaker.check()  # raises CircuitOpenError immediately
+        try:
+            if timeout is not None:
+                result = await asyncio.wait_for(llm.ainvoke(prompt), timeout=timeout)
+            else:
+                result = await llm.ainvoke(prompt)
+            await _llm_circuit_breaker.record_success()
+            return result
+        except CircuitOpenError:
+            raise  # don't record CB errors as failures
+        except Exception:
+            await _llm_circuit_breaker.record_failure()
+            raise
+
+    return await _attempt()
 
 
 # ===================================================================
@@ -264,7 +319,11 @@ async def run_agent(
 
     try:
         while True:
-            event = await event_queue.get()
+            try:
+                event = await asyncio.wait_for(event_queue.get(), timeout=90.0)
+            except TimeoutError:
+                logger.warning("Agent event queue stalled for 90s, forcing done")
+                break
             if event is None:
                 break
             yield event

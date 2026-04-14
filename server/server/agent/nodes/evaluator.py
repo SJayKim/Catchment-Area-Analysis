@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import re
@@ -113,7 +112,7 @@ def _summarize_results(tool_results: dict[str, dict]) -> str:
 
 async def _llm_evaluate(state: AgentState) -> EvaluationResult:
     """Use LLM to judge sufficiency for complex cases."""
-    from server.agent.graph import _create_llm
+    from server.agent.graph import _create_llm, invoke_llm_with_retry
 
     user_message = ""
     for msg in reversed(state.get("messages") or []):
@@ -129,8 +128,8 @@ async def _llm_evaluate(state: AgentState) -> EvaluationResult:
     )
 
     llm = _create_llm(role="evaluator")
-    response = await asyncio.wait_for(
-        llm.ainvoke(prompt), timeout=settings.llm_timeout_fast
+    response = await invoke_llm_with_retry(
+        llm, prompt, timeout=settings.llm_timeout_fast
     )
     content = response.content if hasattr(response, "content") else str(response)
     if isinstance(content, list):
@@ -197,7 +196,7 @@ def generate_proactive_suggestions(state: AgentState) -> list[str]:
                 f"{top} 상세 분석해줘",
                 f"{name} 리스크 확인해줘",
                 f"다른 상권에서 {top}은 어때?",
-                f"2위 업종은 어때?",
+                "2위 업종은 어때?",
             ]
         else:
             suggestions = [f"{name} 요약해줘", "다른 상권 추천해줘"]
@@ -227,6 +226,8 @@ def generate_proactive_suggestions(state: AgentState) -> list[str]:
 
 async def evaluator_node(state: AgentState) -> dict:
     """Judge tool result sufficiency. Fast path first, LLM if needed."""
+    from server.services.circuit_breaker import CircuitOpenError
+
     # 1. Fast path
     fast_result = _fast_evaluate(state)
     if fast_result is not None:
@@ -243,6 +244,9 @@ async def evaluator_node(state: AgentState) -> dict:
                 reasoning=llm_result["reasoning"],
             )
         return {"evaluation": llm_result}
+    except CircuitOpenError:
+        logger.warning("Evaluator skipped: LLM circuit breaker is OPEN, using rule fallback")
+        return {"evaluation": _rule_based_evaluate(state)}
     except Exception:
         logger.warning("Evaluator LLM failed, using rule fallback", exc_info=True)
         return {"evaluation": _rule_based_evaluate(state)}

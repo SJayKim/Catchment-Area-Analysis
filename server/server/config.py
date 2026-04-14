@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     # SQLAlchemy connection pool
     db_pool_size: int = 10
     db_max_overflow: int = 20
+    db_pool_pre_ping: bool = True        # validate connections before use
+    db_pool_recycle: int = 1800          # recycle idle connections after 30min
+    db_pool_timeout: int = 30            # wait timeout for pool checkout
+    db_statement_timeout_ms: int = 10000  # 10s per SQL statement
 
     # Conversation history
     max_history_turns: int = 10
@@ -74,6 +78,32 @@ class Settings(BaseSettings):
 
     # SSE event queue backpressure (graph.py)
     sse_queue_maxsize: int = 256
+
+    # Rate limiting
+    rate_limit_global: str = "60/minute"
+    rate_limit_chat: str = "10/minute"
+
+    # Input validation
+    chat_message_max_length: int = 500
+
+    # SSE streaming
+    sse_heartbeat_interval: float = 25.0
+    sse_connection_max_duration: float = 300.0  # 5 min total
+
+    # Tool execution
+    tool_execution_timeout: float = 15.0
+    tool_result_max_chars: int = 8000
+
+    # Circuit breaker (LLM)
+    circuit_breaker_failure_threshold: int = 5
+    circuit_breaker_recovery_timeout: float = 60.0
+
+    # Session
+    session_max_count: int = 10000
+    session_memory_limit_bytes: int = 524288  # 512KB
+
+    # Logging
+    log_format: str = "console"  # "json" for production, "console" for dev
 
     model_config = {
         "env_file": str(_ENV_FILE) if _ENV_FILE.exists() else None,

@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-lint:
+    name: Backend Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff>=0.8
+
+      - name: Ruff check
+        run: ruff check server/
+
+      - name: Ruff format check
+        run: ruff format --check server/
+
+  frontend-lint:
+    name: Frontend Lint (ESLint + TypeScript)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Next.js lint
+        run: npx next lint
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+  backend-test:
+    name: Backend Tests (pytest)
+    runs-on: ubuntu-latest
+    env:
+      USE_MOCK: "true"
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest -v
+
+  docker-build:
+    name: Docker Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t marketscope-server:ci ./server
+
+      - name: Build frontend image
+        run: docker build -t marketscope-frontend:ci ./frontend
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Python dependency audit
+        run: pip-audit -r <(pip install -e "./server[dev]" --dry-run --report - 2>/dev/null) || true
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: npm audit
+        run: cd frontend && npm audit || true

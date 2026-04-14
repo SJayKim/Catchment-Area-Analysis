@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useMapStore } from '@/stores/mapStore';
 import DistrictLayer from './DistrictLayer';
 import MapControls from './MapControls';
-import HeatmapLayer from './HeatmapLayer';
 import TimeSlider from './TimeSlider';
+
+const HeatmapLayer = dynamic(() => import('./HeatmapLayer'), { ssr: false });
 
 export default function MapContainer() {
   const mapRef = useRef<HTMLDivElement>(null);

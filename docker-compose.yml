@@ -1,8 +1,8 @@
 services:
   db:
     image: postgis/postgis:16-3.4
-    ports:
-      - "5432:5432"
+    command: postgres -c log_min_duration_statement=500 -c log_statement=none
+    ports: ["5432:5432"]
     environment:
       POSTGRES_DB: marketscope
       POSTGRES_USER: marketscope
@@ -13,15 +13,37 @@ services:
       test: ["CMD-SHELL", "pg_isready -U marketscope"]
       interval: 5s
       retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports: ["6379:6379"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   # --- 마이그레이션 (init container, 실행 후 종료) ---
   migrate:
@@ -62,7 +84,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://marketscope:devpassword@db:5432/marketscope
       DATABASE_URL_SYNC: postgresql://marketscope:devpassword@db:5432/marketscope
       REDIS_URL: redis://redis:6379/0
-      CORS_ORIGINS: '["http://localhost:3000","http://frontend:3000"]'
+      CORS_ORIGINS: '["http://localhost:3000","http://localhost:80","http://localhost","http://frontend:3000"]'
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       AGENT_MODE: ${AGENT_MODE:-pae}
@@ -75,6 +97,17 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
       retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   frontend:
     build:
@@ -89,6 +122,37 @@ services:
       NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY:-}
     depends_on:
       backend: { condition: service_healthy }
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  nginx:
+    image: nginx:1.25-alpine
+    ports: ["80:80"]
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend: { condition: service_healthy }
+      frontend: { condition: service_started }
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   # --- Dev 프로필 (docker compose --profile dev up) ---
   backend-dev:

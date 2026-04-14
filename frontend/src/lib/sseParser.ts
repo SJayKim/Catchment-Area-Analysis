@@ -3,16 +3,26 @@ import { SSEEvent } from './types';
 /**
  * Parse an SSE stream from a ReadableStreamDefaultReader,
  * yielding parsed SSEEvent objects.
+ *
+ * @param inactivityTimeoutMs - If no data arrives within this period, the
+ *   stream is considered dead and the generator exits. Defaults to 30s.
  */
 export async function* parseSSEStream(
-  reader: ReadableStreamDefaultReader<Uint8Array>
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  inactivityTimeoutMs: number = 30_000,
 ): AsyncGenerator<SSEEvent> {
   const decoder = new TextDecoder();
   let buffer = '';
 
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      // Race read against inactivity timeout to detect dead connections
+      const readPromise = reader.read();
+      const timeoutPromise = new Promise<{ done: true; value: undefined }>(
+        (resolve) => setTimeout(() => resolve({ done: true, value: undefined }), inactivityTimeoutMs)
+      );
+
+      const { done, value } = await Promise.race([readPromise, timeoutPromise]);
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });

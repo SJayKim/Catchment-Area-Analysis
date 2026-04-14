@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from typing import Protocol
 
 logger = logging.getLogger(__name__)
@@ -46,26 +47,50 @@ class MemoryCacheService:
 
 
 class RedisCacheService:
-    """Redis-backed cache — graceful degradation on failure."""
+    """Redis-backed cache — graceful degradation with exponential backoff."""
 
     def __init__(self, redis_url: str) -> None:
         self._redis_url = redis_url
         self._redis = None
+        # Exponential backoff for reconnection
+        self._last_fail_time: float = 0.0
+        self._backoff_seconds: float = 1.0
+        self._max_backoff: float = 60.0
 
     async def _get_redis(self):
-        if self._redis is None:
-            try:
-                from redis.asyncio import Redis
-                self._redis = Redis.from_url(
-                    self._redis_url, decode_responses=True,
-                    socket_connect_timeout=3, socket_timeout=3,
-                )
-                await self._redis.ping()
-            except Exception:
-                logger.warning("Redis connection failed — cache disabled", exc_info=True)
-                self._redis = None
-                return None
+        if self._redis is not None:
+            return self._redis
+
+        # Exponential backoff: skip reconnection if too soon after last failure
+        now = time.monotonic()
+        if self._last_fail_time > 0 and (now - self._last_fail_time) < self._backoff_seconds:
+            return None
+
+        try:
+            from redis.asyncio import Redis
+            self._redis = Redis.from_url(
+                self._redis_url, decode_responses=True,
+                socket_connect_timeout=3, socket_timeout=3,
+                max_connections=20,
+            )
+            await self._redis.ping()
+            # Success — reset backoff
+            self._backoff_seconds = 1.0
+            self._last_fail_time = 0.0
+        except Exception:
+            logger.warning("Redis connection failed — cache disabled", exc_info=True)
+            self._redis = None
+            self._last_fail_time = time.monotonic()
+            self._backoff_seconds = min(self._backoff_seconds * 2, self._max_backoff)
+            return None
         return self._redis
+
+    def _on_error(self, operation: str, key: str = "") -> None:
+        """Common error handling: log, reset connection, update backoff."""
+        logger.warning("Redis %s failed for key=%s", operation, key)
+        self._redis = None
+        self._last_fail_time = time.monotonic()
+        self._backoff_seconds = min(self._backoff_seconds * 2, self._max_backoff)
 
     async def get(self, key: str) -> dict | None:
         try:
@@ -75,8 +100,7 @@ class RedisCacheService:
             data = await redis.get(key)
             return json.loads(data) if data else None
         except Exception:
-            logger.warning("Redis GET failed for key=%s", key)
-            self._redis = None  # 다음 호출 시 재연결
+            self._on_error("GET", key)
             return None
 
     async def set(self, key: str, value: dict, ttl: int = 86400) -> None:
@@ -87,8 +111,7 @@ class RedisCacheService:
             serialized = json.dumps(value, ensure_ascii=False, default=str)
             await redis.set(key, serialized, ex=ttl)
         except Exception:
-            logger.warning("Redis SET failed for key=%s", key)
-            self._redis = None
+            self._on_error("SET", key)
 
     async def delete(self, key: str) -> None:
         try:
@@ -97,8 +120,7 @@ class RedisCacheService:
                 return
             await redis.delete(key)
         except Exception:
-            logger.warning("Redis DELETE failed for key=%s", key)
-            self._redis = None
+            self._on_error("DELETE", key)
 
     async def flush_by_prefix(self, prefix: str) -> int:
         try:
@@ -115,8 +137,7 @@ class RedisCacheService:
                     break
             return count
         except Exception:
-            logger.warning("Redis FLUSH failed for prefix=%s", prefix)
-            self._redis = None
+            self._on_error("FLUSH", prefix)
             return 0
 
     async def close(self) -> None:

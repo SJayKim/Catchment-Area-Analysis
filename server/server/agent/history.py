@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+from server.config import settings
 
 
 class ConversationHistory:
@@ -37,10 +39,11 @@ class ConversationHistory:
                 "district_code": district_code,
                 "intent": intent,
                 "tool_results_keys": tool_results_keys or [],
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
         )
         self._truncate()
+        self._enforce_memory_limit()
 
     def get_recent(self, max_turns: int | None = None) -> list[dict]:
         """Return the most recent *max_turns* turns."""
@@ -75,3 +78,13 @@ class ConversationHistory:
     def _truncate(self) -> None:
         if len(self.turns) > self.max_turns:
             self.turns = self.turns[-self.max_turns :]
+
+    def _estimate_size(self) -> int:
+        """Estimate total memory footprint by summing content lengths."""
+        return sum(len(t.get("content", "")) for t in self.turns)
+
+    def _enforce_memory_limit(self) -> None:
+        """Pop oldest turns until estimated size is under the configured limit."""
+        limit = settings.session_memory_limit_bytes
+        while self.turns and self._estimate_size() > limit:
+            self.turns.pop(0)

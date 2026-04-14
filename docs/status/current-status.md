@@ -1,12 +1,10 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-13
+> 최종 갱신: 2026-04-14
+> **서빙 안정성 Phase 1~10 구현 완료 ✅ — 체크리스트 24%→61% (148/243), 신규 14파일 + 수정 25파일**
 > **분석 리포트 품질 개선 Phase 1~3 완료 ✅ — 프롬프트+Tool 보강+벤치마킹, S1(9.8)/S2(9.6)/S8(9.7) 합격**
 > **SSE 스트리밍 성능 최적화 ✅ — LLM 프로바이더 Gemini→Claude 전환, TTFT 25s→1.5s (17배 개선)**
 > **Real Mode E2E Run 2026-04-07 완료 ✅ — 45 시나리오 / 41 PASS / 4 design-skip / Consumer-experience 100/100 (READY)**
-> **F05-H1 Korean particles fix ✅ — "강남역과 홍대입구를 비교해줘" 다중 상권 추출 정상**
-> **E2E QA Run 2026-04-07 (Mock) ✅ — 42 시나리오 / 41 PASS / Consumer-experience 94/100**
-> **P0 Critical 8건 수정 완료 ✅ — Migration 003 / LLM timeout / SSE backpressure / disconnect / JSON fallback / sanitize / stale closure / AbortController**
 
 ---
 
@@ -229,6 +227,32 @@
 ### ✅ .gitignore 정리
 - `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
 - `frontend/test-results/` 추가
+
+---
+
+## 완료 항목 (2026-04-14)
+
+### ✅ 서빙 안정성 & 효율성 Phase 1~10 구현
+
+**체크리스트**: `docs/spec/serving-stability-checklist.md` (243개 항목, 24%→61%)
+**구현 계획**: `.claude/plans/modular-bubbling-rocket.md`
+**이전 버전 태그**: `v0.1`
+
+| Phase | 내용 | 핵심 변경 |
+|-------|------|-----------|
+| 1 | Docker Compose 하드닝 | restart 정책, 리소스 제한, 로그 드라이버, Redis maxmemory, non-root |
+| 2 | DB 커넥션 풀 하드닝 | pool_pre_ping, pool_recycle, statement_timeout 10s, slow query 로깅 |
+| 3 | Redis 하드닝 | max_connections=20, 지수 백오프 재연결, singleflight (thundering herd 방지) |
+| 4 | Backend 미들웨어 | 글로벌 예외핸들러, slowapi Rate Limiting, Request ID, 보안 헤더, structlog, 입력 검증(500자) |
+| 5 | SSE 스트리밍 안정성 | heartbeat(25s), 전체 타임아웃(5분), 큐 stall 감지(90s), 프론트 재시도(2회)+비활성 감지(30s) |
+| 6 | LLM/Agent 회복성 | Circuit Breaker(3-state), tenacity 재시도(2회), Tool 타임아웃(15s), 결과 truncation(8000자) |
+| 7 | 세션 하드닝 | 서버 생성 세션 ID(secrets.token_urlsafe), 세션 수 상한(10000), 메모리 상한(512KB) |
+| 8 | Frontend 효율성 | React.memo(7개), useMemo(3곳), dynamic import(deck.gl/Recharts), SplitPanel rAF, viewport 쓰로틀, bounds 캐시 |
+| 9 | CI/CD + 모니터링 | GitHub Actions(lint+test+build+audit), 경량 메트릭 미들웨어(/metrics) |
+| 10 | Nginx + DR 문서 | 리버스 프록시(SSE버퍼링off, gzip, 보안헤더), runbook, disaster-recovery, backup 스크립트 |
+
+**신규 파일 14개**: circuit_breaker.py, singleflight.py, middleware.py, rate_limiter.py, errors.py, logging_config.py, metrics.py, nginx.conf, ci.yml, runbook.md, disaster-recovery.md, backup_db.sh 등
+**신규 의존성 2개**: slowapi, structlog (Python)
 
 ---
 

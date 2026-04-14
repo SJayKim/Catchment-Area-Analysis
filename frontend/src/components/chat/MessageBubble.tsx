@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage } from '@/lib/types';
@@ -10,7 +11,7 @@ interface MessageBubbleProps {
   isStreaming?: boolean;
 }
 
-export default function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
+function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isCard = message.type === 'card';
   const isError = message.type === 'error';
@@ -88,3 +89,11 @@ export default function MessageBubble({ message, isStreaming }: MessageBubblePro
     </div>
   );
 }
+
+export default memo(MessageBubble, (prev, next) => {
+  return (
+    prev.message.id === next.message.id &&
+    prev.message.content === next.message.content &&
+    prev.isStreaming === next.isStreaming
+  );
+});

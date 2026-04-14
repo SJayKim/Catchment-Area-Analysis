@@ -26,6 +26,9 @@ dependencies = [
     "langfuse>=2.0",
     # SSE
     "sse-starlette>=2.0",
+    # Middleware
+    "slowapi>=0.1.9",
+    "structlog>=24.0",
     # Config
     "pydantic-settings>=2.6",
     # CLI

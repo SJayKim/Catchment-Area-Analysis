@@ -177,37 +177,88 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const controller = new AbortController();
     set({ currentAbortController: controller });
 
+    const MAX_RETRIES = 2;
+    const BASE_DELAY_MS = 1000;
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
-    try {
-      const response = await sendChatMessage(
-        message.trim(),
-        state.sessionId,
-        resolvedDistrictCode,
-        controller.signal
-      );
-      reader = response.body?.getReader();
-      if (!reader) throw new Error('No response body');
+    let succeeded = false;
 
-      for await (const event of parseSSEStream(reader)) {
-        handleSSEEvent(event, ctx);
-      }
-    } catch (err) {
-      // Intentional cancellation from a subsequent sendMessage — don't
-      // surface as an error bubble.
-      const isAbort =
-        err instanceof DOMException && err.name === 'AbortError';
-      if (!isAbort) {
-        const errorMessage: ChatMessage = {
-          id: generateId(),
-          role: 'assistant',
-          content:
-            '죄송합니다. 요청을 처리하는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
-          type: 'error',
-          timestamp: new Date(),
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await sendChatMessage(
+          message.trim(),
+          state.sessionId,
+          resolvedDistrictCode,
+          controller.signal
+        );
+
+        // Don't retry client errors (4xx)
+        if (response.status >= 400 && response.status < 500) {
+          throw new Error(`Client error: ${response.status}`);
+        }
+
+        reader = response.body?.getReader();
+        if (!reader) throw new Error('No response body');
+
+        // SSE stream timeout: reset on each event, abort if idle > 120s
+        let streamTimer: ReturnType<typeof setTimeout> | undefined;
+        const resetStreamTimer = () => {
+          if (streamTimer) clearTimeout(streamTimer);
+          streamTimer = setTimeout(() => {
+            controller.abort();
+          }, 120_000);
         };
-        set((s) => ({ messages: [...s.messages, errorMessage] }));
+        resetStreamTimer();
+
+        for await (const event of parseSSEStream(reader)) {
+          resetStreamTimer();
+          handleSSEEvent(event, ctx);
+        }
+
+        if (streamTimer) clearTimeout(streamTimer);
+        succeeded = true;
+        break; // Success, exit retry loop
+      } catch (err) {
+        // Intentional cancellation — never retry
+        const isAbort =
+          err instanceof DOMException && err.name === 'AbortError';
+        if (isAbort) throw err;
+
+        // Last attempt — surface the error
+        if (attempt === MAX_RETRIES) {
+          const errorMessage: ChatMessage = {
+            id: generateId(),
+            role: 'assistant',
+            content:
+              '죄송합니다. 요청을 처리하는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+            type: 'error',
+            timestamp: new Date(),
+          };
+          set((s) => ({ messages: [...s.messages, errorMessage] }));
+          break;
+        }
+
+        // Retry with exponential backoff
+        const delay = BASE_DELAY_MS * Math.pow(2, attempt);
+        set({ agentSteps: [
+          { id: 'retry', label: `재연결 중... (${attempt + 1}/${MAX_RETRIES})`, status: 'in_progress' },
+        ] });
+        await new Promise((r) => setTimeout(r, delay));
+
+        // Release reader before retry
+        if (reader) {
+          try { await reader.cancel(); } catch { /* ignore */ }
+          reader = undefined;
+        }
       }
-    } finally {
+    }
+
+    // Legacy catch path for AbortError
+    if (!succeeded) {
+      // Error already handled above
+    }
+
+    // finally block (always runs)
+    {
       // Release network resources even on abort / error.
       if (reader) {
         try {

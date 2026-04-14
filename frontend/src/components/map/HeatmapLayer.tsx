@@ -68,14 +68,21 @@ export default function HeatmapLayer({ mapInstance }: HeatmapLayerProps) {
     return () => { cancelled = true; };
   }, [heatmapEnabled, heatmapData, setHeatmapData, setHeatmapLoading]);
 
-  // Sync deck.gl viewport with Kakao Map
-  const syncViewport = useCallback(() => {
-    const map = mapInstance.current;
-    const deck = deckRef.current;
-    if (!map || !deck) return;
+  // Sync deck.gl viewport with Kakao Map (rAF-throttled)
+  const syncRafRef = useRef<number | null>(null);
 
-    deck.setProps({
-      viewState: getViewState(map),
+  const syncViewport = useCallback(() => {
+    // Skip if a frame is already pending
+    if (syncRafRef.current !== null) return;
+    syncRafRef.current = requestAnimationFrame(() => {
+      syncRafRef.current = null;
+      const map = mapInstance.current;
+      const deck = deckRef.current;
+      if (!map || !deck) return;
+
+      deck.setProps({
+        viewState: getViewState(map),
+      });
     });
   }, [mapInstance]);
 
@@ -111,6 +118,10 @@ export default function HeatmapLayer({ mapInstance }: HeatmapLayerProps) {
       events.forEach((evt) => {
         window.kakao.maps.event.removeListener(map, evt, syncViewport);
       });
+      if (syncRafRef.current !== null) {
+        cancelAnimationFrame(syncRafRef.current);
+        syncRafRef.current = null;
+      }
       deck.finalize();
       deckRef.current = null;
     };
