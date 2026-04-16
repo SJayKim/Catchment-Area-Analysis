@@ -7,6 +7,8 @@ import logging
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from server.repositories.real._units import MONTHS_PER_QUARTER
+
 logger = logging.getLogger(__name__)
 
 
@@ -113,7 +115,8 @@ class RealComparisonRepository:
                                 .where(EstimatedSales.district_code == code, EstimatedSales.quarter == sales_quarter)
                             )
                         ).one()
-                        monthly_sales = int(sales_row.total or 0)
+                        # DB stores quarterly aggregate; convert to monthly.
+                        monthly_sales = int(sales_row.total or 0) // MONTHS_PER_QUARTER
 
                         trend_rows = (
                             await session.execute(

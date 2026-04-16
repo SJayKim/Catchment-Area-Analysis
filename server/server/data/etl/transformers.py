@@ -193,7 +193,12 @@ def transform_floating_pop(raw: dict) -> list[dict]:
 
 
 def transform_estimated_sales(raw: dict) -> dict:
-    """Transform estimated sales API row."""
+    """Transform estimated sales API row.
+
+    The ``*_AMT`` fields (THSMON_SELNG_AMT, MDW_SELNG_AMT, ...) are raw
+    quarterly aggregates in won per Seoul OpenData FAQ. They are stored
+    verbatim; conversion to monthly happens in real-mode repositories.
+    """
     year = str(raw.get("STDR_YR_CD", ""))
     qu = str(raw.get("STDR_QU_CD", ""))
 

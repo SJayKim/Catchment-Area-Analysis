@@ -5,6 +5,8 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from server.repositories.real._units import MONTHS_PER_QUARTER
+
 
 class RealEstimatedSalesRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
@@ -47,12 +49,13 @@ class RealEstimatedSalesRepository:
                 )
             ).one()
 
-            total_monthly_sales = int(agg_row.total_monthly_sales or 0)
-            total_sales_count = int(agg_row.total_sales_count or 0)
-            weekday_sales = int(agg_row.weekday_sales or 0)
-            weekend_sales = int(agg_row.weekend_sales or 0)
-            male_sales = int(agg_row.male_sales or 0)
-            female_sales = int(agg_row.female_sales or 0)
+            # DB stores quarterly aggregates; convert to monthly for display.
+            total_monthly_sales = int(agg_row.total_monthly_sales or 0) // MONTHS_PER_QUARTER
+            total_sales_count = int(agg_row.total_sales_count or 0) // MONTHS_PER_QUARTER
+            weekday_sales = int(agg_row.weekday_sales or 0) // MONTHS_PER_QUARTER
+            weekend_sales = int(agg_row.weekend_sales or 0) // MONTHS_PER_QUARTER
+            male_sales = int(agg_row.male_sales or 0) // MONTHS_PER_QUARTER
+            female_sales = int(agg_row.female_sales or 0) // MONTHS_PER_QUARTER
 
             # Age breakdown
             age_row = (
@@ -68,12 +71,12 @@ class RealEstimatedSalesRepository:
                 )
             ).one()
             age_sales = {
-                "10대": int(age_row.age_10 or 0),
-                "20대": int(age_row.age_20 or 0),
-                "30대": int(age_row.age_30 or 0),
-                "40대": int(age_row.age_40 or 0),
-                "50대": int(age_row.age_50 or 0),
-                "60대 이상": int(age_row.age_60_plus or 0),
+                "10대": int(age_row.age_10 or 0) // MONTHS_PER_QUARTER,
+                "20대": int(age_row.age_20 or 0) // MONTHS_PER_QUARTER,
+                "30대": int(age_row.age_30 or 0) // MONTHS_PER_QUARTER,
+                "40대": int(age_row.age_40 or 0) // MONTHS_PER_QUARTER,
+                "50대": int(age_row.age_50 or 0) // MONTHS_PER_QUARTER,
+                "60대 이상": int(age_row.age_60_plus or 0) // MONTHS_PER_QUARTER,
             }
 
             # Time-slot breakdown
@@ -90,12 +93,12 @@ class RealEstimatedSalesRepository:
                 )
             ).one()
             time_sales = {
-                "00~06시": int(time_row.t1 or 0),
-                "06~11시": int(time_row.t2 or 0),
-                "11~14시": int(time_row.t3 or 0),
-                "14~17시": int(time_row.t4 or 0),
-                "17~21시": int(time_row.t5 or 0),
-                "21~24시": int(time_row.t6 or 0),
+                "00~06시": int(time_row.t1 or 0) // MONTHS_PER_QUARTER,
+                "06~11시": int(time_row.t2 or 0) // MONTHS_PER_QUARTER,
+                "11~14시": int(time_row.t3 or 0) // MONTHS_PER_QUARTER,
+                "14~17시": int(time_row.t4 or 0) // MONTHS_PER_QUARTER,
+                "17~21시": int(time_row.t5 or 0) // MONTHS_PER_QUARTER,
+                "21~24시": int(time_row.t6 or 0) // MONTHS_PER_QUARTER,
             }
 
             # Quarterly trend (last 4 quarters)
@@ -116,7 +119,7 @@ class RealEstimatedSalesRepository:
                 )
             ).all()
             quarterly_sales = [
-                {"quarter": row.quarter, "monthly_sales": int(row.sales or 0)}
+                {"quarter": row.quarter, "monthly_sales": int(row.sales or 0) // MONTHS_PER_QUARTER}
                 for row in reversed(trend_rows)
             ]
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from server.repositories.real._units import MONTHS_PER_QUARTER
+
 
 class RealSimulationRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
@@ -74,13 +76,15 @@ class RealSimulationRepository:
                     "sample_count": 0,
                 }
 
+            # p25/p50/p75 are used as ratios only — unaffected by quarterly→monthly scaling.
+            # seoul_avg_per_store is an absolute amount, so convert it here.
             return {
                 "category_code": category_code,
                 "quarter": quarter,
                 "p25_ratio": round(float(row.p25 or 0) / p50, 3),
                 "p50_ratio": 1.0,
                 "p75_ratio": round(float(row.p75 or 0) / p50, 3),
-                "seoul_avg_per_store": int(float(row.avg or 0)),
+                "seoul_avg_per_store": int(float(row.avg or 0) / MONTHS_PER_QUARTER),
                 "sample_count": sample_count,
             }
 

@@ -95,7 +95,13 @@
       "Bash(sudo -S nginx -t)",
       "Bash(sudo -S systemctl reload nginx)",
       "Bash(mkdir -p /home/sjkim/Catchment-Area-Analysis/docs/plan/fix)",
-      "Bash(cp /home/sjkim/.claude/plans/mossy-hugging-clarke.md /home/sjkim/Catchment-Area-Analysis/docs/plan/fix/deployment-root-cause-fixes.md)"
+      "Bash(cp /home/sjkim/.claude/plans/mossy-hugging-clarke.md /home/sjkim/Catchment-Area-Analysis/docs/plan/fix/deployment-root-cause-fixes.md)",
+      "Bash(git -C /home/sjkim/Catchment-Area-Analysis log --oneline)",
+      "WebFetch(domain:data.seoul.go.kr)",
+      "WebFetch(domain:www.google.com)",
+      "WebFetch(domain:golmok.seoul.go.kr)",
+      "Bash(python3 -c \"import sys; sys.path.insert\\(0, '.'\\); from server.repositories.real._units import MONTHS_PER_QUARTER; print\\('MONTHS_PER_QUARTER=', MONTHS_PER_QUARTER\\)\")",
+      "Bash(python3 -m py_compile server/repositories/real/_units.py server/repositories/real/estimated_sales.py server/repositories/real/simulation.py server/repositories/real/recommendation.py server/repositories/real/comparison.py server/models/sales.py server/data/etl/transformers.py)"
     ]
   },
   "enableAllProjectMcpServers": true,

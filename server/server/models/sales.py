@@ -5,6 +5,14 @@ from server.models.base import Base
 
 
 class EstimatedSales(Base):
+    """Seoul OpenData OA-15572 estimated-sales rows.
+
+    Note: all ``*_sales`` columns store raw Seoul OpenData values in won,
+    which are **quarterly** aggregates despite the ``THSMON`` (당월) prefix
+    and the ``monthly_sales`` column name. Real-mode repositories convert
+    to monthly via ``repositories.real._units.MONTHS_PER_QUARTER``.
+    """
+
     __tablename__ = "estimated_sales"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)

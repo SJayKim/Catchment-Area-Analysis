@@ -1,10 +1,12 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-14
+> 최종 갱신: 2026-04-16
+> **프로덕션 배포 완료 ✅ — marketscope.robitlabs.co.kr 외부 리버스 프록시 환경 구축, SSE 스트리밍 + 지도 SDK 정상 동작**
 > **서빙 안정성 Phase 1~10 구현 완료 ✅ — 체크리스트 24%→61% (148/243), 신규 14파일 + 수정 25파일**
 > **분석 리포트 품질 개선 Phase 1~3 완료 ✅ — 프롬프트+Tool 보강+벤치마킹, S1(9.8)/S2(9.6)/S8(9.7) 합격**
 > **SSE 스트리밍 성능 최적화 ✅ — LLM 프로바이더 Gemini→Claude 전환, TTFT 25s→1.5s (17배 개선)**
 > **Real Mode E2E Run 2026-04-07 완료 ✅ — 45 시나리오 / 41 PASS / 4 design-skip / Consumer-experience 100/100 (READY)**
+> **분기→월 매출 단위 버그 수정 진행 중 🔧 — Real Repository 4곳 변환 적용(미커밋), `_enrich_sales` 키 버그 3곳 + 캐시 flush + 검증 스크립트 plan 작성 (`docs/plan/fix/sales-unit-conversion-fix.md`)**
 
 ---
 
@@ -227,6 +229,86 @@
 ### ✅ .gitignore 정리
 - `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
 - `frontend/test-results/` 추가
+
+---
+
+## 완료 항목 (2026-04-16)
+
+### ✅ 프로덕션 배포 — marketscope.robitlabs.co.kr
+
+**배포 구성**:
+- 외부 호스트 nginx(Let's Encrypt SSL) 리버스 프록시
+- `docker-compose.prod.yml` 신규 — 내장 nginx 제외, frontend 포트 3200
+- LLM_PROVIDER=gemini, USE_MOCK=false, Real 모드 운영
+
+**배포 중 발생한 이슈 6건과 현장 대응**:
+
+| # | 이슈 | 원인 | 현장 대응 |
+|---|------|------|-----------|
+| 1 | `alembic upgrade head` 실패 | `alembic_version`에 `001`+`003` 공존 (기존 볼륨 잔재) | 수동 DELETE 후 재기동 |
+| 2 | 포트 80 충돌 | 내장 nginx vs 호스트 nginx | prod.yml에서 nginx 서비스 제거 |
+| 3 | `POST /api/api/chat` 404 | `NEXT_PUBLIC_API_URL`에 `/api` 포함 → 프론트가 `/api` 자체 추가 | env를 루트 URL로 수정 + 재빌드 |
+| 4 | SSE "분석 중" 무한 | 외부 nginx `proxy_buffering on` + Next.js rewrite SSE 버퍼링 | 호스트 nginx에 `/api/` 분기 + `proxy_buffering off` |
+| 5 | 지도 미표시 | `/api/kakao-sdk`가 backend로 라우팅되어 404 | nginx `location = /api/kakao-sdk` exact-match로 frontend 예외 |
+| 6 | 빌드 시 env 누락 | `.env` 부재 → `NEXT_PUBLIC_*`이 빈 문자열로 이미지에 baked-in | `.env` 배치 후 frontend 재빌드 |
+
+**최종 검증**:
+```
+backend /health → 200 (healthy)
+frontend /      → 200 (up, port 3200)
+외부 SSE probe  → thinking/tool/text 이벤트 실시간 스트림 OK
+/api/kakao-sdk  → 200 (지도 SDK 정상 로드)
+env 주입       → ANTHROPIC_API_KEY=SET, GOOGLE_API_KEY=SET, LLM_PROVIDER=gemini
+```
+
+### ✅ 배포 근본 해결안 plan 작성
+
+**문서**: `docs/plan/fix/deployment-root-cause-fixes.md`
+
+현장 대응을 반복하지 않도록 P0~P2로 분류한 7개 수정안:
+
+| 우선순위 | 항목 | 대상 파일 |
+|---------|------|-----------|
+| P0-1 | `alembic_version` cleanup을 migrate **전**으로 이동 | `docker-compose.yml`, `docker-compose.prod.yml` |
+| P0-2 | `generate_seed.py` 덤프에서 `alembic_version` 제외 + 덤프 재생성 | `scripts/generate_seed.py`, `data/seed/marketscope_seed.dump` |
+| P1-3 | `/api/kakao-sdk` → `/_proxy/kakao-sdk` (네임스페이스 분리) | `frontend/src/app/_proxy/kakao-sdk/route.ts`, `MapContainer.tsx:33` |
+| P1-4 | 외부 nginx 샘플 + 배포 체크리스트 문서화 | `nginx/external-reverse-proxy.conf.example`, `docs/setup/production-deployment.md` |
+| P1-5 | `.env.example` 포맷 규칙 + Dockerfile build ARG 검증 | `.env.example`, `frontend/Dockerfile` |
+| P2-6 | prod.yml에서 DB/Redis 포트 외부 노출 제거 | `docker-compose.prod.yml` |
+| P2-7 | `scripts/validate_env.py` 신규 (런타임 전 검증) | `scripts/validate_env.py` |
+
+계획은 미구현 상태 — 다음 작업 시 P0부터 순서대로 반영 예정.
+
+### 커밋
+- `5466538` feat: 프로덕션 배포 구성 + 배포 근본 해결안 plan 추가
+- 변경: `docker-compose.prod.yml` (신규), `docs/plan/fix/deployment-root-cause-fixes.md` (신규), `docs/user-guide.md` (신규), `.claude/settings.local.json`
+
+### 🔧 분기→월 매출 단위 버그 수정 (진행 중, 미커밋)
+
+**배경**: 보문역 업종 추천 응답에서 "슈퍼마켓 점포당 월매출 41,279만원 (≈4.13억/월)"이라는 비현실적 숫자가 노출됨. 추적 결과 DB 컬럼 `estimated_sales.monthly_sales`(서울 열린데이터 `THSMON_SELNG_AMT`)가 실제로는 **분기 누적(원)**. 서울 FAQ 원문: "분기당 매출 금액은 개인 매출액과 법인 매출액의 합산값...". 필드명(당월)과 DB 컬럼명이 오해를 유발.
+
+**이미 적용한 선행 수정** (작업 트리, 커밋 전):
+
+| 파일 | 변경 |
+|------|------|
+| `server/server/repositories/real/_units.py` (신규) | `MONTHS_PER_QUARTER = 3` 상수 + 배경 주석 |
+| `server/server/repositories/real/estimated_sales.py` | total/weekday/weekend/gender/age/time/quarterly 매출 모두 `//3` |
+| `server/server/repositories/real/simulation.py` | `seoul_avg_per_store` `/3` (p25/p75 비율 불변) |
+| `server/server/repositories/real/recommendation.py` | `monthly_sales` `//3` — 하위 `per_store_sales`/score 자동 보정 |
+| `server/server/repositories/real/comparison.py` | `monthly_sales` `//3` |
+| `server/server/models/sales.py`, `server/server/data/etl/transformers.py` | 단위 경고 docstring 보강 |
+
+예상 효과: 보문역 슈퍼마켓 점포당 월매출 4.13억 → **약 1.38억/월** (중형 슈퍼마켓으로 현실적).
+
+**잔존 이슈 + 후속 plan**: `docs/plan/fix/sales-unit-conversion-fix.md`
+
+| Phase | 우선순위 | 항목 |
+|-------|---------|------|
+| A | P0 | `_enrich_sales` 키 불일치 버그 3곳 (`quarterly_sales` 실제 키는 `monthly_sales`인데 `.get("sales", 0)`로 조회 → `qoq_growth_pct`/`annual_growth_pct`/`qoqGrowth` 무효화) |
+| B | P1 | `scripts/flush_cache.py` 신설 (`sales:`/`compare:`/`recommend:`/`simulation:`/`summary:` 5개 prefix 일괄 flush) |
+| C | P1 | `scripts/verify_sales_units.py` 신설 (Real repo 4종 직접 호출, 보문역 샘플 assertion) |
+
+**범위 밖 (별도 티켓)**: DB 컬럼 rename, `respond.py:96-98` 프롬프트 예시 숫자 업데이트, pytest 인프라.
 
 ---
 
