@@ -61,7 +61,45 @@
       "Bash(docker cp:*)",
       "Bash(docker exec:*)",
       "Bash(tasklist:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(sudo -n docker compose ps)",
+      "Bash(sudo -S docker ps --format 'table {{.Names}}\\\\t{{.Ports}}\\\\t{{.Status}}')",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml build)",
+      "Bash(tee /tmp/compose-build.log)",
+      "Bash(sudo -S tail -n 50 /tmp/compose-build.log)",
+      "Bash(sudo -S docker images)",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml up -d)",
+      "Bash(tee /tmp/compose-up.log)",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml logs migrate)",
+      "Bash(sudo -S docker exec catchment-area-analysis-db-1 psql -U marketscope -d marketscope -c \"SELECT version_num FROM alembic_version;\")",
+      "Bash(sudo -S docker exec catchment-area-analysis-db-1 psql -U marketscope -d marketscope -c \"DELETE FROM alembic_version WHERE version_num = '001'; SELECT version_num FROM alembic_version;\")",
+      "Bash(sudo -S ss -tlnp)",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml ps)",
+      "Bash(awk -F= '{print $1}')",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml up -d --build)",
+      "Bash(tee /tmp/compose-rebuild.log)",
+      "Bash(sudo -S docker exec catchment-area-analysis-backend-1 sh -c 'echo \"ANTHROPIC_API_KEY set: $\\([ -n \\\\\"$ANTHROPIC_API_KEY\\\\\" ] && echo yes || echo no\\)\"; echo \"GOOGLE_API_KEY set: $\\([ -n \\\\\"$GOOGLE_API_KEY\\\\\" ] && echo yes || echo no\\)\"; echo \"LLM_PROVIDER: $LLM_PROVIDER\"')",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml ps -a)",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml ps --format '{{.Service}} {{.Status}}')",
+      "Bash(sudo -S docker exec catchment-area-analysis-backend-1 sh -c 'echo \"ANTHROPIC_API_KEY: $\\([ -n \\\\\"$ANTHROPIC_API_KEY\\\\\" ] && echo SET || echo EMPTY\\)\"; echo \"GOOGLE_API_KEY: $\\([ -n \\\\\"$GOOGLE_API_KEY\\\\\" ] && echo SET || echo EMPTY\\)\"; echo \"LLM_PROVIDER: ${LLM_PROVIDER:-<unset>}\"; echo \"USE_MOCK: ${USE_MOCK:-<unset>}\"')",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml logs backend --tail 150)",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml up -d --build frontend)",
+      "Bash(tee /tmp/compose-fe-rebuild.log)",
+      "Bash(sudo -S docker exec catchment-area-analysis-frontend-1 sh -c 'grep -rho \"marketscope\\\\.robitlabs\\\\.co\\\\.kr[^\\\\\"]*\" .next/static 2>/dev/null | sort -u | head -20')",
+      "Bash(sudo -S docker compose -f docker-compose.prod.yml logs backend --tail 100 --since 3m)",
+      "Bash(sudo -S bash -c 'ls /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null; echo ---; grep -rl \"marketscope\" /etc/nginx/ 2>/dev/null')",
+      "Bash(sudo -S cat /etc/nginx/sites-available/robitlabs)",
+      "Bash(sudo -S cp /etc/nginx/sites-available/robitlabs /tmp/robitlabs.edit)",
+      "Bash(sudo chown *)",
+      "Bash(sudo -S cp /tmp/robitlabs.edit /etc/nginx/sites-available/robitlabs)",
+      "Bash(sudo -S nginx -t)",
+      "Bash(sudo -S systemctl reload nginx)",
+      "Bash(mkdir -p /home/sjkim/Catchment-Area-Analysis/docs/plan/fix)",
+      "Bash(cp /home/sjkim/.claude/plans/mossy-hugging-clarke.md /home/sjkim/Catchment-Area-Analysis/docs/plan/fix/deployment-root-cause-fixes.md)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "playwright"
+  ]
 }

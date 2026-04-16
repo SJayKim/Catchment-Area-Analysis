@@ -1,0 +1,142 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    command: postgres -c log_min_duration_statement=500 -c log_statement=none
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: marketscope
+      POSTGRES_USER: marketscope
+      POSTGRES_PASSWORD: devpassword
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketscope"]
+      interval: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # --- 마이그레이션 (init container, 실행 후 종료) ---
+  migrate:
+    build: { context: ./server, target: runner }
+    command: alembic upgrade head
+    environment:
+      DATABASE_URL_SYNC: postgresql://marketscope:devpassword@db:5432/marketscope
+    depends_on:
+      db: { condition: service_healthy }
+
+  # --- 시드 데이터 복원 (마이그레이션 후, 데이터 없을 때만 실행) ---
+  seed:
+    image: postgis/postgis:16-3.4
+    command: >
+      bash -c "
+        COUNT=$$(psql -U marketscope -d marketscope -h db -tAc 'SELECT count(*) FROM districts')
+        if [ \"$$COUNT\" -gt 0 ]; then
+          echo 'Seed: districts already has $$COUNT rows — skipping'
+        else
+          echo 'Seed: loading seed data...'
+          pg_restore --no-owner --no-acl -U marketscope -d marketscope -h db /seed/marketscope_seed.dump || true
+          echo 'Seed: cleaning stale alembic_version rows from dump...'
+          psql -U marketscope -d marketscope -h db -c \"DELETE FROM alembic_version WHERE version_num NOT IN (SELECT version_num FROM alembic_version ORDER BY version_num DESC LIMIT 1);\"
+          echo 'Seed: done'
+        fi
+      "
+    environment:
+      PGPASSWORD: devpassword
+    volumes:
+      - ./data/seed:/seed:ro
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  # --- Production 서비스 ---
+  backend:
+    build: { context: ./server, target: runner }
+    ports: ["8000:8000"]
+    environment:
+      USE_MOCK: ${USE_MOCK:-false}
+      DATABASE_URL: postgresql+asyncpg://marketscope:devpassword@db:5432/marketscope
+      DATABASE_URL_SYNC: postgresql://marketscope:devpassword@db:5432/marketscope
+      REDIS_URL: redis://redis:6379/0
+      CORS_ORIGINS: '["https://marketscope.robitlabs.co.kr","http://localhost:3200","http://localhost:3000","http://localhost:80","http://localhost","http://frontend:3000"]'
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      AGENT_MODE: ${AGENT_MODE:-pae}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      seed: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: runner
+      args:
+        NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY:-}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://marketscope.robitlabs.co.kr}
+        BACKEND_INTERNAL_URL: http://backend:8000
+    ports: ["3200:3000"]
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://marketscope.robitlabs.co.kr}
+      BACKEND_INTERNAL_URL: http://backend:8000
+      NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY:-}
+    depends_on:
+      backend: { condition: service_healthy }
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+volumes:
+  pgdata:
