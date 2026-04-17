@@ -92,9 +92,34 @@ resident_population, chat_sessions, chat_messages, category_metadata
 1. **스펙 확인**: `docs/spec/` 폴더의 해당 기능 정의서를 먼저 읽고 요구사항 파악
    - 기능별 스펙: `docs/spec/features/F01~F10-*.md`, `docs/spec/data/D01-*.md`, `docs/spec/business/B01-*.md`
    - 체크리스트: `docs/spec/checklist.md`
-2. **계획 작성**: `docs/plan/<category>/` 폴더(phase/fix/infra/data/ui/business/agent-improvement)에 구현 계획 문서 작성 (접근 방식, 변경 범위, 의존성 정리)
+2. **계획 작성**: `docs/plan/<category>/` 폴더(phase/fix/infra/data/ui/business/agent-improvement)에 구현 계획 문서 작성 (접근 방식, 변경 범위, 의존성 정리) — `/plan-new <category> <name>` 스킬 권장
 3. **구현**: 스펙과 계획에 따라 코드 작성
-4. **상태 업데이트**: 구현 완료 후 `docs/status/current-status.md`에 진행 상황 반영
+4. **상태 업데이트**: 구현 완료 후 `docs/status/current-status.md`에 진행 상황 반영 — `/status-update "<요약>"` 스킬 권장
+
+## Reflection Loop (프로젝트 로컬)
+
+Global `~/.claude/settings.json` 의 `PostToolUseFailure` + `Stop` 훅이 도구 실패 시 자동으로 교훈을 auto memory(`memory/MEMORY.md` + `feedback_*.md`) 에 저장한다. 프로젝트 고유 규칙:
+
+- **새 Plan 작성 전** `memory/MEMORY.md` 를 grep 해서 관련 키워드(SSE, USE_MOCK, UTF-8, ruff, react-key 등) 매칭되는 feedback 파일명을 Plan **Context** 섹션에 인용할 것.
+- 중복 저장 금지. 기존 memory 와 겹치면 파일명만 참조.
+- `/plan-new` 스킬이 Memory 참조를 자동화함.
+
+## Plan 필수 구조 (docs/plan/**/*.md)
+
+모든 신규 Plan 은 아래 5개 섹션을 포함:
+
+1. **Checklist** — 원자적이고 검증 가능한 항목 (체크박스)
+2. **재검토 (Self-Review Gate)** — 구현 시작 전 자기검증 (엣지케이스 / 메모리교훈 / 타 Plan 충돌)
+3. **Scenario (E2E Ring Mapping)** — Ring 0~3 매핑, Scenario ID(`<RING>-<FEATURE>-<CASE>`), 사전조건 / 실행단계 / 기대결과
+4. **Pass 반복** — Pass 1(기본) / Pass 2(엣지) / Pass 3(성능). Fail → 수정 → 재실행 루프
+5. **Agent 모델 선택** — 설계 opus / 구현 sonnet / 검증 haiku. "심층 추론 필요성" 으로 판단
+
+## 하네스 명령어 요약
+
+- `/plan-new <category> <name>` — 표준 5섹션 Plan 템플릿 생성
+- `/status-update "<요약>"` — 오늘 날짜 진행 기록 추가
+- `/e2e-run <ring>` — USE_MOCK preflight 포함 E2E 실행 (수동 호출만)
+- Subagent: `qa-scenario-runner` / `code-reviewer` / `db-validator` — Task 도구로 호출
 
 ## 참고 문서
 
