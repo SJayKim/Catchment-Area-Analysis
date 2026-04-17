@@ -6,9 +6,9 @@ import asyncio
 
 from server.agent.tools.benchmarks import get_district_benchmarks
 from server.agent.tools.data_sources import get_sources_for_tool
-from server.agent.tools.registry import register_tool
 from server.agent.tools.estimated_sales import get_estimated_sales
 from server.agent.tools.floating_population import get_floating_population
+from server.agent.tools.registry import register_tool
 from server.agent.tools.store_info import get_store_info
 from server.config import settings
 from server.repositories import get_data_access
@@ -86,7 +86,9 @@ async def get_district_summary(district_code: str) -> dict:
 
     daily_avg = fp_result.get("daily_avg", 0) if fp_ok else 0
     monthly_sales = sales_result.get("total_monthly_sales", 0) if sales_ok else 0
-    status_label = {"growing": "성장 중인", "stable": "안정적인", "declining": "위축 중인"}.get(status, "안정적인")
+    status_label = {"growing": "성장 중인", "stable": "안정적인", "declining": "위축 중인"}.get(
+        status, "안정적인"
+    )
     summary_text = (
         f"하루 평균 유동인구 {_format_population(daily_avg)}, "
         f"월 추정 매출 {_format_sales(monthly_sales)}의 "
@@ -94,9 +96,12 @@ async def get_district_summary(district_code: str) -> dict:
     )
 
     quarter = (
-        fp_result.get("quarter") if fp_ok
-        else sales_result.get("quarter") if sales_ok
-        else store_result.get("quarter") if store_ok
+        fp_result.get("quarter")
+        if fp_ok
+        else sales_result.get("quarter")
+        if sales_ok
+        else store_result.get("quarter")
+        if store_ok
         else "N/A"
     )
 
@@ -113,7 +118,9 @@ async def get_district_summary(district_code: str) -> dict:
         diff = abs(m_ratio - f_ratio)
         if diff >= 5:
             dominant = "남성" if m_ratio > f_ratio else "여성"
-            insights["genderInsight"] = f"{dominant} 비중 높음 ({dominant} {max(m_ratio, f_ratio):.1f}%, 차이 {diff:.1f}%p)"
+            insights["genderInsight"] = (
+                f"{dominant} 비중 높음 ({dominant} {max(m_ratio, f_ratio):.1f}%, 차이 {diff:.1f}%p)"
+            )
 
         age_dist = fp_result.get("age_distribution", {})
         if age_dist:
@@ -137,8 +144,8 @@ async def get_district_summary(district_code: str) -> dict:
 
         quarterly = sales_result.get("quarterly_sales", [])
         if len(quarterly) >= 2:
-            prev = quarterly[-2].get("sales", 0)
-            curr = quarterly[-1].get("sales", 0)
+            prev = quarterly[-2].get("monthly_sales", 0)
+            curr = quarterly[-1].get("monthly_sales", 0)
             if prev > 0:
                 insights["qoqGrowth"] = round((curr - prev) / prev * 100, 1)
 

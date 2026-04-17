@@ -2,7 +2,7 @@ services:
   db:
     image: postgis/postgis:16-3.4
     command: postgres -c log_min_duration_statement=500 -c log_statement=none
-    ports: ["5432:5432"]
+    # 외부 포트 미노출 (내부 Docker network 전용). 디버깅은 docker compose exec db psql ...
     environment:
       POSTGRES_DB: marketscope
       POSTGRES_USER: marketscope
@@ -28,7 +28,7 @@ services:
   redis:
     image: redis:7-alpine
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    ports: ["6379:6379"]
+    # 외부 포트 미노출 (내부 Docker network 전용). 디버깅은 docker compose exec redis redis-cli
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -46,9 +46,11 @@ services:
         max-file: "5"
 
   # --- 마이그레이션 (init container, 실행 후 종료) ---
+  # cleanup_alembic.py는 stale alembic_version row(오래된 seed dump 유래)를
+  # upgrade 전에 제거한다. 매 기동마다 실행되므로 기존 볼륨 재사용 시에도 안전.
   migrate:
     build: { context: ./server, target: runner }
-    command: alembic upgrade head
+    command: bash -c "python scripts/cleanup_alembic.py && alembic upgrade head"
     environment:
       DATABASE_URL_SYNC: postgresql://marketscope:devpassword@db:5432/marketscope
     depends_on:

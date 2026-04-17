@@ -50,5 +50,7 @@
 - `frontend/src/components/layout/Toolbar.tsx` — 비교모드 버튼
 
 ## 미포함 (추후 구현)
-- Tier 게이팅 인프라 (인증/결제)
+- **Tier 게이팅 인프라 (인증/결제/구독) — ⏸️ Business 스코프로 이관**
+  상세 로드맵은 `docs/plan/business/commercialization-plan.md` 참조 (Stage 2 — Public Launch, M3~M4).
+  현재 기술 구현 우선순위에서 제외.
 - category_aliases 퍼지 검색 테이블 (현재는 LLM이 직접 매핑)

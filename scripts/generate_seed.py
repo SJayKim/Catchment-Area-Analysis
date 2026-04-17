@@ -80,6 +80,9 @@ def main() -> None:
              "-F", "c",
              "--exclude-table=chat_sessions",
              "--exclude-table=chat_messages",
+             # alembic_version은 migration 런타임이 관리. dump에 포함되면
+             # 오래된 head가 재삽입되어 신규 migration이 overlap으로 실패한다.
+             "--exclude-table=alembic_version",
              DB_NAME],
             stdout=f,
             stderr=subprocess.PIPE,

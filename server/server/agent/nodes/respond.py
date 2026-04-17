@@ -143,7 +143,9 @@ def _compute_hints(name: str, data: dict) -> str | None:
             by_hour = data.get("by_hour", [])
             if by_hour:
                 day_pop = sum(h["population"] for h in by_hour if 6 <= h["time_slot"] <= 21)
-                night_pop = sum(h["population"] for h in by_hour if h["time_slot"] < 6 or h["time_slot"] > 21)
+                night_pop = sum(
+                    h["population"] for h in by_hour if h["time_slot"] < 6 or h["time_slot"] > 21
+                )
                 total = day_pop + night_pop
                 if total > 0:
                     hints.append(f"주간(06~21시) 비율: {day_pop / total * 100:.1f}%")
@@ -155,7 +157,9 @@ def _compute_hints(name: str, data: dict) -> str | None:
             diff = abs(m - f)
             if diff >= 5:
                 dominant = "남성" if m > f else "여성"
-                hints.append(f"성별 특성: {dominant} 우세 ({dominant} {max(m, f):.1f}%, 차이 {diff:.1f}%p)")
+                hints.append(
+                    f"성별 특성: {dominant} 우세 ({dominant} {max(m, f):.1f}%, 차이 {diff:.1f}%p)"
+                )
 
             # Top age group
             age = data.get("age_distribution", {})
@@ -188,13 +192,13 @@ def _compute_hints(name: str, data: dict) -> str | None:
             # QoQ growth
             quarterly = data.get("quarterly_sales", [])
             if len(quarterly) >= 2:
-                prev = quarterly[-2].get("sales", 0)
-                curr = quarterly[-1].get("sales", 0)
+                prev = quarterly[-2].get("monthly_sales", 0)
+                curr = quarterly[-1].get("monthly_sales", 0)
                 if prev > 0:
                     qoq = (curr - prev) / prev * 100
                     hints.append(f"QoQ 매출 성장률: {qoq:+.1f}%")
                 if len(quarterly) >= 5:
-                    old = quarterly[-5].get("sales", 0)
+                    old = quarterly[-5].get("monthly_sales", 0)
                     if old > 0:
                         annual = (curr - old) / old * 100
                         hints.append(f"연간(4분기) 매출 성장률: {annual:+.1f}%")
@@ -258,7 +262,9 @@ def _compute_hints(name: str, data: dict) -> str | None:
                             best = max(valid, key=lambda d: d[metric])
                         winners[label] = best.get("district_name", best.get("district_code"))
                 if winners:
-                    hints.append("지표별 우위 상권: " + " / ".join(f"{k}: {v}" for k, v in winners.items()))
+                    hints.append(
+                        "지표별 우위 상권: " + " / ".join(f"{k}: {v}" for k, v in winners.items())
+                    )
 
                 # Sales per store efficiency
                 eff_parts = []
@@ -269,7 +275,9 @@ def _compute_hints(name: str, data: dict) -> str | None:
                     sc = d.get("store_count", 0)
                     if sc > 0:
                         per_store = ms / sc
-                        eff_parts.append(f"{d.get('district_name', d.get('district_code'))}: 점포당 {per_store / 10000:,.0f}만원")
+                        eff_parts.append(
+                            f"{d.get('district_name', d.get('district_code'))}: 점포당 {per_store / 10000:,.0f}만원"
+                        )
                 if eff_parts:
                     hints.append("점포당 매출 효율: " + " / ".join(eff_parts))
 
@@ -277,7 +285,9 @@ def _compute_hints(name: str, data: dict) -> str | None:
             bench = data.get("benchmarks", {})
             avg_cr = bench.get("seoulAvgCloseRate")
             if avg_cr:
-                hints.append(f"서울 평균 폐업률: {avg_cr}% ({bench.get('districtType', '전체')} 기준)")
+                hints.append(
+                    f"서울 평균 폐업률: {avg_cr}% ({bench.get('districtType', '전체')} 기준)"
+                )
             # Quarterly trend summary
             trend = data.get("quarterly_trend", [])
             if len(trend) >= 2:
@@ -310,7 +320,9 @@ def _compute_hints(name: str, data: dict) -> str | None:
                     score = rec.get("score", 0)
                     cr_r = rec.get("close_rate", 0)
                     cost = rec.get("startup_cost", 0)
-                    comparison.append(f"{rec.get('rank')}위 {name_r}(점수:{score}, 폐업률:{cr_r}%, 창업비:{cost}만원)")
+                    comparison.append(
+                        f"{rec.get('rank')}위 {name_r}(점수:{score}, 폐업률:{cr_r}%, 창업비:{cost}만원)"
+                    )
                 hints.append("전체 추천 요약: " + " / ".join(comparison))
 
     except Exception:
@@ -323,7 +335,9 @@ def _format_tool_results(tool_results: dict[str, dict]) -> str:
     """Pretty-print tool results + derived hints for the LLM prompt."""
     parts: list[str] = []
     for name, data in tool_results.items():
-        section = f"### {name}\n```json\n{json.dumps(data, ensure_ascii=False, default=str)[:4000]}\n```"
+        section = (
+            f"### {name}\n```json\n{json.dumps(data, ensure_ascii=False, default=str)[:4000]}\n```"
+        )
         hints = _compute_hints(name, data)
         if hints:
             section += f"\n\n**[파생 지표 힌트]**\n{hints}"
@@ -402,11 +416,13 @@ async def respond_node(
     # silence between tool cards and the first LLM text token (which can
     # take 10-30s depending on model latency).
     if event_queue:
-        await event_queue.put({
-            "type": "thinking",
-            "step": "분석 결과를 정리하는 중...",
-            "icon": "✍️",
-        })
+        await event_queue.put(
+            {
+                "type": "thinking",
+                "step": "분석 결과를 정리하는 중...",
+                "icon": "✍️",
+            }
+        )
 
     llm = _create_llm(role="respond")
     prompt = build_respond_prompt(state)
@@ -437,19 +453,13 @@ async def respond_node(
                         await event_queue.put({"type": "text", "content": content})
                 elif isinstance(content, list):
                     for block in content:
-                        text = (
-                            block.get("text", "") if isinstance(block, dict) else str(block)
-                        )
+                        text = block.get("text", "") if isinstance(block, dict) else str(block)
                         if text:
                             collected_text += text
                             if event_queue:
-                                await event_queue.put(
-                                    {"type": "text", "content": text}
-                                )
-    except asyncio.TimeoutError:
-        logger.warning(
-            "Respond LLM stream timed out after %.1fs", settings.llm_timeout_slow
-        )
+                                await event_queue.put({"type": "text", "content": text})
+    except TimeoutError:
+        logger.warning("Respond LLM stream timed out after %.1fs", settings.llm_timeout_slow)
         notice = "\n\n(응답이 지연되어 일부만 표시합니다.)"
         collected_text += notice
         if event_queue:

@@ -26,20 +26,64 @@ const DEFAULT_STYLE = {
   fillOpacity: 0.15,
 };
 
+// Compare-mode palette (slot 0/1/2 by compareList order). Slot 0 matches the
+// single-select blue so toggling compare mode on/off is visually continuous.
+const COMPARE_STYLES = [
+  SELECTED_STYLE,
+  {
+    strokeWeight: 3,
+    strokeColor: '#d97706',
+    strokeOpacity: 0.85,
+    fillColor: '#f59e0b',
+    fillOpacity: 0.4,
+  },
+  {
+    strokeWeight: 3,
+    strokeColor: '#be185d',
+    strokeOpacity: 0.85,
+    fillColor: '#ec4899',
+    fillOpacity: 0.4,
+  },
+];
+
 export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
   const polygonsRef = useRef<Map<string, any>>(new Map());
   const lastBoundsRef = useRef<string>('');
   const select = useDistrictStore((s) => s.select);
   const setHovered = useDistrictStore((s) => s.setHovered);
+  const addToCompare = useDistrictStore((s) => s.addToCompare);
   const selectedCode = useDistrictStore((s) => s.selected?.code);
+  const isCompareMode = useDistrictStore((s) => s.isCompareMode);
+  const compareList = useDistrictStore((s) => s.compareList);
   const activeLayers = useMapStore((s) => s.activeLayers);
 
-  // Mirror selectedCode in a ref so event listeners always see the latest
-  // value without needing to re-create polygons (see P0-6).
+  // Mirror state in refs so event listeners always see the latest value
+  // without needing to re-create polygons (see P0-6).
   const selectedCodeRef = useRef<string | undefined>(selectedCode);
+  const isCompareModeRef = useRef<boolean>(isCompareMode);
+  const compareCodesRef = useRef<string[]>(compareList.map((d) => d.code));
   useEffect(() => {
     selectedCodeRef.current = selectedCode;
   }, [selectedCode]);
+  useEffect(() => {
+    isCompareModeRef.current = isCompareMode;
+  }, [isCompareMode]);
+  useEffect(() => {
+    compareCodesRef.current = compareList.map((d) => d.code);
+  }, [compareList]);
+
+  // Pick style by current selection / compare-slot membership.
+  const styleFor = useCallback(
+    (code: string) => {
+      if (isCompareModeRef.current && compareCodesRef.current.length > 0) {
+        const idx = compareCodesRef.current.indexOf(code);
+        if (idx >= 0) return COMPARE_STYLES[idx] ?? SELECTED_STYLE;
+        return DEFAULT_STYLE;
+      }
+      return code === selectedCodeRef.current ? SELECTED_STYLE : DEFAULT_STYLE;
+    },
+    []
+  );
 
   const renderPolygons = useCallback(
     (map: any, features: PolygonFeature[]) => {
@@ -49,26 +93,26 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
 
       if (!activeLayers.includes('polygon')) return;
 
-      const currentSelected = selectedCodeRef.current;
+      const isActive = (code: string) =>
+        isCompareModeRef.current && compareCodesRef.current.length > 0
+          ? compareCodesRef.current.includes(code)
+          : code === selectedCodeRef.current;
 
       features.forEach((feature) => {
         const path = feature.coordinates.map(
           ([lng, lat]: number[]) => new window.kakao.maps.LatLng(lat, lng)
         );
 
-        const isSelected = feature.code === currentSelected;
-        const baseStyle = isSelected ? SELECTED_STYLE : DEFAULT_STYLE;
-
         const polygon = new window.kakao.maps.Polygon({
           map,
           path,
-          ...baseStyle,
+          ...styleFor(feature.code),
         });
 
-        // Hover effects — read from ref so a selection change after mount
+        // Hover effects — read from refs so a selection change after mount
         // is still respected without re-creating listeners.
         window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
-          if (feature.code !== selectedCodeRef.current) {
+          if (!isActive(feature.code)) {
             polygon.setOptions({
               fillOpacity: 0.3,
               strokeWeight: 2,
@@ -78,7 +122,7 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
         });
 
         window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
-          if (feature.code !== selectedCodeRef.current) {
+          if (!isActive(feature.code)) {
             polygon.setOptions({
               fillOpacity: DEFAULT_STYLE.fillOpacity,
               strokeWeight: DEFAULT_STYLE.strokeWeight,
@@ -87,33 +131,35 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
           setHovered(null);
         });
 
-        // Click to select (source: 'map' for auto-query via useMapSync)
+        // Click: in compare mode add to compareList (up to 3) and also sync
+        // the "current" selection so chat context / StatusBar follow along.
         window.kakao.maps.event.addListener(polygon, 'click', () => {
-          select(
-            {
-              code: feature.code,
-              name: feature.name,
-              type: feature.type,
-              center: feature.center,
-            },
-            'map'
-          );
+          const district = {
+            code: feature.code,
+            name: feature.name,
+            type: feature.type,
+            center: feature.center,
+          };
+          if (isCompareModeRef.current) {
+            addToCompare(district);
+          }
+          select(district, 'map');
         });
 
         polygonsRef.current.set(feature.code, polygon);
       });
     },
-    [activeLayers, select, setHovered]
+    [activeLayers, select, setHovered, addToCompare, styleFor]
   );
 
-  // On selection change: update polygon styles in-place without re-creating
-  // them. Iterating ~1,650 polygons with setOptions is cheap (~1ms).
+  // On selection / compare-mode / compareList change: update polygon styles
+  // in-place without re-creating them. Iterating ~1,650 polygons with
+  // setOptions is cheap (~1ms).
   useEffect(() => {
     polygonsRef.current.forEach((polygon, code) => {
-      const style = code === selectedCode ? SELECTED_STYLE : DEFAULT_STYLE;
-      polygon.setOptions(style);
+      polygon.setOptions(styleFor(code));
     });
-  }, [selectedCode]);
+  }, [selectedCode, isCompareMode, compareList, styleFor]);
 
   useEffect(() => {
     const map = mapInstance.current;

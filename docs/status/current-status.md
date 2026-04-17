@@ -1,12 +1,12 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-16
+> 최종 갱신: 2026-04-17
 > **프로덕션 배포 완료 ✅ — marketscope.robitlabs.co.kr 외부 리버스 프록시 환경 구축, SSE 스트리밍 + 지도 SDK 정상 동작**
 > **서빙 안정성 Phase 1~10 구현 완료 ✅ — 체크리스트 24%→61% (148/243), 신규 14파일 + 수정 25파일**
 > **분석 리포트 품질 개선 Phase 1~3 완료 ✅ — 프롬프트+Tool 보강+벤치마킹, S1(9.8)/S2(9.6)/S8(9.7) 합격**
 > **SSE 스트리밍 성능 최적화 ✅ — LLM 프로바이더 Gemini→Claude 전환, TTFT 25s→1.5s (17배 개선)**
 > **Real Mode E2E Run 2026-04-07 완료 ✅ — 45 시나리오 / 41 PASS / 4 design-skip / Consumer-experience 100/100 (READY)**
-> **분기→월 매출 단위 버그 수정 진행 중 🔧 — Real Repository 4곳 변환 적용(미커밋), `_enrich_sales` 키 버그 3곳 + 캐시 flush + 검증 스크립트 plan 작성 (`docs/plan/fix/sales-unit-conversion-fix.md`)**
+> **매출 단위 수정 Plan A + 배포 근본해결 Plan B 구현 완료 ✅ (2026-04-17, 미커밋) — 총 10건: `_enrich_sales` 키 버그 3곳 / flush_cache·verify_sales_units·validate_env·cleanup_alembic 스크립트 4종 / kakao-sdk 경로 `_proxy/` 이동 / 외부 nginx 샘플 + 배포 문서 / Dockerfile 빌드 가드 / DB·Redis 포트 비노출**
 
 ---
 
@@ -229,6 +229,70 @@
 ### ✅ .gitignore 정리
 - `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
 - `frontend/test-results/` 추가
+
+---
+
+## 완료 항목 (2026-04-17)
+
+### ✅ Phase 2 후순위 — 비교모드 복수 상권 다색 하이라이트
+
+**Plan**: `docs/plan/phase/phase-2-implementation.md` (미완료 항목 중 1건)
+
+**변경**: `frontend/src/components/map/DistrictLayer.tsx` 단일 파일
+- `COMPARE_STYLES` 팔레트 3색 (blue / amber / rose) — `compareList` 순서 = 색 슬롯
+- `isCompareMode` + `compareList` 구독 + refs 미러 추가 (이벤트 리스너 재생성 없이 최신 값 반영)
+- `styleFor(code)` 헬퍼: compare 모드 ON + 리스트 비어있지 않음 → 슬롯 색 / 그 외 → 기존 selected 단색
+- 폴리곤 click 시 compare 모드면 `addToCompare` 동시 호출 (selected 동기화 유지 → StatusBar/chat 컨텍스트 보존)
+- 스타일 in-place 업데이트 `useEffect` deps에 `isCompareMode`, `compareList` 추가
+
+**효과**: Toolbar 비교모드 토글 후 지도/검색에서 최대 3개 상권 선택 시 각각 다른 색으로 동시 하이라이트. CompareCard(3개 상권 비교)와 시각적 정합.
+
+**검증**:
+- `npx tsc --noEmit` — EXIT 0
+- `npm run build` — 성공 (경고 2건은 pre-existing)
+
+---
+
+### ✅ 매출 단위 수정 Plan A — 잔존 버그 3건 + 검증 자동화
+
+**Plan**: `docs/plan/fix/sales-unit-conversion-fix.md`
+
+| Phase | 항목 | 대상 파일 |
+|-------|------|-----------|
+| A | `_enrich_sales` 키 치환 (`sales` → `monthly_sales`) 3곳 | `agent/tools/estimated_sales.py:29-34`, `agent/tools/district_summary.py:140-141`, `agent/nodes/respond.py:195-201` |
+| B | 캐시 flush 스크립트 신설 | `scripts/flush_cache.py` (5 prefix: sales/compare/recommend/simulation/summary) |
+| C | 단위 변환 검증 스크립트 신설 | `scripts/verify_sales_units.py` (Real repo 4 시나리오 + QoQ 확인) |
+
+**효과**: `computed.qoq_growth_pct` / `insights.qoqGrowth` / QoQ·연간 성장률 힌트 기능이 실제 DB 값에서 동작. `grep -rn 'quarterly.*\.get("sales"' server/` → 0건 회귀.
+
+### ✅ 배포 근본해결 Plan B — P0/P1/P2 7건 구현
+
+**Plan**: `docs/plan/fix/deployment-root-cause-fixes.md`
+
+| 우선순위 | 항목 | 대상 파일 |
+|---------|------|-----------|
+| P0-1 | `alembic_version` cleanup을 migrate **전**으로 이동 | `server/scripts/cleanup_alembic.py` (신규), `docker-compose.yml` + `docker-compose.prod.yml` migrate command → `bash -c "python scripts/cleanup_alembic.py && alembic upgrade head"` |
+| P0-2 | `generate_seed.py` dump 에서 `alembic_version` 제외 | `scripts/generate_seed.py` |
+| P1-3 | `/api/kakao-sdk` → `/_proxy/kakao-sdk` 네임스페이스 분리 | `frontend/src/app/_proxy/kakao-sdk/route.ts` (신규), `api/kakao-sdk/` 삭제, `MapContainer.tsx:34`, `next.config.mjs` beforeFiles 제거 |
+| P1-4 | 외부 nginx 샘플 + 배포 문서 | `nginx/external-reverse-proxy.conf.example` (신규), `docs/setup/production-deployment.md` (신규) |
+| P1-5 | `.env.example` 주석 + Dockerfile 빌드 ARG 가드 | `.env.example` `NEXT_PUBLIC_API_URL` 추가, `frontend/Dockerfile` `grep -Eqv '/api/?$'` 가드 2건 |
+| P2-6 | DB/Redis 외부 포트 제거 | `docker-compose.prod.yml` |
+| P2-7 | 런타임 전 env 검증 스크립트 | `scripts/validate_env.py` (신규) |
+
+**기대 효과**: 기존 볼륨 재사용 시에도 `alembic_version` stale row 자동 제거, 외부 nginx 단일 `location /api/` 블록으로 backend 라우팅, `.env` 빠진 상태 빌드 차단.
+
+### 검증
+
+- Python syntax / compose YAML / ruff(line 100, py3.12) 전부 통과 (기존 respond.py 한글 프롬프트 E501은 이번 스코프 밖)
+- Dockerfile `grep -Eqv '/api/?$'` 가드 4 URL 케이스 검증 (루트 도메인 OK, `/api` / `/api/` FAIL, `localhost:8000` OK)
+- `python:3.12-slim` 이미지에서 `/usr/bin/bash` + `psycopg2` 가용성 확인
+- `validate_env.py` 가 현 `.env` 의 `NEXT_PUBLIC_API_URL` 누락을 실제 탐지 (가드 동작 확인)
+
+### 🔧 다음 단계 (사용자 수행)
+1. `.env` 에 `NEXT_PUBLIC_API_URL=https://marketscope.robitlabs.co.kr` 추가
+2. `USE_MOCK=false` 상태에서 `python scripts/verify_sales_units.py` — 보문역 슈퍼마켓 점포당 월매출 ≈1.38억 회귀 확인
+3. `docker compose -f docker-compose.prod.yml down -v && up -d --build` — migrate cleanup + 신규 seed dump 재생성 통합 검증
+4. 커밋
 
 ---
 
@@ -919,7 +983,7 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 
 ### ~~🟡 8. 기능 고도화~~ ✅ Phase 3 완료 (2026-04-06)
 
-- 비교모드 복수 상권 하이라이트 (미완료, 후순위)
+- ~~비교모드 복수 상권 하이라이트~~ ✅ 완료 (2026-04-17)
 - category_aliases 퍼지 검색 (미완료, 후순위)
 - ~~F06 히트맵 / F09 시뮬레이션 / F10 PDF~~ ✅ 완료
 
@@ -963,7 +1027,7 @@ Card footer에 데이터 출처(서울 열린데이터광장, API명, 라이선�
 
 ### 미완료
 - [ ] category_aliases 퍼지 검색 테이블 (pg_trgm)
-- [ ] 지도 비교모드에서 복수 상권 다른 색상 하이라이트
+- [x] 지도 비교모드에서 복수 상권 다른 색상 하이라이트 (2026-04-17)
 
 ---
 

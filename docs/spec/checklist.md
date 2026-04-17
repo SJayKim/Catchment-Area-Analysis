@@ -143,14 +143,14 @@
 - [ ] 자연어 → 업종 코드 매핑 (Agent LLM)
 - [ ] 업종 분석 텍스트 응답 + 인라인 차트
 
-### Tier 게이팅 인프라
-- [ ] 사용자 인증 시스템 (OAuth2 — Google/Kakao)
-- [ ] `users` + `subscriptions` 테이블
-- [ ] Tier 미들웨어 (Free/Premium 접근 제어)
-- [ ] AI 챗봇 일일 사용 횟수 카운터 (Free: 5회)
-- [ ] Premium 기능 접근 시 업그레이드 유도 UI
-- [ ] 결제 연동 (Toss Payments / PortOne)
-- [ ] 구독 상태 관리 (활성/만료/해지)
+### Tier 게이팅 인프라 — ⏸️ Business 스코프 (현재 구현 고려 대상 아님)
+
+인증/결제/구독/Tier 게이팅 관련 구현은 PMF 검증 이후 착수.
+상세 로드맵 및 체크리스트는 `docs/plan/business/commercialization-plan.md` (Stage 2 — Public Launch, M3~M4) 참조.
+
+- OAuth2 (Google/Kakao), `users` / `subscriptions` 테이블
+- Tier 미들웨어 (Free/Premium 접근 제어), Free 일 5회 카운터
+- Toss Payments 빌링키 정기결제, 구독 상태 관리, 업그레이드 유도 UI
 
 ---
 
