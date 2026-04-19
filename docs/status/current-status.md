@@ -7,6 +7,7 @@
 > **SSE 스트리밍 성능 최적화 ✅ — LLM 프로바이더 Gemini→Claude 전환, TTFT 25s→1.5s (17배 개선)**
 > **Real Mode E2E Run 2026-04-07 완료 ✅ — 45 시나리오 / 41 PASS / 4 design-skip / Consumer-experience 100/100 (READY)**
 > **매출 단위 수정 Plan A + 배포 근본해결 Plan B 구현 완료 ✅ (2026-04-17, 미커밋) — 총 10건: `_enrich_sales` 키 버그 3곳 / flush_cache·verify_sales_units·validate_env·cleanup_alembic 스크립트 4종 / kakao-sdk 경로 `_proxy/` 이동 / 외부 nginx 샘플 + 배포 문서 / Dockerfile 빌드 가드 / DB·Redis 포트 비노출**
+> **v0.3.0 릴리스 완료 ✅ (2026-04-19) — 문서 계층화(archive 제거 + architecture 6개 파일 분할) + 실구현 동기화(F02 ReAct→PAE / Tool 8→11) + E2E 회귀 인프라 Pass 0 / Ring 0 4/4 PASS**
 
 ---
 
@@ -256,17 +257,30 @@
 - ✅ `ring3-negative/reg-2026-04-17.spec.ts` 신규 (6 scenario): cleanup_alembic idempotent / validate_env 누락 감지 / flush_cache 5 prefix / kakao-sdk route / prod-domain-block / sales-unit grep
 - ✅ Playwright `--list` 84 scenario 컴파일 OK (기존 75 + 신규 9)
 
-**다음 단계 (사용자 게이트)**:
-- 🔧 Pass 1 — Mock Ring 0 + Ring 1 (11) + Ring 3 (3 reg) 실행
-- 🔧 Pass 2 — Real 모드 happy-path 6건
-- 🔧 Pass 3 — Ring 0~3 전수 실행 + `docs/qa/runs/e2e-run-2026-04-19.md` 리포트
-- ⚠️ Docker + `.env.e2e` (env.e2e.example 복사 후 ANTHROPIC_API_KEY 테스트 키 입력) 필요
+**Pass 0 진행 (부분)**:
+- ✅ `.env.e2e` 준비 완료 (ENV_PROFILE=e2e / NEXT_PUBLIC_API_URL=localhost:8002 / AGENT_MODE=pae 보강)
+- ✅ `scripts/e2e/preflight.sh` 통과 — backend + frontend + db + redis 빌드 + healthcheck OK, Mock 모드 (`D300x` 상권) 확인
+- ✅ **Ring 0 (4 scenario) 4/4 PASS** — backend /health, frontend root, polygons smoke, mode detection (2.9s)
+- ⏸ **Ring 1 / Ring 2 / Ring 3 실행 보류** — 사용자 요청으로 Pass 1 중단, 후속 세션에서 재개
+- ⏸ stack 은 기동 상태 유지 (`docker compose -f docker-compose.e2e.yml ps` 로 확인) — teardown 도 다음 세션에서
+
+**다음 단계**:
+- 🔧 Pass 1 — Mock Ring 1 (11 spec) + Ring 3 reg (4 spec) 실행
+- 🔧 Pass 2 — Real 모드 happy-path 6건 (store_history design SKIP)
+- 🔧 Pass 3 — Ring 2 (5 journey) + Ring 3 기존 negative (3)
+- 🔧 `docs/qa/runs/e2e-run-2026-04-19.md` 리포트 작성
 
 **실행 명령**:
 ```bash
-cp env.e2e.example .env.e2e    # 테스트 키 입력
-bash scripts/e2e/preflight.sh
-cd frontend && E2E_BASE_URL=http://localhost:3001 E2E_BACKEND_URL=http://localhost:8002 npm test
+# 기동 상태 확인 (이미 up 상태)
+docker compose -f docker-compose.e2e.yml ps
+
+# Pass 1 재개 (예시)
+cd frontend && E2E_BASE_URL=http://localhost:3001 E2E_BACKEND_URL=http://localhost:8002 \
+  NEXT_PUBLIC_CHAT_API_URL=http://localhost:8002 \
+  npx playwright test ring1-features/ ring3-negative/ --reporter=list
+
+# 종료
 bash scripts/e2e/teardown.sh
 ```
 
