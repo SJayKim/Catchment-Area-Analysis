@@ -1,27 +1,22 @@
-# QA — 테스트 플랜 & 리포트
+# QA
 
-품질 검증 관련 플랜, 케이스, 실행 리포트, 버그 수정 결과를 모아둔 폴더.
-
-## 마스터 문서
-
-> **테스트 플랜의 Single Source of Truth는 [qa-test-plan.md](qa-test-plan.md)** (194개 케이스)
-
-## 문서 목록
-
-| 문서 | 역할 |
+| 문서 | 내용 |
 |---|---|
-| [qa-test-plan.md](qa-test-plan.md) | **마스터 테스트 플랜** (194 케이스) |
-| [e2e-qa-test-plan.md](e2e-qa-test-plan.md) | E2E 특화 테스트 플랜 |
-| [qa-summary-report.md](qa-summary-report.md) | 실행 요약 리포트 |
-| [qa-detailed-results.md](qa-detailed-results.md) | 상세 결과 |
-| [qa-bugfix-verification.md](qa-bugfix-verification.md) | 버그 수정 검증 |
-| [qa-improvements.md](qa-improvements.md) | QA 프로세스 개선 |
-| [qa-issue-report.md](qa-issue-report.md) | 이슈 리포트 |
-| [qa-sub-agent-b-results.md](qa-sub-agent-b-results.md) | 서브 에이전트 B 결과 |
+| [test-plan.md](test-plan.md) | E2E 4-ring 테스트 플랜 (Ring 0 preflight / Ring 1 features / Ring 2 journeys / Ring 3 negative) |
+| [runs/](runs/) | 날짜별 실행 리포트 (최근 실행만 유지) |
 
-## 실행 로그 (runs/)
+## Ring 개요
 
-| 로그 | 변형 |
-|---|---|
-| [runs/e2e-run-2026-04-07-mock.md](runs/e2e-run-2026-04-07-mock.md) | Mock 모드 |
-| [runs/e2e-run-2026-04-07-real.md](runs/e2e-run-2026-04-07-real.md) | Real 모드 |
+- **Ring 0** (1 spec): 인프라 sanity — docker 스택 부팅 + Mock/Real 양쪽 접근성
+- **Ring 1** (10+1 spec): 기능별 동작 — f01~f10 + m01 (Mock data)
+- **Ring 2** (5 spec): 사용자 여정 — j01 first-time / j02 comparison / j03 risk-first / j04 recovery / j05 pdf-stakeholder
+- **Ring 3** (4 spec): 부정 케이스 — no-district / prompt-injection / p0-regression / reg-<날짜>
+
+## 실행
+
+```bash
+cd frontend && npm test              # 전체 Playwright E2E
+cd frontend && npx playwright test ring1-features/  # Ring 1 만
+```
+
+또는 `/e2e-run <ring>` 스킬 (USE_MOCK preflight 포함, 수동 호출만).

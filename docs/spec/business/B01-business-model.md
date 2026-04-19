@@ -7,11 +7,13 @@
 ## 1. 개요
 
 | 항목 | 내용 |
-|------|------|
+|---|---|
 | 모델 | Freemium (무료 기본 + 유료 프리미엄) |
 | 무료 목적 | 사용자 유입 + 서비스 가치 체험 |
 | 유료 목적 | 심층 분석 기능으로 전환 유도 |
 | 타겟 고객 | 소상공인 예비 창업자, 부동산/상가 중개인 |
+| 상태 | **Phase 2 미착수** — 현재 모든 기능이 Free 로 접근 가능. OAuth2 / 결제 / Tier 게이팅 미구현. |
+| 로드맵 | [../../plan/business/commercialization-plan.md](../../plan/business/commercialization-plan.md) 참조 — Stage 1(검증) → Stage 2(Public Launch, M3~M4) 에서 인증/결제 구현 |
 
 ## 2. Tier 구분
 

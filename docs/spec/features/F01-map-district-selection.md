@@ -8,10 +8,12 @@
 
 | 항목 | 내용 |
 |------|------|
-| Phase | 1 (MVP) |
-| 의존성 | D01 (데이터 적재), D02 (DB 스키마) |
-| 상권 단위 | 골목상권, 발달상권, 전통시장, (행정동) |
-| 서비스 범위 | 서울 지역 한정 (MVP) |
+| Phase | 1A(Mock) · 1B(Real) — **완료** |
+| Tier | Free |
+| 의존성 | D01 (ETL), `districts` 테이블 |
+| 상권 단위 | 골목상권, 발달상권, 전통시장, 관광특구 |
+| 상권 수 | 서울 전체 **1,650개** (2025Q4) |
+| 서비스 범위 | 서울 지역 한정 |
 
 ## 2. 사용자 인터랙션
 
@@ -36,35 +38,11 @@
 
 ### 3.2 상태 관리 (Zustand)
 
-```typescript
-// stores/mapStore.ts
-interface MapStore {
-  center: { lat: number; lng: number };
-  zoom: number;
-  activeLayers: string[];  // ['polygon', 'heatmap', 'marker']
-  setCenter: (center: { lat: number; lng: number }) => void;
-  setZoom: (zoom: number) => void;
-  toggleLayer: (layer: string) => void;
-}
+구체 필드는 [../../architecture/frontend.md §3](../../architecture/frontend.md) 참조. 요약:
 
-// stores/districtStore.ts
-interface DistrictStore {
-  selected: District | null;       // 현재 선택된 상권
-  compareList: District[];         // 비교 모드 상권 목록 (F05용)
-  allDistricts: District[];        // 전체 상권 목록 (검색용)
-  select: (district: District) => void;
-  deselect: () => void;
-  addCompare: (district: District) => void;
-}
-
-interface District {
-  code: string;
-  name: string;
-  type: '골목상권' | '발달상권' | '전통시장';
-  center: { lat: number; lng: number };
-  polygon: number[][];  // 좌표 배열
-}
-```
+- `mapStore`: `center`, `zoom`, `activeLayers`, heatmap 관련 필드
+- `districtStore`: `selected: { code, name, polygon, source: 'map' | 'chat' }`, `isCompareMode`, `compareList (max 3)`, `hoveredCode`
+- `useMapSync` 훅이 `selected.source === 'map'` 일 때 챗에 자동 요약 쿼리를 전달
 
 ### 3.3 지도 초기화
 
@@ -155,19 +133,20 @@ GET /api/districts/{code}
 
 ```sql
 -- 뷰포트 내 상권 폴리곤 조회
-SELECT district_code, district_name, district_type,
-       ST_AsGeoJSON(boundary) as geojson,
-       ST_AsGeoJSON(center_point) as center
+SELECT code, name, type,
+       ST_AsGeoJSON(boundary) AS geojson,
+       ST_AsGeoJSON(center_point) AS center
 FROM districts
 WHERE ST_Intersects(boundary, ST_MakeEnvelope($sw_lng, $sw_lat, $ne_lng, $ne_lat, 4326));
 
--- 상권 검색 (이름)
-SELECT district_code, district_name, district_type,
-       ST_AsGeoJSON(center_point) as center
+-- 상권 검색 (이름, 한글 조사 strip 전처리)
+SELECT code, name, type, ST_AsGeoJSON(center_point) AS center
 FROM districts
-WHERE district_name ILIKE '%' || $keyword || '%'
+WHERE name ILIKE '%' || $keyword || '%'
 LIMIT 10;
 ```
+
+> `memory/feedback_korean_particles.md` — 검색 입력에서 `을/를/이/가/에/의` 등 조사는 서버에서 strip.
 
 ## 6. 범위 제한 처리
 
@@ -176,15 +155,12 @@ LIMIT 10;
 
 ## 7. 수용 기준
 
-- [ ] Kakao Map이 로드되고 서울 중심으로 초기화된다
-- [ ] 상권 폴리곤이 지도 위에 렌더링된다
-- [ ] 폴리곤 클릭 시 해당 상권이 선택되고 하이라이트된다
-- [ ] 검색바에서 상권명으로 검색/자동완성이 동작한다
-- [ ] 상권 선택 시 지도가 해당 위치로 이동한다
-- [ ] 선택된 상권 정보가 StatusBar에 표시된다
-- [ ] 서울 외 지역 선택 시 안내 메시지가 표시된다
-- [ ] 뷰포트 기반 폴리곤 로딩이 동작한다 (성능)
-
----
-
-*작성일: 2026-03-24*
+- [x] Kakao Map이 로드되고 서울 중심으로 초기화된다 (SDK 프록시 `/_proxy/kakao-sdk` 경유)
+- [x] 상권 폴리곤이 지도 위에 렌더링된다 (Real 모드 1,650개)
+- [x] 폴리곤 클릭 시 해당 상권이 선택되고 하이라이트된다
+- [x] 검색바에서 상권명으로 검색/자동완성이 동작한다 (한글 조사 strip 포함)
+- [x] 상권 선택 시 지도가 해당 위치로 이동한다
+- [x] 선택된 상권 정보가 StatusBar에 표시된다
+- [x] 비교 모드에서 2~3개 상권이 서로 다른 색상으로 하이라이트된다
+- [ ] 서울 외 지역 선택 시 안내 메시지가 표시된다 (미확인)
+- [x] 뷰포트 기반 폴리곤 로딩이 동작한다 (ST_Intersects)

@@ -1,129 +1,94 @@
 # F02. AI 챗봇 에이전트 Spec
 
-> LangGraph ReAct Agent + FastAPI SSE 스트리밍 기반 대화형 상권 분석
+> LangGraph 기반 커스텀 **Planner-Actor-Evaluator-Respond** 그래프 + FastAPI SSE 스트리밍.
+> 상세 그래프/Tool 레지스트리는 [../../architecture/agent.md](../../architecture/agent.md) 참조.
 
 ---
 
 ## 1. 개요
 
 | 항목 | 내용 |
-|------|------|
-| Phase | 1 (MVP) — 핵심 차별점 |
-| 의존성 | F01 (상권 선택) |
-| 아키텍처 | LangGraph ReAct → FastAPI SSE → Next.js ChatPanel |
-| LLM | Claude API (Anthropic) |
+|---|---|
+| Phase | 1A(Mock) · 1B(Real) — **완료** |
+| Tier | Free (Phase 2에서 Free 일 5회 제한 예정) |
+| 의존성 | F01 (상권 선택), D01 (데이터) |
+| 아키텍처 | **PAE 그래프** → FastAPI SSE → Next.js ChatPanel |
+| LLM | Claude Sonnet 4 (planner) / Gemini pro·flash (역할별) / Mock |
+| 현재 세팅 | `agent_mode=pae`, `agent_max_rounds=3` |
 
-## 2. Agent 아키텍처
-
-### 2.1 ReAct 루프
+## 2. Agent 그래프 구조
 
 ```
-START (user query + context)
-  │
-  ▼
-REASON (LLM이 질문 해석, 필요한 Tool 판단)
-  │
-  ├─ tool_call → ACT (Tool 실행) → OBSERVE (결과 해석) → REASON (반복)
-  │
-  └─ direct response → END (최종 응답)
+ START → PLANNER → ┬→ greeting END
+                    ├→ ACTOR → EVALUATOR → ┬→ RESPOND → END
+                    │                       └→ PLANNER (loop, max 3)
+                    └→ RESPOND (fast path)
 ```
 
-- 최대 루프 횟수: 5회 (무한루프 방지)
-- 세션당 최대 Agent 호출: 20회
+| 노드 | 책임 | 파일 |
+|---|---|---|
+| **Planner** | Intent 분류 (rule→LLM), Tool plan 생성, Entity 추출 | `server/server/agent/nodes/planner.py` |
+| **Actor** | 의존성 layer 기반 병렬 Tool 실행, Card 발행, map_cmd | `agent/nodes/actor.py` |
+| **Evaluator** | Tool 결과 충분성 판정 (rule fast path or LLM), suggestion 생성 | `agent/nodes/evaluator.py` |
+| **Respond** | 최종 응답 LLM 스트리밍 (토큰 → SSE `text`) | `agent/nodes/respond.py` |
 
-### 2.2 상태 정의 (`server/agent/state.py`)
+상세 책임·프롬프트·에러 처리는 [architecture/agent.md §3](../../architecture/agent.md) 참조.
+
+## 3. 상태 (`agent/state.py`)
 
 ```python
-class AgentState(TypedDict):
-    messages: list                # 전체 대화 이력
-    selected_district_code: str   # 현재 상권코드
-    selected_district_name: str   # 상권명
-    selected_category_code: str   # 업종코드 (선택)
-    tool_calls: list              # 호출한 Tool 목록
-    tool_results: list            # Tool 반환값
-    iteration_count: int          # ReAct 루프 횟수
-    response_type: str            # "text" | "card" | "chart" | "comparison"
-    map_commands: list            # 지도 조작 명령
+class AgentState(TypedDict, total=False):
+    messages: list[BaseMessage]
+    session_id: str
+    district_code: str | None
+    district_name: str | None
+    selected_category_code: str | None
+    user_intent: str           # summary/comparison/recommendation/risk/category/simulation/heatmap/greeting
+    confidence: float
+    referenced_districts: list[str]
+    referenced_category: str | None
+    plan: list[ToolPlanStep]
+    tool_calls: list[dict]
+    tool_results: list[dict]
+    cards: list[dict]
+    suggestions: list[str]
+    map_commands: list[dict]
+    rounds: int
+    event_queue: asyncio.Queue  # SSE 이벤트 큐
 ```
 
-### 2.3 그래프 정의 (`server/agent/graph.py`)
+## 4. Agent Tools (11종)
 
-```python
-from langgraph.graph import StateGraph, END
+| Tool | Card | 용도 | 관련 기능 |
+|---|---|---|---|
+| `get_district_summary` | summary | 4 Tool 병렬 집계 | F03 |
+| `get_floating_population` | population | 시간대/성별/연령 | F03, F05, F06 |
+| `get_estimated_sales` | sales | 업종별 매출 (분기→월 환산) | F03, F04, F09 |
+| `get_store_info` | store | 점포수, 개폐업, Top 업종 | F03, F04, F07 |
+| `get_store_history` | history | 안정성 / 생존기간 | F08 |
+| `get_population_info` | population | 상주/직장 인구 | F03, F07 |
+| `compare_districts` | comparison | 2~3 상권 지표 비교 | F05 |
+| `recommend_business` | recommend | Top 5 + 점수 + 면책 | F07 |
+| `estimate_revenue` | revenue | p25/avg/p75 범위 | F09 |
+| `get_district_benchmarks` | benchmark | 유형별 통계 | 벤치마킹 |
+| `detect_floating_pop_anomaly` | anomaly | 통계적 이상 감지 | 리스크 감지 |
 
-graph = StateGraph(AgentState)
-graph.add_node("reason", reason_node)
-graph.add_node("act", act_node)
-graph.add_node("observe", observe_node)
+각 Tool 구현 상세는 해당 기능 Spec(F03~F09) 참조.
 
-graph.add_conditional_edges("reason", should_act, {
-    "tool_call": "act",
-    "respond": END
-})
-graph.add_edge("act", "observe")
-graph.add_conditional_edges("observe", should_continue, {
-    "continue": "reason",
-    "respond": END
-})
+## 5. 시스템 프롬프트 (`agent/prompts/system.py`)
 
-graph.set_entry_point("reason")
-agent = graph.compile()
-```
+핵심 규칙:
+1. 데이터 기반 답변, 추측 시 명시
+2. 수치 언급 시 데이터 기준 분기 함께 안내
+3. **추정 매출**은 카드 매출 기반, 현금 매출 미포함 안내
+4. 업종 추천 시 반드시 근거 제시
+5. 리스크 요소는 솔직하게 안내
+6. 응답은 간결하고 핵심적으로
+7. 면책 조항: 투자 의사결정은 개인 책임
 
-## 3. Agent Tools
+## 6. SSE 스트리밍
 
-| Tool | 입력 | 출력 | 사용 기능 |
-|------|------|------|-----------|
-| `get_floating_population` | 상권코드, 기간 | 시간대/요일/연령/성별 유동인구 | F03, F05, F06 |
-| `get_estimated_sales` | 상권코드, 업종코드 | 업종별 추정 매출, 추이 | F03, F04, F09 |
-| `get_store_info` | 상권코드, 업종코드 | 점포 수, 개폐업 현황 | F03, F04, F07 |
-| `get_population_info` | 상권코드 | 상주/직장인구, 연령/성별 | F03, F07 |
-| `get_store_history` | 상권코드 | 과거 업종 이력, 생존기간 | F08 |
-| `compare_districts` | 상권코드 2~3개 | 주요 지표 비교표 | F05 |
-| `recommend_business` | 상권코드, 조건 | 추천 업종 Top 5 + 근거 | F07 |
-| `simulate_revenue` | 상권코드, 업종, 객단가 | 예상 월매출 범위 | F09 |
-| `update_map_view` | 상권코드, 레이어 | 지도 하이라이트/히트맵 명령 | F01, F06 |
-
-각 Tool의 구현 상세는 해당 기능 Spec 참조 (F03~F09).
-
-## 4. 시스템 프롬프트 (`server/agent/prompts/system.py`)
-
-```
-당신은 서울 상권 분석 AI 컨설턴트입니다.
-
-역할:
-- 사용자가 선택한 상권에 대해 데이터 기반 분석을 제공합니다.
-- 복잡한 데이터를 이해하기 쉬운 자연어로 해석합니다.
-- 창업 준비자, 자영업자에게 실질적인 인사이트를 제공합니다.
-
-규칙:
-1. 항상 데이터에 기반하여 답변하세요. 추측을 할 경우 명시하세요.
-2. 수치를 언급할 때는 데이터 기준 분기를 함께 안내하세요.
-3. 추정 매출은 카드 매출 기반 추정치이며 현금 매출은 미포함임을 안내하세요.
-4. 업종 추천 시 반드시 근거 데이터를 제시하세요.
-5. 위험 요소가 있으면 솔직하게 안내하세요.
-6. 한 번에 최대 2개의 Tool을 호출하세요.
-7. 응답은 간결하고 핵심적으로 작성하세요.
-
-현재 컨텍스트:
-- 선택된 상권: {district_name} ({district_code})
-- 데이터 기준: {data_quarter}
-```
-
-## 5. 챗봇 응답 유형
-
-| 유형 | 트리거 예시 | 응답 형태 | SSE 이벤트 |
-|------|------------|-----------|-----------|
-| 데이터 조회 | "유동인구 얼마?" | 수치 + 한줄 해석 | `text` |
-| 비교 분석 | "강남역이랑 홍대 비교" | 비교 카드 + 요약 | `card` (compare) |
-| 추천 | "뭐 하면 좋을까?" | 업종 추천 카드 | `card` (recommend) |
-| 시뮬레이션 | "카페 매출 얼마?" | 범위 추정 카드 | `card` (simulation) |
-| 리스크 | "이 자리 위험해?" | 리스크 카드 | `card` (risk) |
-| 일반 대화 | "고마워" | 텍스트 응답 | `text` |
-
-## 6. SSE 스트리밍 (Backend → Frontend)
-
-### 6.1 API 엔드포인트
+### 6.1 엔드포인트
 
 ```
 POST /api/chat
@@ -131,224 +96,85 @@ Content-Type: application/json
 
 {
   "message": "강남역에서 카페 하면 어때?",
-  "session_id": "uuid-...",
-  "district_code": "3110032"
+  "session_id": "uuid-...",      // 선택, 없으면 서버 생성
+  "district_code": "3110032"     // 선택
 }
 
 Response: text/event-stream
 ```
 
-### 6.2 SSE 이벤트 타입
+### 6.2 이벤트 타입 (9종)
 
-| type | data | 설명 |
-|------|------|------|
-| `thinking` | `{"step": "상권 데이터를 분석하고 있습니다..."}` | 추론 중 표시 |
-| `tool` | `{"name": "get_estimated_sales", "input": {...}}` | Tool 호출 알림 |
-| `text` | `{"content": "강남역에서..."}` | 텍스트 토큰 스트리밍 |
-| `card` | `{"card_type": "summary", "data": {...}}` | Rich Card 데이터 |
-| `map_cmd` | `{"action": "highlight", "params": {...}}` | 지도 조작 명령 |
-| `suggestion` | `{"questions": ["업종 추천해줘", "홍대랑 비교"]}` | 추천 질문 |
-| `done` | `{}` | 응답 완료 |
+| type | payload | 발생 시점 |
+|---|---|---|
+| `thinking` | `{step, icon}` | 노드 전환 |
+| `plan` | `{intent, steps[]}` | Planner 완료 |
+| `tool` | `{name, input, progress_label, icon}` | Tool 호출 직전 |
+| `tool_end` | `{name, done_label, icon}` | Tool 종료 |
+| `text` | `{content}` | Respond 토큰 |
+| `card` | `{card_type, data, dataSources[]}` | Actor 카드 발행 |
+| `suggestion` | `{questions[]}` | Evaluator 추천 질문 |
+| `map_cmd` | `{action, params}` | 지도 조작 |
+| `done` | `{}` | 세션 종료 |
 
-### 6.3 FastAPI SSE 구현
+### 6.3 구현
 
-```python
-@router.post("/api/chat")
-async def chat(request: ChatRequest):
-    async def event_generator():
-        async for event in agent.astream(state):
-            if event.type == "thinking":
-                yield f"data: {json.dumps({'type': 'thinking', ...})}\n\n"
-            elif event.type == "tool_call":
-                yield f"data: {json.dumps({'type': 'tool', ...})}\n\n"
-            elif event.type == "text":
-                yield f"data: {json.dumps({'type': 'text', ...})}\n\n"
-            # ...
-        yield f"data: {json.dumps({'type': 'done'})}\n\n"
-
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
-```
+`server/server/api/routes/chat.py`
+- `sse_starlette.EventSourceResponse` 사용
+- `event_queue: asyncio.Queue(maxsize=256)` 로 backpressure
+- 25s 주기 heartbeat (프록시 유지)
+- 최대 지속 시간 5분, 클라이언트 disconnect 시 graceful 종료
 
 ## 7. Frontend 구현
 
-### 7.1 관련 컴포넌트
-
 | 컴포넌트 | 파일 | 역할 |
-|----------|------|------|
-| ChatPanel | `components/chat/ChatPanel.tsx` | 채팅 패널 컨테이너 |
-| MessageList | `components/chat/MessageList.tsx` | 메시지 목록 스크롤 |
-| MessageBubble | `components/chat/MessageBubble.tsx` | 개별 메시지 (텍스트/카드 분기) |
-| ChatInput | `components/chat/ChatInput.tsx` | 입력창 + 전송 버튼 |
+|---|---|---|
+| ChatPanel | `components/chat/ChatPanel.tsx` | 컨테이너 (MessageList + SuggestionChips + ChatInput) |
+| MessageList | `components/chat/MessageList.tsx` | 스크롤 + 메시지 렌더링 |
+| MessageBubble | `components/chat/MessageBubble.tsx` | 텍스트 / 카드 분기 + react-markdown |
+| AgentProgressIndicator | `components/chat/AgentProgressIndicator.tsx` | thinking→plan→tool 진행 표시 |
+| ChatInput | `components/chat/ChatInput.tsx` | 자연어 입력 |
 | SuggestionChips | `components/chat/SuggestionChips.tsx` | 추천 질문 버튼 |
 
-### 7.2 SSE 클라이언트 (`hooks/useChat.ts`)
+SSE 파서는 `lib/sseParser.ts` (async generator), 이벤트 dispatch 는 `lib/eventHandlers.ts` 참조.
 
-```typescript
-function useChat() {
-  const sendMessage = async (message: string) => {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      body: JSON.stringify({ message, session_id, district_code }),
-    });
+### 지도 클릭 → 자동 요약
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+`useMapSync` 훅이 `districtStore.selected.source === 'map'` 일 때 챗에 `"상권 요약해줘"` 쿼리 자동 전송 → Planner 가 summary intent 로 분류 → F03 카드 생성.
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+## 8. 세션 관리
 
-      const events = parseSSE(decoder.decode(value));
-      for (const event of events) {
-        switch (event.type) {
-          case 'text': appendText(event.content); break;
-          case 'card': addCard(event.card_type, event.data); break;
-          case 'map_cmd': mapStore.executeCommand(event); break;
-          case 'suggestion': setSuggestions(event.questions); break;
-          case 'thinking': setThinking(event.step); break;
-        }
-      }
-    }
-  };
-}
-```
+- 세션 ID: UUID, 브라우저 `sessionStorage` + 서버 인메모리
+- 히스토리: `history_max_turns=10`, 응답은 300자로 trim 후 저장
+- TTL: 30분, 60초 주기 prune, 최대 10,000 세션 / 512KB per session
+- 대화 컨텍스트는 Planner 가 `referenced_districts` / `referenced_category` 로 활용 ("거기서 카페는?" 가능)
 
-### 7.3 상권 선택 시 자동 쿼리
+## 9. 에러 처리
 
-지도에서 상권 클릭 → 내부적으로 다음 메시지를 Agent에 전달:
-```
-"사용자가 {상권명} 상권을 선택했습니다. 기본 요약을 제공해주세요."
-```
-→ F03 기본 리포트가 자동으로 생성됨
+| 상황 | 감지 | 처리 | SSE |
+|---|---|---|---|
+| LLM 타임아웃 | fast 15s / slow 60s | 2회 재시도 + 지수 백오프 | `error` 또는 degraded `text` |
+| LLM 연속 실패 | Circuit Breaker 임계 5회 | OPEN 60s, HALF_OPEN 재시도 | `text` (degraded) |
+| Tool 타임아웃 | 15s | 스킵 후 부분 응답 | `tool_end` (status=timeout) |
+| Tool 실행 에러 | transient → 2x 재시도 | 실패 시 Evaluator 가 부분 응답 | `tool_end` (status=error) |
+| 세션 rate limit | slowapi 10/min (IP) | 429 + Retry-After | HTTP 에러 |
+| 세션 Round 상한 | `rounds ≥ 3` | 수집된 결과로 Respond 진입 | 정상 `text` + `done` |
+| Agent 동시 초과 | semaphore 20 | 대기 후 진행 (fairness) | — |
 
-## 8. 대화 세션 관리
+## 10. 관측 (Langfuse)
 
-- 세션 ID: UUID, 브라우저 `sessionStorage`에 저장
-- 대화 이력: `chat_sessions` + `chat_messages` 테이블에 저장
-- 컨텍스트 유지: Agent에 최근 10개 메시지 전달
-- 상권 전환 시: 새 세션 생성 또는 컨텍스트 리셋 확인
-
-## 9. 에러 처리 및 폴백 전략
-
-### 9.1 에러 유형별 처리
-
-| 에러 상황 | 감지 방법 | 처리 | SSE 이벤트 |
-|-----------|----------|------|-----------|
-| LLM API 실패 | HTTP 5xx / timeout (30s) | 1회 재시도 → 실패 시 에러 메시지 | `error` |
-| LLM API Rate Limit | HTTP 429 | 2초 대기 후 1회 재시도 → 실패 시 에러 메시지 | `error` |
-| Tool 실행 실패 (DB 오류) | Tool 함수 내 exception | Agent에 에러 observation 전달 → LLM이 대체 Tool 선택 또는 부분 응답 | `tool` (status: error) |
-| Tool 실행 타임아웃 | 10초 초과 | 해당 Tool 스킵, 나머지 결과로 응답 | `tool` (status: timeout) |
-| ReAct 루프 5회 도달 | iteration_count ≥ 5 | 수집된 tool_results로 강제 응답 생성 | `text` + `done` |
-| 세션 호출 20회 도달 | 세션 카운터 | "분석 한도에 도달했습니다. 새 대화를 시작해주세요" | `error` |
-| 상권 데이터 없음 | Tool 반환 결과 empty | "해당 상권의 {항목} 데이터가 아직 없습니다" | `text` |
-
-### 9.2 Tool 실패 시 ReAct 루프 동작
-
-```python
-async def observe_node(state: AgentState) -> AgentState:
-    """Tool 결과를 해석하고 다음 액션 결정"""
-
-    last_tool = state["tool_calls"][-1]
-    last_result = state["tool_results"][-1]
-
-    if last_result["status"] == "error":
-        # 에러 정보를 observation으로 LLM에 전달
-        state["messages"].append({
-            "role": "tool",
-            "content": f"[Tool '{last_tool['name']}' 실패: {last_result['error']}] "
-                       f"이 데이터 없이 답변하거나, 대체 방법을 시도하세요.",
-            "tool_call_id": last_tool["id"]
-        })
-    elif last_result["status"] == "timeout":
-        state["messages"].append({
-            "role": "tool",
-            "content": f"[Tool '{last_tool['name']}' 응답 시간 초과] "
-                       f"이 데이터 없이 가능한 범위에서 답변하세요.",
-            "tool_call_id": last_tool["id"]
-        })
-    else:
-        # 정상 결과
-        state["messages"].append({
-            "role": "tool",
-            "content": json.dumps(last_result["data"], ensure_ascii=False),
-            "tool_call_id": last_tool["id"]
-        })
-
-    return state
-```
-
-### 9.3 ReAct 루프 초과 시 강제 응답 생성
-
-```python
-async def should_continue(state: AgentState) -> str:
-    """루프 계속/종료 판단"""
-    if state["iteration_count"] >= 5:
-        # 수집된 결과가 있으면 강제 응답 생성
-        if any(r["status"] == "success" for r in state["tool_results"]):
-            # 성공한 Tool 결과만으로 부분 응답 생성
-            state["messages"].append({
-                "role": "system",
-                "content": "루프 한도에 도달했습니다. 현재까지 수집된 데이터로 답변을 생성하세요. "
-                           "부족한 부분은 '추가 분석이 필요합니다'로 안내하세요."
-            })
-        return "respond"
-    return "continue"
-```
-
-### 9.4 부분 응답 예시
-
-```
-🔍 강남역 카페 분석 (2025년 4분기 기준)
-
-강남역에 카페가 72개 있어서 경쟁이 꽤 치열합니다 (상권 내 점포 비율 13.8%).
-
-⚠ 매출 데이터를 불러오지 못해 매출 분석은 제외되었습니다.
-유동인구 중 20~30대가 63%로, 카페 타겟과 잘 맞습니다.
-
-💡 매출 정보가 필요하시면 "카페 매출 알려줘"로 다시 질문해주세요.
-```
-
-### 9.5 프론트엔드 에러 표시
-
-```typescript
-// SSE error 이벤트 수신 시
-case 'error':
-  addMessage({
-    role: 'assistant',
-    type: 'error',
-    content: event.message,        // "잠시 후 다시 시도해주세요"
-    retryable: event.retryable,    // true → 재시도 버튼 표시
-  });
-  break;
-```
-
-## 10. Langfuse 통합
-
-```python
-from langfuse.callback import CallbackHandler
-
-langfuse_handler = CallbackHandler(...)
-result = agent.invoke(state, config={"callbacks": [langfuse_handler]})
-```
-
-추적 항목:
-- ReAct 루프별 reasoning/tool_call/observation
-- Tool별 latency, 성공/실패율
-- 토큰 사용량, 비용
-- 사용자 질문 유형 분류
+- `.env` 의 `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` 설정 시 활성화
+- 현재: 환경변수만 준비, graph callback 주입 wiring 향후 계획
+- 추적 예정: Planner 분류 정확도, Tool latency, 토큰 비용
 
 ## 11. 수용 기준
 
-- [ ] 자연어 입력 → Agent가 적절한 Tool을 선택하여 호출한다
-- [ ] SSE 스트리밍으로 응답이 실시간 표시된다
-- [ ] thinking 상태가 UI에 표시된다
-- [ ] Tool 결과가 적절한 카드/텍스트로 포맷팅된다
-- [ ] 대화 컨텍스트가 유지된다 (이전 대화 참조 가능)
-- [ ] 상권 선택 시 자동으로 기본 요약이 생성된다
-- [ ] 지도 조작 명령(map_cmd)이 실제 지도에 반영된다
-- [ ] ReAct 루프가 5회 이내로 제한된다
-- [ ] Langfuse에서 Agent 호출 트레이스가 확인된다
-
----
-
-*작성일: 2026-03-24*
+- [x] 자연어 입력 → Planner 가 적절한 Tool plan 생성
+- [x] SSE 스트리밍 (9 이벤트) 실시간 표시
+- [x] AgentProgressIndicator 에 thinking / plan / tool 단계 표시
+- [x] 카드·텍스트 포맷팅 정확 (card registry 5종)
+- [x] 대화 컨텍스트 유지 (follow-up 가능)
+- [x] 지도 클릭 시 자동 요약 (`useMapSync`)
+- [x] `map_cmd` → 지도 반영
+- [x] Evaluator 재진입 최대 3회
+- [ ] Langfuse 콜백 주입 (wiring 대기)

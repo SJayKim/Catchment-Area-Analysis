@@ -236,40 +236,37 @@ MarketScope-AI/
 │
 ├── server/                            # FastAPI (Python 3.12)
 │   └── server/
-│       ├── main.py                    # FastAPI 앱 진입점
-│       ├── config.py                  # 환경 설정 (Mock/Real 전환)
-│       ├── agent/                     # LangGraph AI Agent
-│       │   ├── graph.py              # ReAct Agent 그래프 정의
-│       │   ├── state.py              # AgentState 타입
-│       │   ├── prompts/system.py     # 시스템 프롬프트
-│       │   └── tools/                # Agent Tools (8종)
-│       │       ├── floating_population.py
-│       │       ├── estimated_sales.py
-│       │       ├── store_info.py
-│       │       ├── store_history.py
-│       │       ├── population_info.py
-│       │       ├── compare_districts.py
-│       │       ├── recommend_business.py
-│       │       ├── district_summary.py
-│       │       └── mock_data.py      # Mock 모드 데이터
-│       ├── api/routes/               # REST + SSE 엔드포인트
-│       │   ├── chat.py               # POST /api/chat (SSE 스트리밍)
-│       │   ├── districts.py          # GET /api/districts
-│       │   └── map_data.py           # GET /api/map-data/polygons
-│       ├── data/etl/                 # 공공데이터 ETL 파이프라인
+│       ├── main.py                    # FastAPI 앱 + lifespan
+│       ├── config.py                  # pydantic-settings (Mock/Real 전환)
+│       ├── agent/                     # LangGraph PAE Agent
+│       │   ├── graph.py              # Planner → Actor → Evaluator → Respond
+│       │   ├── state.py / history.py # 상태 + 세션 히스토리
+│       │   ├── nodes/                # planner, actor, evaluator, respond
+│       │   ├── prompts/              # system, planner, evaluator
+│       │   ├── config/intents.yaml   # Intent 분류 규칙
+│       │   └── tools/                # Agent Tools 11종 + registry + mock JSON
+│       ├── api/                      # routes, middleware, rate_limiter
+│       │   └── routes/               # chat (SSE), districts, map_data
+│       ├── data/etl/                 # 공공데이터 ETL (서울 열린데이터 + SHP + CSV)
+│       ├── repositories/             # mock/ · real/ + protocols.py (9 인터페이스)
 │       ├── models/                   # SQLAlchemy + PostGIS 모델
-│       └── services/cache.py        # Redis 캐싱
+│       └── services/                 # cache / circuit_breaker / category_resolver
 │
-├── data/shp/                          # SHP 폴리곤 파일
+├── data/                              # SHP 폴리곤 파일 + seed 덤프
+├── scripts/                           # 운영 스크립트 (verify_sales_units, flush_cache, validate_env, …)
+├── nginx/                             # 내장 + 외부 리버스 프록시 설정
 ├── docs/
-│   ├── architecture/                  # 시스템 아키텍처 문서
+│   ├── architecture/                  # 계층별 설계 (overview/backend/frontend/agent/data/deployment)
 │   ├── spec/                          # 기능 스펙 (F01~F10, D01, B01)
-│   ├── plan/                          # 구현 계획서
-│   ├── status/                        # 진행 상황 리포트
-│   ├── screenshots/                   # 스크린샷 (dev, e2e-qa, real-mode)
+│   ├── ops/                           # 운영 (quickstart, runbook, deployment, DR)
+│   ├── plan/                          # 현재 진행 중인 계획만 유지
+│   ├── qa/                            # E2E test plan + 실행 로그
+│   ├── status/current-status.md       # 단일 마스터 상태
+│   ├── screenshots/                   # UI 스크린샷
 │   └── images/                        # README 이미지
 │
-├── docker-compose.yml                 # PostGIS + Redis + Backend + Frontend
+├── docker-compose.yml                 # 개발 (PostGIS + Redis + Backend + Frontend + Nginx)
+├── docker-compose.prod.yml            # 프로덕션 (내부 네트워크 + 외부 Nginx)
 ├── .env.example                       # 환경 변수 템플릿
 └── CLAUDE.md                          # AI 어시스턴트 개발 가이드
 ```
@@ -296,18 +293,21 @@ MarketScope-AI/
 
 ## AI Agent Tools
 
-LangGraph ReAct Agent가 사용하는 8개 Tool:
+LangGraph **Planner-Actor-Evaluator** Agent 가 사용하는 11개 Tool:
 
 | Tool | 기능 | 데이터 소스 |
 |------|------|-------------|
-| `get_floating_population` | 시간대/요일/연령/성별 유동인구 | floating_population |
-| `get_estimated_sales` | 업종별 추정 매출액 + 추이 | estimated_sales |
-| `get_store_info` | 점포 수, 개폐업 현황, Top 업종 | stores |
-| `get_population_info` | 상주/직장인구, 연령/성별 분포 | resident_population |
-| `get_store_history` | 점포 이력, 생존 기간, 폐업 분석 | store_history |
-| `compare_districts` | 2~3개 상권 주요 지표 비교 | 복합 조회 |
-| `recommend_business` | 추천 업종 Top 5 + 근거 | 복합 분석 |
-| `district_summary` | 상권 종합 요약 리포트 | 병렬 조회 |
+| `get_district_summary` | 상권 종합 요약 (4 Tool 병렬 집계) | 복합 조회 |
+| `get_floating_population` | 시간대/연령/성별 유동인구 | floating_population |
+| `get_estimated_sales` | 업종별 추정 매출 (분기→월 환산) | estimated_sales |
+| `get_store_info` | 점포 수, 개폐업, Top 업종 | stores |
+| `get_population_info` | 상주/직장인구 | resident_population |
+| `get_store_history` | 안정성 스코어 / 생존 기간 | stores (history 미적재) |
+| `compare_districts` | 2~3 상권 지표 비교 | 복합 조회 |
+| `recommend_business` | 추천 업종 Top 5 + 점수 + 면책 | 복합 분석 |
+| `estimate_revenue` | p25/avg/p75 매출 범위 | estimated_sales |
+| `get_district_benchmarks` | 상권 유형별 벤치마크 | 통계 집계 |
+| `detect_floating_pop_anomaly` | 유동인구 이상 감지 | floating_population |
 
 ---
 
@@ -408,17 +408,19 @@ category_metadata         업종 코드 참조
 ## 개발 로드맵
 
 ```
-Phase 1A ✅  Mock E2E       지도 선택 → AI 챗봇 → Card UI (5개 샘플 상권)
-Phase 1B ✅  Real Data      공공데이터 ETL → PostGIS → 1,650개 상권 실데이터
-Phase 2  🔜  Premium        업종 심층 분석, Tier 게이팅 (OAuth2, 결제)
-Phase 3  📋  확장           시간대별 히트맵 (deck.gl), 매출 시뮬레이션, PDF 리포트
+Phase 1A ✅  Mock E2E      지도 선택 → AI 챗봇 → Card UI (5개 샘플 상권)
+Phase 1B ✅  Real Data     공공데이터 ETL → PostGIS → 1,650개 상권 실데이터
+Phase 3  ✅  확장          시간대별 히트맵 (deck.gl), 매출 시뮬레이션, PDF 리포트
+Phase 2  ⏳  Premium       업종 심층 분석, Tier 게이팅 (OAuth2, 결제)
+Prod     ✅  마켓스코프    marketscope.robitlabs.co.kr 라이브
 ```
 
-### 현재 상태 (2026-04-01)
+### 현재 상태 (2026-04-19)
 
-- Phase 1A/1B 완료 --- 32/32 E2E 테스트 통과, Real 모드 22/26 QA 시나리오 PASS
-- Agent Tools 8종 + Card UI 4종 + 다크 테마 + SSE 스트리밍 완성
-- Agent 아키텍처 고도화 계획 수립 완료 (Planner-Actor-Evaluator 전환)
+- Phase 1A · 1B · 3 완료. PAE Agent 전환 완료 (11 Tool / 5 Card)
+- Real 모드 E2E 41/45 PASS (2026-04-07), Mock 모드 32/32 PASS
+- 프로덕션 배포 완료 (외부 Nginx + SSE 스트리밍 정상)
+- 매출 단위 분기→월 환산 버그 fix + 배포 근본 해결 7건 (2026-04-17)
 
 ---
 

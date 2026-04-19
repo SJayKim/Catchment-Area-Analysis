@@ -7,10 +7,13 @@
 ## 1. 개요
 
 | 항목 | 내용 |
-|------|------|
-| Phase | 3 (확장) |
+|---|---|
+| Phase | 3 — **완료** (Phase 2 Tier 게이팅 대기) |
+| Tier | **Premium** (현재 게이팅 없음) |
 | 의존성 | F03 (기본 리포트) |
-| 기술 | `@react-pdf/renderer` (Frontend) 또는 Backend PDF 생성 |
+| 기술 | `@react-pdf/renderer` 4.3 + `html2canvas` 1.4 (Frontend) |
+| 구현 | `useReportExport` 훅 + `ReportDocument` 컴포넌트 |
+| 트리거 | 챗봇 `"PDF로 저장해줘"` (로컬 패턴 매칭) / ChatPanel 상단 버튼 |
 | 용도 | 사업계획서 첨부, 지인 공유 |
 
 ## 2. PDF 포함 내용
@@ -76,12 +79,8 @@ Response: application/pdf (파일 다운로드)
 
 ## 5. 수용 기준
 
-- [ ] "PDF로 저장" 요청 시 PDF 파일이 다운로드된다
-- [ ] PDF에 상권 요약, 대화 내역, 차트가 포함된다
-- [ ] 데이터 기준 분기와 면책 조항이 명시된다
-- [ ] 한글이 정상적으로 렌더링된다 (폰트)
-- [ ] PDF 생성이 5초 이내에 완료된다
-
----
-
-*작성일: 2026-03-24*
+- [x] "PDF로 저장" 요청 시 PDF 파일 다운로드 (`MarketScope_{district}_{date}.pdf`)
+- [x] PDF 에 상권 요약, 대화 내역, 차트 포함
+- [x] 데이터 기준 분기 + 면책 조항 명시
+- [x] 한글 폰트 (Spoqa Han Sans Neo) 렌더링
+- [ ] PDF 생성 5초 이내 (브라우저 성능 검증 필요)
