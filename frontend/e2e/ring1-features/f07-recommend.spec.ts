@@ -2,9 +2,8 @@
  * Ring 1 — F07 업종 추천
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { waitForCardText } from '../helpers/waitSSE';
 
 test.beforeAll(() => ensureRunDir());

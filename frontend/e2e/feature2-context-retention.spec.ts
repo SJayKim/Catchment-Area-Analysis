@@ -1,10 +1,4 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForMapReady,
-  sendChatMessage,
-  waitForResponseComplete,
-  getStatusBarText,
-} from './helpers/setup';
+import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete, getStatusBarText } from './helpers/setup';
 
 test.describe('Feature 2: 대화 컨텍스트 유지', () => {
   test.beforeEach(async ({ page }) => {

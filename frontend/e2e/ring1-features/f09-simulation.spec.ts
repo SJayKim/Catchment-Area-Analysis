@@ -2,9 +2,8 @@
  * Ring 1 — F09 매출 시뮬레이션 (Premium)
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { waitForCardText } from '../helpers/waitSSE';
 
 test.beforeAll(() => ensureRunDir());

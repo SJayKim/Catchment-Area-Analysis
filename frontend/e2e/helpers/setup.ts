@@ -1,4 +1,18 @@
-import { Page, expect } from '@playwright/test';
+import { Page, test as base, expect as baseExpect } from '@playwright/test';
+import { installProdGuard } from './prodGuard';
+
+/**
+ * Extended `test` — 모든 spec 에서 `@playwright/test` 대신 이 파일에서 import.
+ * context 생성 직후 `prodGuard` 를 자동 설치하여 운영 도메인 아웃바운드 요청을 abort.
+ */
+export const test = base.extend<{}>({
+  context: async ({ context }, use, testInfo) => {
+    await installProdGuard(context, testInfo.title);
+    await use(context);
+  },
+});
+
+export const expect = baseExpect;
 
 /** Known mock district centers (from mock_data.py) */
 export const DISTRICTS = {

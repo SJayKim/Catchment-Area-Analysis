@@ -4,9 +4,8 @@
  * Phase 2 기능 — happy path만 검증.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage, waitForResponseComplete } from '../helpers/setup';
 import { waitForCardText } from '../helpers/waitSSE';
 
 test.beforeAll(() => ensureRunDir());

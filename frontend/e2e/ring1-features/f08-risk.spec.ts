@@ -2,9 +2,8 @@
  * Ring 1 — F08 점포 이력/리스크 분석
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { waitForCardText } from '../helpers/waitSSE';
 
 test.beforeAll(() => ensureRunDir());

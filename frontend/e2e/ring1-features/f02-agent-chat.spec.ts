@@ -4,9 +4,8 @@
  * Verifies LLM agent intent → tool → SSE response stream + context retention.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage, waitForResponseComplete } from '../helpers/setup';
 
 const BACKEND = process.env.E2E_BACKEND_URL || 'http://localhost:8002';
 

@@ -2,9 +2,8 @@
  * Ring 1 — F03 상권 기본 리포트 (SummaryCard)
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { waitForCardText } from '../helpers/waitSSE';
 
 test.beforeAll(() => ensureRunDir());
@@ -70,6 +69,64 @@ test.describe('Ring 1 — F03 Summary Report', () => {
         { criterion: '분기 패턴', met: quarterMatch, evidence: quarterMatch ? 'matched' : 'no match' },
       ],
     });
+    await packet.finalize(page);
+  });
+
+  test('F03-H4 monthly_sales 키 회귀 (4dbd598 _enrich_sales 변경)', async ({ page }) => {
+    // 2026-04-19: estimated_sales._enrich_sales 가 분기 매출 → 월매출(/3) 변환 후
+    // monthly_sales / total_monthly_sales 키로 통일. 분기 단위 노출되면 3배 과표시.
+    const packet = new EvalPacket({
+      id: 'F03-H4-monthly-sales-key',
+      title: 'monthly_sales 키 회귀',
+      story: '강남역 요약 응답의 card payload 에 monthly_sales (또는 total_monthly_sales) 키가 있고 값은 월 스케일이어야 한다.',
+      steps: ['POST /api/chat — 강남역 분석', 'SSE card 이벤트의 data.monthly_sales 검증'],
+      mode: 'Both',
+      ring: 1,
+      feature: 'F03',
+      criteria: ['card payload 에 monthly_sales|total_monthly_sales 키', '값 > 0', '월 스케일 (< 100조)'],
+    });
+    packet.attach(page);
+
+    const backend = process.env.E2E_BACKEND_URL || 'http://localhost:8002';
+    const resp = await page.request.post(`${backend}/api/chat`, {
+      data: { message: '강남역 분석해줘', district_code: 'D3001' },
+      headers: { Accept: 'text/event-stream' },
+      timeout: 60000,
+    });
+    const body = await resp.text();
+
+    const cardMatches = [...body.matchAll(/event:\s*card\s*\ndata:\s*(\{[^\n]+\})/g)];
+    let hasMonthlyKey = false;
+    let monthlyValue = 0;
+    for (const m of cardMatches) {
+      try {
+        const evt = JSON.parse(m[1]);
+        const data = evt?.data || evt;
+        const v =
+          data?.monthly_sales ??
+          data?.total_monthly_sales ??
+          data?.sales?.monthly_sales ??
+          data?.sales?.total_monthly_sales;
+        if (typeof v === 'number' && v > 0) {
+          hasMonthlyKey = true;
+          monthlyValue = v;
+          break;
+        }
+      } catch {
+        /* skip */
+      }
+    }
+    const rangeOk = monthlyValue > 0 && monthlyValue < 1e14;
+
+    packet.writeAutoVerdict({
+      result: hasMonthlyKey && rangeOk ? 'PASS' : 'FAIL',
+      reason: `hasKey=${hasMonthlyKey} value=${monthlyValue}`,
+      checks: [
+        { criterion: 'monthly_sales 키', met: hasMonthlyKey, evidence: `${monthlyValue}` },
+        { criterion: '월 스케일', met: rangeOk, evidence: `${monthlyValue}` },
+      ],
+    });
+    expect(hasMonthlyKey).toBe(true);
     await packet.finalize(page);
   });
 

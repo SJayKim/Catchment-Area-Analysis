@@ -5,9 +5,8 @@
  * F01 → F02 → F03 → F07 → F05
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { waitForCardText } from '../helpers/waitSSE';
 import { clickPolygonByCode } from '../helpers/polygonClick';
 import { detectMode } from '../helpers/modeGuard';

@@ -1,10 +1,4 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForMapReady,
-  sendChatMessage,
-  waitForResponseComplete,
-  verifyProgressGone,
-} from './helpers/setup';
+import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete, verifyProgressGone } from './helpers/setup';
 
 test.describe('Feature 7: Error Handling', () => {
   test.beforeEach(async ({ page }) => {

@@ -1,6 +1,6 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-17
+> 최종 갱신: 2026-04-19
 > **프로덕션 배포 완료 ✅ — marketscope.robitlabs.co.kr 외부 리버스 프록시 환경 구축, SSE 스트리밍 + 지도 SDK 정상 동작**
 > **서빙 안정성 Phase 1~10 구현 완료 ✅ — 체크리스트 24%→61% (148/243), 신규 14파일 + 수정 25파일**
 > **분석 리포트 품질 개선 Phase 1~3 완료 ✅ — 프롬프트+Tool 보강+벤치마킹, S1(9.8)/S2(9.6)/S8(9.7) 합격**
@@ -229,6 +229,46 @@
 ### ✅ .gitignore 정리
 - `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
 - `frontend/test-results/` 추가
+
+---
+
+## 완료 항목 (2026-04-19)
+
+### 🔧 E2E 회귀 테스트 인프라 구축 (Pass 0)
+
+**Plan**: `docs/plan/infra/e2e-regression-plan-2026-04-19.md`
+
+**목적**: 커밋 `4dbd598` (Plan A 매출 단위 fix 3곳 + Plan B 배포 근본해결 7건 + 비교모드 다색) 이후 수동 smoke 만 거친 상태. 운영 `marketscope.robitlabs.co.kr` 이 라이브이므로 테스트 트래픽이 운영으로 유입되지 않도록 격리된 stack 구성.
+
+**완료**:
+- ✅ `docker-compose.e2e.yml` — 전용 포트 (fe 3001 / be 8002 / db 55432 / redis 56379) + `COMPOSE_PROJECT_NAME=marketscope-e2e` + `marketscope-e2e_pgdata` volume
+- ✅ `env.e2e.example` — `ENV_PROFILE=e2e` / telemetry 전면 비활성 / 테스트 전용 LLM 키 슬롯
+- ✅ `frontend/e2e/helpers/prodGuard.ts` — 운영 도메인 7종 (marketscope.robitlabs.co.kr / langfuse.com / posthog / sentry) `route.abort('failed')` + `ProdHitLog` JSONL 기록
+- ✅ `setup.ts` 확장: `test.extend` 로 context fixture 에 `prodGuard` 자동 주입
+- ✅ 28 spec 파일 import 마이그레이션: `@playwright/test` → `./helpers/setup` (test/expect + 기존 helpers 단일 import 로 병합)
+- ✅ `scripts/e2e/preflight.sh` — ENV 가드 (NEXT_PUBLIC_API_URL localhost 강제 / LANGFUSE 빈 값 강제) + 운영 volume 감지 알림 + compose up + /health 대기
+- ✅ `scripts/e2e/teardown.sh` — volume prefix `marketscope-e2e_` 가드, 외 이름 감지 시 중단
+- ✅ 회귀 spec 4종 추가 (Ring 1):
+  - `F01-H5` `/_proxy/kakao-sdk` 200 + `/api/kakao-sdk` 호출 0건
+  - `F03-H4` 응답 SSE card payload 에 `monthly_sales|total_monthly_sales` 키 + 월 스케일 (< 100조)
+  - `F05-H3` 3-way 비교 후 `__districtStore.compareList === 3` + `isCompareMode === true`
+  - `F05-H4` 한글 조사 (과/를) intent — compareList 2 + 모드 ON
+- ✅ `ring3-negative/reg-2026-04-17.spec.ts` 신규 (6 scenario): cleanup_alembic idempotent / validate_env 누락 감지 / flush_cache 5 prefix / kakao-sdk route / prod-domain-block / sales-unit grep
+- ✅ Playwright `--list` 84 scenario 컴파일 OK (기존 75 + 신규 9)
+
+**다음 단계 (사용자 게이트)**:
+- 🔧 Pass 1 — Mock Ring 0 + Ring 1 (11) + Ring 3 (3 reg) 실행
+- 🔧 Pass 2 — Real 모드 happy-path 6건
+- 🔧 Pass 3 — Ring 0~3 전수 실행 + `docs/qa/runs/e2e-run-2026-04-19.md` 리포트
+- ⚠️ Docker + `.env.e2e` (env.e2e.example 복사 후 ANTHROPIC_API_KEY 테스트 키 입력) 필요
+
+**실행 명령**:
+```bash
+cp env.e2e.example .env.e2e    # 테스트 키 입력
+bash scripts/e2e/preflight.sh
+cd frontend && E2E_BASE_URL=http://localhost:3001 E2E_BACKEND_URL=http://localhost:8002 npm test
+bash scripts/e2e/teardown.sh
+```
 
 ---
 

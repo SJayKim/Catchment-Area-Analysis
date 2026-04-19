@@ -1,9 +1,4 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForMapReady,
-  sendChatMessage,
-  waitForCard,
-} from './helpers/setup';
+import { test, expect, waitForMapReady, sendChatMessage, waitForCard } from './helpers/setup';
 
 test.describe('Feature 5: Card Rendering', () => {
   test.beforeEach(async ({ page }) => {

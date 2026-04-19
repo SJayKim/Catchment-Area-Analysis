@@ -1,11 +1,4 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForMapReady,
-  sendChatMessage,
-  waitForResponseComplete,
-  waitForCard,
-  getStatusBarText,
-} from './helpers/setup';
+import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete, waitForCard, getStatusBarText } from './helpers/setup';
 
 test.describe('Feature 1: 폴리곤 클릭 → 자동 SummaryCard', () => {
   test.beforeEach(async ({ page }) => {

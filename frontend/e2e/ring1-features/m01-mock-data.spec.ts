@@ -4,7 +4,7 @@
  * Verifies the Mock fixtures that the entire Phase-1A pipeline depends on.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
 import { requireMode } from '../helpers/modeGuard';
 

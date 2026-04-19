@@ -6,9 +6,8 @@
  * and are SKIP-marked here unless the env supports them.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { clickPolygonByCode } from '../helpers/polygonClick';
 import { detectMode } from '../helpers/modeGuard';
 

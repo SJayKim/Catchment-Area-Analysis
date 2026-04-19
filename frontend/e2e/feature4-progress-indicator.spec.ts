@@ -1,11 +1,4 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForMapReady,
-  sendChatMessage,
-  waitForResponseComplete,
-  waitForProgressStep,
-  verifyProgressGone,
-} from './helpers/setup';
+import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete, waitForProgressStep, verifyProgressGone } from './helpers/setup';
 
 test.describe('Feature 4: Agent Progress Indicator', () => {
   test.beforeEach(async ({ page }) => {

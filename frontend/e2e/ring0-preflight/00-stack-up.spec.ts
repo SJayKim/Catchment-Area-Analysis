@@ -5,7 +5,7 @@
  * Failures here halt the entire run.
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
 import { detectMode } from '../helpers/modeGuard';
 

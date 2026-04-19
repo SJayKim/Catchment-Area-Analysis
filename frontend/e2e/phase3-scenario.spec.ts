@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/setup';
 
 const BASE_URL = 'http://localhost:3001';
 const BACKEND_URL = 'http://localhost:8002';

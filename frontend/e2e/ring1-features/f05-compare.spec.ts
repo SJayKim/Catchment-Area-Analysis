@@ -2,9 +2,8 @@
  * Ring 1 — F05 상권 비교
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage, waitForResponseComplete } from '../helpers/setup';
 import { waitForCardText } from '../helpers/waitSSE';
 
 test.beforeAll(() => ensureRunDir());
@@ -66,6 +65,88 @@ test.describe('Ring 1 — F05 Compare', () => {
       checks: [{ criterion: '3 상권명', met: allThree, evidence: allThree ? 'all present' : 'missing' }],
     });
     expect(allThree).toBe(true);
+    await packet.finalize(page);
+  });
+
+  test('F05-H3 비교모드 다색 하이라이트 store 상태 (4dbd598 회귀)', async ({ page }) => {
+    // 2026-04-19: DistrictLayer 에 COMPARE_STYLES 팔레트 3종(blue/amber/rose) 추가.
+    // Kakao 폴리곤 fillColor 는 canvas/SVG 렌더에 묻혀 있어 DOM 단위 선택이 신뢰도
+    // 낮음 → window.__districtStore 로 직접 계약 검증.
+    const packet = new EvalPacket({
+      id: 'F05-H3-multi-color-state',
+      title: '비교모드 다색 하이라이트 store 상태',
+      story: '3개 상권 비교 요청 후 Zustand store 의 compareList 3개 + isCompareMode=true 여야 한다.',
+      steps: ['"강남역, 홍대입구, 건대입구 비교해줘"', 'window.__districtStore.getState() 확인'],
+      mode: 'Mock',
+      ring: 1,
+      feature: 'F05',
+      criteria: ['compareList.length === 3', 'isCompareMode === true', '3개 code distinct'],
+    });
+    packet.attach(page);
+
+    await sendChatMessage(page, '강남역, 홍대입구, 건대입구 비교해줘');
+    await page.waitForTimeout(3000);
+
+    const state = await page.evaluate(() => {
+      const w = window as unknown as { __districtStore?: { getState: () => unknown } };
+      const st = w.__districtStore?.getState?.() as
+        | { compareList?: { code: string }[]; isCompareMode?: boolean }
+        | undefined;
+      return {
+        compareCodes: st?.compareList?.map((d) => d.code) ?? [],
+        isCompareMode: !!st?.isCompareMode,
+      };
+    });
+
+    const distinct = new Set(state.compareCodes);
+    const lenOk = state.compareCodes.length === 3 && distinct.size === 3;
+    const modeOk = state.isCompareMode === true;
+
+    packet.writeAutoVerdict({
+      result: lenOk && modeOk ? 'PASS' : 'FAIL',
+      reason: `codes=${JSON.stringify(state.compareCodes)} mode=${state.isCompareMode}`,
+      checks: [
+        { criterion: 'compareList 3 distinct', met: lenOk, evidence: state.compareCodes.join(',') },
+        { criterion: 'isCompareMode true', met: modeOk, evidence: `${state.isCompareMode}` },
+      ],
+    });
+    expect(lenOk).toBe(true);
+    expect(modeOk).toBe(true);
+    await packet.finalize(page);
+  });
+
+  test('F05-H4 한글 조사 처리 (과/를 회귀)', async ({ page }) => {
+    // feedback_korean_particles.md — f05 + neg 양쪽에 particles 케이스 포함.
+    const packet = new EvalPacket({
+      id: 'F05-H4-particles',
+      title: '한글 조사 비교 intent',
+      story: '"강남역과 홍대입구를 비교해줘" 처럼 조사가 붙어도 compareList 2개로 세팅된다.',
+      steps: ['해당 문장 전송', 'compareList 2 + isCompareMode=true'],
+      mode: 'Mock',
+      ring: 1,
+      feature: 'F05',
+      criteria: ['compareList 2 distinct', 'isCompareMode true'],
+    });
+    packet.attach(page);
+    await sendChatMessage(page, '강남역과 홍대입구를 비교해줘');
+    await page.waitForTimeout(3000);
+    const state = await page.evaluate(() => {
+      const w = window as unknown as { __districtStore?: { getState: () => unknown } };
+      const st = w.__districtStore?.getState?.() as
+        | { compareList?: { code: string }[]; isCompareMode?: boolean }
+        | undefined;
+      return {
+        codes: st?.compareList?.map((d) => d.code) ?? [],
+        mode: !!st?.isCompareMode,
+      };
+    });
+    const ok = state.codes.length === 2 && state.mode === true;
+    packet.writeAutoVerdict({
+      result: ok ? 'PASS' : 'FAIL',
+      reason: `codes=${JSON.stringify(state.codes)} mode=${state.mode}`,
+      checks: [{ criterion: '2 distinct + mode', met: ok, evidence: `${state.codes.length}/${state.mode}` }],
+    });
+    expect(ok).toBe(true);
     await packet.finalize(page);
   });
 

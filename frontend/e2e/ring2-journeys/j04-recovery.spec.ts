@@ -5,9 +5,8 @@
  * F02 → F01 → F03
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 
 test.beforeAll(() => ensureRunDir());
 test.setTimeout(180000);

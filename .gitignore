@@ -12,6 +12,7 @@ build/
 .env
 .env.local
 .env.backup
+.env.e2e
 !.env.example
 
 # Node

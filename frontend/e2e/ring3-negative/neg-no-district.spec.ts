@@ -2,9 +2,8 @@
  * Ring 3 — Negative: 상권 미선택 상태에서 분석 요청
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 
 test.beforeAll(() => ensureRunDir());
 

@@ -2,9 +2,8 @@
  * Ring 3 — Negative: prompt injection (P0-8 sanitize 회귀)
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 
 test.beforeAll(() => ensureRunDir());
 

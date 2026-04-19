@@ -1,9 +1,4 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForMapReady,
-  sendChatMessage,
-  waitForResponseComplete,
-} from './helpers/setup';
+import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete } from './helpers/setup';
 
 test.describe('Feature 6: Streaming UX', () => {
   test.beforeEach(async ({ page }) => {

@@ -4,7 +4,7 @@
  * Tests the heatmap API + toggle UI smoke (full canvas verification deferred).
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
 
 const BACKEND = process.env.E2E_BACKEND_URL || 'http://localhost:8002';

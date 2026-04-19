@@ -1,0 +1,121 @@
+# docker-compose.e2e.yml — E2E 전용 stack (운영 prod compose 와 포트/볼륨 완전 격리)
+#
+# 실행:
+#   bash scripts/e2e/preflight.sh       (Pass 1 시작 전 필수)
+#   COMPOSE_PROJECT_NAME=marketscope-e2e docker compose -f docker-compose.e2e.yml up -d
+#
+# 포트 (호스트 노출):
+#   frontend → 3001     (playwright E2E_BASE_URL)
+#   backend  → 8002     (playwright E2E_BACKEND_URL)
+#   db       → 55432    (디버깅 전용 — 운영 5432 와 절대 충돌 없음)
+#   redis    → 56379
+#
+# Volume: marketscope-e2e_pgdata   (COMPOSE_PROJECT_NAME prefix)
+# .env 소스: .env.e2e                (.env.e2e.example 복사 후 테스트 키 입력)
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    command: postgres -c log_min_duration_statement=500 -c log_statement=none
+    ports: ["55432:5432"]
+    environment:
+      POSTGRES_DB: marketscope_e2e
+      POSTGRES_USER: marketscope
+      POSTGRES_PASSWORD: e2epassword
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketscope -d marketscope_e2e"]
+      interval: 3s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    ports: ["56379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      retries: 10
+
+  migrate:
+    build: { context: ./server, target: runner }
+    command: bash -c "python scripts/cleanup_alembic.py && alembic upgrade head"
+    environment:
+      DATABASE_URL_SYNC: postgresql://marketscope:e2epassword@db:5432/marketscope_e2e
+    depends_on:
+      db: { condition: service_healthy }
+
+  seed:
+    image: postgis/postgis:16-3.4
+    command: >
+      bash -c "
+        COUNT=$$(psql -U marketscope -d marketscope_e2e -h db -tAc 'SELECT count(*) FROM districts' 2>/dev/null || echo 0)
+        if [ \"$$COUNT\" -gt 0 ]; then
+          echo 'Seed: districts already has '\"$$COUNT\"' rows — skipping'
+        else
+          if [ -f /seed/marketscope_seed.dump ]; then
+            echo 'Seed: loading seed data...'
+            pg_restore --no-owner --no-acl -U marketscope -d marketscope_e2e -h db /seed/marketscope_seed.dump || true
+            psql -U marketscope -d marketscope_e2e -h db -c \"DELETE FROM alembic_version WHERE version_num NOT IN (SELECT version_num FROM alembic_version ORDER BY version_num DESC LIMIT 1);\"
+            echo 'Seed: done'
+          else
+            echo 'Seed: dump not found — running without seed (Mock-only Ring 1 OK, Real Ring 1 will skip)'
+          fi
+        fi
+      "
+    environment:
+      PGPASSWORD: e2epassword
+    volumes:
+      - ./data/seed:/seed:ro
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  backend:
+    build: { context: ./server, target: runner }
+    ports: ["8002:8000"]
+    env_file: .env.e2e
+    environment:
+      ENV_PROFILE: e2e
+      USE_MOCK: ${USE_MOCK:-true}
+      DATABASE_URL: postgresql+asyncpg://marketscope:e2epassword@db:5432/marketscope_e2e
+      DATABASE_URL_SYNC: postgresql://marketscope:e2epassword@db:5432/marketscope_e2e
+      REDIS_URL: redis://redis:6379/0
+      CORS_ORIGINS: '["http://localhost:3001","http://localhost:3000","http://frontend:3000"]'
+      # Telemetry 비활성 — 운영 Langfuse / PostHog 로 절대 유출 금지
+      LANGFUSE_PUBLIC_KEY: ""
+      LANGFUSE_SECRET_KEY: ""
+      LANGFUSE_HOST: ""
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      seed: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 5s
+      retries: 6
+
+  frontend:
+    build:
+      context: ./frontend
+      target: runner
+      args:
+        NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY:-e2edummykey}
+        NEXT_PUBLIC_API_URL: http://localhost:8002
+        BACKEND_INTERNAL_URL: http://backend:8000
+    ports: ["3001:3000"]
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8002
+      BACKEND_INTERNAL_URL: http://backend:8000
+      NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY:-e2edummykey}
+    depends_on:
+      backend: { condition: service_healthy }
+
+volumes:
+  pgdata:
+    name: marketscope-e2e_pgdata

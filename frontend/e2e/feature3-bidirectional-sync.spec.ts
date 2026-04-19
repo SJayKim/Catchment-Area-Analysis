@@ -1,10 +1,4 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForMapReady,
-  sendChatMessage,
-  waitForResponseComplete,
-  getStatusBarText,
-} from './helpers/setup';
+import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete, getStatusBarText } from './helpers/setup';
 
 test.describe('Feature 3: bidirectional sync', () => {
   test.beforeEach(async ({ page }) => {

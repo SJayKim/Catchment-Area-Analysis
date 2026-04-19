@@ -4,9 +4,8 @@
  * Smoke: PDF 버튼 존재 + 클릭 시 다운로드 트리거 (full PDF parse 생략).
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForMapReady, sendChatMessage } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
-import { waitForMapReady, sendChatMessage } from '../helpers/setup';
 
 test.beforeAll(() => ensureRunDir());
 
