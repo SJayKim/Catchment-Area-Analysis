@@ -1,13 +1,14 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-19
+> 최종 갱신: 2026-04-21
 > **프로덕션 배포 완료 ✅ — marketscope.robitlabs.co.kr 외부 리버스 프록시 환경 구축, SSE 스트리밍 + 지도 SDK 정상 동작**
 > **서빙 안정성 Phase 1~10 구현 완료 ✅ — 체크리스트 24%→61% (148/243), 신규 14파일 + 수정 25파일**
 > **분석 리포트 품질 개선 Phase 1~3 완료 ✅ — 프롬프트+Tool 보강+벤치마킹, S1(9.8)/S2(9.6)/S8(9.7) 합격**
 > **SSE 스트리밍 성능 최적화 ✅ — LLM 프로바이더 Gemini→Claude 전환, TTFT 25s→1.5s (17배 개선)**
 > **Real Mode E2E Run 2026-04-07 완료 ✅ — 45 시나리오 / 41 PASS / 4 design-skip / Consumer-experience 100/100 (READY)**
-> **매출 단위 수정 Plan A + 배포 근본해결 Plan B 구현 완료 ✅ (2026-04-17, 미커밋) — 총 10건: `_enrich_sales` 키 버그 3곳 / flush_cache·verify_sales_units·validate_env·cleanup_alembic 스크립트 4종 / kakao-sdk 경로 `_proxy/` 이동 / 외부 nginx 샘플 + 배포 문서 / Dockerfile 빌드 가드 / DB·Redis 포트 비노출**
-> **v0.3.0 릴리스 완료 ✅ (2026-04-19) — 문서 계층화(archive 제거 + architecture 6개 파일 분할) + 실구현 동기화(F02 ReAct→PAE / Tool 8→11) + E2E 회귀 인프라 Pass 0 / Ring 0 4/4 PASS**
+> **매출 단위 수정 Plan A + 배포 근본해결 Plan B 구현 완료 ✅ (2026-04-17) — 총 10건 + E2E 회귀 인프라 구축**
+> **v0.3.0 릴리스 완료 ✅ (2026-04-19) — 문서 계층화 + 실구현 동기화 (F02 ReAct→PAE / Tool 8→11)**
+> **E2E 회귀 Pass 1~3 전체 그린 ✅ (2026-04-21) — Mock 39/39 + Real 24/24 (`3c5f884` / `1986f61` / `ded6cb1` / `ff9909c` push)**
 
 ---
 
@@ -230,6 +231,51 @@
 ### ✅ .gitignore 정리
 - `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
 - `frontend/test-results/` 추가
+
+---
+
+## 완료 항목 (2026-04-21)
+
+### ✅ E2E 회귀 Pass 1~3 전체 그린 — Mock 39/39 + Real 24/24
+
+**스코프**: Pass 0 (Ring 0 sanity) 이후 보류되었던 Pass 1 잔여 FAIL 처리 + Pass 3 Mock + Pass 2 Real subset.
+
+**잔여 FAIL 핫픽스 4건** (`3c5f884` 포함):
+
+| # | 이슈 | 수정 |
+|---|------|------|
+| 1 | `/_proxy/kakao-sdk` → 404 (Next.js private folder 규칙 위반) | `frontend/src/app/_proxy/` → `frontend/src/app/proxy/` rename (MapContainer + next.config + e2e spec 반영) |
+| 2 | F03-H4 summary card payload `monthlySales` 최상위 키 부재 | `server/server/agent/tools/district_summary.py` payload 보강 |
+| 3 | F05-H3/H4 채팅 비교 intent → 지도 compareList 미동기화 | `frontend/src/lib/eventHandlers.ts` — compare card 도착 시 `districtStore` 자동 동기화 (Agent 채팅 의도 기반 비교도 시각 하이라이트) |
+| 4 | Real `detect_districts_in_message` 과잉 매칭 (강남 → 강남구청역) | `server/server/repositories/real/districts.py` contains 매칭 2글자→3글자 제한 |
+
+**테스트 인프라 리팩토링** (`1986f61`):
+- `scripts/flush_cache.py` → `server/scripts/flush_cache.py` 이동 (Dockerfile COPY 포함)
+- sys.path 를 host/container 양쪽에서 작동하도록 일반화
+- `ring3-negative/reg-2026-04-17.spec.ts` 의 cleanup_alembic / flush_cache 테스트를 `docker compose exec -T backend` 방식으로 전환 → 호스트 Python 에 psycopg2/redis 설치 없이도 PASS + 실제 운영 환경과 동일한 의존성 검증
+
+**소규모 추가 수정**:
+- `ded6cb1` P0-7 test timeout 60s → 180s (2회 SSE round + reload 에 필요)
+- `ff9909c` F03-H4 `district_code` 런타임 resolve (Mock D3001 / Real 3120189 양쪽 대응, mode=Both 선언과 일치)
+
+**실행 결과**:
+
+| Pass | Ring / spec | 결과 | 소요 |
+|------|------------|------|------|
+| 1 Mock | Ring 1 F01/F03/F05 (14 test) | 14/14 PASS | 6.7 분 |
+| 1 Mock | Ring 3 reg-2026-04-17 (6 test) | 6/6 PASS | 2.3 초 |
+| 3 Mock | Ring 2 journey (5 test) | 5/5 PASS | ~10 분 |
+| 3 Mock | Ring 3 negative (10 test · 2 skip) | 10/10 PASS · 2 SKIP (P0-1 Real-only / P0-2 smoke-only) | ~5 분 |
+| 2 Real | Ring 0 + Ring 1 F01/F03/F05 + Ring 3 reg (24 test) | 24/24 PASS | ~7 분 |
+
+**Mock 총합 39/39 실행 PASS · 2 SKIP (의도됨)** — F01/F03/F05/Ring 2/Ring 3 전체 그린
+**Real 총합 24/24 PASS** — USE_MOCK=false 로 backend recreate, 강남역 real code `3120189` 검증
+
+**이번 세션 커밋 4건 (origin/main 푸시 완료)**:
+- `3c5f884` fix(e2e): Pass 1 잔여 FAIL 3건 처리 — /proxy/ rename + F03 monthlySales + F05 compareList 동기화
+- `1986f61` refactor(e2e): cleanup_alembic + flush_cache 테스트를 docker exec 방식으로 전환
+- `ded6cb1` fix(e2e): P0-7 test timeout 180s 로 상향
+- `ff9909c` fix(e2e): F03-H4 district_code 를 런타임 resolve — Mock/Real 양쪽 동작
 
 ---
 
