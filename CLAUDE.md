@@ -32,7 +32,7 @@ Catchment-Area-Analysis/
 │   │   └── services/       # cache, circuit_breaker, category_resolver
 │   └── alembic/            # 001~003 마이그레이션
 ├── data/                    # SHP 폴리곤, seed 덤프
-├── scripts/                 # 운영 유틸 (verify_sales_units, flush_cache, validate_env, …)
+├── scripts/                 # 운영 유틸 (verify_sales_units, validate_env, setup_db, …)
 ├── nginx/                   # 내장 + 외부 리버스 프록시 설정
 ├── docker-compose.yml       # 개발
 ├── docker-compose.prod.yml  # 프로덕션

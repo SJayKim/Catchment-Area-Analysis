@@ -1,8 +1,8 @@
 """Flush MarketScope Redis cache by prefix.
 
 Usage:
-    python scripts/flush_cache.py                    # flush all 5 report prefixes
-    python scripts/flush_cache.py --prefix sales:   # flush only sales:* keys
+    python server/scripts/flush_cache.py                    # flush all 5 report prefixes
+    python server/scripts/flush_cache.py --prefix sales:    # flush only sales:* keys
 
 Targets 5 tool cache prefixes:
     sales:*       (get_estimated_sales)
@@ -11,8 +11,9 @@ Targets 5 tool cache prefixes:
     simulation:*  (simulate_revenue)
     summary:*     (district_summary)
 
-Run from host shell or inside the server container:
-    docker compose exec server python scripts/flush_cache.py
+Run from host shell (with server/ on import path) or inside the backend
+container (WORKDIR /app where ``server`` package is already importable):
+    docker compose exec backend python scripts/flush_cache.py
 """
 
 from __future__ import annotations
@@ -22,8 +23,13 @@ import asyncio
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "server"))
+# Works in two layouts:
+#   host repo:    <repo>/server/scripts/flush_cache.py  → add <repo>/server to sys.path
+#   container:    /app/scripts/flush_cache.py           → /app already has ``server`` package
+SCRIPT_DIR = Path(__file__).resolve().parent
+SERVER_PKG_PARENT = SCRIPT_DIR.parent  # host: <repo>/server   container: /app
+if str(SERVER_PKG_PARENT) not in sys.path:
+    sys.path.insert(0, str(SERVER_PKG_PARENT))
 
 from server.config import settings  # noqa: E402
 from server.services.cache import (  # noqa: E402

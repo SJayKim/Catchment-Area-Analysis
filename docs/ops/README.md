@@ -16,12 +16,12 @@
 | 스크립트 | 용도 |
 |---|---|
 | `verify_sales_units.py` | 매출 단위(분기→월) 변환 정상 검증 |
-| `flush_cache.py` | Redis 캐시 flush (단위 변환 후 stale 제거) |
 | `validate_env.py` | 필수 환경변수 누락 체크 |
 | `generate_seed.py` | seed 덤프 생성 |
 | `backup_db.sh` | DB 백업 (pg_dump) |
 | `setup_db.py` | 신규 환경 DB 초기화 |
 | `server/scripts/cleanup_alembic.py` | stale `alembic_version` 정리 |
+| `server/scripts/flush_cache.py` | Redis 캐시 flush (단위 변환 후 stale 제거) |
 
 ## 관련 문서
 

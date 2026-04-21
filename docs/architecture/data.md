@@ -184,12 +184,12 @@ Redis 장애 시 graceful degradation — 함수는 `None` 반환, 호출측은 
 | 스크립트 | 용도 |
 |---|---|
 | `scripts/verify_sales_units.py` | 매출 단위(분기→월) 변환이 정상인지 검증 |
-| `scripts/flush_cache.py` | Redis 캐시 초기화 (매출 단위 fix 후 stale 제거) |
 | `scripts/validate_env.py` | 필수 환경변수 누락 가드 |
 | `scripts/generate_seed.py` | seed 덤프 생성 |
 | `scripts/backup_db.sh` | DB 덤프 백업 |
 | `scripts/setup_db.py` | 신규 환경 DB 초기화 |
 | `server/scripts/cleanup_alembic.py` | alembic_version 정리 |
+| `server/scripts/flush_cache.py` | Redis 캐시 초기화 (매출 단위 fix 후 stale 제거) |
 
 ## 7. 데이터 품질 주의사항
 

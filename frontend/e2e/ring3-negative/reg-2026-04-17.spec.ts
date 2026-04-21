@@ -13,7 +13,7 @@
 import { test, expect } from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
 import { getProdHits, clearProdHits, prodHitLogPath } from '../helpers/prodGuard';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, SpawnSyncReturns } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -21,32 +21,90 @@ test.beforeAll(() => ensureRunDir());
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const PY = process.env.E2E_PYTHON || 'python';
+const COMPOSE_FILE = process.env.E2E_COMPOSE_FILE || 'docker-compose.e2e.yml';
+const COMPOSE_PROJECT = process.env.E2E_COMPOSE_PROJECT || 'marketscope-e2e';
+
+// 호스트에 psycopg2/redis 모듈을 설치하지 않아도 되도록, Python 스크립트는
+// backend 컨테이너에서 실행한다. 컨테이너는 실제 마이그레이션/캐시가 돌아가는
+// 환경과 동일해서 의존성/경로 정합성도 자연스럽게 검증된다.
+function dockerComposeExec(
+  service: string,
+  cmd: string[],
+  envOverrides: Record<string, string> = {},
+  timeoutMs: number = 20000
+): SpawnSyncReturns<string> {
+  const envFlags: string[] = [];
+  for (const [k, v] of Object.entries(envOverrides)) {
+    envFlags.push('-e', `${k}=${v}`);
+  }
+  const args = [
+    'compose',
+    '-f',
+    COMPOSE_FILE,
+    '-p',
+    COMPOSE_PROJECT,
+    'exec',
+    '-T',
+    ...envFlags,
+    service,
+    ...cmd,
+  ];
+  return spawnSync('docker', args, {
+    cwd: REPO_ROOT,
+    encoding: 'utf8',
+    timeout: timeoutMs,
+  });
+}
+
+function dockerUnavailableReason(r: SpawnSyncReturns<string>): string | null {
+  if (r.error && (r.error as NodeJS.ErrnoException).code === 'ENOENT') {
+    return 'docker CLI not found on PATH';
+  }
+  if (r.status === null) return 'docker exec timed out or failed to spawn';
+  const stderr = (r.stderr || '').toLowerCase();
+  if (stderr.includes('no configuration file provided')) {
+    return 'docker compose file not found';
+  }
+  if (stderr.includes('not running') || stderr.includes('no such container')) {
+    return 'e2e stack service not running';
+  }
+  if (stderr.includes('error response from daemon')) {
+    return 'docker daemon unreachable';
+  }
+  if (stderr.includes('cannot connect to the docker daemon')) {
+    return 'docker daemon unreachable';
+  }
+  return null;
+}
 
 test.describe('Ring 3 — Regression 2026-04-17', () => {
   test('3-REG-CLEANUP-ALEMBIC idempotent (2회 실행 exit 0)', async () => {
-    // 스크립트는 server/ 디렉터리에서 실행. DATABASE_URL_SYNC 필요.
+    // backend 컨테이너에서 실행 — 실제 migrate 컨테이너와 동일한 의존성/네트워크
+    // 환경(/app/scripts/cleanup_alembic.py, DATABASE_URL_SYNC 주입, psycopg2 포함).
     const packet = new EvalPacket({
       id: '3-REG-CLEANUP-ALEMBIC',
       title: 'cleanup_alembic idempotent',
       story: '마이그레이션 init 컨테이너에서 매 기동 실행해도 exit 0 이어야 한다.',
-      steps: ['server/scripts/cleanup_alembic.py 2 회 실행', '두 번 모두 exit 0'],
+      steps: ['docker exec backend python scripts/cleanup_alembic.py 2회', '두 번 모두 exit 0'],
       mode: 'Real',
       ring: 3,
       criteria: ['1회차 exit 0', '2회차 exit 0', 'stale rows removed 로그'],
     });
 
-    const db =
-      process.env.E2E_DATABASE_URL_SYNC ||
-      'postgresql://marketscope:e2epassword@localhost:55432/marketscope_e2e';
-
     const runs = [0, 1].map(() =>
-      spawnSync(PY, ['server/scripts/cleanup_alembic.py'], {
-        cwd: REPO_ROOT,
-        env: { ...process.env, DATABASE_URL_SYNC: db },
-        encoding: 'utf8',
-        timeout: 15000,
-      })
+      dockerComposeExec('backend', ['python', 'scripts/cleanup_alembic.py'])
     );
+
+    const unavailable = dockerUnavailableReason(runs[0]);
+    if (unavailable) {
+      packet.writeAutoVerdict({
+        result: 'SKIP',
+        reason: `${unavailable} (stderr="${runs[0].stderr?.slice(0, 200)}")`,
+        checks: [{ criterion: 'docker stack available', met: false, evidence: unavailable }],
+      });
+      test.skip(true, unavailable);
+    }
+
     const statuses = runs.map((r) => r.status);
     const bothZero = statuses.every((s) => s === 0);
     const logged = runs[0].stdout?.includes('stale rows removed') ?? false;
@@ -60,16 +118,6 @@ test.describe('Ring 3 — Regression 2026-04-17', () => {
         { criterion: '로그 출력', met: logged, evidence: runs[0].stdout?.slice(0, 80) || '' },
       ],
     });
-    // DB 가 e2e 포트에 없는 환경(CI-skip 등) 은 soft skip — status null 이면 runtime 이슈로 간주
-    if (statuses.some((s) => s === null)) {
-      test.skip(true, 'DB not reachable on 55432 — e2e compose 미기동 환경');
-    }
-    // 호스트 Python 에 psycopg2 미설치 시 skip (호스트 개발 환경 편차 흡수).
-    // 실제 마이그레이션 idempotency 는 `docker compose exec migrate` 단계에서 검증됨.
-    const stderrFirst = runs[0].stderr || '';
-    if (stderrFirst.includes('ModuleNotFoundError') || stderrFirst.includes('No module named')) {
-      test.skip(true, 'host Python missing psycopg2 — migrate 컨테이너에서 이미 검증됨');
-    }
     expect(bothZero).toBe(true);
   });
 
@@ -116,23 +164,35 @@ test.describe('Ring 3 — Regression 2026-04-17', () => {
   });
 
   test('3-REG-FLUSH-CACHE 5 prefix 삭제', async () => {
+    // backend 컨테이너 내부에서 Real 모드로 실행 — /app/scripts/flush_cache.py
+    // (server/scripts/ → 컨테이너 COPY 결과) + redis 모듈 + REDIS_URL 이 이미
+    // 준비된 환경. 호스트 의존성 0.
     const packet = new EvalPacket({
       id: '3-REG-FLUSH-CACHE',
       title: 'flush_cache.py 5 prefix 로그',
-      story: 'scripts/flush_cache.py 실행 시 sales:/compare:/recommend:/simulation:/summary: 5 prefix 가 각각 로깅되어야 한다.',
-      steps: ['python scripts/flush_cache.py', 'stdout 에 5 prefix 각 존재'],
+      story: 'docker exec backend python scripts/flush_cache.py 실행 시 sales:/compare:/recommend:/simulation:/summary: 5 prefix 가 각각 로깅되어야 한다.',
+      steps: ['docker exec backend python scripts/flush_cache.py', 'stdout 에 5 prefix 각 존재'],
       mode: 'Real',
       ring: 3,
       criteria: ['exit 0', '5 prefix 라인 존재', '[flush_cache] Total removed: 포함'],
     });
 
-    const redis = process.env.E2E_REDIS_URL || 'redis://localhost:56379/0';
-    const r = spawnSync(PY, ['scripts/flush_cache.py'], {
-      cwd: REPO_ROOT,
-      env: { ...process.env, REDIS_URL: redis, USE_MOCK: 'false' },
-      encoding: 'utf8',
-      timeout: 15000,
-    });
+    const r = dockerComposeExec(
+      'backend',
+      ['python', 'scripts/flush_cache.py'],
+      { USE_MOCK: 'false' }
+    );
+
+    const unavailable = dockerUnavailableReason(r);
+    if (unavailable) {
+      packet.writeAutoVerdict({
+        result: 'SKIP',
+        reason: `${unavailable} (stderr="${r.stderr?.slice(0, 200)}")`,
+        checks: [{ criterion: 'docker stack available', met: false, evidence: unavailable }],
+      });
+      test.skip(true, unavailable);
+    }
+
     const prefixes = ['sales:', 'compare:', 'recommend:', 'simulation:', 'summary:'];
     const out = r.stdout || '';
     const hits = prefixes.filter((p) => out.includes(p));
@@ -148,14 +208,6 @@ test.describe('Ring 3 — Regression 2026-04-17', () => {
         { criterion: 'Total removed 로깅', met: totalLogged, evidence: totalLogged ? 'ok' : 'missing' },
       ],
     });
-    if (r.status === null) {
-      test.skip(true, 'Redis/Python 미연결 — e2e compose 미기동 환경');
-    }
-    // 호스트 Python 에 redis 모듈 미설치 시 skip.
-    const stderr = r.stderr || '';
-    if (stderr.includes('ModuleNotFoundError') || stderr.includes('No module named')) {
-      test.skip(true, 'host Python missing redis — 컨테이너에서 별도 검증');
-    }
     expect(exitOk).toBe(true);
     expect(hits.length).toBe(5);
   });

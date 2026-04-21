@@ -165,7 +165,7 @@ server/server/
 
 - **Backend pytest**: 미구축 (향후 `server/tests/` 생성 예정)
 - **E2E (Playwright)**: `frontend/e2e/ring{0,1,2,3}-*` → 백엔드 SSE 규약까지 커버
-- **수동 smoke**: `scripts/verify_sales_units.py`, `scripts/flush_cache.py` 등 운영 스크립트
+- **수동 smoke**: `scripts/verify_sales_units.py`, `server/scripts/flush_cache.py` 등 운영 스크립트
 
 ## 9. 레이트/쿼터
 

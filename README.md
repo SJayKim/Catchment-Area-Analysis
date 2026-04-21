@@ -253,7 +253,7 @@ MarketScope-AI/
 │       └── services/                 # cache / circuit_breaker / category_resolver
 │
 ├── data/                              # SHP 폴리곤 파일 + seed 덤프
-├── scripts/                           # 운영 스크립트 (verify_sales_units, flush_cache, validate_env, …)
+├── scripts/                           # 운영 스크립트 (verify_sales_units, validate_env, setup_db, …)
 ├── nginx/                             # 내장 + 외부 리버스 프록시 설정
 ├── docs/
 │   ├── architecture/                  # 계층별 설계 (overview/backend/frontend/agent/data/deployment)

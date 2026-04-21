@@ -74,7 +74,7 @@ etl/
 
 - **현재**: CLI 수동 실행만 지원 (`python -m server.data.etl.runner run 2025Q4`)
 - **향후**: GitHub Actions cron (분기 시작 새벽 3시) 또는 Celery Beat
-- **캐시 무효화**: ETL 완료 후 `scripts/flush_cache.py` 로 Redis 초기화 필요
+- **캐시 무효화**: ETL 완료 후 `server/scripts/flush_cache.py` 로 Redis 초기화 필요
 
 ## 7. 환경 변수
 
@@ -92,8 +92,8 @@ etl/
 | `scripts/generate_seed.py` | 시드 덤프 생성 |
 | `scripts/backup_db.sh` | DB 백업 (pg_dump) |
 | `scripts/verify_sales_units.py` | 매출 단위 변환 정상성 검증 |
-| `scripts/flush_cache.py` | Redis 캐시 flush |
 | `server/scripts/cleanup_alembic.py` | stale `alembic_version` 정리 |
+| `server/scripts/flush_cache.py` | Redis 캐시 flush |
 
 ## 9. 수용 기준
 
