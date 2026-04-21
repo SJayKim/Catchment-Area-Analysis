@@ -88,8 +88,19 @@ test.describe('Ring 1 — F03 Summary Report', () => {
     packet.attach(page);
 
     const backend = process.env.E2E_BACKEND_URL || 'http://localhost:8002';
+    // Mock 은 D3001, Real 은 3120189 처럼 code 가 모드별로 다름. 런타임에 /api/districts
+    // 에서 강남역을 검색해 실제 code 를 사용 (mode=Both 이기 때문).
+    const districtsResp = await page.request.get(
+      `${backend}/api/districts?search=%EA%B0%95%EB%82%A8%EC%97%AD`
+    );
+    const districtsJson = await districtsResp.json();
+    const gangnamItem =
+      districtsJson.items?.find((d: { district_name: string }) => d.district_name === '강남역') ??
+      districtsJson.items?.[0];
+    const districtCode = gangnamItem?.district_code as string | undefined;
+
     const resp = await page.request.post(`${backend}/api/chat`, {
-      data: { message: '강남역 분석해줘', district_code: 'D3001' },
+      data: { message: '강남역 분석해줘', district_code: districtCode },
       headers: { Accept: 'text/event-stream' },
       timeout: 60000,
     });
