@@ -249,6 +249,8 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                         district_name=district_name,
                         data_quarter=data_quarter,
                         conversation_history=conversation_history,
+                        session_id=session_id,
+                        request_id=getattr(request.state, "request_id", ""),
                     ):
                         # Check for client disconnect each iteration
                         if await request.is_disconnected():

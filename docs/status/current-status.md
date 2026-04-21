@@ -9,6 +9,7 @@
 > **매출 단위 수정 Plan A + 배포 근본해결 Plan B 구현 완료 ✅ (2026-04-17) — 총 10건 + E2E 회귀 인프라 구축**
 > **v0.3.0 릴리스 완료 ✅ (2026-04-19) — 문서 계층화 + 실구현 동기화 (F02 ReAct→PAE / Tool 8→11)**
 > **E2E 회귀 Pass 1~3 전체 그린 ✅ (2026-04-21) — Mock 39/39 + Real 24/24 (`3c5f884` / `1986f61` / `ded6cb1` / `ff9909c` push)**
+> **LLMOps L1 (Langfuse trace) wiring 완료 ✅ (2026-04-21) — ADR + graceful degrade + SSE `done.trace_id` + E2E 7/7 PASS + Ring 0 + reg-2026-04-17 10/10 회귀 그린**
 
 ---
 
@@ -1009,6 +1010,78 @@ START → PLANNER → ACTOR → EVALUATOR → RESPOND → END
 - `.env.example` — API 키 발급 가이드 주석 추가
 - `docs/setup/database-setup.md` — 셋업 가이드 문서
 - Quick Start 테스트 완료: DB 초기화 → `--quick` → 5개 테이블 전부 복원 확인
+
+---
+
+## 완료 항목 (2026-04-21 · L1)
+
+### ✅ LLMOps L1 — Langfuse Trace wiring (graceful degrade 우선)
+
+**Plan**: `docs/plan/infra/llmops-platform.md` §3.3.1 + `docs/plan/infra/llmops-l1-adr-hosting.md`
+
+**목표**: LLM/Tool/세션 trace 수집 파이프라인 최소 진입점. 서비스 영향 0.
+
+**변경 파일 6개 + 신규 2개**:
+
+| # | 파일 | 변경 |
+|---|------|------|
+| 1 | `docs/plan/infra/llmops-l1-adr-hosting.md` (신규) | Cloud 선택 + Langfuse SDK `>=2.0,<3.0` 핀 근거 |
+| 2 | `server/server/config.py` | `langfuse_sampling_rate`, `langfuse_session_salt`, `langfuse_enabled` property 추가. host 기본값 Cloud 로 변경 |
+| 3 | `server/server/services/langfuse_tracer.py` (신규) | `_hash_session` (salted sha256, 16 hex) + `should_sample` + `get_langfuse_handler` + `get_trace_id` + `flush`. 모든 실패 → None 반환 + `_tracer_valid` 플래그로 재시도 회피 (`_anthropic_valid` 패턴) |
+| 4 | `server/server/agent/graph.py` | `run_agent` 에 `session_id` / `request_id` 파라미터 추가. `compiled.astream(config={'callbacks':[handler]}, ...)`. `finally` 에서 `flush`. `done` 이벤트에 `trace_id` optional 주입 |
+| 5 | `server/server/api/routes/chat.py` | `run_agent` 호출 시 `session_id=session_id, request_id=request.state.request_id` 전달 |
+| 6 | `server/pyproject.toml` | `langfuse>=2.0,<3.0` 버전 핀 (v3+ 는 `langchain` 풀패키지 요구) |
+| 7 | `frontend/src/lib/types.ts` | `DoneEvent` 에 `trace_id?: string` optional 필드 |
+| 8 | `frontend/src/lib/eventHandlers.ts` | `done` 이벤트에서 `trace_id` console.debug (L4 feedback 버튼 준비) |
+| 9 | `.env.example` | `LANGFUSE_HOST`, `LANGFUSE_SAMPLING_RATE`, `LANGFUSE_SESSION_SALT` + 주석 |
+
+**Plan 교훈 반영**:
+- SSE 포맷 불변 — `trace_id` 는 `done` 이벤트 JSON 내부 필드로만 추가 (`event:` 라인 신설 X)
+- Anthropic 401 세션 플래그 패턴 재사용 — `_tracer_valid=False` 로 반복 실패 회피
+- UTF-8 파일 I/O 강제 — `_hash_session` 에서 `.encode('utf-8')` 고정
+- graceful degrade — import 실패 / handler 생성자 예외 / flush 예외 모두 log warn + None 반환
+
+**검증 결과**:
+
+| 항목 | 결과 |
+|------|------|
+| `ast.parse` (4 files) | 0 error |
+| TypeScript `tsc --noEmit` | 0 error |
+| `_hash_session('test-session-id')` → `4cad75f238dd7abe` (16 hex) | ✅ |
+| `get_langfuse_handler()` 키 미설정 → `None` | ✅ |
+| `get_langfuse_handler()` 잘못된 키 + v4 SDK → warn + `None` | ✅ (R1-TRACE-DOWN 등가) |
+| 5-쿼리 smoke (summary/compare/recommend/risk/simulate, Mock D3001) | `all_ok=True` — 각 쿼리 9~17 이벤트, 전부 `done` 수신 |
+| Ring 0 (E2E, 4 tests) | 4/4 PASS (1.9s) |
+
+**L1 E2E 회귀 spec 추가** (`frontend/e2e/ring3-negative/l1-langfuse.spec.ts`, 7 test):
+
+| ID | 검증 | 방식 |
+|----|------|------|
+| L1-E01 | TRACE-DOWN baseline — 키 미설정에서 SSE 정상 (events≥5, done, trace_id=null) | `postSseRaw` Node http 직접 스트림 |
+| L1-E02 | v4 SDK `langfuse.callback` import fail → handler None + `_tracer_valid=False` | backend python -c |
+| L1-E03 | 잘못된 키 + 생성자 실패 → None (`_tracer_valid` 내림) | backend python -c |
+| L1-E04 | `_hash_session` ascii + 한글 2회 호출 결정성 + 16 hex | backend python -c |
+| L1-E05 | salt 교체 시 같은 session_id → 다른 해시 | backend python -c |
+| L1-E06 | `done.trace_id` 부재 상태에서 frontend 파서 console error 0 | Playwright page |
+| L1-E07 | SSE raw 에 `event:` 라인 0 (Plan §4.2 재검토 계약) | `postSseRaw` + regex |
+
+**실행 결과**:
+
+| 대상 | 결과 | 소요 |
+|------|------|------|
+| L1-E2E (7 test) | **7/7 PASS** | 55.7s |
+| Ring 0 (R0-1~R0-4) | **4/4 PASS** | 2.6s |
+| reg-2026-04-17 (6 test) | **6/6 PASS** | — |
+
+**핫픽스** (spec 개발 중 발견):
+1. Playwright `request.post` 가 SSE chunked stream 끝(0-size trailer) 감지에 실패 → `node:http` + `"type":"done"` 완전 프레임 감지 후 destroy 로 교체 (`postSseRaw` 헬퍼)
+2. L1-E01 timeout 60s → `testInfo.setTimeout(120_000)` + `postSseRaw` 90s (PAE 전체 파이프라인 실행 시간 반영)
+
+**Plan 문서**: `docs/plan/infra/llmops-l1-e2e.md`
+
+**다음 단계** (L2 착수 전):
+- Langfuse Cloud 키 발급 + `.env` 세팅 후 `R1-TRACE-BASIC` 시나리오 (Langfuse UI 에서 planner/actor/respond span 확인)
+- 로컬 개발 시 `langfuse` 재설치 필요 (`pip install 'langfuse>=2.0,<3.0'` 또는 docker 재빌드)
 
 ---
 

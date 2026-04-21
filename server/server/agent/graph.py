@@ -223,15 +223,29 @@ async def run_agent(
     district_name: str,
     data_quarter: str,
     conversation_history: list[dict] | None = None,
+    session_id: str = "",
+    request_id: str = "",
 ) -> AsyncGenerator[dict[str, Any], None]:
-    """PAE agent — asyncio.Queue based real-time SSE streaming."""
+    """PAE agent — asyncio.Queue based real-time SSE streaming.
+
+    `session_id` / `request_id` 는 Langfuse trace 메타데이터로 전달.
+    Langfuse 비활성/실패 시 handler=None → 기존 경로와 동일.
+    """
     from server.agent.state import AgentState
+    from server.services.langfuse_tracer import (
+        flush as _lf_flush,
+        get_langfuse_handler,
+        get_trace_id,
+    )
 
     # Bounded queue so a slow/disconnected SSE consumer naturally blocks the
     # LLM/tool producers (backpressure) instead of growing memory unbounded.
     event_queue: asyncio.Queue[dict | None] = asyncio.Queue(
         maxsize=settings.sse_queue_maxsize
     )
+
+    # Langfuse callback (best-effort). None 이면 trace 없이 진행.
+    lf_handler = get_langfuse_handler(session_id=session_id, request_id=request_id)
 
     initial_state: AgentState = {  # type: ignore[typeddict-item]
         "messages": [HumanMessage(content=message)],
@@ -267,7 +281,13 @@ async def run_agent(
         try:
             await event_queue.put({"type": "thinking", "step": "질문 분석 중..."})
 
-            async for update in compiled.astream(initial_state, stream_mode="updates"):
+            astream_config: dict[str, Any] = {}
+            if lf_handler is not None:
+                astream_config["callbacks"] = [lf_handler]
+
+            async for update in compiled.astream(
+                initial_state, config=astream_config or None, stream_mode="updates",
+            ):
                 for node_name, state_update in update.items():
                     if node_name == "planner":
                         plan = state_update.get("plan", [])
@@ -330,8 +350,10 @@ async def run_agent(
     finally:
         if not task.done():
             task.cancel()
+        # best-effort flush — 예외 삼킴
+        _lf_flush(lf_handler)
 
-    # Suggestion + done
+    # Suggestion + done (trace_id 는 Langfuse 활성 시에만 포함)
     dn = district_name if district_name and district_name != "미선택" else "여기"
     suggestions = final_suggestions or [
         f"{dn}에서 뭐하면 좋을까?",
@@ -340,4 +362,9 @@ async def run_agent(
         "유동인구 자세히 알려줘",
     ]
     yield {"type": "suggestion", "questions": suggestions}
-    yield {"type": "done"}
+
+    done_payload: dict[str, Any] = {"type": "done"}
+    trace_id = get_trace_id(lf_handler)
+    if trace_id:
+        done_payload["trace_id"] = trace_id
+    yield done_payload

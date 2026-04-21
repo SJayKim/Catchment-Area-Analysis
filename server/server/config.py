@@ -36,10 +36,21 @@ class Settings(BaseSettings):
     gemini_model_pro: str = "gemini-2.5-pro"
     gemini_model_flash: str = "gemini-2.5-flash"
 
-    # Langfuse
+    # Langfuse (LLMOps L1 — Trace 활성화)
+    # 빈 값이면 tracing 비활성. 둘 중 하나만 세팅 시 경고 로그 후 비활성.
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
-    langfuse_host: str = "http://localhost:3001"
+    # Langfuse Cloud 기본값. Self-host 전환 시 덮어쓰기.
+    langfuse_host: str = "https://cloud.langfuse.com"
+    # 샘플링 비율 (1.0 = 100%). load-test 시 0.1 로 낮춰 플러싱 지연 회피.
+    langfuse_sampling_rate: float = 1.0
+    # session_id 해싱용 salt. 배포별로 고유값. 비워두면 인스턴스 기동 시 랜덤 생성.
+    langfuse_session_salt: str = ""
+
+    @property
+    def langfuse_enabled(self) -> bool:
+        """Tracing 활성화 조건: public + secret key 둘 다 세팅."""
+        return bool(self.langfuse_public_key) and bool(self.langfuse_secret_key)
 
     # ETL
     etl_page_size: int = 1000

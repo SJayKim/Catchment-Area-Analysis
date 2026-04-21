@@ -167,7 +167,7 @@ export type SSEEvent =
   | { type: 'card'; card_type: string; data: Record<string, unknown> }
   | { type: 'map_cmd'; action: string; params?: Record<string, unknown>; district_code?: string; district_name?: string; district_type?: string }
   | { type: 'suggestion'; questions: string[] }
-  | { type: 'done' }
+  | { type: 'done'; trace_id?: string }
   | { type: 'error'; message?: string };
 
 export interface MapBounds {

@@ -201,6 +201,10 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
       if (!ctx.firstTextReceived.current) {
         set({ isThinking: false, agentSteps: [] });
       }
+      if (event.trace_id) {
+        // Langfuse trace 상관용 — L4 피드백 버튼에서 trace_id 를 재사용 예정
+        console.debug('[marketscope] trace_id:', event.trace_id);
+      }
       break;
 
     case 'error':
