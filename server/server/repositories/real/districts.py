@@ -198,8 +198,10 @@ class RealDistrictRepository:
                         seen_codes.add(row.district_code)
                         continue
 
-                # 3순위: contains 매칭 (2글자 이상)
-                if len(candidate) >= 2:
+                # 3순위: contains 매칭 (3글자 이상으로 제한 — 2글자 축약어는 과잉 매칭)
+                # 예: "강남역" → suffix strip 후 "강남" (len=2) 이 %강남% contains 로
+                # "강남구청역" 같은 무관 상권을 끌어오는 문제 방지.
+                if len(candidate) >= 3:
                     row = (await session.execute(
                         select(District.district_code, District.district_name)
                         .where(District.district_name.ilike(f"%{candidate}%"))

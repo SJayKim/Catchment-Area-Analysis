@@ -112,16 +112,16 @@ test.describe('Ring 1 — F01 Map Selection', () => {
     await packet.finalize(page);
   });
 
-  test('F01-H5 Kakao SDK proxy path (/_proxy/kakao-sdk, 4dbd598 회귀)', async ({ page }) => {
+  test('F01-H5 Kakao SDK proxy path (/proxy/kakao-sdk, 4dbd598 회귀)', async ({ page }) => {
     const packet = new EvalPacket({
       id: 'F01-H5-kakao-sdk-proxy',
       title: 'Kakao SDK 프록시 경로 확인',
-      story: '프론트엔드는 /_proxy/kakao-sdk 경로로 SDK 본문을 가져와 인라인 실행해야 한다. 이전 /api/kakao-sdk 경로는 제거됨.',
-      steps: ['/ 재진입 → network 기록', '/_proxy/kakao-sdk 200 존재', '/api/kakao-sdk 호출 0건'],
+      story: '프론트엔드는 /proxy/kakao-sdk 경로로 SDK 본문을 가져와 인라인 실행해야 한다. 이전 /api/kakao-sdk 경로는 제거됨.',
+      steps: ['/ 재진입 → network 기록', '/proxy/kakao-sdk 200 존재', '/api/kakao-sdk 호출 0건'],
       mode: 'Mock',
       ring: 1,
       feature: 'F01',
-      criteria: ['/_proxy/kakao-sdk 200 ≥1', '/api/kakao-sdk 호출 0', 'SDK 로드 실패 console error 0'],
+      criteria: ['/proxy/kakao-sdk 200 ≥1', '/api/kakao-sdk 호출 0', 'SDK 로드 실패 console error 0'],
     });
     packet.attach(page);
 
@@ -129,7 +129,7 @@ test.describe('Ring 1 — F01 Map Selection', () => {
     const legacyCalls: string[] = [];
     page.on('response', (resp) => {
       const u = resp.url();
-      if (u.includes('/_proxy/kakao-sdk')) proxyCalls.push({ url: u, status: resp.status() });
+      if (u.includes('/proxy/kakao-sdk')) proxyCalls.push({ url: u, status: resp.status() });
       if (/\/api\/kakao-sdk(\?|$)/.test(u)) legacyCalls.push(u);
     });
 
@@ -145,7 +145,7 @@ test.describe('Ring 1 — F01 Map Selection', () => {
       result: proxyOk && legacyGone && errors === 0 ? 'PASS' : 'FAIL',
       reason: `proxyCalls=${proxyCalls.length} legacyCalls=${legacyCalls.length} sdkErrors=${errors}`,
       checks: [
-        { criterion: '/_proxy/kakao-sdk 200', met: proxyOk, evidence: JSON.stringify(proxyCalls.slice(0, 3)) },
+        { criterion: '/proxy/kakao-sdk 200', met: proxyOk, evidence: JSON.stringify(proxyCalls.slice(0, 3)) },
         { criterion: '/api/kakao-sdk 미호출', met: legacyGone, evidence: legacyCalls.join(',') || 'none' },
         { criterion: 'SDK console error 0', met: errors === 0, evidence: `${errors}` },
       ],

@@ -95,7 +95,13 @@ test.describe('Ring 1 — F03 Summary Report', () => {
     });
     const body = await resp.text();
 
-    const cardMatches = [...body.matchAll(/event:\s*card\s*\ndata:\s*(\{[^\n]+\})/g)];
+    // MarketScope SSE: 매 줄이 `data: {...}` (event: 라인 없음).
+    // card_type=summary 이벤트의 data 블록에서 monthly_sales / monthlySales 추출.
+    // CRLF/LF 양쪽 대응 — split 으로 라인 분해 후 직접 JSON.parse.
+    const cardLines = body
+      .split(/\r?\n/)
+      .filter((l) => l.startsWith('data:') && l.includes('"card_type"') && l.includes('summary'));
+    const cardMatches = cardLines.map((l) => [l, l.replace(/^data:\s*/, '').trim()] as const);
     let hasMonthlyKey = false;
     let monthlyValue = 0;
     for (const m of cardMatches) {
@@ -103,8 +109,10 @@ test.describe('Ring 1 — F03 Summary Report', () => {
         const evt = JSON.parse(m[1]);
         const data = evt?.data || evt;
         const v =
+          data?.monthlySales ??
           data?.monthly_sales ??
           data?.total_monthly_sales ??
+          data?.totalMonthlySales ??
           data?.sales?.monthly_sales ??
           data?.sales?.total_monthly_sales;
         if (typeof v === 'number' && v > 0) {

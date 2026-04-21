@@ -26,7 +26,7 @@
 | `frontend` | 3200:3000 | 외부 호스트 nginx 가 접근 |
 | `seed` | one-off | pg_restore + `cleanup_alembic.py` 실행 |
 
-**외부 nginx** (호스트 OS): `nginx/external-reverse-proxy.conf.example` 참고. Let's Encrypt 인증서, SSE 버퍼링 비활성, `/api/*` → backend, `/_proxy/*` + `/` → frontend 라우팅.
+**외부 nginx** (호스트 OS): `nginx/external-reverse-proxy.conf.example` 참고. Let's Encrypt 인증서, SSE 버퍼링 비활성, `/api/*` → backend, `/proxy/*` + `/` → frontend 라우팅.
 
 ## 2. 네트워크 토폴로지 (프로덕션)
 
@@ -50,7 +50,7 @@
 ```
 
 - **SSE 경로**: 호스트 nginx → backend 컨테이너. `proxy_buffering off` + `X-Accel-Buffering: no` 필수 (`memory/feedback_sse_buffering.md`).
-- **Kakao SDK 프록시**: 프론트엔드 `/_proxy/kakao-sdk` 라우트가 백엔드로 가지 않도록 nginx 라우팅 필수.
+- **Kakao SDK 프록시**: 프론트엔드 `/proxy/kakao-sdk` 라우트가 백엔드로 가지 않도록 nginx 라우팅 필수.
 - **DB/Redis 비노출**: 프로덕션에서는 `docker compose exec db psql …` 로만 접근.
 
 ## 3. 환경변수 (요약)

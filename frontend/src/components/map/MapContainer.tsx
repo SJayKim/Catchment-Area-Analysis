@@ -30,8 +30,9 @@ export default function MapContainer() {
     document.head.appendChild(dummy);
 
     // 2) 서버 프록시로 SDK 코드를 가져와 인라인 실행
-    //    /_proxy/* 는 Next.js server route 네임스페이스 — /api/* 는 전부 backend로 감.
-    fetch('/_proxy/kakao-sdk')
+    //    /proxy/* 는 Next.js server route 네임스페이스 — /api/* 는 전부 backend로 감.
+    //    (주의: _proxy/ 처럼 underscore prefix 는 Next.js private folder 로 라우트 제외됨)
+    fetch('/proxy/kakao-sdk')
       .then((res) => {
         if (!res.ok) throw new Error(`SDK proxy ${res.status}`);
         return res.text();

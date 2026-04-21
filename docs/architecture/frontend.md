@@ -10,7 +10,7 @@ frontend/src/
 │   ├── layout.tsx           # 루트 레이아웃 (CSS 변수 + Inter font)
 │   ├── page.tsx             # 메인 (Toolbar + SplitPanel + StatusBar)
 │   ├── globals.css          # 다크 테마 CSS 변수
-│   └── _proxy/
+│   └── proxy/
 │       └── kakao-sdk/route.ts  # Kakao SDK 서버 프록시 (ORB 회피)
 ├── components/
 │   ├── layout/              # SplitPanel, Toolbar, StatusBar

@@ -264,11 +264,18 @@
 - ⏸ **Ring 1 / Ring 2 / Ring 3 실행 보류** — 사용자 요청으로 Pass 1 중단, 후속 세션에서 재개
 - ⏸ stack 은 기동 상태 유지 (`docker compose -f docker-compose.e2e.yml ps` 로 확인) — teardown 도 다음 세션에서
 
+**Pass 1 Mock 실행 결과 (2026-04-19 재개)** — `docs/qa/runs/e2e-run-2026-04-19.md`
+- ✅ **40/46 PASS · 5 FAIL · 2 SKIP** (Mock 모드)
+- 🔧 **핫픽스 적용**: `src/app/_proxy/` → `src/app/proxy/` (Next.js `_` prefix는 private folder라 라우트 안 됨). `MapContainer.tsx` + `next.config.mjs` + e2e spec 2종 + 문서 5종 수정. `/proxy/kakao-sdk` 200 OK 회복. 이 fix로 초기 9 FAIL 중 **4건 PASS 전환**.
+- 🔧 **잔여 5건 FAIL**:
+  - F03-H4: summary card 에 `monthly_sales` top-level 키 부재 (1줄 backend fix 필요)
+  - F05-H3/H4: 채팅 comparison intent → compareList 자동 주입 미구현 (기능 갭 — 현 기능은 수동 UI flow 만)
+  - 3-REG-CLEANUP-ALEMBIC / 3-REG-FLUSH-CACHE: 호스트 Python 에 psycopg2/redis 미설치 → skip 조건 보강 or 컨테이너 exec 변경 필요
+
 **다음 단계**:
-- 🔧 Pass 1 — Mock Ring 1 (11 spec) + Ring 3 reg (4 spec) 실행
+- 🔧 Pass 1 잔여 5 FAIL 분류별 처리 결정 (기능 갭 vs 테스트 수정 vs 인프라)
 - 🔧 Pass 2 — Real 모드 happy-path 6건 (store_history design SKIP)
 - 🔧 Pass 3 — Ring 2 (5 journey) + Ring 3 기존 negative (3)
-- 🔧 `docs/qa/runs/e2e-run-2026-04-19.md` 리포트 작성
 
 **실행 명령**:
 ```bash

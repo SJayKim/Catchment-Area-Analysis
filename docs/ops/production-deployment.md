@@ -55,7 +55,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 curl -s https://marketscope.robitlabs.co.kr/health
 curl -s -I https://marketscope.robitlabs.co.kr/            # → 200
 curl -s -o /dev/null -w '%{http_code}\n' \
-     https://marketscope.robitlabs.co.kr/_proxy/kakao-sdk   # → 200
+     https://marketscope.robitlabs.co.kr/proxy/kakao-sdk   # → 200
 ```
 
 ### 재배포 (기존 볼륨 유지)
@@ -86,9 +86,9 @@ docker compose -f docker-compose.prod.yml up -d --build
 | `location /api/chat` | `proxy_read_timeout 300s` | Agent 응답 5분까지 허용 |
 | `location /api/chat` | `chunked_transfer_encoding on` | SSE chunked 전송 유지 |
 | `location /api/` | proxy_pass → backend:8000 | Next.js `/api/*` 가 아닌 FastAPI 로 라우팅 |
-| `location /` | proxy_pass → frontend:3200 | `/_proxy/kakao-sdk` 도 여기 포함 |
+| `location /` | proxy_pass → frontend:3200 | `/proxy/kakao-sdk` 도 여기 포함 |
 
-> **히스토리:** 과거 `/api/kakao-sdk` 는 Next.js server route였지만 `/api/*` 네임스페이스 겹침으로 매 배포마다 exact-match exception 필요. 현재 `/_proxy/kakao-sdk` 로 분리 — 외부 nginx 설정이 단순해짐.
+> **히스토리:** 과거 `/api/kakao-sdk` 는 Next.js server route였지만 `/api/*` 네임스페이스 겹침으로 매 배포마다 exact-match exception 필요. 현재 `/proxy/kakao-sdk` 로 분리 — 외부 nginx 설정이 단순해짐.
 
 ---
 
@@ -110,7 +110,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 | 증상 | 확인 | 해결 |
 |------|------|------|
 | `/api/chat` 첫 응답 5~10초 지연 | `curl -sN -X POST ...` 로 이벤트 타임라인 | 외부 nginx `proxy_buffering off` 누락 점검 |
-| 지도 빈 화면 | 브라우저 Network `_proxy/kakao-sdk` | 200 인지 확인, 빌드 시 `NEXT_PUBLIC_KAKAO_MAP_KEY` 전달 여부 |
+| 지도 빈 화면 | 브라우저 Network `proxy/kakao-sdk` | 200 인지 확인, 빌드 시 `NEXT_PUBLIC_KAKAO_MAP_KEY` 전달 여부 |
 | `/api/api/chat` 404 | Network 탭 URL | `.env` `NEXT_PUBLIC_API_URL` 끝에 `/api` 붙어있음 → 제거 후 재빌드 |
 | alembic "Multiple head revisions" | `docker compose logs migrate` | `cleanup_alembic.py` 실행 여부 — 커스텀 command 변경됐는지 확인 |
 | seed 서비스 skip 후 데이터 없음 | `docker compose exec db psql ... -c "SELECT COUNT(*) FROM districts;"` | `down -v` 로 볼륨 완전 초기화 후 재기동 |

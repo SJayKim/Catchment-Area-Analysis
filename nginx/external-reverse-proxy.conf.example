@@ -10,7 +10,7 @@
 #
 # 필수 포인트:
 #   - /api/chat 은 SSE → proxy_buffering off, proxy_read_timeout ≥300s
-#   - /api/*   는 전부 backend:8000 (Next.js server route는 /_proxy/* 네임스페이스 사용)
+#   - /api/*   는 전부 backend:8000 (Next.js server route는 /proxy/* 네임스페이스 사용)
 #   - frontend(3200) 는 default location
 #   - /health 는 backend 직접 노출
 
@@ -112,7 +112,7 @@ server {
         add_header X-Content-Type-Options nosniff always;
     }
 
-    # --- Frontend (기본) — /_proxy/kakao-sdk 등 Next.js server routes 포함 ---
+    # --- Frontend (기본) — /proxy/kakao-sdk 등 Next.js server routes 포함 ---
     location / {
         proxy_pass http://marketscope_frontend;
         proxy_http_version 1.1;

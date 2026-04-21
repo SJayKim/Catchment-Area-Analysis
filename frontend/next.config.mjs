@@ -27,8 +27,9 @@ const nextConfig = {
       process.env.BACKEND_INTERNAL_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
       'http://localhost:8002';
-    // kakao-sdk 프록시는 /_proxy/kakao-sdk (Next.js server route)로 이동됨.
-    // /_proxy/* 는 rewrite 대상이 아니므로 /api/* 전체를 backend로 보내도 무방.
+    // kakao-sdk 프록시는 /proxy/kakao-sdk (Next.js server route)로 이동됨.
+    // /proxy/* 는 rewrite 대상이 아니므로 /api/* 전체를 backend로 보내도 무방.
+    // (underscore prefix `_proxy/` 는 Next.js private folder 로 라우트 제외되므로 사용 금지)
     return {
       fallback: [
         {

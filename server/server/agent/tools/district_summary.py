@@ -164,6 +164,7 @@ async def get_district_summary(district_code: str) -> dict:
         "districtName": meta["name"],
         "districtType": meta["type"],
         "summary": summary_text,
+        "monthlySales": monthly_sales,
         "floatingPopulation": {
             "dailyAvg": daily_avg,
             "peakHour": fp_result.get("peak_hour", 0) if fp_ok else 0,

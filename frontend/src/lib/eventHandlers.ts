@@ -1,4 +1,5 @@
-import { ChatMessage, SSEEvent, AgentStep } from './types';
+import { ChatMessage, SSEEvent, AgentStep, CompareCardData, District } from './types';
+import { useDistrictStore } from '@/stores/districtStore';
 
 export const TOOL_LABELS: Record<string, { progress: string; done: string }> = {
   get_floating_population_tool: { progress: '유동인구 조회 중...', done: '유동인구 조회 완료' },
@@ -156,6 +157,30 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
         timestamp: new Date(),
       };
       set({ messages: [...(get() as unknown as { messages: ChatMessage[] }).messages, cardMessage] });
+
+      // Sync compareList when comparison card arrives — Agent가 채팅으로
+      // 비교 의도를 감지해 도구를 실행했으면 지도 하이라이트도 자동 갱신.
+      // (수동 UI 플로우: 비교모드 토글 + 폴리곤 클릭 도 계속 유효)
+      if (event.card_type === 'compare') {
+        const data = event.data as unknown as CompareCardData | undefined;
+        const codes = data?.district_codes ?? [];
+        const districts = data?.districts ?? {};
+        if (codes.length >= 2) {
+          const store = useDistrictStore.getState();
+          store.clearCompare();
+          if (!store.isCompareMode) store.toggleCompareMode();
+          for (const code of codes.slice(0, 3)) {
+            const entry = districts[code];
+            const district: District = {
+              code,
+              name: entry?.district_name || code,
+              type: '발달상권',
+              center: { lat: 0, lng: 0 },
+            };
+            useDistrictStore.getState().addToCompare(district);
+          }
+        }
+      }
       break;
     }
 
