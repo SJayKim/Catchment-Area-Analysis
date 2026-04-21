@@ -184,6 +184,9 @@ test.describe('Ring 3 — P0 Regression', () => {
 
   // P0-7 SSE reader release + AbortController
   test('P0-7 navigate-away then new request OK', async ({ page }) => {
+    // 2회 SSE 라운드(≈ 45s × 2) + reload — 60s 기본 timeout 초과. Ring 2 journey와
+    // 동일한 180s 스코프로 상향.
+    test.setTimeout(180000);
     const packet = new EvalPacket({
       id: 'P0-7-abort-controller',
       title: '라우팅 이탈 후 새 요청',
