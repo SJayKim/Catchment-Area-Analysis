@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-21
+> 최종 갱신: 2026-04-22
+> **E2E + Ops 회귀 run 완료 ✅ (2026-04-22, 2차 재실행 포함) — stale container 2 FAIL + e2e stack 6 SKIP 전부 회복. 최종 Ring 0 4/4 · F03/F05 9/9 · L1 7/7 · reg-2026-04-17 6/6 · OPS-01/02 2/2 · Consumer 100/100 READY. [e2e-run-2026-04-22](./runs/e2e-run-2026-04-22.md) · [followup plan](../plan/infra/e2e-ops-followup-2026-04-22.md)**
 > **프로덕션 배포 완료 ✅ — marketscope.robitlabs.co.kr 외부 리버스 프록시 환경 구축, SSE 스트리밍 + 지도 SDK 정상 동작**
 > **서빙 안정성 Phase 1~10 구현 완료 ✅ — 체크리스트 24%→61% (148/243), 신규 14파일 + 수정 25파일**
 > **분석 리포트 품질 개선 Phase 1~3 완료 ✅ — 프롬프트+Tool 보강+벤치마킹, S1(9.8)/S2(9.6)/S8(9.7) 합격**
@@ -232,6 +233,93 @@
 ### ✅ .gitignore 정리
 - `.playwright-mcp/` 디렉토리 전체 제외 (기존 `*.log`만 제외 → 전체)
 - `frontend/test-results/` 추가
+
+---
+
+## 완료 항목 (2026-04-22)
+
+### ⚠️ E2E + Ops 회귀 Run — 47 PASS / 2 FAIL (stale container) / 10 SKIP (e2e stack infra)
+
+**Plan**: `docs/plan/infra/e2e-ops-2026-04-22.md`
+**Run 리포트**: `docs/qa/runs/e2e-run-2026-04-22.md`
+
+**스코프**: Ring 0~3 전체 회귀 + 신규 ops 엔드포인트 커버리지 (`/api/health/detail`, `/metrics`).
+
+**실행 환경 피벗**: `docker-compose.e2e.yml` 기반 전용 stack 은 `pip install` SSL 인증서 검증 실패로 빌드 불가 (사내/로컬 네트워크의 pypi SSL 체인 문제). 기존 dev stack (Real 모드, backend 2026-04-17 11:02 image) + `npx next dev` 로 frontend 로컬 기동하여 실행.
+
+**신규 산출**:
+- `docs/plan/infra/e2e-ops-2026-04-22.md` — 5섹션 표준 plan
+- `frontend/e2e/ring3-negative/ops-endpoints.spec.ts` (+85 LOC) — OPS-01 health-detail + OPS-02 /metrics
+- `.env.e2e` — env.e2e.example 복사 (gitignored)
+
+**결과 요약**:
+
+| Ring | PASS | FAIL | SKIP | 비고 |
+|------|-----:|-----:|-----:|------|
+| 0 | 4 | 0 | 0 | stack health OK |
+| 1 | 21 | 2 | 2 | F03-H4 / F05-H4 stale-container 회귀 · M01-H1/H3 Mock-only |
+| 2 | 4 | 0 | 1 | J01 design-skip (Real UI 플레이크) |
+| 3 | 18 | 0 | 7 | OPS-01/02 PASS · cleanup_alembic/flush_cache/L1-E02~E05 docker-exec 의존 |
+| **합계** | **47** | **2** | **10** | 총 59 test |
+
+**FAIL 원인 (공통: stale container)**:
+- F03-H4 `monthly_sales` 키 부재 — `ff9909c` (2026-04-21) 미반영
+- F05-H4 한글 조사 `과/를` multi-district detect 실패 — `3c5f884` (2026-04-21) 미반영
+- 해당 fix 는 이미 main 에 merge 상태. Backend 컨테이너만 재빌드하면 자동 회복.
+
+**신규 OPS 커버리지**:
+- OPS-01: `/api/health/detail` 11 필수 필드(db_pool_* 4개 + redis_connected + agent_mode + llm_provider + use_mock + semaphore_* 2개 + active_sessions) 타입 스키마
+- OPS-02: `/metrics` 응답 구조(`request_counts[]` + `latency[]` + `sse_active_connections`) + warm-up 호출 기록
+
+**Consumer-experience score**: 92/100 (stale container 2 FAIL -5, e2e stack 미가용 -3)
+
+---
+
+### ✅ E2E + Ops 후속 조치 — stale FAIL 2 + infra SKIP 6 전부 회복 (2차 재실행)
+
+**Plan**: `docs/plan/infra/e2e-ops-followup-2026-04-22.md`
+
+**조치 1 — Dockerfile pip SSL 우회 build-arg** (`server/Dockerfile`):
+- `ARG PIP_INDEX_URL=https://pypi.org/simple` + `ARG PIP_TRUSTED_HOST=` (기본값은 기존 HTTPS 유지 → 동작 무변화)
+- `/etc/pip.conf` 파일 렌더로 pip isolated build subprocess 가 env 상속 못 하는 문제 우회
+- SSL 장애 환경에서만: `docker compose build --build-arg PIP_INDEX_URL=https://pypi.org/simple --build-arg 'PIP_TRUSTED_HOST=pypi.org files.pythonhosted.org' backend`
+
+**조치 2 — dev stack backend 재빌드**:
+- 이미지 CreatedAt: `2026-04-17 11:02` → **`2026-04-22 11:26`**
+- 커밋 `ff9909c` / `3c5f884` 반영 확인:
+  - summary card data 에 `monthlySales: 139568168199` 노출 (Redis `summary:*` 캐시 선 플러시 필요)
+  - `detect_districts_in_message("강남역과 홍대입구를 비교해줘")` → `["3120189", "3120103"]` 정상 추출
+- Ring 1 재실행: **F03 4/4 + F05 5/5 = 9/9 PASS** (stale FAIL 2건 회복)
+
+**조치 3 — E2E 전용 stack 가동 → 6 SKIP 회복**:
+- `docker-compose.e2e.yml` backend/migrate `build.args` 에 `PIP_INDEX_URL` / `PIP_TRUSTED_HOST` 전달
+- Windows excluded port range (55015–55614) 회피: db `55432 → 15432`, redis `56379 → 16379`
+- `scripts/e2e/preflight.sh` 포트 체크 동기화 (3001/8002/15432/16379)
+- 재실행 결과:
+
+| Spec | 결과 |
+|------|------|
+| ring0-preflight (4 test) | 4/4 PASS |
+| ring3-negative/ops-endpoints (2 test) | 2/2 PASS |
+| ring3-negative/l1-langfuse (7 test) | **7/7 PASS** (L1-E02~E05 포함) |
+| ring3-negative/reg-2026-04-17 (6 test) | **6/6 PASS** (cleanup_alembic + flush_cache 포함) |
+
+**최종 Consumer-experience score**: 92 → **100/100**. **판정: READY**
+
+**이번 세션 변경 파일**:
+
+| 파일 | 변경 |
+|------|------|
+| `server/Dockerfile` | pip SSL 우회 build-arg + `/etc/pip.conf` 렌더 |
+| `docker-compose.e2e.yml` | backend/migrate build args 전달 + 포트 재할당 (15432/16379) |
+| `scripts/e2e/preflight.sh` | 포트 체크 동기화 |
+| `docs/plan/infra/e2e-ops-followup-2026-04-22.md` | 신규 5섹션 plan |
+| `docs/qa/runs/e2e-run-2026-04-22.md` | 2차 재실행 섹션 append |
+| `docs/status/current-status.md` | 본 섹션 + 헤더 갱신 |
+
+**feedback memory** (auto-memory 2건 신규):
+- `feedback_stale_container_vs_source.md` — E2E FAIL 분류 시 컨테이너 빌드 시각부터 확인
+- `feedback_probe_endpoint_shape_first.md` — 스키마 spec 작성 전에 실제 응답 probe
 
 ---
 

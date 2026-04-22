@@ -62,7 +62,7 @@ if docker ps --format '{{.Names}}' 2>/dev/null | grep -E "^(marketscope-prod|mar
 fi
 
 # 충돌 포트 점검
-for port in 3001 8002 55432 56379; do
+for port in 3001 8002 15432 16379; do
     if netstat -an 2>/dev/null | grep -E "[.:]${port} .*LISTEN" > /dev/null; then
         log "⚠ port ${port} 이 이미 사용 중 — docker compose up 에서 실패할 수 있음"
     fi

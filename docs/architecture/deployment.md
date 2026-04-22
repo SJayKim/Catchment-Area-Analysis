@@ -85,6 +85,17 @@
 2. `pip install -e ".[dev]"` (`pyproject.toml` 소스 설치)
 3. uvicorn --host 0.0.0.0 --port 8000 --workers 2
 
+**pip SSL 우회 build-arg (선택)**: 사내/제한된 네트워크에서 `CERTIFICATE_VERIFY_FAILED` 발생 시:
+
+```bash
+docker compose build \
+  --build-arg PIP_INDEX_URL=https://pypi.org/simple \
+  --build-arg 'PIP_TRUSTED_HOST=pypi.org files.pythonhosted.org' \
+  backend
+```
+
+기본값은 HTTPS PyPI(기존 동작 유지). build-arg 는 `/etc/pip.conf` 에 렌더되어 pip isolated build subprocess 까지 전파된다. `docker-compose.e2e.yml` 의 migrate/backend 에서도 `${PIP_INDEX_URL}` / `${PIP_TRUSTED_HOST}` 를 그대로 받는다.
+
 ## 5. 배포 순서 (프로덕션)
 
 1. `scripts/validate_env.py` — 필수 env 확인

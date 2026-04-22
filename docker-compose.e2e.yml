@@ -7,8 +7,8 @@
 # 포트 (호스트 노출):
 #   frontend → 3001     (playwright E2E_BASE_URL)
 #   backend  → 8002     (playwright E2E_BACKEND_URL)
-#   db       → 55432    (디버깅 전용 — 운영 5432 와 절대 충돌 없음)
-#   redis    → 56379
+#   db       → 15432    (디버깅 전용 — 운영 5432 와 절대 충돌 없음 · Windows excluded 55xxx 회피)
+#   redis    → 16379
 #
 # Volume: marketscope-e2e_pgdata   (COMPOSE_PROJECT_NAME prefix)
 # .env 소스: .env.e2e                (.env.e2e.example 복사 후 테스트 키 입력)
@@ -17,7 +17,7 @@ services:
   db:
     image: postgis/postgis:16-3.4
     command: postgres -c log_min_duration_statement=500 -c log_statement=none
-    ports: ["55432:5432"]
+    ports: ["15432:5432"]
     environment:
       POSTGRES_DB: marketscope_e2e
       POSTGRES_USER: marketscope
@@ -37,14 +37,19 @@ services:
   redis:
     image: redis:7-alpine
     command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
-    ports: ["56379:6379"]
+    ports: ["16379:6379"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
       retries: 10
 
   migrate:
-    build: { context: ./server, target: runner }
+    build:
+      context: ./server
+      target: runner
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-}
     command: bash -c "python scripts/cleanup_alembic.py && alembic upgrade head"
     environment:
       DATABASE_URL_SYNC: postgresql://marketscope:e2epassword@db:5432/marketscope_e2e
@@ -77,7 +82,12 @@ services:
       migrate: { condition: service_completed_successfully }
 
   backend:
-    build: { context: ./server, target: runner }
+    build:
+      context: ./server
+      target: runner
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-}
     ports: ["8002:8000"]
     env_file: .env.e2e
     environment:
