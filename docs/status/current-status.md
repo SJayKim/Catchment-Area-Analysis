@@ -4,7 +4,7 @@
 > **프로덕션 v0.4.0 동기화 완료 ✅ — `c6cc60e` 기반 재배포 (저녁), 오전 `60b6de3` 대비 6 커밋 / +13,038 / -577 반영**
 > 프로덕션: `marketscope.robitlabs.co.kr` 라이브 — prod-smoke 28/28 + 신규 2 endpoint 검증 PASS
 > 배포 변경: alembic 004 (`learned_aliases`) · `/`=랜딩/`/app`=챗맵 라우트 분리 · Planner Entity Linking + Abstention + Rewriter · `/api/districts/{code}/preview` · `/api/feedback/score`
-> **E2E 회귀 (2026-04-23 저녁)**: 106 test · 94 PASS · 4 FAIL (전부 test infra) · 8 SKIP · **서비스 회귀 0** · ops 5종 전수 PASS. [Run log](../qa/runs/e2e-run-2026-04-23-full.md)
+> **E2E 회귀 (2026-04-23 저녁)**: Pass 1 = 106 test · 94 PASS · 4 FAIL (전부 test infra) · 8 SKIP → **Pass 2 hotfix 후 4 spec + 1 component 수정으로 FAIL 0** (ring0~3 chromium 66/66 + prod-smoke 28/28). ops 5종 전수 PASS. [Run log](../qa/runs/e2e-run-2026-04-23-full.md) · [Hotfix plan](../plan/qa/e2e-spec-hotfix-2026-04-23.md)
 > E2E 회귀: Ring 0~3 전체 그린 (Mock 39/39 · Real 24/24) + Ops OPS-01/02 + L1 Langfuse 7/7 + prod-smoke 7/7
 > 관측성 L1: Langfuse **trace 실제 발행 확인 완료** (dev 로컬 sanity — `done.trace_id=9d59e6455eeb42f685b71f8057915377` + `agent_done` 로그 동일 값 매핑) · langfuse SDK **v2→v3 포팅** (v2 의 legacy langchain 의존 해소) · `agent_done` 운영 로그 조인 추가. 프로덕션 env 배선 완료. [Plan](../plan/infra/llmops-l1-verification.md)
 > **2026-04-23 env 관례 분리**: `.env`=프로덕션 · `.env.dev`=로컬 개발 (pydantic/Next.js/scripts 전부 `.env.dev` 우선 로드) · Langfuse prod 워크스페이스 키 분리(`pk-lf-07a3fa78…`) + `LANGFUSE_TRACING_ENVIRONMENT` 태깅으로 dev/prod trace 격리
