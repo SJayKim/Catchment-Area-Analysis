@@ -20,7 +20,8 @@ import * as path from 'node:path';
 test.beforeAll(() => ensureRunDir());
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const PY = process.env.E2E_PYTHON || 'python';
+// Ubuntu jammy (Playwright Docker) ships python3 only. Override with E2E_PYTHON=python for hosts using legacy Python 2 aliases.
+const PY = process.env.E2E_PYTHON || 'python3';
 const COMPOSE_FILE = process.env.E2E_COMPOSE_FILE || 'docker-compose.e2e.yml';
 const COMPOSE_PROJECT = process.env.E2E_COMPOSE_PROJECT || 'marketscope-e2e';
 

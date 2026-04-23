@@ -6,7 +6,7 @@ export default function StatusBar() {
   const selected = useDistrictStore((s) => s.selected);
 
   return (
-    <div className="h-8 bg-gray-50 border-t border-gray-200 flex items-center px-4 text-xs text-gray-500 flex-shrink-0">
+    <div data-testid="statusbar" className="h-8 bg-gray-50 border-t border-gray-200 flex items-center px-4 text-xs text-gray-500 flex-shrink-0">
       <span>데이터 기준: 2025년 4분기</span>
       <span className="mx-2">|</span>
       {selected ? (

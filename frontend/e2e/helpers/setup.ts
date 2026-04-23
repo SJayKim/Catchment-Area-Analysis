@@ -129,8 +129,8 @@ export async function waitForCard(page: Page, cardType: string, timeout = 30000)
  * StatusBar is the bottom bar with "데이터 기준:" and "선택: {name}"
  */
 export async function getStatusBarText(page: Page): Promise<string> {
-  // StatusBar: div.h-8.bg-gray-50 at the bottom
-  const statusBar = page.locator('.h-8.bg-gray-50').first();
+  // StatusBar: [data-testid="statusbar"] (originally .h-8.bg-gray-50 but that class was overloaded)
+  const statusBar = page.locator('[data-testid="statusbar"]').first();
   const text = await statusBar.textContent({ timeout: 5000 }).catch(() => '');
   return text || '';
 }

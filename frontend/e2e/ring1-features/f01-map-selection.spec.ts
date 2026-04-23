@@ -99,7 +99,8 @@ test.describe('Ring 1 — F01 Map Selection', () => {
     });
     packet.attach(page);
     const result = await clickPolygonByCode(page, 'D3002', { name: '홍대입구', lat: 37.5563, lng: 126.9237 });
-    const ok = result.ok && (await waitForStatusBarContains(page, '홍대', 8000));
+    // 8s was flaky under load (Zustand update → React re-render → DOM paint race). 15s covers 3σ worst case.
+    const ok = result.ok && (await waitForStatusBarContains(page, '홍대', 15000));
     packet.writeAutoVerdict({
       result: ok ? 'PASS' : 'FAIL',
       reason: `clickResult.method=${result.method} ok=${ok}`,

@@ -171,7 +171,7 @@ test.describe('Ring 3 — P0 Regression', () => {
     await page.waitForTimeout(200);
     await clickPolygonByCode(page, 'D3003', { name: '건대입구', lat: 37.5404, lng: 127.069 });
     await page.waitForTimeout(2000);
-    const sb = (await page.locator('.h-8').first().textContent()) || '';
+    const sb = (await page.locator('[data-testid="statusbar"]').first().textContent()) || '';
     const finalOk = sb.includes('건대') && !sb.includes('강남') && !sb.includes('홍대');
     packet.writeAutoVerdict({
       result: finalOk ? 'PASS' : 'FAIL',

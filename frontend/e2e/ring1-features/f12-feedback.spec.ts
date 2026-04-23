@@ -11,8 +11,13 @@ test.describe('Ring 1 — F12 Feedback FAB', () => {
   test('1-F12-FAB-KAKAO — FAB opens kakao URL when NEXT_PUBLIC_KAKAO_CHANNEL_URL set', async ({ page }) => {
     await page.goto('/');
     const fab = page.locator('[data-testid="feedback-fab"]');
-    const mode = await fab.getAttribute('data-feedback-mode').catch(() => null);
-
+    // FeedbackFab returns null when both env vars are unset → element never attaches.
+    // `locator.getAttribute()` waits indefinitely in that case, so precheck count first.
+    if ((await fab.count()) === 0) {
+      test.skip(true, 'Feedback FAB not rendered (NEXT_PUBLIC_KAKAO_CHANNEL_URL / FEEDBACK_FORM_URL unset)');
+      return;
+    }
+    const mode = await fab.getAttribute('data-feedback-mode');
     if (mode === 'hidden' || mode === null) {
       test.skip(true, 'Feedback URL env not configured in this run');
       return;

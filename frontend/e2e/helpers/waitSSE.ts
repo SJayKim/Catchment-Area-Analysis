@@ -44,7 +44,7 @@ export async function waitForCardText(
 export async function waitForStatusBarContains(page: Page, needle: string, timeoutMs = 10000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const sb = await page.locator('.h-8').first().textContent().catch(() => '');
+    const sb = await page.locator('[data-testid="statusbar"]').first().textContent().catch(() => '');
     if (sb && sb.includes(needle)) return true;
     await page.waitForTimeout(200);
   }

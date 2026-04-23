@@ -15,6 +15,20 @@
 > **2026-04-23 F-01 fix + Accuracy Gap W1/W2/W3 구현** ⭐: ETL 8 컬럼 NULL 버그 해소(21,333 행 재적재) + Entity Linking(pg_trgm 대체: difflib+type boost) + Abstention(classify_tool_results+attribution rule) + Coreference Rewriter(Tier1 rule+Tier2 LLM) + 배제 토큰(말고/대신/빼고) + learned_aliases 테이블(alembic 004). [Plan F-01](../plan/fix/etl-sales-column-rename-2026-04-23.md) · [Plan Accuracy Gap](../plan/fix/accuracy-gap-fix.md)
 > **2026-04-23 Refactoring Phase 1 Plan 작성**: 7 기준(R1~R7) 기반 저위험/중위험 항목 1 Pass 묶음. Pass1 = singleflight 삭제 + 레거시 E2E 8건 삭제 + status 압축 + Any import 정리. Pass2 = errors.py 래퍼 통합 + blanket except 9건 좁히기 + respond.py 헬퍼 분리 + chatStore slice 분할. [Plan](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — 구현 미착수
 
+## 2026-04-23 (저녁, Pass 2) — E2E Spec Hotfix → PASS 100%
+
+- **Plan**: [e2e-spec-hotfix-2026-04-23.md](../plan/qa/e2e-spec-hotfix-2026-04-23.md)
+- **변경 (5 spec + 1 component)**:
+  - `StatusBar.tsx` `data-testid="statusbar"` 추가 (Tailwind `.h-8` 셀렉터 5곳 충돌 근본 해소)
+  - `waitSSE.ts` / `setup.ts` / `p0-regression.spec.ts` 세 곳 `.h-8` → `[data-testid="statusbar"]`
+  - `f12-feedback.spec.ts` `fab.count()===0` precheck 로 skip-guard 보강 (unlimited `getAttribute` timeout 회피)
+  - `reg-2026-04-17.spec.ts` `PY` 기본값 `'python'` → `'python3'` (Playwright jammy 이미지)
+  - `f01-map-selection.spec.ts` F01-H3 waitForStatusBarContains 8s → 15s
+- **결과**: ring0~3 78 test **66 PASS / 0 FAIL / 12 SKIP** (이전 94/106/4FAIL 대비 FAIL 소거). prod-smoke 7/7 재확인 — StatusBar HTML attribute 추가 영향 없음.
+- **Memory 후보 (run log 에 기록)**: 셀렉터 충돌 (h-8), Playwright 이미지 python 미존재, `locator.getAttribute` unlimited wait.
+
+---
+
 ## 2026-04-23 (저녁) — E2E 전체 회귀 Run (v0.4.0 검증)
 
 - **Scope**: prod-smoke (live prod, 4 viewport × 7 test) + ring0~3 (e2e stack, chromium) + ops 전수.
