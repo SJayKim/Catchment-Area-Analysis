@@ -1,8 +1,9 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-23
-> **프로덕션 동기화 완료 ✅ — `a5bef97` 기반 재배포, 13 커밋 밀려 있던 운영을 HEAD 로 끌어올림**
-> 프로덕션: `marketscope.robitlabs.co.kr` 라이브 — prod-smoke E2E 7/7 PASS (58s)
+> 최종 갱신: 2026-04-23 (저녁)
+> **프로덕션 v0.4.0 동기화 완료 ✅ — `c6cc60e` 기반 재배포 (저녁), 오전 `60b6de3` 대비 6 커밋 / +13,038 / -577 반영**
+> 프로덕션: `marketscope.robitlabs.co.kr` 라이브 — prod-smoke + 신규 2 endpoint 검증 PASS
+> 배포 변경: alembic 004 (`learned_aliases`) · `/`=랜딩/`/app`=챗맵 라우트 분리 · Planner Entity Linking + Abstention + Rewriter · `/api/districts/{code}/preview` · `/api/feedback/score`
 > E2E 회귀: Ring 0~3 전체 그린 (Mock 39/39 · Real 24/24) + Ops OPS-01/02 + L1 Langfuse 7/7 + prod-smoke 7/7
 > 관측성 L1: Langfuse **trace 실제 발행 확인 완료** (dev 로컬 sanity — `done.trace_id=9d59e6455eeb42f685b71f8057915377` + `agent_done` 로그 동일 값 매핑) · langfuse SDK **v2→v3 포팅** (v2 의 legacy langchain 의존 해소) · `agent_done` 운영 로그 조인 추가. 프로덕션 env 배선 완료. [Plan](../plan/infra/llmops-l1-verification.md)
 > **2026-04-23 env 관례 분리**: `.env`=프로덕션 · `.env.dev`=로컬 개발 (pydantic/Next.js/scripts 전부 `.env.dev` 우선 로드) · Langfuse prod 워크스페이스 키 분리(`pk-lf-07a3fa78…`) + `LANGFUSE_TRACING_ENVIRONMENT` 태깅으로 dev/prod trace 격리
@@ -12,6 +13,32 @@
 > **2026-04-23 Mobile Responsive Plan Phase A+B+C 구현**: viewport/breakpoint/touch-target · BottomSheet 3-snap + BottomNav 2-tab · IME/VisualViewport 가드 + auto-scroll FAB. tsc/eslint/build 0 errors. Phase D/E/F (PWA·Perf·A11y/E2E) 미착수. [Plan](../plan/ui/mobile-responsive.md)
 > **2026-04-23 F-01 fix + Accuracy Gap W1/W2/W3 구현** ⭐: ETL 8 컬럼 NULL 버그 해소(21,333 행 재적재) + Entity Linking(pg_trgm 대체: difflib+type boost) + Abstention(classify_tool_results+attribution rule) + Coreference Rewriter(Tier1 rule+Tier2 LLM) + 배제 토큰(말고/대신/빼고) + learned_aliases 테이블(alembic 004). [Plan F-01](../plan/fix/etl-sales-column-rename-2026-04-23.md) · [Plan Accuracy Gap](../plan/fix/accuracy-gap-fix.md)
 > **2026-04-23 Refactoring Phase 1 Plan 작성**: 7 기준(R1~R7) 기반 저위험/중위험 항목 1 Pass 묶음. Pass1 = singleflight 삭제 + 레거시 E2E 8건 삭제 + status 압축 + Any import 정리. Pass2 = errors.py 래퍼 통합 + blanket except 9건 좁히기 + respond.py 헬퍼 분리 + chatStore slice 분할. [Plan](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — 구현 미착수
+
+## 2026-04-23 (저녁) — v0.4.0 프로덕션 재배포 `c6cc60e`
+
+- **Before**: `60b6de3` (오전 배포, 9h ago)
+- **After**: `c6cc60e` v0.4.0 — migrate 003→004, 새 라우트 (`/`=랜딩, `/app`=챗맵), 신규 API 2종
+- **Plan**: [prod-deploy-v0.4.0-2026-04-23.md](../plan/infra/prod-deploy-v0.4.0-2026-04-23.md)
+- **실행**:
+  - `docker compose -f docker-compose.prod.yml build backend frontend migrate seed` (~55s)
+  - `docker compose -f docker-compose.prod.yml up -d` → migrate exit 0 (cleanup 0 rows + alembic upgrade head 003→004) → seed exit 0 → backend healthy ~23s
+- **DB 변경**: `learned_aliases(alias PK, code FK→category_metadata, confidence, source, hit_count, created_at, last_used_at)` + `idx_learned_aliases_code`. Additive, 기존 데이터 무영향.
+- **라우트 cut-over**: `/` → 랜딩(F11, size=26.5KB), `/app` → 기존 챗맵(size=16.1KB Next.js chunk). `/proxy/kakao-sdk` 200 유지, `/api/kakao-sdk` 404 유지.
+- **검증**:
+  - P1 `/` 200 + landing marker 1
+  - P2 `/proxy/kakao-sdk` 200 + 4095 bytes
+  - P3 polygons 500 features Polygon
+  - P4 `강남역` → 3120189
+  - P5 SSE summary: thinking/tool/card/text 전수, `perStoreSales=27,307,409` 원/월 (월 단위 정상, 5M~100M 범위)
+  - P6 recommend: 편의점 `per_store_sales=208,887,585` 원/월 (월 단위 정상, <1B)
+  - P7 `/app` 200 + app markers
+  - N1 `/api/districts/3120189/preview` 200 + `top_categories` 풍부한 F13 preview
+  - N2 `/api/feedback/score` → 빈 payload 422 (validation), 정상 payload 204 (Langfuse idempotent drop)
+- **prod-smoke spec 갱신**: P7 `page.goto(BASE)` → `page.goto(BASE + '/app')` — 랜딩 분리 대응.
+- **이미지 업데이트**: backend `catchment-area-analysis-backend` + frontend `a5d385012a6f` + migrate 동일 이미지 재사용.
+- **배포 메모**: `seed` 서비스는 `postgis/postgis:16-3.4` 베이스 이미지 재사용(build 없음). migrate 는 backend 와 동일 context → 한 번 빌드로 둘 다 갱신.
+
+---
 
 ## 2026-04-23 — Env 관례 분리 (.env=prod, .env.dev=로컬)
 

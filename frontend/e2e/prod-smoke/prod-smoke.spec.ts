@@ -184,7 +184,8 @@ test.describe('Production smoke', () => {
       if (msg.type() === 'error') consoleErrors.push(msg.text());
     });
 
-    await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+    // v0.4.0 라우트: `/` = 랜딩(F11), `/app` = 기존 챗+맵. Kakao 맵은 `/app` 에만 주입.
+    await page.goto(`${BASE}/app`, { waitUntil: 'domcontentloaded' });
 
     // Wait for Kakao SDK to finish loading (MapContainer triggers autoload=false → kakao.maps.load)
     await page.waitForFunction(
