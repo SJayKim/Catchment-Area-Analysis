@@ -1,0 +1,1095 @@
+{
+  "meta": {
+    "quarter": "2025Q4",
+    "samples": [
+      [
+        "3120189",
+        "강남역"
+      ],
+      [
+        "3120103",
+        "홍대입구역"
+      ],
+      [
+        "3120053",
+        "건대입구역"
+      ],
+      [
+        "3120028",
+        "명동"
+      ],
+      [
+        "3120043",
+        "서울역"
+      ]
+    ]
+  },
+  "sales_audit": [
+    {
+      "name": "강남역",
+      "district_code": "3120189",
+      "raw_db_sum_monthly_sales": 418704504599,
+      "checks": [
+        {
+          "field": "total_monthly_sales",
+          "tool": 139568168199,
+          "expected_raw//3": 139568168199,
+          "match": true
+        },
+        {
+          "field": "total_sales_count",
+          "tool": 3954377,
+          "expected_raw//3": 3954377,
+          "match": true
+        },
+        {
+          "field": "weekday_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "weekend_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "gender_sales.male",
+          "tool": 56371934297,
+          "expected_raw//3": 56371934297,
+          "match": true
+        },
+        {
+          "field": "gender_sales.female",
+          "tool": 74078440826,
+          "expected_raw//3": 74078440826,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "홍대입구역",
+      "district_code": "3120103",
+      "raw_db_sum_monthly_sales": 159600840855,
+      "checks": [
+        {
+          "field": "total_monthly_sales",
+          "tool": 53200280285,
+          "expected_raw//3": 53200280285,
+          "match": true
+        },
+        {
+          "field": "total_sales_count",
+          "tool": 1924711,
+          "expected_raw//3": 1924711,
+          "match": true
+        },
+        {
+          "field": "weekday_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "weekend_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "gender_sales.male",
+          "tool": 21829009894,
+          "expected_raw//3": 21829009894,
+          "match": true
+        },
+        {
+          "field": "gender_sales.female",
+          "tool": 28905902477,
+          "expected_raw//3": 28905902477,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "건대입구역",
+      "district_code": "3120053",
+      "raw_db_sum_monthly_sales": 78003493953,
+      "checks": [
+        {
+          "field": "total_monthly_sales",
+          "tool": 26001164651,
+          "expected_raw//3": 26001164651,
+          "match": true
+        },
+        {
+          "field": "total_sales_count",
+          "tool": 1225891,
+          "expected_raw//3": 1225891,
+          "match": true
+        },
+        {
+          "field": "weekday_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "weekend_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "gender_sales.male",
+          "tool": 11102859717,
+          "expected_raw//3": 11102859717,
+          "match": true
+        },
+        {
+          "field": "gender_sales.female",
+          "tool": 13367063758,
+          "expected_raw//3": 13367063758,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "명동",
+      "district_code": "3120028",
+      "raw_db_sum_monthly_sales": 127213318942,
+      "checks": [
+        {
+          "field": "total_monthly_sales",
+          "tool": 42404439647,
+          "expected_raw//3": 42404439647,
+          "match": true
+        },
+        {
+          "field": "total_sales_count",
+          "tool": 1564692,
+          "expected_raw//3": 1564692,
+          "match": true
+        },
+        {
+          "field": "weekday_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "weekend_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "gender_sales.male",
+          "tool": 14738807578,
+          "expected_raw//3": 14738807578,
+          "match": true
+        },
+        {
+          "field": "gender_sales.female",
+          "tool": 22166978353,
+          "expected_raw//3": 22166978353,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "서울역",
+      "district_code": "3120043",
+      "raw_db_sum_monthly_sales": 60183523736,
+      "checks": [
+        {
+          "field": "total_monthly_sales",
+          "tool": 20061174578,
+          "expected_raw//3": 20061174578,
+          "match": true
+        },
+        {
+          "field": "total_sales_count",
+          "tool": 851815,
+          "expected_raw//3": 851815,
+          "match": true
+        },
+        {
+          "field": "weekday_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "weekend_sales",
+          "tool": 0,
+          "expected_raw//3": 0,
+          "match": true
+        },
+        {
+          "field": "gender_sales.male",
+          "tool": 8687592475,
+          "expected_raw//3": 8687592475,
+          "match": true
+        },
+        {
+          "field": "gender_sales.female",
+          "tool": 5703237005,
+          "expected_raw//3": 5703237005,
+          "match": true
+        }
+      ],
+      "all_match": true
+    }
+  ],
+  "flpop_audit": [
+    {
+      "name": "강남역",
+      "district_code": "3120189",
+      "checks": [
+        {
+          "slot": 0,
+          "tool": 903516,
+          "db": 903516,
+          "match": true
+        },
+        {
+          "slot": 6,
+          "tool": 1389371,
+          "db": 1389371,
+          "match": true
+        },
+        {
+          "slot": 11,
+          "tool": 1360561,
+          "db": 1360561,
+          "match": true
+        },
+        {
+          "slot": 14,
+          "tool": 1414726,
+          "db": 1414726,
+          "match": true
+        },
+        {
+          "slot": 17,
+          "tool": 1653367,
+          "db": 1653367,
+          "match": true
+        },
+        {
+          "slot": 21,
+          "tool": 731661,
+          "db": 731661,
+          "match": true
+        },
+        {
+          "field": "daily_avg",
+          "tool": 7453202,
+          "expected_sum_across_slots": 7453202,
+          "match": true,
+          "note": "daily_avg field is SUM of 6 time_slot counts — potentially double-counts individuals"
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "홍대입구역",
+      "district_code": "3120103",
+      "checks": [
+        {
+          "slot": 0,
+          "tool": 759987,
+          "db": 759987,
+          "match": true
+        },
+        {
+          "slot": 6,
+          "tool": 543843,
+          "db": 543843,
+          "match": true
+        },
+        {
+          "slot": 11,
+          "tool": 554696,
+          "db": 554696,
+          "match": true
+        },
+        {
+          "slot": 14,
+          "tool": 694293,
+          "db": 694293,
+          "match": true
+        },
+        {
+          "slot": 17,
+          "tool": 988851,
+          "db": 988851,
+          "match": true
+        },
+        {
+          "slot": 21,
+          "tool": 564539,
+          "db": 564539,
+          "match": true
+        },
+        {
+          "field": "daily_avg",
+          "tool": 4106209,
+          "expected_sum_across_slots": 4106209,
+          "match": true,
+          "note": "daily_avg field is SUM of 6 time_slot counts — potentially double-counts individuals"
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "건대입구역",
+      "district_code": "3120053",
+      "checks": [
+        {
+          "slot": 0,
+          "tool": 465878,
+          "db": 465878,
+          "match": true
+        },
+        {
+          "slot": 6,
+          "tool": 440712,
+          "db": 440712,
+          "match": true
+        },
+        {
+          "slot": 11,
+          "tool": 363841,
+          "db": 363841,
+          "match": true
+        },
+        {
+          "slot": 14,
+          "tool": 420721,
+          "db": 420721,
+          "match": true
+        },
+        {
+          "slot": 17,
+          "tool": 687304,
+          "db": 687304,
+          "match": true
+        },
+        {
+          "slot": 21,
+          "tool": 392947,
+          "db": 392947,
+          "match": true
+        },
+        {
+          "field": "daily_avg",
+          "tool": 2771403,
+          "expected_sum_across_slots": 2771403,
+          "match": true,
+          "note": "daily_avg field is SUM of 6 time_slot counts — potentially double-counts individuals"
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "명동",
+      "district_code": "3120028",
+      "checks": [
+        {
+          "slot": 0,
+          "tool": 115761,
+          "db": 115761,
+          "match": true
+        },
+        {
+          "slot": 6,
+          "tool": 399806,
+          "db": 399806,
+          "match": true
+        },
+        {
+          "slot": 11,
+          "tool": 449913,
+          "db": 449913,
+          "match": true
+        },
+        {
+          "slot": 14,
+          "tool": 470188,
+          "db": 470188,
+          "match": true
+        },
+        {
+          "slot": 17,
+          "tool": 446557,
+          "db": 446557,
+          "match": true
+        },
+        {
+          "slot": 21,
+          "tool": 126467,
+          "db": 126467,
+          "match": true
+        },
+        {
+          "field": "daily_avg",
+          "tool": 2008692,
+          "expected_sum_across_slots": 2008692,
+          "match": true,
+          "note": "daily_avg field is SUM of 6 time_slot counts — potentially double-counts individuals"
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "서울역",
+      "district_code": "3120043",
+      "checks": [
+        {
+          "slot": 0,
+          "tool": 59150,
+          "db": 59150,
+          "match": true
+        },
+        {
+          "slot": 6,
+          "tool": 255755,
+          "db": 255755,
+          "match": true
+        },
+        {
+          "slot": 11,
+          "tool": 250275,
+          "db": 250275,
+          "match": true
+        },
+        {
+          "slot": 14,
+          "tool": 246256,
+          "db": 246256,
+          "match": true
+        },
+        {
+          "slot": 17,
+          "tool": 162562,
+          "db": 162562,
+          "match": true
+        },
+        {
+          "slot": 21,
+          "tool": 48062,
+          "db": 48062,
+          "match": true
+        },
+        {
+          "field": "daily_avg",
+          "tool": 1022060,
+          "expected_sum_across_slots": 1022060,
+          "match": true,
+          "note": "daily_avg field is SUM of 6 time_slot counts — potentially double-counts individuals"
+        }
+      ],
+      "all_match": true
+    }
+  ],
+  "store_audit": [
+    {
+      "name": "강남역",
+      "district_code": "3120189",
+      "checks": [
+        {
+          "field": "total_stores",
+          "tool": 5111,
+          "db": 5111,
+          "match": true
+        },
+        {
+          "field": "open_count",
+          "tool": 96,
+          "db": 96,
+          "match": true
+        },
+        {
+          "field": "close_count",
+          "tool": 118,
+          "db": 118,
+          "match": true
+        },
+        {
+          "field": "franchise_count",
+          "tool": 494,
+          "db": 494,
+          "match": true
+        },
+        {
+          "field": "close_rate",
+          "tool": 2.3,
+          "expected": 2.3,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "홍대입구역",
+      "district_code": "3120103",
+      "checks": [
+        {
+          "field": "total_stores",
+          "tool": 2981,
+          "db": 2981,
+          "match": true
+        },
+        {
+          "field": "open_count",
+          "tool": 95,
+          "db": 95,
+          "match": true
+        },
+        {
+          "field": "close_count",
+          "tool": 120,
+          "db": 120,
+          "match": true
+        },
+        {
+          "field": "franchise_count",
+          "tool": 259,
+          "db": 259,
+          "match": true
+        },
+        {
+          "field": "close_rate",
+          "tool": 4.0,
+          "expected": 4.0,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "건대입구역",
+      "district_code": "3120053",
+      "checks": [
+        {
+          "field": "total_stores",
+          "tool": 1545,
+          "db": 1545,
+          "match": true
+        },
+        {
+          "field": "open_count",
+          "tool": 55,
+          "db": 55,
+          "match": true
+        },
+        {
+          "field": "close_count",
+          "tool": 59,
+          "db": 59,
+          "match": true
+        },
+        {
+          "field": "franchise_count",
+          "tool": 264,
+          "db": 264,
+          "match": true
+        },
+        {
+          "field": "close_rate",
+          "tool": 3.8,
+          "expected": 3.8,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "명동",
+      "district_code": "3120028",
+      "checks": [
+        {
+          "field": "total_stores",
+          "tool": 1712,
+          "db": 1712,
+          "match": true
+        },
+        {
+          "field": "open_count",
+          "tool": 64,
+          "db": 64,
+          "match": true
+        },
+        {
+          "field": "close_count",
+          "tool": 44,
+          "db": 44,
+          "match": true
+        },
+        {
+          "field": "franchise_count",
+          "tool": 237,
+          "db": 237,
+          "match": true
+        },
+        {
+          "field": "close_rate",
+          "tool": 2.6,
+          "expected": 2.6,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "서울역",
+      "district_code": "3120043",
+      "checks": [
+        {
+          "field": "total_stores",
+          "tool": 877,
+          "db": 877,
+          "match": true
+        },
+        {
+          "field": "open_count",
+          "tool": 21,
+          "db": 21,
+          "match": true
+        },
+        {
+          "field": "close_count",
+          "tool": 21,
+          "db": 21,
+          "match": true
+        },
+        {
+          "field": "franchise_count",
+          "tool": 168,
+          "db": 168,
+          "match": true
+        },
+        {
+          "field": "close_rate",
+          "tool": 2.4,
+          "expected": 2.4,
+          "match": true
+        }
+      ],
+      "all_match": true
+    }
+  ],
+  "summary_insights_audit": [
+    {
+      "name": "강남역",
+      "district_code": "3120189",
+      "checks": [
+        {
+          "field": "perStoreSales",
+          "tool": 27307409,
+          "expected": 27307409,
+          "match": true
+        },
+        {
+          "field": "franchiseRatio",
+          "tool": 9.7,
+          "expected": 9.7,
+          "match": true
+        }
+      ],
+      "all_match": true,
+      "tool_insights": {
+        "ageInsight": "20대 (26.8%)",
+        "perStoreSales": 27307409,
+        "franchiseRatio": 9.7
+      },
+      "expected_insights": {
+        "perStoreSales": 27307409,
+        "franchiseRatio": 9.7
+      }
+    },
+    {
+      "name": "홍대입구역",
+      "district_code": "3120103",
+      "checks": [
+        {
+          "field": "perStoreSales",
+          "tool": 17846454,
+          "expected": 17846454,
+          "match": true
+        },
+        {
+          "field": "franchiseRatio",
+          "tool": 8.7,
+          "expected": 8.7,
+          "match": true
+        }
+      ],
+      "all_match": true,
+      "tool_insights": {
+        "genderInsight": "여성 비중 높음 (여성 52.7%, 차이 5.4%p)",
+        "ageInsight": "20대 (43.5%)",
+        "perStoreSales": 17846454,
+        "franchiseRatio": 8.7
+      },
+      "expected_insights": {
+        "perStoreSales": 17846454,
+        "franchiseRatio": 8.7
+      }
+    },
+    {
+      "name": "건대입구역",
+      "district_code": "3120053",
+      "checks": [
+        {
+          "field": "perStoreSales",
+          "tool": 16829233,
+          "expected": 16829233,
+          "match": true
+        },
+        {
+          "field": "franchiseRatio",
+          "tool": 17.1,
+          "expected": 17.1,
+          "match": true
+        }
+      ],
+      "all_match": true,
+      "tool_insights": {
+        "genderInsight": "여성 비중 높음 (여성 54.7%, 차이 9.4%p)",
+        "ageInsight": "20대 (41.5%)",
+        "perStoreSales": 16829233,
+        "franchiseRatio": 17.1
+      },
+      "expected_insights": {
+        "perStoreSales": 16829233,
+        "franchiseRatio": 17.1
+      }
+    },
+    {
+      "name": "명동",
+      "district_code": "3120028",
+      "checks": [
+        {
+          "field": "perStoreSales",
+          "tool": 24768948,
+          "expected": 24768948,
+          "match": true
+        },
+        {
+          "field": "franchiseRatio",
+          "tool": 13.8,
+          "expected": 13.8,
+          "match": true
+        }
+      ],
+      "all_match": true,
+      "tool_insights": {
+        "genderInsight": "여성 비중 높음 (여성 53.5%, 차이 7.0%p)",
+        "ageInsight": "20대 (22.5%)",
+        "perStoreSales": 24768948,
+        "franchiseRatio": 13.8
+      },
+      "expected_insights": {
+        "perStoreSales": 24768948,
+        "franchiseRatio": 13.8
+      }
+    },
+    {
+      "name": "서울역",
+      "district_code": "3120043",
+      "checks": [
+        {
+          "field": "perStoreSales",
+          "tool": 22874771,
+          "expected": 22874771,
+          "match": true
+        },
+        {
+          "field": "franchiseRatio",
+          "tool": 19.2,
+          "expected": 19.2,
+          "match": true
+        }
+      ],
+      "all_match": true,
+      "tool_insights": {
+        "ageInsight": "40대 (25.8%)",
+        "perStoreSales": 22874771,
+        "franchiseRatio": 19.2
+      },
+      "expected_insights": {
+        "perStoreSales": 22874771,
+        "franchiseRatio": 19.2
+      }
+    }
+  ],
+  "simulate_audit": [
+    {
+      "name": "강남역",
+      "district_code": "3120189",
+      "category": "CS200001",
+      "basis": {
+        "total_monthly_sales": 1981036955,
+        "store_count": 164,
+        "additional_competitors": 0,
+        "effective_stores": 164,
+        "unit_price": null,
+        "default_unit_price": null,
+        "price_ratio": 1.0
+      },
+      "simulation": {
+        "low": 4239902,
+        "avg": 12079493,
+        "high": 26586965
+      },
+      "checks": [
+        {
+          "field": "simulation.avg",
+          "tool": 12079493,
+          "expected": 12079493,
+          "match": true
+        },
+        {
+          "field": "simulation.low",
+          "tool": 4239902,
+          "expected": 4239902,
+          "match": true
+        },
+        {
+          "field": "simulation.high",
+          "tool": 26586965,
+          "expected": 26586965,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "홍대입구역",
+      "district_code": "3120103",
+      "category": "CS200001",
+      "basis": {
+        "total_monthly_sales": 73847105,
+        "store_count": 44,
+        "additional_competitors": 0,
+        "effective_stores": 44,
+        "unit_price": null,
+        "default_unit_price": null,
+        "price_ratio": 1.0
+      },
+      "simulation": {
+        "low": 589098,
+        "avg": 1678343,
+        "high": 3694033
+      },
+      "checks": [
+        {
+          "field": "simulation.avg",
+          "tool": 1678343,
+          "expected": 1678343,
+          "match": true
+        },
+        {
+          "field": "simulation.low",
+          "tool": 589098,
+          "expected": 589098,
+          "match": true
+        },
+        {
+          "field": "simulation.high",
+          "tool": 3694033,
+          "expected": 3694033,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "건대입구역",
+      "district_code": "3120053",
+      "category": "CS200001",
+      "basis": {
+        "total_monthly_sales": 0,
+        "store_count": 6,
+        "additional_competitors": 0,
+        "effective_stores": 6,
+        "unit_price": null,
+        "default_unit_price": null,
+        "price_ratio": 1.0
+      },
+      "simulation": {
+        "low": 0,
+        "avg": 0,
+        "high": 0
+      },
+      "checks": [
+        {
+          "field": "simulation.avg",
+          "tool": 0,
+          "expected": 0,
+          "match": true
+        },
+        {
+          "field": "simulation.low",
+          "tool": 0,
+          "expected": 0,
+          "match": true
+        },
+        {
+          "field": "simulation.high",
+          "tool": 0,
+          "expected": 0,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "명동",
+      "district_code": "3120028",
+      "category": "CS200001",
+      "basis": {
+        "total_monthly_sales": 0,
+        "store_count": 5,
+        "additional_competitors": 0,
+        "effective_stores": 5,
+        "unit_price": null,
+        "default_unit_price": null,
+        "price_ratio": 1.0
+      },
+      "simulation": {
+        "low": 0,
+        "avg": 0,
+        "high": 0
+      },
+      "checks": [
+        {
+          "field": "simulation.avg",
+          "tool": 0,
+          "expected": 0,
+          "match": true
+        },
+        {
+          "field": "simulation.low",
+          "tool": 0,
+          "expected": 0,
+          "match": true
+        },
+        {
+          "field": "simulation.high",
+          "tool": 0,
+          "expected": 0,
+          "match": true
+        }
+      ],
+      "all_match": true
+    },
+    {
+      "name": "서울역",
+      "district_code": "3120043",
+      "category": "CS200001",
+      "basis": {
+        "total_monthly_sales": 0,
+        "store_count": 5,
+        "additional_competitors": 0,
+        "effective_stores": 5,
+        "unit_price": null,
+        "default_unit_price": null,
+        "price_ratio": 1.0
+      },
+      "simulation": {
+        "low": 0,
+        "avg": 0,
+        "high": 0
+      },
+      "checks": [
+        {
+          "field": "simulation.avg",
+          "tool": 0,
+          "expected": 0,
+          "match": true
+        },
+        {
+          "field": "simulation.low",
+          "tool": 0,
+          "expected": 0,
+          "match": true
+        },
+        {
+          "field": "simulation.high",
+          "tool": 0,
+          "expected": 0,
+          "match": true
+        }
+      ],
+      "all_match": true
+    }
+  ],
+  "compare_audit": {
+    "codes": [
+      "3120189",
+      "3120103",
+      "3120053"
+    ],
+    "checks": [
+      {
+        "winner": "highest_pop",
+        "tool": "강남역",
+        "expected": "강남역",
+        "match": true
+      },
+      {
+        "winner": "highest_sales",
+        "tool": "강남역",
+        "expected": "강남역",
+        "match": true
+      },
+      {
+        "winner": "lowest_close_rate",
+        "tool": "강남역",
+        "expected": "강남역",
+        "match": true
+      },
+      {
+        "winner": "best_efficiency",
+        "tool": "강남역",
+        "expected": "강남역",
+        "match": true
+      }
+    ],
+    "all_match": true,
+    "districts_summary": {
+      "3120189": {
+        "district_name": "강남역",
+        "floating_pop": 7453202,
+        "monthly_sales": 139568168199,
+        "store_count": 5111,
+        "close_rate": 2.3,
+        "sales_per_store": 27307409
+      },
+      "3120103": {
+        "district_name": "홍대입구역(홍대)",
+        "floating_pop": 4106209,
+        "monthly_sales": 53200280285,
+        "store_count": 2981,
+        "close_rate": 4.0,
+        "sales_per_store": 17846454
+      },
+      "3120053": {
+        "district_name": "건대입구역(건대)",
+        "floating_pop": 2771403,
+        "monthly_sales": 26001164651,
+        "store_count": 1545,
+        "close_rate": 3.8,
+        "sales_per_store": 16829233
+      }
+    }
+  }
+}

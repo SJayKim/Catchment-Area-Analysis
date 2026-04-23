@@ -6,6 +6,27 @@
 > E2E 회귀: Ring 0~3 전체 그린 (Mock 39/39 · Real 24/24) + Ops OPS-01/02 + L1 Langfuse 7/7 + prod-smoke 7/7
 > 관측성 L1: Langfuse trace wiring 완료 (graceful degrade · SSE `done.trace_id`), **프로덕션 env 배선 완료**
 > 다음 권장: Accuracy Gap Fix W1~W4 (정확성 74 → 85+). [Plan](../plan/fix/accuracy-gap-fix.md) · Phase 2 착수 전 선행 권장
+> **2026-04-23 신규 Audit**: Data Integrity Audit 에서 **ETL 키 불일치 (F-01, HIGH)** + **Comparison intent 수치 hallucination (F-02, HIGH)** 발견. [Report](../qa/runs/data-integrity-audit-2026-04-23.md)
+
+## 2026-04-23 — Data Integrity Audit (Phase 1~3)
+
+- **Report**: [docs/qa/runs/data-integrity-audit-2026-04-23.md](../qa/runs/data-integrity-audit-2026-04-23.md)
+- **Plan**: [docs/plan/qa/data-integrity-audit.md](../plan/qa/data-integrity-audit.md)
+- **Scope**: 5 sample 상권(강남/홍대/건대/명동/서울역) × 2025Q4 — (1) API↔DB 적재 완전성, (2) Tool/Repository 계산 정확성, (3) LLM 응답 hallucination
+- **Verdict**: ETL **FAIL** (F-01) · Tool/Repo **PASS** 25/25 · LLM Summary **PASS** · LLM Comparison **FAIL** 5/5 (F-02/F-03)
+- **신규 결함 6건**:
+  - 🔴 **F-01** ETL 키 불일치 — `MDW→MDWK`, `WND→WKEND`, `TMZON_1→TMZON_00_06` 으로 `estimated_sales.weekday_sales / weekend_sales / time_1~6_sales` 8개 컬럼 **전량 NULL**
+  - 🔴 **F-02** Comparison intent multi-district 추출 실패 → compare_districts error → Respond LLM 일반지식 hallucination (5/5 세션에서 매출 -39% ~ +79% 오차)
+  - 🟡 **F-03** tool error 시 Respond 가드레일 부재 (accuracy-gap-fix GAP-D)
+  - 🟡 **F-04** `floating_population.daily_avg` 실제 의미는 "분기 시간대별 관측합" — 명명 오해
+  - 🟢 **F-05** LLM store_count 표기 ±2 (5,112 vs 5,111)
+  - 🟢 **F-06** audit script 성능 개선 필요
+- **PASS 근거**: Phase 2 에서 5상권 × 5 tool = 25 체크 전량 일치. `//MONTHS_PER_QUARTER`, 파생 지표, compare argmax, simulate p25/p75 모두 정확.
+- **외부 교차검증**: 홍대 월 532억 / 점포당 1,785만 / 점포 2,981개 — 공개 통계 order-of-magnitude 합리. 단 서울 열린데이터는 **2016년 보정비 + KT 생활인구 추정** 구조적 한계.
+- **즉시 권장 Action**: (1) F-01 5분 fix — `transformers.py:214-229` key rename + 재적재, (2) F-02 comparison guardrail, (3) accuracy-gap-fix W1 착수 격상.
+- **신규 memory**: `feedback_etl_api_column_rename.md`, `feedback_comparison_intent_halluc.md`
+
+---
 
 ## 2026-04-23 — 운영 재배포 (HEAD 동기화)
 

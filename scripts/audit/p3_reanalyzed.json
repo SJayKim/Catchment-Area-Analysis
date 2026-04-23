@@ -1,0 +1,423 @@
+{
+  "sessions": [
+    {
+      "intent": "summary",
+      "district_code": "3120189",
+      "message": "강남역 상권 요약해줘",
+      "raw_suspicious_count": 2,
+      "confirmed_hallucination_count": 1,
+      "near_match_count": 1,
+      "confirmed": [
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_ratio": 0.6086871453727255
+        }
+      ],
+      "near_match": [
+        {
+          "raw": "5,112개",
+          "value": 5112.0,
+          "near": 5111.0
+        }
+      ]
+    },
+    {
+      "intent": "comparison",
+      "district_code": "3120189",
+      "message": "강남역이랑 홍대 비교해줘",
+      "raw_suspicious_count": 10,
+      "confirmed_hallucination_count": 9,
+      "near_match_count": 0,
+      "confirmed": [
+        {
+          "raw": "12만",
+          "value": 120000.0,
+          "closest_ratio": 0.8786470358021583
+        },
+        {
+          "raw": "4천",
+          "value": 4000.0,
+          "closest_ratio": 0.21737429074545098
+        },
+        {
+          "raw": "8만",
+          "value": 80000.0,
+          "closest_ratio": 0.9190980238681055
+        },
+        {
+          "raw": "7천",
+          "value": 7000.0,
+          "closest_ratio": 0.3695949911954608
+        },
+        {
+          "raw": "852억",
+          "value": 85200000000.0,
+          "closest_ratio": 0.1501321983675773
+        }
+      ],
+      "near_match": []
+    },
+    {
+      "intent": "recommendation",
+      "district_code": "3120189",
+      "message": "강남역에 창업하기 좋은 업종 추천해줘",
+      "raw_suspicious_count": 4,
+      "confirmed_hallucination_count": 4,
+      "near_match_count": 0,
+      "confirmed": [
+        {
+          "raw": "3억",
+          "value": 300000000.0,
+          "closest_ratio": 0.9946782028372589
+        },
+        {
+          "raw": "6,115만",
+          "value": 61150000.0,
+          "closest_ratio": 0.9989152403449946
+        },
+        {
+          "raw": "1억",
+          "value": 100000000.0,
+          "closest_ratio": 0.9982260676124196
+        },
+        {
+          "raw": "1,825만",
+          "value": 18250000.0,
+          "closest_ratio": 0.33168321112922655
+        }
+      ],
+      "near_match": []
+    },
+    {
+      "intent": "summary",
+      "district_code": "3120103",
+      "message": "홍대입구역 상권 요약해줘",
+      "raw_suspicious_count": 3,
+      "confirmed_hallucination_count": 2,
+      "near_match_count": 1,
+      "confirmed": [
+        {
+          "raw": "6천",
+          "value": 6000.0,
+          "closest_ratio": 0.9939323517901079
+        },
+        {
+          "raw": "9천",
+          "value": 9000.0,
+          "closest_ratio": 0.9908985276851618
+        }
+      ],
+      "near_match": [
+        {
+          "raw": "2,983개",
+          "value": 2983.0,
+          "near": 2981.0
+        }
+      ]
+    },
+    {
+      "intent": "comparison",
+      "district_code": "3120103",
+      "message": "홍대입구역이랑 홍대 비교해줘",
+      "raw_suspicious_count": 0,
+      "confirmed_hallucination_count": 0,
+      "near_match_count": 0,
+      "confirmed": [],
+      "near_match": []
+    },
+    {
+      "intent": "recommendation",
+      "district_code": "3120103",
+      "message": "홍대입구역에 창업하기 좋은 업종 추천해줘",
+      "raw_suspicious_count": 2,
+      "confirmed_hallucination_count": 2,
+      "near_match_count": 0,
+      "confirmed": [
+        {
+          "raw": "108만",
+          "value": 1080000.0,
+          "closest_ratio": 0.09217667778057564
+        },
+        {
+          "raw": "24시간",
+          "value": 24.0,
+          "closest_ratio": 0.7473684210526316
+        }
+      ],
+      "near_match": []
+    },
+    {
+      "intent": "summary",
+      "district_code": "3120053",
+      "message": "건대입구역 상권 요약해줘",
+      "raw_suspicious_count": 3,
+      "confirmed_hallucination_count": 2,
+      "near_match_count": 1,
+      "confirmed": [
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_ratio": 0.29449838187702265
+        },
+        {
+          "raw": "7천",
+          "value": 7000.0,
+          "closest_ratio": 0.9898152782465983
+        }
+      ],
+      "near_match": [
+        {
+          "raw": "1,545개",
+          "value": 1545.0,
+          "near": 1545.0
+        }
+      ]
+    },
+    {
+      "intent": "comparison",
+      "district_code": "3120053",
+      "message": "건대입구역이랑 홍대 비교해줘",
+      "raw_suspicious_count": 6,
+      "confirmed_hallucination_count": 6,
+      "near_match_count": 0,
+      "confirmed": [
+        {
+          "raw": "11만",
+          "value": 110000.0,
+          "closest_ratio": 0.8399543724465448
+        },
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_ratio": 0.29449838187702265
+        },
+        {
+          "raw": "6만",
+          "value": 60000.0,
+          "closest_ratio": 0.9127023849708426
+        },
+        {
+          "raw": "8천",
+          "value": 8000.0,
+          "closest_ratio": 0.9883603179961123
+        },
+        {
+          "raw": "650억",
+          "value": 65000000000.0,
+          "closest_ratio": 0.22179807421666858
+        }
+      ],
+      "near_match": []
+    },
+    {
+      "intent": "recommendation",
+      "district_code": "3120053",
+      "message": "건대입구역에 창업하기 좋은 업종 추천해줘",
+      "raw_suspicious_count": 2,
+      "confirmed_hallucination_count": 2,
+      "near_match_count": 0,
+      "confirmed": [
+        {
+          "raw": "1억",
+          "value": 100000000.0,
+          "closest_ratio": 0.990993311403648
+        },
+        {
+          "raw": "8,405만",
+          "value": 84050000.0,
+          "closest_ratio": 0.9924298782347661
+        }
+      ],
+      "near_match": []
+    },
+    {
+      "intent": "summary",
+      "district_code": "3120028",
+      "message": "명동 상권 요약해줘",
+      "raw_suspicious_count": 3,
+      "confirmed_hallucination_count": 2,
+      "near_match_count": 1,
+      "confirmed": [
+        {
+          "raw": "8천",
+          "value": 8000.0,
+          "closest_ratio": 0.9829855291925783
+        },
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_ratio": 0.16822429906542055
+        }
+      ],
+      "near_match": [
+        {
+          "raw": "1,712개",
+          "value": 1712.0,
+          "near": 1712.0
+        }
+      ]
+    },
+    {
+      "intent": "comparison",
+      "district_code": "3120028",
+      "message": "명동이랑 홍대 비교해줘",
+      "raw_suspicious_count": 10,
+      "confirmed_hallucination_count": 10,
+      "near_match_count": 0,
+      "confirmed": [
+        {
+          "raw": "15만",
+          "value": 150000.0,
+          "closest_ratio": 0.6809786723608429
+        },
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_ratio": 0.16822429906542055
+        },
+        {
+          "raw": "11만",
+          "value": 110000.0,
+          "closest_ratio": 0.7660510263979514
+        },
+        {
+          "raw": "8천",
+          "value": 8000.0,
+          "closest_ratio": 0.9829855291925783
+        },
+        {
+          "raw": "920억",
+          "value": 92000000000.0,
+          "closest_ratio": 0.7293141973528232
+        }
+      ],
+      "near_match": []
+    },
+    {
+      "intent": "recommendation",
+      "district_code": "3120028",
+      "message": "명동에 창업하기 좋은 업종 추천해줘",
+      "raw_suspicious_count": 2,
+      "confirmed_hallucination_count": 2,
+      "near_match_count": 0,
+      "confirmed": [
+        {
+          "raw": "4억",
+          "value": 400000000.0,
+          "closest_ratio": 0.97286076245428
+        },
+        {
+          "raw": "7,018만",
+          "value": 70180000.0,
+          "closest_ratio": 0.9952384207726034
+        }
+      ],
+      "near_match": []
+    },
+    {
+      "intent": "summary",
+      "district_code": "3120043",
+      "message": "서울역 상권 요약해줘",
+      "raw_suspicious_count": 7,
+      "confirmed_hallucination_count": 7,
+      "near_match_count": 2,
+      "confirmed": [
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_ratio": 0.9921800160309672
+        },
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_ratio": 0.9921800160309672
+        },
+        {
+          "raw": "6천",
+          "value": 6000.0,
+          "closest_ratio": 0.9765400480929014
+        },
+        {
+          "raw": "9천",
+          "value": 9000.0,
+          "closest_ratio": 0.9648100721393521
+        },
+        {
+          "raw": "24시간",
+          "value": 24.0,
+          "closest_ratio": 0.14285714285714285
+        }
+      ],
+      "near_match": [
+        {
+          "raw": "24시간",
+          "value": 24.0,
+          "near": 21.0
+        },
+        {
+          "raw": "24시간",
+          "value": 24.0,
+          "near": 21.0
+        }
+      ]
+    },
+    {
+      "intent": "comparison",
+      "district_code": "3120043",
+      "message": "서울역이랑 홍대 비교해줘",
+      "raw_suspicious_count": 2,
+      "confirmed_hallucination_count": 2,
+      "near_match_count": 0,
+      "confirmed": [
+        {
+          "raw": "15만",
+          "value": 150000.0,
+          "closest_ratio": 0.41350120232253523
+        },
+        {
+          "raw": "10만",
+          "value": 100000.0,
+          "closest_ratio": 0.6090008015483568
+        }
+      ],
+      "near_match": []
+    },
+    {
+      "intent": "recommendation",
+      "district_code": "3120043",
+      "message": "서울역에 창업하기 좋은 업종 추천해줘",
+      "raw_suspicious_count": 4,
+      "confirmed_hallucination_count": 4,
+      "near_match_count": 0,
+      "confirmed": [
+        {
+          "raw": "116만",
+          "value": 1160000.0,
+          "closest_ratio": 0.13496272234506781
+        },
+        {
+          "raw": "4억",
+          "value": 400000000.0,
+          "closest_ratio": 0.9298643911204836
+        },
+        {
+          "raw": "6,055만",
+          "value": 60550000.0,
+          "closest_ratio": 0.9893832222058632
+        },
+        {
+          "raw": "5,269만",
+          "value": 52690000.0,
+          "closest_ratio": 0.9907613869203457
+        }
+      ],
+      "near_match": []
+    }
+  ],
+  "summary": {
+    "total_raw_suspicious": 60,
+    "confirmed_hallucination": 55,
+    "near_match_rounding": 4
+  }
+}

@@ -1,0 +1,579 @@
+{
+  "sessions": [
+    {
+      "message": "강남역 상권 요약해줘",
+      "district_code": "3120189",
+      "card_types": [
+        "summary"
+      ],
+      "tool_calls": [
+        "get_district_summary"
+      ],
+      "ground_truth_count": 29,
+      "text_length": 900,
+      "text_numbers_found": 17,
+      "suspicious_count": 2,
+      "suspicious": [
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_gt_ratio": 0.9782608695652174
+        },
+        {
+          "raw": "5,112개",
+          "value": 5112.0,
+          "closest_gt_ratio": 0.9444347826086956
+        }
+      ],
+      "text_excerpt": "**강남역은 서울 최대 규모의 발달상권으로, 하루 745만명이 몰리는 초대형 상업지역입니다.**\n\n## 📊 핵심 지표 분석\n\n**유동인구**: 하루 평균 745만명으로 서울 평균(9만 2천명) 대비 **81배**에 달하는 압도적 규모입니다. 오후 5시(165만명)에 피크를 기록하는 전형적인 **퇴근형 상권**이며, 20대가 26.8%로 가장 많은 비중을 차지합니다.\n\n**매출 규모**: 월 추정 매출 1,396억원으로 서울 평균(550억원) 대비 **2.5배** 수준입니다. 발달상권 중에서도 **상위 25%**에 속하는 최고 매출 지역입니다.\n\n**점포 현황**: 총 5,112개 점포가 운영 중이며, 점포당 월 매출은 2,731만원입니다. 다만 이는 발달상권 평균 대비 **하위 25%** 수준으로, 점포 밀",
+      "intent": "summary"
+    },
+    {
+      "message": "강남역이랑 홍대 비교해줘",
+      "district_code": "3120189",
+      "card_types": [],
+      "tool_calls": [
+        "compare_districts",
+        "compare_districts",
+        "compare_districts"
+      ],
+      "ground_truth_count": 0,
+      "text_length": 923,
+      "text_numbers_found": 15,
+      "suspicious_count": 10,
+      "suspicious": [
+        {
+          "raw": "12만",
+          "value": 120000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "4천",
+          "value": 4000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "8만",
+          "value": 80000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "7천",
+          "value": 7000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "852억",
+          "value": 85200000000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "4,600만",
+          "value": 46000000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "580억",
+          "value": 58000000000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "3,200만",
+          "value": 32000000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "245개",
+          "value": 245.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "198개",
+          "value": 198.0,
+          "closest_gt_ratio": null
+        }
+      ],
+      "text_excerpt": "강남역과 홍대를 비교분석해드리겠습니다.\n\n**강남역은 직장인 중심의 고매출 상권, 홍대는 대학생·젊은층 중심의 문화상권으로 뚜렷한 차이를 보입니다.**\n\n## 유동인구 비교\n- **강남역**: 하루 12만 4천명 (발달상권 중 최상위권)\n- **홍대**: 하루 8만 7천명 (강남역 대비 70% 수준)\n\n강남역이 압도적으로 많지만, 홍대도 서울 평균을 크게 웃도는 수준입니다.\n\n## 매출 규모 비교\n- **강남역**: 월 852억원, 점포당 4,600만원\n- **홍대**: 월 약 580억원 추정, 점포당 약 3,200만원 추정\n\n강남역이 매출 규모에서 약 47% 우위를 보이며, 점포당 효율성도 높습니다.\n\n## 고객층 특성\n- **강남역**: 30대(32.1%) + 20대(28.5%) = 60.6%, 퇴근 시",
+      "intent": "comparison"
+    },
+    {
+      "message": "강남역에 창업하기 좋은 업종 추천해줘",
+      "district_code": "3120189",
+      "card_types": [
+        "recommend"
+      ],
+      "tool_calls": [
+        "recommend_business"
+      ],
+      "ground_truth_count": 31,
+      "text_length": 1011,
+      "text_numbers_found": 34,
+      "suspicious_count": 4,
+      "suspicious": [
+        {
+          "raw": "3억",
+          "value": 300000000.0,
+          "closest_gt_ratio": 0.16932777359981951
+        },
+        {
+          "raw": "6,115만",
+          "value": 61150000.0,
+          "closest_gt_ratio": 0.42986376753740185
+        },
+        {
+          "raw": "1억",
+          "value": 100000000.0,
+          "closest_gt_ratio": 0.15434724668613423
+        },
+        {
+          "raw": "1,825만",
+          "value": 18250000.0,
+          "closest_gt_ratio": 0.4642336317136113
+        }
+      ],
+      "text_excerpt": "**강남역에서는 편의점이 1순위 추천 업종이지만, 높은 폐업률(29.4%)로 신중한 접근이 필요합니다.**\n\n## 상위 5개 업종 비교 분석\n\n### 🥇 1위: 편의점 (점수 100.0)\n- **점포당 월매출**: 3억 6,115만원 (압도적 1위)\n- **경쟁 현황**: 17개 점포 (밀집도 0.3%, 여유)\n- **고객 매칭**: 73% (20~30대 직장인층과 완벽 매칭)\n- **⚠️ 리스크**: 폐업률 29.4% (고위험) - 높은 임대료와 치열한 경쟁 예상\n\n### 🥈 2위: 서적 (점수 29.3)\n- **점포당 월매출**: 1억 1,825만원\n- **경쟁 현황**: 31개 점포 (밀집도 0.6%, 여유)\n- **✅ 안정성**: 폐업률 0.0% (매우 안전)\n- **한계**: 고객 매칭률 46%로 ",
+      "intent": "recommendation"
+    },
+    {
+      "message": "홍대입구역 상권 요약해줘",
+      "district_code": "3120103",
+      "card_types": [
+        "summary"
+      ],
+      "tool_calls": [
+        "get_district_summary"
+      ],
+      "ground_truth_count": 29,
+      "text_length": 861,
+      "text_numbers_found": 20,
+      "suspicious_count": 3,
+      "suspicious": [
+        {
+          "raw": "6천",
+          "value": 6000.0,
+          "closest_gt_ratio": 0.9347826086956522
+        },
+        {
+          "raw": "9천",
+          "value": 9000.0,
+          "closest_gt_ratio": 0.9021739130434783
+        },
+        {
+          "raw": "2,983개",
+          "value": 2983.0,
+          "closest_gt_ratio": 0.9675760869565218
+        }
+      ],
+      "text_excerpt": "**홍대입구역은 20대 중심의 초대형 발달상권으로, 서울에서 가장 활발한 젊은이 문화 중심지입니다.**\n\n## 유동인구 분석\n하루 평균 **410만 6천명**이 몰리는 서울 최고 수준의 유동인구를 자랑합니다. 발달상권 중에서도 **상위 25%**에 해당하는 규모로, 오후 5시(98만 9천명)에 피크를 찍는 전형적인 **퇴근 후 유흥형 상권**입니다. 특히 **20대가 43.5%**를 차지하며, **여성 비중이 52.7%**로 남성보다 5.4%p 높아 젊은 여성층이 주요 고객입니다.\n\n## 매출 현황\n월 추정 매출 **532억원**으로 발달상권 중 **상위 50%** 수준이지만, 점포당 월 매출은 **1,785만원**으로 발달상권 중 **하위 25%**에 머물러 있습니다. 이는 총 2,983개의 많은 점포가 ",
+      "intent": "summary"
+    },
+    {
+      "message": "홍대입구역이랑 홍대 비교해줘",
+      "district_code": "3120103",
+      "card_types": [],
+      "tool_calls": [
+        "compare_districts",
+        "compare_districts",
+        "compare_districts"
+      ],
+      "ground_truth_count": 0,
+      "text_length": 387,
+      "text_numbers_found": 0,
+      "suspicious_count": 0,
+      "suspicious": [],
+      "text_excerpt": "죄송합니다. 홍대입구역과 홍대를 비교하려고 했는데, 시스템에서 비교 분석을 위한 데이터를 가져오지 못했습니다.\n\n**홍대입구역과 홍대는 실제로는 같은 지역**을 가리키는 경우가 많습니다. 서울시 상권 분류에서는 보통 하나의 상권으로 통합되어 관리됩니다.\n\n대신 다음과 같은 분석을 도와드릴 수 있습니다:\n\n1. **홍대입구역(홍대) 상권 단독 분석** - 유동인구, 매출, 업종 현황 등 종합 분석\n2. **홍대와 유사한 다른 상권과의 비교** - 예를 들어:\n   - 홍대 vs 강남역 (대학가 vs 직장인 상권)\n   - 홍대 vs 신촌 (인근 대학가 상권)\n   - 홍대 vs 이태원 (젊은층 유흥·문화 상권)\n\n어떤 분석을 원하시는지 말씀해 주시면, 구체적인 데이터로 도움드리겠습니다!",
+      "intent": "comparison"
+    },
+    {
+      "message": "홍대입구역에 창업하기 좋은 업종 추천해줘",
+      "district_code": "3120103",
+      "card_types": [
+        "recommend"
+      ],
+      "tool_calls": [
+        "recommend_business"
+      ],
+      "ground_truth_count": 34,
+      "text_length": 1061,
+      "text_numbers_found": 25,
+      "suspicious_count": 2,
+      "suspicious": [
+        {
+          "raw": "108만",
+          "value": 1080000.0,
+          "closest_gt_ratio": 0.9664498529835664
+        },
+        {
+          "raw": "24시간",
+          "value": 24.0,
+          "closest_gt_ratio": 0.14832535885167472
+        }
+      ],
+      "text_excerpt": "**홍대입구역은 편의점이 압도적 1순위 추천 업종으로, 높은 수익성과 안정적 수요가 기대됩니다.**\n\n## 상위 5개 업종 비교 분석\n\n### 🥇 1순위: 편의점 (점수 100.0)\n- **점포당 월매출**: 2억 108만원 — 매우 높은 수익성\n- **경쟁 현황**: 15개 점포 (밀집도 0.5%) — 포화도 여유\n- **고객 매칭**: 63% — 20~30대 젊은층과 잘 맞음\n- **폐업률**: 6.7% (주의 필요하지만 관리 가능한 수준)\n\n### 🥈 2순위: 슈퍼마켓 (점수 20.9)\n- **점포당 월매출**: 3,807만원 — 안정적 수익\n- **경쟁 현황**: 32개 점포 (밀집도 1.1%) — 여전히 여유\n- **고객 매칭**: 75% — 지역 주민층과 매우 잘 맞음\n- **폐업률**: 6.2%",
+      "intent": "recommendation"
+    },
+    {
+      "message": "건대입구역 상권 요약해줘",
+      "district_code": "3120053",
+      "card_types": [
+        "summary"
+      ],
+      "tool_calls": [
+        "get_district_summary"
+      ],
+      "ground_truth_count": 29,
+      "text_length": 906,
+      "text_numbers_found": 23,
+      "suspicious_count": 3,
+      "suspicious": [
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_gt_ratio": 0.9782608695652174
+        },
+        {
+          "raw": "7천",
+          "value": 7000.0,
+          "closest_gt_ratio": 0.9239130434782609
+        },
+        {
+          "raw": "1,545개",
+          "value": 1545.0,
+          "closest_gt_ratio": 0.6263157894736842
+        }
+      ],
+      "text_excerpt": "**건대입구역은 20대 여성 중심의 대학가 발달상권으로, 높은 유동인구와 안정적인 운영 환경을 자랑합니다.**\n\n## 유동인구 분석\n하루 평균 **277만 1천명**의 유동인구가 몰리는 서울 최상위권 상권입니다. 발달상권 중에서도 **상위 25%**에 해당하는 압도적인 규모로, 서울 평균(9만 2천명) 대비 **30배** 이상의 유동인구를 보입니다. 오후 5시(68만 7천명)에 피크를 기록하는 전형적인 **하교·퇴근형 상권**입니다.\n\n## 매출 현황  \n월 추정 매출 **260억원**으로 발달상권 중 상위 75% 수준입니다. 하지만 점포당 월 매출은 **1,683만원**으로 하위 25%에 머물러, 높은 유동인구 대비 **매출 효율이 아쉬운** 상황입니다. 이는 대학가 특성상 저가 소비가 많기 때문으로 분석",
+      "intent": "summary"
+    },
+    {
+      "message": "건대입구역이랑 홍대 비교해줘",
+      "district_code": "3120053",
+      "card_types": [],
+      "tool_calls": [
+        "compare_districts",
+        "compare_districts",
+        "compare_districts"
+      ],
+      "ground_truth_count": 0,
+      "text_length": 830,
+      "text_numbers_found": 11,
+      "suspicious_count": 6,
+      "suspicious": [
+        {
+          "raw": "11만",
+          "value": 110000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "6만",
+          "value": 60000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "8천",
+          "value": 8000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "650억",
+          "value": 65000000000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "380억",
+          "value": 38000000000.0,
+          "closest_gt_ratio": null
+        }
+      ],
+      "text_excerpt": "건대입구역과 홍대를 비교 분석해드리겠습니다.\n\n**건대입구역은 대학가 중심의 안정적 상권이고, 홍대는 젊은층 문화·유흥 중심의 역동적 상권입니다.**\n\n## 유동인구 비교\n- **홍대**: 하루 평균 11만 2천명으로 압도적 우위\n- **건대입구역**: 하루 평균 6만 8천명으로 홍대 대비 약 61% 수준\n\n홍대가 유동인구에서 1.6배 많지만, 건대입구역도 발달상권 평균을 상회하는 수준입니다.\n\n## 매출 규모 비교\n- **홍대**: 월 추정 매출 약 650억원 규모의 대형 상권\n- **건대입구역**: 월 추정 매출 약 380억원으로 홍대 대비 58% 수준\n\n점포당 매출 효율성에서는 큰 차이를 보이지 않아, 건대입구역이 상대적으로 효율적인 상권 구조를 가지고 있습니다.\n\n## 상권 특성 비교\n**홍대**:\n",
+      "intent": "comparison"
+    },
+    {
+      "message": "건대입구역에 창업하기 좋은 업종 추천해줘",
+      "district_code": "3120053",
+      "card_types": [
+        "recommend"
+      ],
+      "tool_calls": [
+        "recommend_business"
+      ],
+      "ground_truth_count": 30,
+      "text_length": 1148,
+      "text_numbers_found": 29,
+      "suspicious_count": 2,
+      "suspicious": [
+        {
+          "raw": "1억",
+          "value": 100000000.0,
+          "closest_gt_ratio": 0.3939393939393939
+        },
+        {
+          "raw": "8,405만",
+          "value": 84050000.0,
+          "closest_gt_ratio": 0.28693091719620056
+        }
+      ],
+      "text_excerpt": "**건대입구역은 편의점이 압도적으로 유리한 상권으로, 대학가 특성상 생활밀착형 업종이 강세를 보입니다.**\n\n## 상위 5개 업종 비교 분석\n\n### 🥇 1순위: 편의점 (점수 100.0)\n- **점포당 월매출**: 1억 8,405만원 (압도적 1위)\n- **경쟁 현황**: 8개 점포 (밀집도 0.5%, 여유)\n- **폐업률**: 0.0% (매우 안정적)\n- **고객 매칭**: 71% (대학생·직장인층과 잘 맞음)\n\n### 🥈 2순위: 의약품(약국) (점수 30.6)\n- **점포당 월매출**: 6,531만원\n- **경쟁 현황**: 20개 점포 (밀집도 1.3%, 여유)\n- **폐업률**: 0.0%\n- **고객 매칭**: 79% (최고 매칭률)\n\n### 🥉 3순위: 안경 (점수 23.9)\n- **점포당 월매출",
+      "intent": "recommendation"
+    },
+    {
+      "message": "명동 상권 요약해줘",
+      "district_code": "3120028",
+      "card_types": [
+        "summary"
+      ],
+      "tool_calls": [
+        "get_district_summary"
+      ],
+      "ground_truth_count": 29,
+      "text_length": 878,
+      "text_numbers_found": 26,
+      "suspicious_count": 3,
+      "suspicious": [
+        {
+          "raw": "8천",
+          "value": 8000.0,
+          "closest_gt_ratio": 0.9130434782608695
+        },
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_gt_ratio": 0.9782608695652174
+        },
+        {
+          "raw": "1,712개",
+          "value": 1712.0,
+          "closest_gt_ratio": 0.8021052631578948
+        }
+      ],
+      "text_excerpt": "**명동은 하루 200만명이 몰리는 서울 최대 관광·쇼핑 발달상권으로, 안정적이지만 점포당 효율성은 아쉬운 상권입니다.**\n\n## 유동인구 분석\n하루 평균 **200만 8천명**으로 서울 평균(9만 2천명) 대비 **22배**에 달하는 압도적 유동인구를 자랑합니다. 발달상권 중에서도 **상위 25%**에 속하는 초대형 상권이며, 오후 2시(47만명)에 피크를 찍는 전형적인 **관광·쇼핑형 상권**입니다. 여성 비중이 53.5%로 7%p 높고, 20대가 22.5%로 주요 고객층을 형성합니다.\n\n## 매출 현황\n월 추정 매출 **424억원**으로 서울 평균(550억원) 대비 23% 낮지만, 이는 현금 매출이 많은 관광 특성상 카드 매출만 집계된 결과로 보입니다. 점포당 월 매출은 **2,477만원**으로 서울 ",
+      "intent": "summary"
+    },
+    {
+      "message": "명동이랑 홍대 비교해줘",
+      "district_code": "3120028",
+      "card_types": [],
+      "tool_calls": [
+        "compare_districts",
+        "compare_districts",
+        "compare_districts"
+      ],
+      "ground_truth_count": 0,
+      "text_length": 1034,
+      "text_numbers_found": 13,
+      "suspicious_count": 10,
+      "suspicious": [
+        {
+          "raw": "15만",
+          "value": 150000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "11만",
+          "value": 110000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "8천",
+          "value": 8000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "920억",
+          "value": 92000000000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "5,100만",
+          "value": 51000000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "680억",
+          "value": 68000000000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "3,800만",
+          "value": 38000000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "1,804개",
+          "value": 1804.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "1,789개",
+          "value": 1789.0,
+          "closest_gt_ratio": null
+        }
+      ],
+      "text_excerpt": "명동과 홍대 상권을 비교분석해드리겠습니다.\n\n**명동은 관광객 중심의 쇼핑 특화 상권, 홍대는 젊은층 중심의 엔터테인먼트 복합 상권으로 서로 다른 매력을 가지고 있습니다.**\n\n## 유동인구 비교\n- **명동**: 하루 평균 15만 2천명 (서울 발달상권 중 최상위권)\n- **홍대**: 하루 평균 11만 8천명 (발달상권 평균 수준)\n\n명동이 약 29% 더 많은 유동인구를 보유하고 있으며, 특히 오후 2-4시 관광 피크타임에 강세를 보입니다. 홍대는 저녁~밤 시간대에 집중되는 패턴입니다.\n\n## 매출 규모 비교\n- **명동**: 월 추정 매출 약 920억원, 점포당 월 5,100만원\n- **홍대**: 월 추정 매출 약 680억원, 점포당 월 3,800만원\n\n명동이 매출 규모에서 35% 우세하며, 점포당 효율",
+      "intent": "comparison"
+    },
+    {
+      "message": "명동에 창업하기 좋은 업종 추천해줘",
+      "district_code": "3120028",
+      "card_types": [
+        "recommend"
+      ],
+      "tool_calls": [
+        "recommend_business"
+      ],
+      "ground_truth_count": 29,
+      "text_length": 945,
+      "text_numbers_found": 25,
+      "suspicious_count": 2,
+      "suspicious": [
+        {
+          "raw": "4억",
+          "value": 400000000.0,
+          "closest_gt_ratio": 0.14091211019300437
+        },
+        {
+          "raw": "7,018만",
+          "value": 70180000.0,
+          "closest_gt_ratio": 0.14970046690507122
+        }
+      ],
+      "text_excerpt": "**명동에서는 치킨전문점이 압도적으로 유리하며, 높은 매출과 낮은 경쟁으로 최적의 창업 기회를 제공합니다.**\n\n## 🥇 1순위: 치킨전문점 (점수 100.0)\n- **점포당 월매출**: 4억 6,561만원 (압도적 수준)\n- **경쟁 현황**: 단 1개 점포만 운영 중 (밀집도 0.1%)\n- **폐업률**: 0.0% (매우 안전)\n- **고객 매칭**: 타겟 고객 매칭률 59%\n- **창업비**: 소자본으로 시작 가능\n\n명동의 높은 유동인구와 관광객 수요를 고려할 때, 치킨전문점은 거의 독점적 위치에서 높은 수익을 기대할 수 있습니다.\n\n## 🥈 2순위: 편의점 (점수 31.0) ⚠️\n- **점포당 월매출**: 1억 7,018만원\n- **경쟁 현황**: 12개 점포 (밀집도 0.7%)\n- **⚠️ 폐업률*",
+      "intent": "recommendation"
+    },
+    {
+      "message": "서울역 상권 요약해줘",
+      "district_code": "3120043",
+      "card_types": [
+        "summary"
+      ],
+      "tool_calls": [
+        "get_district_summary"
+      ],
+      "ground_truth_count": 29,
+      "text_length": 948,
+      "text_numbers_found": 27,
+      "suspicious_count": 7,
+      "suspicious": [
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_gt_ratio": 0.958387083350672
+        },
+        {
+          "raw": "2천",
+          "value": 2000.0,
+          "closest_gt_ratio": 0.958387083350672
+        },
+        {
+          "raw": "6천",
+          "value": 6000.0,
+          "closest_gt_ratio": 0.8751612500520162
+        },
+        {
+          "raw": "9천",
+          "value": 9000.0,
+          "closest_gt_ratio": 0.8127418750780242
+        },
+        {
+          "raw": "24시간",
+          "value": 24.0,
+          "closest_gt_ratio": 0.14285714285714285
+        },
+        {
+          "raw": "6천",
+          "value": 6000.0,
+          "closest_gt_ratio": 0.8751612500520162
+        },
+        {
+          "raw": "24시간",
+          "value": 24.0,
+          "closest_gt_ratio": 0.14285714285714285
+        }
+      ],
+      "text_excerpt": "**서울역은 하루 102만명이 오가는 초대형 교통 허브 상권으로, 안정적이지만 점포당 매출 효율은 아쉬운 편입니다.**\n\n## 유동인구 분석\n하루 평균 **102만 2천명**으로 서울 평균(9만 2천명) 대비 **11배**에 달하는 압도적인 유동인구를 보입니다. 발달상권 중에서도 **상위 25%**에 해당하는 수준입니다.\n\n시간대별로는 **오전 6시**(25만 6천명)와 **오전 11시**(25만명)에 피크를 보이는데, 이는 출근 시간대와 점심 시간대의 교통 허브 특성을 잘 보여줍니다. 새벽 0시에도 5만 9천명이 유지되어 24시간 활동하는 상권임을 알 수 있습니다.\n\n## 매출 현황\n월 추정 매출은 **200억 6천만원**으로 상당한 규모이지만, 발달상권 중 **하위 25%**에 위치합니다. 점포당 월 매",
+      "intent": "summary"
+    },
+    {
+      "message": "서울역이랑 홍대 비교해줘",
+      "district_code": "3120043",
+      "card_types": [],
+      "tool_calls": [
+        "compare_districts",
+        "compare_districts",
+        "compare_districts"
+      ],
+      "ground_truth_count": 0,
+      "text_length": 906,
+      "text_numbers_found": 2,
+      "suspicious_count": 2,
+      "suspicious": [
+        {
+          "raw": "15만",
+          "value": 150000.0,
+          "closest_gt_ratio": null
+        },
+        {
+          "raw": "10만",
+          "value": 100000.0,
+          "closest_gt_ratio": null
+        }
+      ],
+      "text_excerpt": "서울역과 홍대 상권을 비교 분석해드리겠습니다.\n\n**서울역은 교통 허브 중심의 직장인 상권, 홍대는 젊은층 중심의 문화·유흥 상권으로 뚜렷한 차이를 보입니다.**\n\n## 유동인구 비교\n- **서울역**: 하루 평균 약 15만명 (추정) - 교통 허브 특성상 매우 높은 유동인구\n- **홍대**: 하루 평균 약 8-10만명 (추정) - 젊은층 집중도가 높은 문화상권\n\n서울역이 절대적 유동인구에서 우세하지만, 홍대는 체류형 소비 패턴이 강합니다.\n\n## 고객층 특성\n- **서울역**: 직장인, 출퇴근족, 지방 방문객 중심 - 빠른 이동 중심\n- **홍대**: 20-30대 젊은층, 대학생, 외국인 관광객 - 체류형 소비\n\n## 업종 특성\n- **서울역**: 편의점, 패스트푸드, 간편식, 교통 관련 서비스업 발달\n-",
+      "intent": "comparison"
+    },
+    {
+      "message": "서울역에 창업하기 좋은 업종 추천해줘",
+      "district_code": "3120043",
+      "card_types": [
+        "recommend"
+      ],
+      "tool_calls": [
+        "recommend_business"
+      ],
+      "ground_truth_count": 28,
+      "text_length": 1068,
+      "text_numbers_found": 33,
+      "suspicious_count": 4,
+      "suspicious": [
+        {
+          "raw": "116만",
+          "value": 1160000.0,
+          "closest_gt_ratio": 0.9838167854756431
+        },
+        {
+          "raw": "4억",
+          "value": 400000000.0,
+          "closest_gt_ratio": 0.13147187882146266
+        },
+        {
+          "raw": "6,055만",
+          "value": 60550000.0,
+          "closest_gt_ratio": 0.15526410392257683
+        },
+        {
+          "raw": "5,269만",
+          "value": 52690000.0,
+          "closest_gt_ratio": 0.26491933337209866
+        }
+      ],
+      "text_excerpt": "**서울역은 치킨전문점이 1순위 추천 업종으로, 높은 매출과 낮은 경쟁 리스크를 보여줍니다.**\n\n## 추천 업종 TOP 5 비교\n\n### 🥇 1위: 치킨전문점 (추천점수 100.0)\n- **점포당 월매출**: 1억 116만원 (매우 높음)\n- **경쟁 현황**: 단 1개 점포로 경쟁 거의 없음 (밀집도 0.1%)\n- **폐업률**: 0.0% (매우 안전)\n- **고객 매칭**: 69% (20~30대 직장인층과 잘 맞음)\n\n### 🥈 2위: 패스트푸드점 (추천점수 75.9)\n- **점포당 월매출**: 7,676만원\n- **경쟁 현황**: 6개 점포 (밀집도 0.7%, 여유)\n- **폐업률**: 0.0%\n- **총 업종 매출**: 4억 6,055만원\n\n### 🥉 3위: 호프-간이주점 (추천점수 69.0)\n- ",
+      "intent": "recommendation"
+    }
+  ],
+  "summary": {
+    "total_sessions": 15,
+    "errored": 0,
+    "clean": 1,
+    "with_suspicious_numbers": 14
+  }
+}
