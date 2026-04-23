@@ -40,12 +40,14 @@ def _parse_plan(raw_plan: list[dict] | None) -> list[dict[str, Any]]:
         return []
     result = []
     for step in raw_plan:
-        result.append({
-            "tool_name": step["tool"],
-            "args_template": step.get("args", {}),
-            "reason": step.get("reason", ""),
-            "depends_on": step.get("depends_on", []),
-        })
+        result.append(
+            {
+                "tool_name": step["tool"],
+                "args_template": step.get("args", {}),
+                "reason": step.get("reason", ""),
+                "depends_on": step.get("depends_on", []),
+            }
+        )
     return result
 
 

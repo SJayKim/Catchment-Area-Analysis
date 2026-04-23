@@ -11,12 +11,8 @@ class Settings(BaseSettings):
     use_mock: bool = True
 
     # Database
-    database_url: str = (
-        "postgresql+asyncpg://marketscope:devpassword@localhost:5432/marketscope"
-    )
-    database_url_sync: str = (
-        "postgresql://marketscope:devpassword@localhost:5432/marketscope"
-    )
+    database_url: str = "postgresql+asyncpg://marketscope:devpassword@localhost:5432/marketscope"
+    database_url_sync: str = "postgresql://marketscope:devpassword@localhost:5432/marketscope"
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"
@@ -69,9 +65,9 @@ class Settings(BaseSettings):
     # SQLAlchemy connection pool
     db_pool_size: int = 10
     db_max_overflow: int = 20
-    db_pool_pre_ping: bool = True        # validate connections before use
-    db_pool_recycle: int = 1800          # recycle idle connections after 30min
-    db_pool_timeout: int = 30            # wait timeout for pool checkout
+    db_pool_pre_ping: bool = True  # validate connections before use
+    db_pool_recycle: int = 1800  # recycle idle connections after 30min
+    db_pool_timeout: int = 30  # wait timeout for pool checkout
     db_statement_timeout_ms: int = 10000  # 10s per SQL statement
 
     # Conversation history

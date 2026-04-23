@@ -27,9 +27,7 @@ def main() -> int:
     conn = psycopg2.connect(url)
     try:
         with conn, conn.cursor() as cur:
-            cur.execute(
-                "CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) PRIMARY KEY);"
-            )
+            cur.execute("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) PRIMARY KEY);")
             cur.execute(
                 "DELETE FROM alembic_version WHERE version_num NOT IN "
                 "(SELECT version_num FROM alembic_version "

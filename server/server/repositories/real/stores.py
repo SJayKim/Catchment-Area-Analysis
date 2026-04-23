@@ -24,13 +24,19 @@ def _detect_trend(close_counts: list[int]) -> dict:
     change_rate = slope / y_mean if y_mean > 0 else 0
 
     if change_rate > 0.15:
-        return {"direction": "increasing", "adjustment": -15,
-                "detail": f"폐업이 분기당 {abs(change_rate) * 100:.0f}% 증가 추세"}
+        return {
+            "direction": "increasing",
+            "adjustment": -15,
+            "detail": f"폐업이 분기당 {abs(change_rate) * 100:.0f}% 증가 추세",
+        }
     elif change_rate > 0.05:
         return {"direction": "slightly_increasing", "adjustment": -7, "detail": "폐업이 소폭 증가 추세"}
     elif change_rate < -0.15:
-        return {"direction": "decreasing", "adjustment": 10,
-                "detail": f"폐업이 분기당 {abs(change_rate) * 100:.0f}% 감소 추세"}
+        return {
+            "direction": "decreasing",
+            "adjustment": 10,
+            "detail": f"폐업이 분기당 {abs(change_rate) * 100:.0f}% 감소 추세",
+        }
     elif change_rate < -0.05:
         return {"direction": "slightly_decreasing", "adjustment": 5, "detail": "폐업이 소폭 감소 추세"}
     else:
@@ -52,9 +58,7 @@ class RealStoreRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._sf = session_factory
 
-    async def get_store_info(
-        self, district_code: str, category_code: str | None = None
-    ) -> dict:
+    async def get_store_info(self, district_code: str, category_code: str | None = None) -> dict:
         from server.models.store import Store
 
         async with self._sf() as session:
@@ -92,8 +96,11 @@ class RealStoreRepository:
             top_rows = (
                 await session.execute(
                     select(
-                        Store.category_code, Store.category_name,
-                        Store.store_count, Store.open_count, Store.close_count,
+                        Store.category_code,
+                        Store.category_name,
+                        Store.store_count,
+                        Store.open_count,
+                        Store.close_count,
                     )
                     .where(Store.district_code == district_code, Store.quarter == quarter, Store.store_count > 0)
                     .order_by(Store.store_count.desc())
@@ -123,7 +130,8 @@ class RealStoreRepository:
         }
 
     async def get_store_history(self, district_code: str) -> dict:
-        from server.models.store import Store, StoreHistory as StoreHistoryModel
+        from server.models.store import Store
+        from server.models.store import StoreHistory as StoreHistoryModel
 
         try:
             async with self._sf() as session:
@@ -146,8 +154,11 @@ class RealStoreRepository:
                     )
                 ).all()
                 survival_by_category = [
-                    {"category": row.category_name, "avg_months": round(float(row.avg_months), 1),
-                     "sample_count": int(row.sample_count)}
+                    {
+                        "category": row.category_name,
+                        "avg_months": round(float(row.avg_months), 1),
+                        "sample_count": int(row.sample_count),
+                    }
                     for row in survival_rows
                 ]
 
@@ -167,15 +178,20 @@ class RealStoreRepository:
                     )
                 ).all()
                 quarterly_trend = [
-                    {"quarter": row.quarter, "store_count": int(row.stores or 0),
-                     "open": int(row.opens or 0), "close": int(row.closes or 0)}
+                    {
+                        "quarter": row.quarter,
+                        "store_count": int(row.stores or 0),
+                        "open": int(row.opens or 0),
+                        "close": int(row.closes or 0),
+                    }
                     for row in reversed(trend_rows)
                 ]
 
                 # Stability score
                 if len(quarterly_trend) < 2:
                     stability = {
-                        "score": None, "grade": "데이터 부족",
+                        "score": None,
+                        "grade": "데이터 부족",
                         "message": "2분기 이상 데이터가 쌓이면 리스크 분석이 가능합니다",
                         "quarters_analyzed": len(quarterly_trend),
                     }
@@ -187,8 +203,10 @@ class RealStoreRepository:
                     trend_result = _detect_trend([q["close"] for q in quarterly_trend])
                     score = round(min(100, max(0, base_score + trend_result["adjustment"])))
                     stability = {
-                        "score": score, "grade": _get_grade(score),
-                        "trend": trend_result, "quarters_analyzed": len(quarterly_trend),
+                        "score": score,
+                        "grade": _get_grade(score),
+                        "trend": trend_result,
+                        "quarters_analyzed": len(quarterly_trend),
                     }
 
                 # Risk categories
@@ -199,7 +217,11 @@ class RealStoreRepository:
                     cat_rows = (
                         await session.execute(
                             select(Store.category_name, Store.store_count, Store.close_count)
-                            .where(Store.district_code == district_code, Store.quarter == latest_quarter, Store.store_count > 0)
+                            .where(
+                                Store.district_code == district_code,
+                                Store.quarter == latest_quarter,
+                                Store.store_count > 0,
+                            )
                             .order_by(
                                 (cast(Store.close_count, Float) / func.nullif(Store.store_count, 0)).desc().nulls_last()
                             )
@@ -228,7 +250,13 @@ class RealStoreRepository:
                         rate = round(cc / sc * 100, 1)
                         if rate > 15 or rate >= relative_threshold:
                             warning = "폐업률 매우 높음" if rate > 15 else "폐업률 높음"
-                            risk_categories.append({"category": row.category_name, "close_rate": rate, "warning": warning})
+                            risk_categories.append(
+                                {
+                                    "category": row.category_name,
+                                    "close_rate": rate,
+                                    "warning": warning,
+                                }
+                            )
 
                 return {
                     "district_code": district_code,

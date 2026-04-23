@@ -18,21 +18,15 @@ class DistrictRepository(Protocol):
 
 
 class FloatingPopulationRepository(Protocol):
-    async def get_floating_population(
-        self, district_code: str, quarter: str | None = None
-    ) -> dict: ...
+    async def get_floating_population(self, district_code: str, quarter: str | None = None) -> dict: ...
 
 
 class EstimatedSalesRepository(Protocol):
-    async def get_estimated_sales(
-        self, district_code: str, category_code: str | None = None
-    ) -> dict: ...
+    async def get_estimated_sales(self, district_code: str, category_code: str | None = None) -> dict: ...
 
 
 class StoreRepository(Protocol):
-    async def get_store_info(
-        self, district_code: str, category_code: str | None = None
-    ) -> dict: ...
+    async def get_store_info(self, district_code: str, category_code: str | None = None) -> dict: ...
     async def get_store_history(self, district_code: str) -> dict: ...
 
 
@@ -51,17 +45,13 @@ class RecommendationRepository(Protocol):
 
 
 class SimulationRepository(Protocol):
-    async def get_sales_percentiles(
-        self, category_code: str, quarter: str | None = None
-    ) -> dict: ...
+    async def get_sales_percentiles(self, category_code: str, quarter: str | None = None) -> dict: ...
 
     async def get_default_unit_price(self, category_code: str) -> int | None: ...
 
 
 class HeatmapRepository(Protocol):
-    async def get_heatmap_data(
-        self, time_slot: int, quarter: str | None = None
-    ) -> dict: ...
+    async def get_heatmap_data(self, time_slot: int, quarter: str | None = None) -> dict: ...
 
     async def get_heatmap_all(self, quarter: str | None = None) -> dict: ...
 

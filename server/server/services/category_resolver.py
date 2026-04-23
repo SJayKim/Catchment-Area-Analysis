@@ -81,7 +81,8 @@ class CategoryResolver:
                 else:
                     logger.info(
                         "Loaded %d category keywords from DB (merged with %d defaults)",
-                        count, len(_DEFAULT_KEYWORDS),
+                        count,
+                        len(_DEFAULT_KEYWORDS),
                     )
         except Exception:
             logger.warning("Failed to load categories from DB, using defaults only", exc_info=True)

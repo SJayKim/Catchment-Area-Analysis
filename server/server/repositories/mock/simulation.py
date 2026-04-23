@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 # Default unit prices by major category keyword
 _DEFAULT_PRICES: dict[str, int] = {
     "카페": 5500,
@@ -22,9 +21,7 @@ _DEFAULT_PRICES: dict[str, int] = {
 
 
 class MockSimulationRepository:
-    async def get_sales_percentiles(
-        self, category_code: str, quarter: str | None = None
-    ) -> dict:
+    async def get_sales_percentiles(self, category_code: str, quarter: str | None = None) -> dict:
         return {
             "category_code": category_code,
             "quarter": quarter or "2025Q3",

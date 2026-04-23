@@ -77,7 +77,7 @@ def load_resident_pop_csv(
     # Try EUC-KR first, then UTF-8
     for encoding in ("euc-kr", "cp949", "utf-8"):
         try:
-            with open(csv_path, "r", encoding=encoding) as f:
+            with open(csv_path, encoding=encoding) as f:
                 reader = csv.DictReader(f)
                 for raw_row in reader:
                     # Parse quarter
@@ -95,14 +95,16 @@ def load_resident_pop_csv(
                     # Generate one row per (age_group, gender) combination
                     for col_name, (age_group, gender) in _AGE_GENDER_COLUMNS.items():
                         population = _safe_int(raw_row.get(col_name, "0"))
-                        rows.append({
-                            "district_code": district_code,
-                            "quarter": quarter,
-                            "pop_type": "resident",
-                            "age_group": age_group,
-                            "gender": gender,
-                            "population": population,
-                        })
+                        rows.append(
+                            {
+                                "district_code": district_code,
+                                "quarter": quarter,
+                                "pop_type": "resident",
+                                "age_group": age_group,
+                                "gender": gender,
+                                "population": population,
+                            }
+                        )
             break  # Success — stop trying other encodings
         except UnicodeDecodeError:
             continue

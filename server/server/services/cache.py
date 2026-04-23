@@ -68,9 +68,12 @@ class RedisCacheService:
 
         try:
             from redis.asyncio import Redis
+
             self._redis = Redis.from_url(
-                self._redis_url, decode_responses=True,
-                socket_connect_timeout=3, socket_timeout=3,
+                self._redis_url,
+                decode_responses=True,
+                socket_connect_timeout=3,
+                socket_timeout=3,
                 max_connections=20,
             )
             await self._redis.ping()

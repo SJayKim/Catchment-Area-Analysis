@@ -92,16 +92,18 @@ def load_districts_from_shp(shp_path: str | Path, data_quarter: str) -> list[dic
         # Map type code to Korean name
         district_type = DISTRICT_TYPE_MAP.get(type_code, type_code)
 
-        rows.append({
-            "district_code": code,
-            "district_name": name,
-            "district_type": district_type,
-            "boundary_wkt": boundary_wkt,
-            "center_wkt": center_wkt,
-            "gu_code": gu_code if gu_code and gu_code != "nan" else None,
-            "dong_code": dong_code if dong_code and dong_code != "nan" else None,
-            "data_quarter": data_quarter,
-        })
+        rows.append(
+            {
+                "district_code": code,
+                "district_name": name,
+                "district_type": district_type,
+                "boundary_wkt": boundary_wkt,
+                "center_wkt": center_wkt,
+                "gu_code": gu_code if gu_code and gu_code != "nan" else None,
+                "dong_code": dong_code if dong_code and dong_code != "nan" else None,
+                "data_quarter": data_quarter,
+            }
+        )
 
     if skipped:
         logger.warning(f"[shp] Skipped {skipped} features with empty/invalid geometry")

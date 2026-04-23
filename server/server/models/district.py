@@ -20,6 +20,4 @@ class District(Base):
     data_quarter: Mapped[str] = mapped_column(String(10), nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=func.now())
 
-    __table_args__ = (
-        Index("idx_districts_boundary", "boundary", postgresql_using="gist"),
-    )
+    __table_args__ = (Index("idx_districts_boundary", "boundary", postgresql_using="gist"),)

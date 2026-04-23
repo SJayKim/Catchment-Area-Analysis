@@ -53,9 +53,7 @@ def _create_llm(role: str = "default"):
                 '"direct_response": false, "reasoning": "상권 요약 요청"}'
             ]
         elif role in ("evaluator",):
-            responses = [
-                '{"sufficient": true, "reasoning": "모든 도구 결과가 정상 반환됨", "missing": []}'
-            ]
+            responses = ['{"sufficient": true, "reasoning": "모든 도구 결과가 정상 반환됨", "missing": []}']
         else:
             responses = [
                 "강남역 상권은 서울 주요 상권 중 하나입니다. "
@@ -162,15 +160,19 @@ def _build_pae_graph(event_queue: asyncio.Queue):
 
     async def _greeting(state: AgentState) -> dict:
         """Emit greeting response directly — no LLM call needed."""
-        await event_queue.put({
-            "type": "text",
-            "content": "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다.\n"
-                       "지도에서 상권을 선택하시거나, 분석할 상권명을 알려주세요!",
-        })
-        await event_queue.put({
-            "type": "suggestion",
-            "questions": ["강남역 상권 분석해줘", "홍대 어때?", "업종 추천해줘", "상권 비교하고 싶어"],
-        })
+        await event_queue.put(
+            {
+                "type": "text",
+                "content": "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다.\n"
+                "지도에서 상권을 선택하시거나, 분석할 상권명을 알려주세요!",
+            }
+        )
+        await event_queue.put(
+            {
+                "type": "suggestion",
+                "questions": ["강남역 상권 분석해줘", "홍대 어때?", "업종 추천해줘", "상권 비교하고 싶어"],
+            }
+        )
         return {"final_response": "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다."}
 
     async def _actor(state: AgentState) -> dict:
@@ -206,7 +208,8 @@ def _build_pae_graph(event_queue: asyncio.Queue):
 
     graph.set_entry_point("planner")
     graph.add_conditional_edges(
-        "planner", route_after_planner,
+        "planner",
+        route_after_planner,
         {"actor": "actor", "respond": "respond", "greeting": "greeting"},
     )
     graph.add_edge("greeting", END)
@@ -234,15 +237,15 @@ async def run_agent(
     from server.agent.state import AgentState
     from server.services.langfuse_tracer import (
         flush as _lf_flush,
+    )
+    from server.services.langfuse_tracer import (
         get_langfuse_handler,
         get_trace_id,
     )
 
     # Bounded queue so a slow/disconnected SSE consumer naturally blocks the
     # LLM/tool producers (backpressure) instead of growing memory unbounded.
-    event_queue: asyncio.Queue[dict | None] = asyncio.Queue(
-        maxsize=settings.sse_queue_maxsize
-    )
+    event_queue: asyncio.Queue[dict | None] = asyncio.Queue(maxsize=settings.sse_queue_maxsize)
 
     # Langfuse callback (best-effort). None 이면 trace 없이 진행.
     lf_handler = get_langfuse_handler(session_id=session_id, request_id=request_id)
@@ -286,7 +289,9 @@ async def run_agent(
                 astream_config["callbacks"] = [lf_handler]
 
             async for update in compiled.astream(
-                initial_state, config=astream_config or None, stream_mode="updates",
+                initial_state,
+                config=astream_config or None,
+                stream_mode="updates",
             ):
                 for node_name, state_update in update.items():
                     if node_name == "planner":
@@ -294,11 +299,13 @@ async def run_agent(
                         intent = state_update.get("user_intent", "")
                         if plan:
                             steps = [s["reason"] for s in plan]
-                            await event_queue.put({
-                                "type": "plan",
-                                "intent": intent,
-                                "steps": steps,
-                            })
+                            await event_queue.put(
+                                {
+                                    "type": "plan",
+                                    "intent": intent,
+                                    "steps": steps,
+                                }
+                            )
 
                     elif node_name == "actor":
                         # Only emit NEW cards (actor accumulates across rounds)
@@ -306,19 +313,23 @@ async def run_agent(
                         new_cards = all_cards[emitted_card_count:]
                         emitted_card_count = len(all_cards)
                         for card in new_cards:
-                            await event_queue.put({
-                                "type": "card",
-                                "card_type": card["card_type"],
-                                "data": card["data"],
-                            })
+                            await event_queue.put(
+                                {
+                                    "type": "card",
+                                    "card_type": card["card_type"],
+                                    "data": card["data"],
+                                }
+                            )
 
                     elif node_name == "evaluator":
                         ev = state_update.get("evaluation") or {}
                         if not ev.get("sufficient", True):
-                            await event_queue.put({
-                                "type": "thinking",
-                                "step": "추가 데이터 수집 중...",
-                            })
+                            await event_queue.put(
+                                {
+                                    "type": "thinking",
+                                    "step": "추가 데이터 수집 중...",
+                                }
+                            )
                         # Capture suggestions
                         sug = ev.get("proactive_suggestions", [])
                         if sug:
@@ -328,10 +339,12 @@ async def run_agent(
 
         except Exception:
             logger.exception("PAE agent execution failed")
-            await event_queue.put({
-                "type": "text",
-                "content": "죄송합니다. 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-            })
+            await event_queue.put(
+                {
+                    "type": "text",
+                    "content": "죄송합니다. 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                }
+            )
         finally:
             await event_queue.put(None)  # sentinel
 

@@ -135,7 +135,7 @@ def transform_district(raw: dict) -> dict:
         "district_name": str(raw.get("TRDAR_CD_NM", "")),
         "district_type": DISTRICT_TYPE_MAP.get(type_code, type_code),
         "boundary_wkt": polygon_wkt,  # WKT string, SRID=5181 (None if from store change API)
-        "center_wkt": center_wkt,      # WKT string, SRID=5181 (None if from store change API)
+        "center_wkt": center_wkt,  # WKT string, SRID=5181 (None if from store change API)
         "gu_code": str(raw.get("SIGNGU_CD", "")) or None,
         "dong_code": str(raw.get("ADSTRD_CD", "")) or None,
         "data_quarter": quarter,
@@ -174,20 +174,22 @@ def transform_floating_pop(raw: dict) -> list[dict]:
                 pop = _safe_int(raw.get(f"TMZON_{legacy_key}_FLPOP_CO"))
         # Distribute demographics proportionally across time slots
         ratio = pop / total if total > 0 else 0
-        rows.append({
-            "district_code": code,
-            "quarter": quarter,
-            "time_slot": slot_value,
-            "total_pop": pop,
-            "male_pop": round(male_pop * ratio),
-            "female_pop": round(female_pop * ratio),
-            "age_10_pop": round(age_10 * ratio),
-            "age_20_pop": round(age_20 * ratio),
-            "age_30_pop": round(age_30 * ratio),
-            "age_40_pop": round(age_40 * ratio),
-            "age_50_pop": round(age_50 * ratio),
-            "age_60_plus_pop": round(age_60 * ratio),
-        })
+        rows.append(
+            {
+                "district_code": code,
+                "quarter": quarter,
+                "time_slot": slot_value,
+                "total_pop": pop,
+                "male_pop": round(male_pop * ratio),
+                "female_pop": round(female_pop * ratio),
+                "age_10_pop": round(age_10 * ratio),
+                "age_20_pop": round(age_20 * ratio),
+                "age_30_pop": round(age_30 * ratio),
+                "age_40_pop": round(age_40 * ratio),
+                "age_50_pop": round(age_50 * ratio),
+                "age_60_plus_pop": round(age_60 * ratio),
+            }
+        )
 
     return rows
 
@@ -266,7 +268,7 @@ def transform_resident_pop(raw: dict, pop_type: str = "resident") -> list[dict]:
 
     # Column suffix depends on pop_type
     if pop_type == "resident":
-        male_suffix = "MAG_POPLTN_CO"   # 남성 상주인구
+        male_suffix = "MAG_POPLTN_CO"  # 남성 상주인구
         female_suffix = "FAG_POPLTN_CO"  # 여성 상주인구
     else:  # worker
         male_suffix = "MAG_POPLTN_CO"
@@ -277,24 +279,28 @@ def transform_resident_pop(raw: dict, pop_type: str = "resident") -> list[dict]:
         # Male
         male_key = f"{age_prefix}_{male_suffix}"
         male_val = _safe_int(raw.get(male_key))
-        rows.append({
-            "district_code": code,
-            "quarter": quarter,
-            "pop_type": pop_type,
-            "age_group": age_label,
-            "gender": "M",
-            "population": male_val,
-        })
+        rows.append(
+            {
+                "district_code": code,
+                "quarter": quarter,
+                "pop_type": pop_type,
+                "age_group": age_label,
+                "gender": "M",
+                "population": male_val,
+            }
+        )
         # Female
         female_key = f"{age_prefix}_{female_suffix}"
         female_val = _safe_int(raw.get(female_key))
-        rows.append({
-            "district_code": code,
-            "quarter": quarter,
-            "pop_type": pop_type,
-            "age_group": age_label,
-            "gender": "F",
-            "population": female_val,
-        })
+        rows.append(
+            {
+                "district_code": code,
+                "quarter": quarter,
+                "pop_type": pop_type,
+                "age_group": age_label,
+                "gender": "F",
+                "population": female_val,
+            }
+        )
 
     return rows

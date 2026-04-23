@@ -8,9 +8,7 @@ from server.services.cache import get_cache_service
     progress_label="점포 현황 조회 중...",
     done_label="점포 현황 조회 완료",
 )
-async def get_store_info(
-    district_code: str, category_code: str | None = None
-) -> dict:
+async def get_store_info(district_code: str, category_code: str | None = None) -> dict:
     """Query store information for a district."""
     cache = get_cache_service()
     cache_key = f"store:{district_code}:{category_code or 'all'}"

@@ -12,9 +12,7 @@ class RealSimulationRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._sf = session_factory
 
-    async def get_sales_percentiles(
-        self, category_code: str, quarter: str | None = None
-    ) -> dict:
+    async def get_sales_percentiles(self, category_code: str, quarter: str | None = None) -> dict:
         """Get per-store sales percentiles across all Seoul districts for a category."""
         from server.models.sales import EstimatedSales
         from server.models.store import Store
@@ -23,9 +21,7 @@ class RealSimulationRepository:
             # Determine quarter
             if not quarter:
                 latest = await session.execute(
-                    select(EstimatedSales.quarter)
-                    .order_by(EstimatedSales.quarter.desc())
-                    .limit(1)
+                    select(EstimatedSales.quarter).order_by(EstimatedSales.quarter.desc()).limit(1)
                 )
                 quarter = latest.scalar_one_or_none()
                 if not quarter:
@@ -34,9 +30,7 @@ class RealSimulationRepository:
             # Per-store monthly sales across all districts for this category
             # JOIN estimated_sales + stores on district_code + category_code + quarter
             per_store_sales = (
-                select(
-                    (EstimatedSales.monthly_sales / func.nullif(Store.store_count, 0)).label("per_store")
-                )
+                select((EstimatedSales.monthly_sales / func.nullif(Store.store_count, 0)).label("per_store"))
                 .join(
                     Store,
                     (EstimatedSales.district_code == Store.district_code)
@@ -93,7 +87,6 @@ class RealSimulationRepository:
 
         async with self._sf() as session:
             result = await session.execute(
-                select(CategoryMetadata.default_unit_price)
-                .where(CategoryMetadata.category_code == category_code)
+                select(CategoryMetadata.default_unit_price).where(CategoryMetadata.category_code == category_code)
             )
             return result.scalar_one_or_none()

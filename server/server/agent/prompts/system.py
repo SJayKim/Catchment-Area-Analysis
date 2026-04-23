@@ -91,8 +91,11 @@ _sanitize = sanitize_prompt_value
 
 
 def get_system_prompt(
-    district_name: str, district_code: str, data_quarter: str,
-    *, is_mock: bool | None = None,
+    district_name: str,
+    district_code: str,
+    data_quarter: str,
+    *,
+    is_mock: bool | None = None,
 ) -> str:
     """Build the system prompt with the current context.
 

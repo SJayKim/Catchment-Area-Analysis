@@ -86,9 +86,7 @@ async def get_district_summary(district_code: str) -> dict:
 
     daily_avg = fp_result.get("daily_avg", 0) if fp_ok else 0
     monthly_sales = sales_result.get("total_monthly_sales", 0) if sales_ok else 0
-    status_label = {"growing": "성장 중인", "stable": "안정적인", "declining": "위축 중인"}.get(
-        status, "안정적인"
-    )
+    status_label = {"growing": "성장 중인", "stable": "안정적인", "declining": "위축 중인"}.get(status, "안정적인")
     summary_text = (
         f"하루 평균 유동인구 {_format_population(daily_avg)}, "
         f"월 추정 매출 {_format_sales(monthly_sales)}의 "

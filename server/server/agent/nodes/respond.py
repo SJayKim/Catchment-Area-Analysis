@@ -143,9 +143,7 @@ def _compute_hints(name: str, data: dict) -> str | None:
             by_hour = data.get("by_hour", [])
             if by_hour:
                 day_pop = sum(h["population"] for h in by_hour if 6 <= h["time_slot"] <= 21)
-                night_pop = sum(
-                    h["population"] for h in by_hour if h["time_slot"] < 6 or h["time_slot"] > 21
-                )
+                night_pop = sum(h["population"] for h in by_hour if h["time_slot"] < 6 or h["time_slot"] > 21)
                 total = day_pop + night_pop
                 if total > 0:
                     hints.append(f"주간(06~21시) 비율: {day_pop / total * 100:.1f}%")
@@ -157,9 +155,7 @@ def _compute_hints(name: str, data: dict) -> str | None:
             diff = abs(m - f)
             if diff >= 5:
                 dominant = "남성" if m > f else "여성"
-                hints.append(
-                    f"성별 특성: {dominant} 우세 ({dominant} {max(m, f):.1f}%, 차이 {diff:.1f}%p)"
-                )
+                hints.append(f"성별 특성: {dominant} 우세 ({dominant} {max(m, f):.1f}%, 차이 {diff:.1f}%p)")
 
             # Top age group
             age = data.get("age_distribution", {})
@@ -262,9 +258,7 @@ def _compute_hints(name: str, data: dict) -> str | None:
                             best = max(valid, key=lambda d: d[metric])
                         winners[label] = best.get("district_name", best.get("district_code"))
                 if winners:
-                    hints.append(
-                        "지표별 우위 상권: " + " / ".join(f"{k}: {v}" for k, v in winners.items())
-                    )
+                    hints.append("지표별 우위 상권: " + " / ".join(f"{k}: {v}" for k, v in winners.items()))
 
                 # Sales per store efficiency
                 eff_parts = []
@@ -285,9 +279,7 @@ def _compute_hints(name: str, data: dict) -> str | None:
             bench = data.get("benchmarks", {})
             avg_cr = bench.get("seoulAvgCloseRate")
             if avg_cr:
-                hints.append(
-                    f"서울 평균 폐업률: {avg_cr}% ({bench.get('districtType', '전체')} 기준)"
-                )
+                hints.append(f"서울 평균 폐업률: {avg_cr}% ({bench.get('districtType', '전체')} 기준)")
             # Quarterly trend summary
             trend = data.get("quarterly_trend", [])
             if len(trend) >= 2:
@@ -320,9 +312,7 @@ def _compute_hints(name: str, data: dict) -> str | None:
                     score = rec.get("score", 0)
                     cr_r = rec.get("close_rate", 0)
                     cost = rec.get("startup_cost", 0)
-                    comparison.append(
-                        f"{rec.get('rank')}위 {name_r}(점수:{score}, 폐업률:{cr_r}%, 창업비:{cost}만원)"
-                    )
+                    comparison.append(f"{rec.get('rank')}위 {name_r}(점수:{score}, 폐업률:{cr_r}%, 창업비:{cost}만원)")
                 hints.append("전체 추천 요약: " + " / ".join(comparison))
 
     except Exception:
@@ -335,9 +325,7 @@ def _format_tool_results(tool_results: dict[str, dict]) -> str:
     """Pretty-print tool results + derived hints for the LLM prompt."""
     parts: list[str] = []
     for name, data in tool_results.items():
-        section = (
-            f"### {name}\n```json\n{json.dumps(data, ensure_ascii=False, default=str)[:4000]}\n```"
-        )
+        section = f"### {name}\n```json\n{json.dumps(data, ensure_ascii=False, default=str)[:4000]}\n```"
         hints = _compute_hints(name, data)
         if hints:
             section += f"\n\n**[파생 지표 힌트]**\n{hints}"
@@ -377,8 +365,7 @@ def build_respond_prompt(state: AgentState) -> str:
     if tool_errors:
         errors_text = "\n".join(f"- {k}: {v}" for k, v in tool_errors.items())
         sections.append(
-            f"## 데이터 조회 실패\n{errors_text}\n"
-            "실패한 항목은 언급하지 말고, 확보된 데이터만으로 답변하세요."
+            f"## 데이터 조회 실패\n{errors_text}\n실패한 항목은 언급하지 말고, 확보된 데이터만으로 답변하세요."
         )
 
     # Proactive suggestions
@@ -391,11 +378,7 @@ def build_respond_prompt(state: AgentState) -> str:
     district_name = sanitize_prompt_value(state.get("district_name") or "미선택")
     district_code = sanitize_prompt_value(state.get("district_code") or "")
     data_quarter = sanitize_prompt_value(state.get("data_quarter") or "최신")
-    sections.append(
-        f"## 현재 컨텍스트\n"
-        f"- 상권: {district_name} ({district_code})\n"
-        f"- 데이터 기준: {data_quarter}"
-    )
+    sections.append(f"## 현재 컨텍스트\n- 상권: {district_name} ({district_code})\n- 데이터 기준: {data_quarter}")
 
     return "\n\n".join(sections)
 

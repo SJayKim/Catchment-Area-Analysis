@@ -4,17 +4,19 @@ Revision ID: 001
 Revises:
 Create Date: 2026-03-25
 """
-from typing import Sequence, Union
+
+from collections.abc import Sequence
 
 import geoalchemy2
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
+
 revision: str = "001"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -65,9 +67,7 @@ def upgrade() -> None:
         sa.Column("age_40_pop", sa.Integer, server_default="0"),
         sa.Column("age_50_pop", sa.Integer, server_default="0"),
         sa.Column("age_60_plus_pop", sa.Integer, server_default="0"),
-        sa.UniqueConstraint(
-            "district_code", "quarter", "time_slot", name="uq_fp_district_quarter_ts"
-        ),
+        sa.UniqueConstraint("district_code", "quarter", "time_slot", name="uq_fp_district_quarter_ts"),
     )
     op.create_index("idx_fp_district_quarter", "floating_population", ["district_code", "quarter"])
 
@@ -103,7 +103,9 @@ def upgrade() -> None:
         sa.Column("time_5_sales", sa.BigInteger),
         sa.Column("time_6_sales", sa.BigInteger),
         sa.UniqueConstraint(
-            "district_code", "category_code", "quarter",
+            "district_code",
+            "category_code",
+            "quarter",
             name="uq_es_district_category_quarter",
         ),
     )
@@ -131,7 +133,9 @@ def upgrade() -> None:
         sa.Column("close_count", sa.Integer),
         sa.Column("franchise_count", sa.Integer),
         sa.UniqueConstraint(
-            "district_code", "category_code", "quarter",
+            "district_code",
+            "category_code",
+            "quarter",
             name="uq_stores_district_category_quarter",
         ),
     )
@@ -172,13 +176,15 @@ def upgrade() -> None:
         sa.Column("gender", sa.String(1), nullable=False),
         sa.Column("population", sa.Integer, nullable=False),
         sa.UniqueConstraint(
-            "district_code", "quarter", "pop_type", "age_group", "gender",
+            "district_code",
+            "quarter",
+            "pop_type",
+            "age_group",
+            "gender",
             name="uq_rp_district_quarter_type_age_gender",
         ),
     )
-    op.create_index(
-        "idx_rp_district_quarter", "resident_population", ["district_code", "quarter"]
-    )
+    op.create_index("idx_rp_district_quarter", "resident_population", ["district_code", "quarter"])
 
     # --- chat_sessions ---
     op.create_table(

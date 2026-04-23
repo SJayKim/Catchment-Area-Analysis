@@ -63,10 +63,21 @@ include = ["server*"]
 
 [tool.ruff]
 target-version = "py312"
-line-length = 100
+# 한국어 프롬프트/에러 메시지가 많아 100 기준으로는 과도한 가독성 저하. 120 으로 운영.
+line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# 시스템/플래너 프롬프트, Few-shot 예시, 추론 힌트 등 의도된 장문 한국어 텍스트.
+"server/agent/nodes/respond.py" = ["E501"]
+"server/agent/prompts/*.py" = ["E501"]
+"server/agent/graph.py" = ["E501"]
+# FastAPI 미들웨어/라우터 등록 순서가 의존하는 import — 상단 이동 시 순서 어긋남.
+"server/main.py" = ["E402"]
+# Typer CLI 관례: Option/Argument 를 기본값으로 호출. 가독성 유지 위해 허용.
+"server/data/etl/runner.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.12"

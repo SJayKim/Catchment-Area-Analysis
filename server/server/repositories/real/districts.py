@@ -59,20 +59,76 @@ class RealDistrictRepository:
             }
 
     # 상권명이 아닌 일반 키워드 (과잉 매칭 방지)
-    _STOPWORDS = frozenset({
-        "카페", "커피", "한식", "중식", "일식", "양식", "분식", "치킨",
-        "편의점", "미용", "약국", "주점", "제과", "음식점", "식당",
-        "서울", "서울시", "상권", "분석", "추천", "비교", "위험",
-        "리스크", "폐업", "매출", "유동인구", "인구", "업종",
-        "시뮬레이션", "히트맵", "리포트", "요약", "현황", "정보",
-        "안녕", "감사", "도움", "질문",
-    })
+    _STOPWORDS = frozenset(
+        {
+            "카페",
+            "커피",
+            "한식",
+            "중식",
+            "일식",
+            "양식",
+            "분식",
+            "치킨",
+            "편의점",
+            "미용",
+            "약국",
+            "주점",
+            "제과",
+            "음식점",
+            "식당",
+            "서울",
+            "서울시",
+            "상권",
+            "분석",
+            "추천",
+            "비교",
+            "위험",
+            "리스크",
+            "폐업",
+            "매출",
+            "유동인구",
+            "인구",
+            "업종",
+            "시뮬레이션",
+            "히트맵",
+            "리포트",
+            "요약",
+            "현황",
+            "정보",
+            "안녕",
+            "감사",
+            "도움",
+            "질문",
+        }
+    )
 
     _PARTICLES = (
-        "에서는", "이랑은", "에서", "부터", "까지", "처럼", "만큼",
-        "이랑", "하고", "에게", "한테", "보다",
-        "은", "는", "이", "가", "을", "를", "에", "도", "로", "의",
-        "와", "과", "랑", "서",
+        "에서는",
+        "이랑은",
+        "에서",
+        "부터",
+        "까지",
+        "처럼",
+        "만큼",
+        "이랑",
+        "하고",
+        "에게",
+        "한테",
+        "보다",
+        "은",
+        "는",
+        "이",
+        "가",
+        "을",
+        "를",
+        "에",
+        "도",
+        "로",
+        "의",
+        "와",
+        "과",
+        "랑",
+        "서",
     )
 
     # Common location suffixes in Korean place names
@@ -89,7 +145,12 @@ class RealDistrictRepository:
         candidates: list[str] = []
         seen: set[str] = set()
         for word in words:
-            for cand in (word, *(word[: -len(p)] for p in cls._PARTICLES if word.endswith(p) and len(word) > len(p) and len(word) - len(p) >= 2)):
+            stripped = (
+                word[: -len(p)]
+                for p in cls._PARTICLES
+                if word.endswith(p) and len(word) > len(p) and len(word) - len(p) >= 2
+            )
+            for cand in (word, *stripped):
                 if cand in cls._STOPWORDS or cand in seen:
                     continue
                 seen.add(cand)
@@ -108,48 +169,56 @@ class RealDistrictRepository:
         return candidates
 
     async def detect_district_by_name(self, message: str) -> dict | None:
-        from sqlalchemy import select, literal
+        from sqlalchemy import literal, select
 
         from server.models.district import District
 
         async with self._sf() as session:
             for candidate in self._candidate_words(message):
                 # 1순위: 정확 매칭
-                row = (await session.execute(
-                    select(District.district_code, District.district_name)
-                    .where(District.district_name == candidate)
-                    .limit(1)
-                )).first()
+                row = (
+                    await session.execute(
+                        select(District.district_code, District.district_name)
+                        .where(District.district_name == candidate)
+                        .limit(1)
+                    )
+                ).first()
                 if row:
                     return {"code": row.district_code, "name": row.district_name}
 
                 # 2순위: prefix 매칭 (3글자 이상만)
                 if len(candidate) >= 3:
-                    row = (await session.execute(
-                        select(District.district_code, District.district_name)
-                        .where(District.district_name.ilike(f"{candidate}%"))
-                        .limit(1)
-                    )).first()
+                    row = (
+                        await session.execute(
+                            select(District.district_code, District.district_name)
+                            .where(District.district_name.ilike(f"{candidate}%"))
+                            .limit(1)
+                        )
+                    ).first()
                     if row:
                         return {"code": row.district_code, "name": row.district_name}
 
                 # 3순위: contains 매칭 (2글자 이상)
                 if len(candidate) >= 2:
-                    row = (await session.execute(
-                        select(District.district_code, District.district_name)
-                        .where(District.district_name.ilike(f"%{candidate}%"))
-                        .limit(1)
-                    )).first()
+                    row = (
+                        await session.execute(
+                            select(District.district_code, District.district_name)
+                            .where(District.district_name.ilike(f"%{candidate}%"))
+                            .limit(1)
+                        )
+                    ).first()
                     if row:
                         return {"code": row.district_code, "name": row.district_name}
 
                 # 4순위: 역방향 prefix (DB 이름이 candidate의 prefix인 경우)
                 if len(candidate) >= 3:
-                    row = (await session.execute(
-                        select(District.district_code, District.district_name)
-                        .where(literal(candidate).ilike(District.district_name + "%"))
-                        .limit(1)
-                    )).first()
+                    row = (
+                        await session.execute(
+                            select(District.district_code, District.district_name)
+                            .where(literal(candidate).ilike(District.district_name + "%"))
+                            .limit(1)
+                        )
+                    ).first()
                     if row:
                         return {"code": row.district_code, "name": row.district_name}
 
@@ -163,7 +232,7 @@ class RealDistrictRepository:
 
         Matching priority: exact > prefix > contains > reverse-prefix.
         """
-        from sqlalchemy import select, literal
+        from sqlalchemy import literal, select
 
         from server.models.district import District
 
@@ -176,11 +245,13 @@ class RealDistrictRepository:
                     break
 
                 # 1순위: 정확 매칭
-                row = (await session.execute(
-                    select(District.district_code, District.district_name)
-                    .where(District.district_name == candidate)
-                    .limit(1)
-                )).first()
+                row = (
+                    await session.execute(
+                        select(District.district_code, District.district_name)
+                        .where(District.district_name == candidate)
+                        .limit(1)
+                    )
+                ).first()
                 if row and row.district_code not in seen_codes:
                     found.append({"code": row.district_code, "name": row.district_name})
                     seen_codes.add(row.district_code)
@@ -188,11 +259,13 @@ class RealDistrictRepository:
 
                 # 2순위: prefix 매칭 (3글자 이상만)
                 if len(candidate) >= 3:
-                    row = (await session.execute(
-                        select(District.district_code, District.district_name)
-                        .where(District.district_name.ilike(f"{candidate}%"))
-                        .limit(1)
-                    )).first()
+                    row = (
+                        await session.execute(
+                            select(District.district_code, District.district_name)
+                            .where(District.district_name.ilike(f"{candidate}%"))
+                            .limit(1)
+                        )
+                    ).first()
                     if row and row.district_code not in seen_codes:
                         found.append({"code": row.district_code, "name": row.district_name})
                         seen_codes.add(row.district_code)
@@ -202,11 +275,13 @@ class RealDistrictRepository:
                 # 예: "강남역" → suffix strip 후 "강남" (len=2) 이 %강남% contains 로
                 # "강남구청역" 같은 무관 상권을 끌어오는 문제 방지.
                 if len(candidate) >= 3:
-                    row = (await session.execute(
-                        select(District.district_code, District.district_name)
-                        .where(District.district_name.ilike(f"%{candidate}%"))
-                        .limit(1)
-                    )).first()
+                    row = (
+                        await session.execute(
+                            select(District.district_code, District.district_name)
+                            .where(District.district_name.ilike(f"%{candidate}%"))
+                            .limit(1)
+                        )
+                    ).first()
                     if row and row.district_code not in seen_codes:
                         found.append({"code": row.district_code, "name": row.district_name})
                         seen_codes.add(row.district_code)
@@ -214,11 +289,13 @@ class RealDistrictRepository:
 
                 # 4순위: 역방향 prefix (DB 이름이 candidate의 prefix인 경우)
                 if len(candidate) >= 3:
-                    row = (await session.execute(
-                        select(District.district_code, District.district_name)
-                        .where(literal(candidate).ilike(District.district_name + "%"))
-                        .limit(1)
-                    )).first()
+                    row = (
+                        await session.execute(
+                            select(District.district_code, District.district_name)
+                            .where(literal(candidate).ilike(District.district_name + "%"))
+                            .limit(1)
+                        )
+                    ).first()
                     if row and row.district_code not in seen_codes:
                         found.append({"code": row.district_code, "name": row.district_name})
                         seen_codes.add(row.district_code)
@@ -258,20 +335,22 @@ class RealDistrictRepository:
             items = []
             for row in rows:
                 district, cx, cy = row
-                items.append({
-                    "district_code": district.district_code,
-                    "district_name": district.district_name,
-                    "district_type": district.district_type,
-                    "gu_code": district.gu_code,
-                    "dong_code": district.dong_code,
-                    "data_quarter": district.data_quarter,
-                    "center_lng": cx,
-                    "center_lat": cy,
-                })
+                items.append(
+                    {
+                        "district_code": district.district_code,
+                        "district_name": district.district_name,
+                        "district_type": district.district_type,
+                        "gu_code": district.gu_code,
+                        "dong_code": district.dong_code,
+                        "data_quarter": district.data_quarter,
+                        "center_lng": cx,
+                        "center_lat": cy,
+                    }
+                )
             return total, items
 
     async def get_district_detail(self, code: str) -> dict | None:
-        from geoalchemy2.functions import ST_AsGeoJSON, ST_X, ST_Y
+        from geoalchemy2.functions import ST_X, ST_Y, ST_AsGeoJSON
         from sqlalchemy import select
 
         from server.models.district import District
@@ -301,7 +380,7 @@ class RealDistrictRepository:
             }
 
     async def get_polygons_geojson(self, bounds: str | None) -> dict:
-        from geoalchemy2.functions import ST_AsGeoJSON, ST_X, ST_Y
+        from geoalchemy2.functions import ST_X, ST_Y, ST_AsGeoJSON
         from sqlalchemy import func, select
 
         from server.models.district import District
@@ -331,15 +410,17 @@ class RealDistrictRepository:
                 if not geojson_str:
                     continue
                 geometry = json.loads(geojson_str)
-                features.append({
-                    "type": "Feature",
-                    "properties": {
-                        "district_code": code,
-                        "district_name": name,
-                        "district_type": d_type,
-                        "data_quarter": quarter,
-                        "center": [cx, cy] if cx is not None and cy is not None else None,
-                    },
-                    "geometry": geometry,
-                })
+                features.append(
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "district_code": code,
+                            "district_name": name,
+                            "district_type": d_type,
+                            "data_quarter": quarter,
+                            "center": [cx, cy] if cx is not None and cy is not None else None,
+                        },
+                        "geometry": geometry,
+                    }
+                )
             return {"type": "FeatureCollection", "features": features}

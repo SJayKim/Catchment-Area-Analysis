@@ -25,9 +25,7 @@ class CircuitOpenError(Exception):
 
     def __init__(self, recovery_remaining: float):
         self.recovery_remaining = recovery_remaining
-        super().__init__(
-            f"Circuit breaker is OPEN. Retry after {recovery_remaining:.1f}s"
-        )
+        super().__init__(f"Circuit breaker is OPEN. Retry after {recovery_remaining:.1f}s")
 
 
 class CircuitBreaker:
@@ -99,9 +97,7 @@ class CircuitBreaker:
 
             if self._state == CircuitState.HALF_OPEN:
                 self._state = CircuitState.OPEN
-                logger.warning(
-                    "Circuit breaker [%s] HALF_OPEN probe failed -> OPEN", self.name
-                )
+                logger.warning("Circuit breaker [%s] HALF_OPEN probe failed -> OPEN", self.name)
             elif self._failure_count >= self.failure_threshold:
                 self._state = CircuitState.OPEN
                 logger.warning(

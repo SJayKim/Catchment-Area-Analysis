@@ -8,9 +8,7 @@ from server.services.cache import get_cache_service
     progress_label="유동인구 데이터 조회 중...",
     done_label="유동인구 조회 완료",
 )
-async def get_floating_population(
-    district_code: str, quarter: str | None = None
-) -> dict:
+async def get_floating_population(district_code: str, quarter: str | None = None) -> dict:
     """Query floating population data for a district."""
     cache = get_cache_service()
     cache_key = f"fp:{district_code}:{quarter or 'latest'}"

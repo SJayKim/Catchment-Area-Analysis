@@ -69,7 +69,8 @@ async def list_districts(
     except OperationalError:
         logger.exception("Database unavailable in list_districts")
         raise HTTPException(
-            status_code=503, detail="Database temporarily unavailable",
+            status_code=503,
+            detail="Database temporarily unavailable",
         ) from None
 
 
@@ -87,5 +88,6 @@ async def get_district(code: str) -> DistrictDetail:
     except OperationalError:
         logger.exception("Database unavailable in get_district")
         raise HTTPException(
-            status_code=503, detail="Database temporarily unavailable",
+            status_code=503,
+            detail="Database temporarily unavailable",
         ) from None

@@ -10,9 +10,7 @@ class RealFloatingPopulationRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._sf = session_factory
 
-    async def get_floating_population(
-        self, district_code: str, quarter: str | None = None
-    ) -> dict:
+    async def get_floating_population(self, district_code: str, quarter: str | None = None) -> dict:
         from server.models.population import FloatingPopulation as FPModel
 
         async with self._sf() as session:

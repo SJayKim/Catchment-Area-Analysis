@@ -33,7 +33,8 @@ async def get_polygons(
             [float(p.strip()) for p in parts]
         except ValueError:
             raise HTTPException(
-                status_code=400, detail="bounds values must be valid numbers",
+                status_code=400,
+                detail="bounds values must be valid numbers",
             ) from None
 
     try:
@@ -46,7 +47,8 @@ async def get_polygons(
     except OperationalError:
         logger.exception("Database unavailable in get_polygons")
         raise HTTPException(
-            status_code=503, detail="Database temporarily unavailable",
+            status_code=503,
+            detail="Database temporarily unavailable",
         ) from None
 
 
@@ -75,7 +77,8 @@ async def get_heatmap(
     except OperationalError:
         logger.exception("Database unavailable in get_heatmap")
         raise HTTPException(
-            status_code=503, detail="Database temporarily unavailable",
+            status_code=503,
+            detail="Database temporarily unavailable",
         ) from None
 
 
@@ -106,5 +109,6 @@ async def get_heatmap_all(
     except OperationalError:
         logger.exception("Database unavailable in get_heatmap_all")
         raise HTTPException(
-            status_code=503, detail="Database temporarily unavailable",
+            status_code=503,
+            detail="Database temporarily unavailable",
         ) from None

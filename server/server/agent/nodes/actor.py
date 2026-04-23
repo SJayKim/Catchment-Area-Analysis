@@ -15,11 +15,23 @@ from server.config import settings
 logger = logging.getLogger(__name__)
 
 # Keys whose list values should be truncated to keep tool results compact
-_TRUNCATABLE_KEYS = frozenset({
-    "by_hour", "quarterly_sales", "top_categories", "by_age_group",
-    "by_gender", "by_day_type", "by_time_slot", "trends", "history",
-    "recommendations", "stores", "categories", "monthly_data",
-})
+_TRUNCATABLE_KEYS = frozenset(
+    {
+        "by_hour",
+        "quarterly_sales",
+        "top_categories",
+        "by_age_group",
+        "by_gender",
+        "by_day_type",
+        "by_time_slot",
+        "trends",
+        "history",
+        "recommendations",
+        "stores",
+        "categories",
+        "monthly_data",
+    }
+)
 
 
 def _truncate_result(data: dict, max_chars: int | None = None) -> dict:
@@ -100,6 +112,7 @@ async def execute_tool(step: ToolPlanStep) -> tuple[str, dict | None, str | None
     # Import DB exceptions for retry — these may not be available in mock mode
     try:
         from sqlalchemy.exc import InterfaceError, OperationalError
+
         _db_errors: tuple = (OperationalError, InterfaceError)
     except ImportError:
         _db_errors = ()
@@ -127,9 +140,7 @@ async def execute_tool(step: ToolPlanStep) -> tuple[str, dict | None, str | None
 
         return step["tool_name"], result, None
     except TimeoutError:
-        logger.warning(
-            "Tool %s timed out after %.0fs", step["tool_name"], settings.tool_execution_timeout
-        )
+        logger.warning("Tool %s timed out after %.0fs", step["tool_name"], settings.tool_execution_timeout)
         timeout_s = settings.tool_execution_timeout
         return step["tool_name"], None, f"Tool timeout: {step['tool_name']} ({timeout_s:.0f}s)"
     except Exception as exc:
@@ -164,7 +175,7 @@ async def actor_node(
                         "type": "tool",
                         "name": step["tool_name"],
                         "input": step["args"],
-                                                "progress_label": meta.progress_label if meta else None,
+                        "progress_label": meta.progress_label if meta else None,
                     }
                 )
 
@@ -193,7 +204,7 @@ async def actor_node(
                     {
                         "type": "tool_end",
                         "name": step["tool_name"],
-                                                "done_label": meta.done_label if meta else None,
+                        "done_label": meta.done_label if meta else None,
                     }
                 )
 

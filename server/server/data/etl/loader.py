@@ -39,13 +39,9 @@ class DataLoader:
                 center_expr = "NULL"
 
                 if row.get("boundary_wkt"):
-                    boundary_expr = (
-                        f"ST_Transform(ST_GeomFromText(:boundary_wkt, 5181), 4326)"
-                    )
+                    boundary_expr = "ST_Transform(ST_GeomFromText(:boundary_wkt, 5181), 4326)"
                 if row.get("center_wkt"):
-                    center_expr = (
-                        f"ST_Transform(ST_GeomFromText(:center_wkt, 5181), 4326)"
-                    )
+                    center_expr = "ST_Transform(ST_GeomFromText(:center_wkt, 5181), 4326)"
 
                 sql = text(f"""
                     INSERT INTO districts (

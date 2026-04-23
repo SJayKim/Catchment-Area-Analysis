@@ -10,18 +10,14 @@ class RealHeatmapRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._sf = session_factory
 
-    async def get_heatmap_data(
-        self, time_slot: int, quarter: str | None = None
-    ) -> dict:
+    async def get_heatmap_data(self, time_slot: int, quarter: str | None = None) -> dict:
         from server.models.district import District
         from server.models.population import FloatingPopulation
 
         async with self._sf() as session:
             if not quarter:
                 latest = await session.execute(
-                    select(FloatingPopulation.quarter)
-                    .order_by(FloatingPopulation.quarter.desc())
-                    .limit(1)
+                    select(FloatingPopulation.quarter).order_by(FloatingPopulation.quarter.desc()).limit(1)
                 )
                 quarter = latest.scalar_one_or_none()
                 if not quarter:
@@ -71,9 +67,7 @@ class RealHeatmapRepository:
         async with self._sf() as session:
             if not quarter:
                 latest = await session.execute(
-                    select(FloatingPopulation.quarter)
-                    .order_by(FloatingPopulation.quarter.desc())
-                    .limit(1)
+                    select(FloatingPopulation.quarter).order_by(FloatingPopulation.quarter.desc()).limit(1)
                 )
                 quarter = latest.scalar_one_or_none()
                 if not quarter:
@@ -107,10 +101,12 @@ class RealHeatmapRepository:
             ts = str(r.time_slot)
             if ts not in slots:
                 slots[ts] = []
-            slots[ts].append({
-                "lat": round(float(r.lat), 6),
-                "lng": round(float(r.lng), 6),
-                "weight": int(r.weight or 0),
-            })
+            slots[ts].append(
+                {
+                    "lat": round(float(r.lat), 6),
+                    "lng": round(float(r.lng), 6),
+                    "weight": int(r.weight or 0),
+                }
+            )
 
         return {"quarter": quarter, "slots": slots}

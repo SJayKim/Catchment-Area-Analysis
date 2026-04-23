@@ -56,11 +56,7 @@ def _rule_based_evaluate(state: AgentState) -> EvaluationResult:
         sufficient=any_success,
         missing_info=missing_info,
         proactive_suggestions=generate_proactive_suggestions(state),
-        reasoning=(
-            "규칙 기반 평가: 확보된 도구 결과로 응답 진행."
-            if any_success
-            else "수집된 데이터 없음."
-        ),
+        reasoning=("규칙 기반 평가: 확보된 도구 결과로 응답 진행." if any_success else "수집된 데이터 없음."),
     )
 
 
@@ -128,14 +124,10 @@ async def _llm_evaluate(state: AgentState) -> EvaluationResult:
     )
 
     llm = _create_llm(role="evaluator")
-    response = await invoke_llm_with_retry(
-        llm, prompt, timeout=settings.llm_timeout_fast
-    )
+    response = await invoke_llm_with_retry(llm, prompt, timeout=settings.llm_timeout_fast)
     content = response.content if hasattr(response, "content") else str(response)
     if isinstance(content, list):
-        content = "".join(
-            b.get("text", "") if isinstance(b, dict) else str(b) for b in content
-        )
+        content = "".join(b.get("text", "") if isinstance(b, dict) else str(b) for b in content)
 
     try:
         json_match = re.search(r"\{.*\}", content, re.DOTALL)

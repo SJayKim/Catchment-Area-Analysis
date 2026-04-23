@@ -12,9 +12,7 @@ class RealEstimatedSalesRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._sf = session_factory
 
-    async def get_estimated_sales(
-        self, district_code: str, category_code: str | None = None
-    ) -> dict:
+    async def get_estimated_sales(self, district_code: str, category_code: str | None = None) -> dict:
         from server.models.sales import EstimatedSales
 
         async with self._sf() as session:

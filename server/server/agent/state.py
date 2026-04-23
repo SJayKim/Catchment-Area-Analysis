@@ -1,8 +1,7 @@
-from typing import Annotated, Optional, TypedDict
+from typing import Annotated, TypedDict
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
-
 
 # ---------------------------------------------------------------------------
 # PAE sub-types
@@ -46,7 +45,7 @@ class AgentState(TypedDict):
     user_intent: str
     intent_confidence: float
     referenced_districts: list[str]
-    referenced_category: Optional[str]
+    referenced_category: str | None
 
     # --- plan (PAE: set by Planner) ---
     plan: list[ToolPlanStep]
@@ -58,7 +57,7 @@ class AgentState(TypedDict):
     execution_round: int
 
     # --- evaluation (PAE: set by Evaluator) ---
-    evaluation: Optional[EvaluationResult]
+    evaluation: EvaluationResult | None
 
     # --- response control (PAE) ---
     response_mode: str  # "direct" | "tool_assisted"

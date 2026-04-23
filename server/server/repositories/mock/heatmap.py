@@ -24,19 +24,19 @@ def _generate_weight(hour: int, base: float) -> float:
 
 
 class MockHeatmapRepository:
-    async def get_heatmap_data(
-        self, time_slot: int, quarter: str | None = None
-    ) -> dict:
+    async def get_heatmap_data(self, time_slot: int, quarter: str | None = None) -> dict:
         points = []
         for c in _MOCK_CENTERS:
             weight = _generate_weight(time_slot, 1.0)
             # Add some jitter around center
             for dx, dy in [(0, 0), (0.002, 0.001), (-0.001, 0.002), (0.001, -0.001)]:
-                points.append({
-                    "lat": c["lat"] + dx,
-                    "lng": c["lng"] + dy,
-                    "weight": round(weight * (1.0 + dx * 100), 2),
-                })
+                points.append(
+                    {
+                        "lat": c["lat"] + dx,
+                        "lng": c["lng"] + dy,
+                        "weight": round(weight * (1.0 + dx * 100), 2),
+                    }
+                )
         return {
             "time_slot": time_slot,
             "quarter": quarter or "2025Q3",

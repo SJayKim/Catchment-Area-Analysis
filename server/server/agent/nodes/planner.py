@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import re
@@ -103,14 +102,10 @@ async def _classify_with_llm(
 
     llm = _create_llm(role="planner")
     try:
-        response = await invoke_llm_with_retry(
-            llm, prompt, timeout=settings.llm_timeout_fast
-        )
+        response = await invoke_llm_with_retry(llm, prompt, timeout=settings.llm_timeout_fast)
         content = response.content if hasattr(response, "content") else str(response)
         if isinstance(content, list):
-            content = "".join(
-                b.get("text", "") if isinstance(b, dict) else str(b) for b in content
-            )
+            content = "".join(b.get("text", "") if isinstance(b, dict) else str(b) for b in content)
         # Extract JSON from response
         json_match = re.search(r"\{.*\}", content, re.DOTALL)
         if json_match:
@@ -118,7 +113,7 @@ async def _classify_with_llm(
         logger.warning("LLM classification returned no JSON, using rule fallback")
     except CircuitOpenError:
         logger.warning("LLM circuit breaker is OPEN, using rule fallback for planner")
-    except (asyncio.TimeoutError, TimeoutError):
+    except TimeoutError:
         logger.warning(
             "LLM classification timed out after %.1fs, using rule fallback",
             settings.llm_timeout_fast,
@@ -128,6 +123,7 @@ async def _classify_with_llm(
         # Disable Anthropic for future calls if the key is invalid
         if "AuthenticationError" in type(exc).__name__ or "authentication" in str(exc).lower():
             import server.agent.graph as _graph_mod
+
             _graph_mod._anthropic_valid = False
             logger.warning("Anthropic API key invalid — disabled for this session")
 

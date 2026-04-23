@@ -27,8 +27,10 @@ class RealRecommendationRepository:
         try:
             async with self._sf() as session:
                 latest_q = await session.execute(
-                    select(Store.quarter).where(Store.district_code == district_code)
-                    .order_by(Store.quarter.desc()).limit(1)
+                    select(Store.quarter)
+                    .where(Store.district_code == district_code)
+                    .order_by(Store.quarter.desc())
+                    .limit(1)
                 )
                 quarter = latest_q.scalar_one_or_none()
                 if quarter is None:
@@ -36,8 +38,17 @@ class RealRecommendationRepository:
 
                 cat_rows = (
                     await session.execute(
-                        select(Store.category_code, Store.category_name, Store.store_count, Store.open_count, Store.close_count)
-                        .where(Store.district_code == district_code, Store.quarter == quarter, Store.store_count > 0)
+                        select(
+                            Store.category_code,
+                            Store.category_name,
+                            Store.store_count,
+                            Store.open_count,
+                            Store.close_count,
+                        ).where(
+                            Store.district_code == district_code,
+                            Store.quarter == quarter,
+                            Store.store_count > 0,
+                        )
                     )
                 ).all()
                 if not cat_rows:
@@ -48,10 +59,14 @@ class RealRecommendationRepository:
                 sales_rows = (
                     await session.execute(
                         select(
-                            EstimatedSales.category_code, EstimatedSales.monthly_sales,
-                            EstimatedSales.age_10_sales, EstimatedSales.age_20_sales,
-                            EstimatedSales.age_30_sales, EstimatedSales.age_40_sales,
-                            EstimatedSales.age_50_sales, EstimatedSales.age_60_plus_sales,
+                            EstimatedSales.category_code,
+                            EstimatedSales.monthly_sales,
+                            EstimatedSales.age_10_sales,
+                            EstimatedSales.age_20_sales,
+                            EstimatedSales.age_30_sales,
+                            EstimatedSales.age_40_sales,
+                            EstimatedSales.age_50_sales,
+                            EstimatedSales.age_60_plus_sales,
                         ).where(EstimatedSales.district_code == district_code, EstimatedSales.quarter == quarter)
                     )
                 ).all()
@@ -66,7 +81,10 @@ class RealRecommendationRepository:
                             func.sum(FloatingPopulation.age_40_pop).label("a40"),
                             func.sum(FloatingPopulation.age_50_pop).label("a50"),
                             func.sum(FloatingPopulation.age_60_plus_pop).label("a60"),
-                        ).where(FloatingPopulation.district_code == district_code, FloatingPopulation.quarter == quarter)
+                        ).where(
+                            FloatingPopulation.district_code == district_code,
+                            FloatingPopulation.quarter == quarter,
+                        )
                     )
                 ).one_or_none()
 
@@ -74,15 +92,24 @@ class RealRecommendationRepository:
                 pop_total = 0
                 if fp_row:
                     pop_by_age = {
-                        "10대": int(fp_row.a10 or 0), "20대": int(fp_row.a20 or 0),
-                        "30대": int(fp_row.a30 or 0), "40대": int(fp_row.a40 or 0),
-                        "50대": int(fp_row.a50 or 0), "60대 이상": int(fp_row.a60 or 0),
+                        "10대": int(fp_row.a10 or 0),
+                        "20대": int(fp_row.a20 or 0),
+                        "30대": int(fp_row.a30 or 0),
+                        "40대": int(fp_row.a40 or 0),
+                        "50대": int(fp_row.a50 or 0),
+                        "60대 이상": int(fp_row.a60 or 0),
                     }
                     pop_total = sum(pop_by_age.values())
 
-                meta_rows = (await session.execute(
-                    select(CategoryMetadata.category_code, CategoryMetadata.avg_startup_cost, CategoryMetadata.major_category)
-                )).all()
+                meta_rows = (
+                    await session.execute(
+                        select(
+                            CategoryMetadata.category_code,
+                            CategoryMetadata.avg_startup_cost,
+                            CategoryMetadata.major_category,
+                        )
+                    )
+                ).all()
                 meta_map = {r.category_code: r for r in meta_rows}
 
                 raw_scores = []
@@ -102,9 +129,12 @@ class RealRecommendationRepository:
                     close_rate = close_count / store_count if store_count else 0
 
                     age_sales = {
-                        "10대": int(sales_data.age_10_sales or 0), "20대": int(sales_data.age_20_sales or 0),
-                        "30대": int(sales_data.age_30_sales or 0), "40대": int(sales_data.age_40_sales or 0),
-                        "50대": int(sales_data.age_50_sales or 0), "60대 이상": int(sales_data.age_60_plus_sales or 0),
+                        "10대": int(sales_data.age_10_sales or 0),
+                        "20대": int(sales_data.age_20_sales or 0),
+                        "30대": int(sales_data.age_30_sales or 0),
+                        "40대": int(sales_data.age_40_sales or 0),
+                        "50대": int(sales_data.age_50_sales or 0),
+                        "60대 이상": int(sales_data.age_60_plus_sales or 0),
                     }
                     total_age_sales = sum(age_sales.values())
 
@@ -132,15 +162,21 @@ class RealRecommendationRepository:
                         reasons.append(f"폐업률 주의 ({close_rate * 100:.1f}%)")
 
                     meta = meta_map.get(code)
-                    raw_scores.append({
-                        "category_code": code, "category_name": name,
-                        "raw_score": raw_score, "per_store_sales": int(per_store_sales),
-                        "store_count": store_count, "close_rate": round(close_rate * 100, 1),
-                        "age_match": round(age_match * 100, 1), "monthly_sales": monthly_sales,
-                        "reasons": reasons,
-                        "startup_cost": int(meta.avg_startup_cost or 0) if meta else None,
-                        "category_group": meta.major_category if meta else None,
-                    })
+                    raw_scores.append(
+                        {
+                            "category_code": code,
+                            "category_name": name,
+                            "raw_score": raw_score,
+                            "per_store_sales": int(per_store_sales),
+                            "store_count": store_count,
+                            "close_rate": round(close_rate * 100, 1),
+                            "age_match": round(age_match * 100, 1),
+                            "monthly_sales": monthly_sales,
+                            "reasons": reasons,
+                            "startup_cost": int(meta.avg_startup_cost or 0) if meta else None,
+                            "category_group": meta.major_category if meta else None,
+                        }
+                    )
 
                 filtered = raw_scores
                 budget_filtered = False
@@ -149,7 +185,9 @@ class RealRecommendationRepository:
                     if pref_f:
                         filtered = pref_f
                 if budget:
-                    budget_f = [s for s in filtered if s.get("startup_cost") is not None and s["startup_cost"] <= budget]
+                    budget_f = [
+                        s for s in filtered if s.get("startup_cost") is not None and s["startup_cost"] <= budget
+                    ]
                     if budget_f:
                         filtered = budget_f
                         budget_filtered = True
@@ -167,11 +205,16 @@ class RealRecommendationRepository:
                 recommendations = []
                 for i, item in enumerate(top5, 1):
                     rec = {
-                        "rank": i, "category_name": item["category_name"],
-                        "category_code": item["category_code"], "score": item.get("score", 0),
-                        "per_store_sales": item["per_store_sales"], "store_count": item["store_count"],
-                        "close_rate": item["close_rate"], "age_match": item["age_match"],
-                        "monthly_sales": item["monthly_sales"], "reasons": item["reasons"],
+                        "rank": i,
+                        "category_name": item["category_name"],
+                        "category_code": item["category_code"],
+                        "score": item.get("score", 0),
+                        "per_store_sales": item["per_store_sales"],
+                        "store_count": item["store_count"],
+                        "close_rate": item["close_rate"],
+                        "age_match": item["age_match"],
+                        "monthly_sales": item["monthly_sales"],
+                        "reasons": item["reasons"],
                     }
                     if item.get("startup_cost"):
                         rec["startup_cost"] = item["startup_cost"]
@@ -182,8 +225,10 @@ class RealRecommendationRepository:
                     message = "예산 조건에 맞는 업종이 없어 전체 기준으로 추천합니다"
 
                 result = {
-                    "district_code": district_code, "quarter": quarter,
-                    "recommendations": recommendations, "total_categories_analyzed": len(raw_scores),
+                    "district_code": district_code,
+                    "quarter": quarter,
+                    "recommendations": recommendations,
+                    "total_categories_analyzed": len(raw_scores),
                 }
                 if message:
                     result["message"] = message

@@ -65,13 +65,19 @@ class RealComparisonRepository:
                                     func.sum(FloatingPopulation.age_40_pop).label("a40"),
                                     func.sum(FloatingPopulation.age_50_pop).label("a50"),
                                     func.sum(FloatingPopulation.age_60_plus_pop).label("a60"),
-                                ).where(FloatingPopulation.district_code == code, FloatingPopulation.quarter == fp_quarter)
+                                ).where(
+                                    FloatingPopulation.district_code == code,
+                                    FloatingPopulation.quarter == fp_quarter,
+                                )
                             )
                         ).one()
                         age_map = {
-                            "10대": int(fp_row.a10 or 0), "20대": int(fp_row.a20 or 0),
-                            "30대": int(fp_row.a30 or 0), "40대": int(fp_row.a40 or 0),
-                            "50대": int(fp_row.a50 or 0), "60대 이상": int(fp_row.a60 or 0),
+                            "10대": int(fp_row.a10 or 0),
+                            "20대": int(fp_row.a20 or 0),
+                            "30대": int(fp_row.a30 or 0),
+                            "40대": int(fp_row.a40 or 0),
+                            "50대": int(fp_row.a50 or 0),
+                            "60대 이상": int(fp_row.a60 or 0),
                         }
                         district_data["floating_pop"] = int(fp_row.total or 0)
                         district_data["main_age"] = max(age_map, key=age_map.get) if any(age_map.values()) else "-"
@@ -81,8 +87,7 @@ class RealComparisonRepository:
 
                     # Stores
                     st_latest = await session.execute(
-                        select(Store.quarter).where(Store.district_code == code)
-                        .order_by(Store.quarter.desc()).limit(1)
+                        select(Store.quarter).where(Store.district_code == code).order_by(Store.quarter.desc()).limit(1)
                     )
                     st_quarter = st_latest.scalar_one_or_none()
                     if st_quarter:
@@ -97,22 +102,27 @@ class RealComparisonRepository:
                         total_stores = int(st_row.total or 0)
                         close_count = int(st_row.closes or 0)
                         district_data["store_count"] = total_stores
-                        district_data["close_rate"] = round(close_count / total_stores * 100, 1) if total_stores else 0.0
+                        district_data["close_rate"] = (
+                            round(close_count / total_stores * 100, 1) if total_stores else 0.0
+                        )
                     else:
                         district_data["store_count"] = 0
                         district_data["close_rate"] = 0.0
 
                     # Sales + trend
                     sales_latest = await session.execute(
-                        select(EstimatedSales.quarter).where(EstimatedSales.district_code == code)
-                        .order_by(EstimatedSales.quarter.desc()).limit(1)
+                        select(EstimatedSales.quarter)
+                        .where(EstimatedSales.district_code == code)
+                        .order_by(EstimatedSales.quarter.desc())
+                        .limit(1)
                     )
                     sales_quarter = sales_latest.scalar_one_or_none()
                     if sales_quarter:
                         sales_row = (
                             await session.execute(
-                                select(func.sum(EstimatedSales.monthly_sales).label("total"))
-                                .where(EstimatedSales.district_code == code, EstimatedSales.quarter == sales_quarter)
+                                select(func.sum(EstimatedSales.monthly_sales).label("total")).where(
+                                    EstimatedSales.district_code == code, EstimatedSales.quarter == sales_quarter
+                                )
                             )
                         ).one()
                         # DB stores quarterly aggregate; convert to monthly.

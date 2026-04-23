@@ -1,8 +1,8 @@
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import create_engine
 
+from alembic import context
 from server.config import settings
 from server.models import Base  # noqa: F401 — registers all models
 

@@ -13,7 +13,6 @@ import asyncio
 import logging
 import re
 import time
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -54,9 +53,9 @@ async def _run_pipeline(
 ) -> None:
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+    from server.data.etl import transformers
     from server.data.etl.loader import DataLoader
     from server.data.etl.seoul_opendata import SeoulOpenDataCollector
-    from server.data.etl import transformers
 
     year, q = _parse_quarter(quarter)
     raw_quarter = f"{year}{q}"  # API uses "20253" format
@@ -76,6 +75,7 @@ async def _run_pipeline(
             t0 = time.time()
             if shp_file:
                 from server.data.etl.shp_collector import load_districts_from_shp
+
                 console.print(f"[bold blue]Loading districts from SHP: {shp_file}[/]")
                 transformed = load_districts_from_shp(shp_file, quarter)
             else:
@@ -146,6 +146,7 @@ async def _run_pipeline(
             # Resident population: CSV or API
             if csv_file:
                 from server.data.etl.csv_collector import load_resident_pop_csv
+
                 console.print(f"[bold blue]Loading resident population from CSV: {csv_file}[/]")
                 transformed.extend(load_resident_pop_csv(csv_file, quarter))
             else:
@@ -158,9 +159,11 @@ async def _run_pipeline(
                     console.print(f"  [yellow]API failed: {e}[/]")
                     # Try CSV fallback
                     from pathlib import Path
+
                     fallback = Path(DEFAULT_RESIDENT_CSV)
                     if fallback.exists():
                         from server.data.etl.csv_collector import load_resident_pop_csv
+
                         console.print(f"  [yellow]Falling back to CSV: {fallback}[/]")
                         transformed.extend(load_resident_pop_csv(str(fallback), quarter))
                     else:
@@ -189,6 +192,7 @@ async def _run_pipeline(
         t0 = time.time()
         console.print("[bold blue]Seeding category_metadata from stores...[/]")
         from server.data.etl.seed_category_metadata import seed_category_metadata
+
         cat_count = await seed_category_metadata(session_factory)
         elapsed = time.time() - t0
         results.append({"table": "category_metadata", "rows": cat_count, "time": elapsed})
@@ -216,9 +220,7 @@ async def _validate_data(quarter: str) -> None:
 
     async with session_factory() as session:
         # Row counts
-        for table_name in [
-            "districts", "floating_population", "estimated_sales", "stores", "resident_population"
-        ]:
+        for table_name in ["districts", "floating_population", "estimated_sales", "stores", "resident_population"]:
             result = await session.execute(
                 sql_text(f"SELECT COUNT(*) FROM {table_name}")  # noqa: S608
             )
@@ -226,29 +228,37 @@ async def _validate_data(quarter: str) -> None:
             checks.append({"check": f"{table_name} row count", "result": str(count), "ok": count > 0})
 
         # Referential integrity: floating_population district_codes exist in districts
-        result = await session.execute(sql_text("""
+        result = await session.execute(
+            sql_text("""
             SELECT COUNT(*) FROM floating_population fp
             WHERE NOT EXISTS (SELECT 1 FROM districts d WHERE d.district_code = fp.district_code)
-        """))
+        """)
+        )
         orphans = result.scalar() or 0
-        checks.append({
-            "check": "floating_pop FK integrity",
-            "result": f"{orphans} orphans",
-            "ok": orphans == 0,
-        })
+        checks.append(
+            {
+                "check": "floating_pop FK integrity",
+                "result": f"{orphans} orphans",
+                "ok": orphans == 0,
+            }
+        )
 
         # NULL ratio for districts.boundary
-        result = await session.execute(sql_text("""
+        result = await session.execute(
+            sql_text("""
             SELECT
                 COUNT(*) FILTER (WHERE boundary IS NULL) * 100.0 / NULLIF(COUNT(*), 0)
             FROM districts
-        """))
+        """)
+        )
         null_pct = result.scalar() or 0
-        checks.append({
-            "check": "districts.boundary NULL %",
-            "result": f"{null_pct:.1f}%",
-            "ok": null_pct < 5,
-        })
+        checks.append(
+            {
+                "check": "districts.boundary NULL %",
+                "result": f"{null_pct:.1f}%",
+                "ok": null_pct < 5,
+            }
+        )
 
     await engine.dispose()
 
@@ -265,14 +275,10 @@ async def _validate_data(quarter: str) -> None:
 @app.command()
 def run(
     quarter: str = typer.Argument(..., help="Target quarter (e.g., 2025Q3)"),
-    table: Optional[list[str]] = typer.Option(None, "--table", "-t", help="Specific tables to load"),
+    table: list[str] | None = typer.Option(None, "--table", "-t", help="Specific tables to load"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Collect & transform only, skip DB load"),
-    shp_file: Optional[str] = typer.Option(
-        None, "--shp-file", help="SHP file for districts (overrides API)"
-    ),
-    csv_file: Optional[str] = typer.Option(
-        None, "--csv-file", help="CSV file for resident population (overrides API)"
-    ),
+    shp_file: str | None = typer.Option(None, "--shp-file", help="SHP file for districts (overrides API)"),
+    csv_file: str | None = typer.Option(None, "--csv-file", help="CSV file for resident population (overrides API)"),
 ) -> None:
     """Run ETL pipeline for a given quarter."""
     _parse_quarter(quarter)  # validate format
@@ -339,7 +345,10 @@ def load_csv(
     if dry_run:
         console.print("[yellow]DRY RUN — showing sample:[/]")
         for r in rows[:6]:
-            console.print(f"  {r['district_code']} | {r['quarter']} | {r['pop_type']} | {r['age_group']} | {r['gender']} | {r['population']}")
+            console.print(
+                f"  {r['district_code']} | {r['quarter']} | {r['pop_type']} | "
+                f"{r['age_group']} | {r['gender']} | {r['population']}"
+            )
         return
 
     async def _load() -> None:

@@ -16,9 +16,7 @@ class EstimatedSales(Base):
     __tablename__ = "estimated_sales"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    district_code: Mapped[str] = mapped_column(
-        String(20), ForeignKey("districts.district_code"), nullable=False
-    )
+    district_code: Mapped[str] = mapped_column(String(20), ForeignKey("districts.district_code"), nullable=False)
     category_code: Mapped[str] = mapped_column(String(20), nullable=False)
     category_name: Mapped[str] = mapped_column(String(100), nullable=False)
     quarter: Mapped[str] = mapped_column(String(10), nullable=False)
@@ -43,7 +41,9 @@ class EstimatedSales(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "district_code", "category_code", "quarter",
+            "district_code",
+            "category_code",
+            "quarter",
             name="uq_es_district_category_quarter",
         ),
         Index("idx_es_district_category", "district_code", "category_code", "quarter"),

@@ -41,10 +41,7 @@ async def _get_session(session_id: str) -> dict:
     async with _sessions_lock:
         # 쓰로틀 pruning (60초에 1회)
         if now - _last_prune_time > _PRUNE_INTERVAL:
-            expired = [
-                k for k, v in _sessions.items()
-                if now - v.get("last_active", 0) > _SESSION_TTL
-            ]
+            expired = [k for k, v in _sessions.items() if now - v.get("last_active", 0) > _SESSION_TTL]
             for k in expired:
                 del _sessions[k]
             _last_prune_time = now
@@ -56,7 +53,8 @@ async def _get_session(session_id: str) -> dict:
                 del _sessions[oldest_key]
                 logger.info(
                     "Session evicted (max_count=%d): %s",
-                    settings.session_max_count, oldest_key,
+                    settings.session_max_count,
+                    oldest_key,
                 )
 
             _sessions[session_id] = {
@@ -107,8 +105,10 @@ async def health_detail(request: Request) -> dict:
         }
     else:
         db_info = {
-            "db_pool_size": 0, "db_pool_checkedout": 0,
-            "db_pool_overflow": 0, "db_pool_checkedin": 0,
+            "db_pool_size": 0,
+            "db_pool_checkedout": 0,
+            "db_pool_overflow": 0,
+            "db_pool_checkedin": 0,
         }
 
     # Redis status
@@ -205,20 +205,32 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
 
             # 인사 단축 (Agent 파이프라인 스킵 → <1s)
             if _GREETING_PATTERN.match(body.message.strip()):
-                yield {"data": json.dumps({
-                    "type": "text",
-                    "content": (
-                        "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다.\n"
-                        "지도에서 상권을 선택하시거나, 분석할 상권명을 알려주세요!"
-                    ),
-                }, ensure_ascii=False)}
-                yield {"data": json.dumps({
-                    "type": "suggestion",
-                    "questions": [
-                        "강남역 상권 분석해줘", "홍대 어때?",
-                        "업종 추천해줘", "상권 비교하고 싶어",
-                    ],
-                }, ensure_ascii=False)}
+                yield {
+                    "data": json.dumps(
+                        {
+                            "type": "text",
+                            "content": (
+                                "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다.\n"
+                                "지도에서 상권을 선택하시거나, 분석할 상권명을 알려주세요!"
+                            ),
+                        },
+                        ensure_ascii=False,
+                    )
+                }
+                yield {
+                    "data": json.dumps(
+                        {
+                            "type": "suggestion",
+                            "questions": [
+                                "강남역 상권 분석해줘",
+                                "홍대 어때?",
+                                "업종 추천해줘",
+                                "상권 비교하고 싶어",
+                            ],
+                        },
+                        ensure_ascii=False,
+                    )
+                }
                 yield {"data": json.dumps({"type": "done"}, ensure_ascii=False)}
                 return
 
@@ -226,18 +238,23 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
             if district_center:
                 if await request.is_disconnected():
                     return
-                yield {"data": json.dumps({
-                    "type": "map_cmd",
-                    "action": "move",
-                    "params": {
-                        "lat": district_center["lat"],
-                        "lng": district_center["lng"],
-                        "zoom": 4,
-                    },
-                    "district_code": body.district_code,
-                    "district_name": district_name,
-                    "district_type": district_type,
-                }, ensure_ascii=False)}
+                yield {
+                    "data": json.dumps(
+                        {
+                            "type": "map_cmd",
+                            "action": "move",
+                            "params": {
+                                "lat": district_center["lat"],
+                                "lng": district_center["lng"],
+                                "zoom": 4,
+                            },
+                            "district_code": body.district_code,
+                            "district_name": district_name,
+                            "district_type": district_type,
+                        },
+                        ensure_ascii=False,
+                    )
+                }
 
             collected_text = ""
 
@@ -268,17 +285,21 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                     "SSE connection exceeded max duration (%.0fs)",
                     settings.sse_connection_max_duration,
                 )
-                yield {"data": json.dumps(
-                    {"type": "text", "content": "\n\n(응답 시간이 초과되어 종료합니다.)"},
-                    ensure_ascii=False,
-                )}
+                yield {
+                    "data": json.dumps(
+                        {"type": "text", "content": "\n\n(응답 시간이 초과되어 종료합니다.)"},
+                        ensure_ascii=False,
+                    )
+                }
                 yield {"data": json.dumps({"type": "done"}, ensure_ascii=False)}
             except Exception:
                 logger.exception("SSE event generation failed")
-                yield {"data": json.dumps(
-                    {"type": "text", "content": "죄송합니다. 서비스에 오류가 발생했습니다."},
-                    ensure_ascii=False,
-                )}
+                yield {
+                    "data": json.dumps(
+                        {"type": "text", "content": "죄송합니다. 서비스에 오류가 발생했습니다."},
+                        ensure_ascii=False,
+                    )
+                }
                 yield {"data": json.dumps({"type": "done"}, ensure_ascii=False)}
 
             # Save conversation turns

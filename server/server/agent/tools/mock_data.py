@@ -130,12 +130,14 @@ def get_mock_district_list(search: str | None = None, district_type: str | None 
             continue
         if district_type and d["type"] != district_type:
             continue
-        results.append({
-            "district_code": code,
-            "district_name": d["name"],
-            "district_type": d["type"],
-            "data_quarter": d["quarter"],
-            "center_lng": d["center"]["lng"],
-            "center_lat": d["center"]["lat"],
-        })
+        results.append(
+            {
+                "district_code": code,
+                "district_name": d["name"],
+                "district_type": d["type"],
+                "data_quarter": d["quarter"],
+                "center_lng": d["center"]["lng"],
+                "center_lat": d["center"]["lat"],
+            }
+        )
     return results
