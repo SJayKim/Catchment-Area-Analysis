@@ -12,7 +12,8 @@ server/server/
 ├── api/
 │   ├── routes/
 │   │   ├── chat.py      # POST /api/chat (SSE 스트리밍)
-│   │   ├── districts.py # GET /api/districts, /{code}
+│   │   ├── districts.py # GET /api/districts, /{code}, /{code}/preview
+│   │   ├── feedback.py  # POST /api/feedback/score (Langfuse score proxy)
 │   │   └── map_data.py  # GET /api/map-data/polygons, /heatmap[/all]
 │   ├── deps.py          # FastAPI 의존성 주입
 │   ├── middleware.py    # RequestId, SecurityHeaders
@@ -107,6 +108,8 @@ server/server/
 | GET | `/api/map-data/polygons` | `bounds?` | GeoJSON FeatureCollection | 뷰포트 필터 |
 | GET | `/api/map-data/heatmap` | `time_slot=0..23`, `quarter?` | `{points[]}` | Redis cache 24h |
 | GET | `/api/map-data/heatmap/all` | `quarter?` | `{slots: {0..23: [...]}}` | 프리로드 |
+| GET | `/api/districts/{code}/preview` | `role?` | `DistrictPreview` JSON | F13 — LLM 무호출, Redis 24h |
+| POST | `/api/feedback/score` | `{trace_id, value, reason?, comment?}` | 202/204 | F12 L1 — Langfuse score proxy |
 
 ### `/api/chat` SSE 이벤트
 

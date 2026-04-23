@@ -2,7 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+@layer utilities {
+  /* WCAG 2.5.8 AA — 최소 터치 타깃 44×44px (본 프로젝트 표준) */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* iOS/Android safe-area padding helpers */
+  .pb-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+  .pl-safe {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+  .pr-safe {
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+}
+
+/* ===========================================================
+ * Design tokens — light(default) / dark via [data-theme]
+ * Brand: Deep Blue + Teal. 2026-04-23 Plan: landing-onboarding-feedback
+ * =========================================================== */
+
+:root,
+:root[data-theme='light'] {
+  /* 라이트 팔레트 — 한국 B2C 기본값 (Toss/Kakao Bank 관례) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-accent: #0b3d91;
+  --bg-accent-hover: #0a3480;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --bot-bubble: #f1f5f9;
+  --user-bubble: #0b3d91;
+  --success: #059669;
+  --warning: #d97706;
+  --error: #dc2626;
+  --thinking-bg: rgba(11, 61, 145, 0.06);
+  --thinking-border: #0b3d91;
+
+  /* brand tokens (공통) */
+  --brand-deep-blue: #0b3d91;
+  --brand-deep-blue-hover: #0a3480;
+  --brand-teal: #14b8a6;
+  --brand-teal-hover: #0f9488;
+
+  /* 비교모드 3색 슬롯 (DistrictLayer 연동) */
+  --compare-slot-1: #3b82f6;
+  --compare-slot-2: #f59e0b;
+  --compare-slot-3: #f43f5e;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  /* 다크 팔레트 — 기존 2026-04-23 이전 값 보존 */
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #283548;
@@ -19,6 +81,69 @@
   --error: #ef4444;
   --thinking-bg: rgba(59, 130, 246, 0.06);
   --thinking-border: #3b82f6;
+
+  --brand-deep-blue: #3b82f6;
+  --brand-deep-blue-hover: #2563eb;
+  --brand-teal: #2dd4bf;
+  --brand-teal-hover: #14b8a6;
+
+  --compare-slot-1: #60a5fa;
+  --compare-slot-2: #fbbf24;
+  --compare-slot-3: #fb7185;
+
+  color-scheme: dark;
+}
+
+/* system preference 자동 추적 — data-theme 미지정 시 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #283548;
+    --bg-accent: #3b82f6;
+    --bg-accent-hover: #2563eb;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: #334155;
+    --bot-bubble: #1e293b;
+    --user-bubble: #3b82f6;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --thinking-bg: rgba(59, 130, 246, 0.06);
+    --thinking-border: #3b82f6;
+    --brand-deep-blue: #3b82f6;
+    --brand-deep-blue-hover: #2563eb;
+    --brand-teal: #2dd4bf;
+    --brand-teal-hover: #14b8a6;
+    --compare-slot-1: #60a5fa;
+    --compare-slot-2: #fbbf24;
+    --compare-slot-3: #fb7185;
+    color-scheme: dark;
+  }
+}
+
+/* 감소 모션 — 접근성 필수 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Safe-area inset tokens — iOS notch / home indicator / Android gesture bar */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  /* 모바일 가상 키보드 높이. useKeyboardInset() 훅이 런타임에 업데이트. */
+  --kb-inset: 0px;
 }
 
 @layer base {
@@ -31,6 +156,19 @@
     background-color: var(--bg-primary);
     color: var(--text-primary);
     @apply antialiased;
+    font-family:
+      'Pretendard Variable',
+      Pretendard,
+      -apple-system,
+      BlinkMacSystemFont,
+      system-ui,
+      Roboto,
+      'Helvetica Neue',
+      'Segoe UI',
+      'Apple SD Gothic Neo',
+      'Noto Sans KR',
+      'Malgun Gothic',
+      sans-serif;
   }
 
   /* Hide scrollbar for cleaner UI */
@@ -89,6 +227,16 @@
   }
   .animate-step-in {
     animation: step-in 0.2s ease-out forwards;
+  }
+
+  /* Hero visual PNG cross-fade loop (랜딩 전용) */
+  @keyframes hero-crossfade {
+    0%, 28% { opacity: 1; }
+    33%, 95% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  .hero-frame {
+    animation: hero-crossfade 8s ease-in-out infinite;
   }
 
   /* Markdown body styles */

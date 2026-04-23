@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
@@ -19,6 +19,18 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { browserName: 'chromium' },
+    },
+    {
+      name: 'mobile-iphone',
+      use: { ...devices['iPhone 12'] },
+    },
+    {
+      name: 'mobile-galaxy',
+      use: { ...devices['Galaxy S9+'] },
+    },
+    {
+      name: 'tablet-ipad',
+      use: { ...devices['iPad Pro 11'] },
     },
   ],
 });

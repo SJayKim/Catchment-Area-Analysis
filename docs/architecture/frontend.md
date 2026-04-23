@@ -7,45 +7,60 @@
 ```
 frontend/src/
 ├── app/
-│   ├── layout.tsx           # 루트 레이아웃 (CSS 변수 + Inter font)
-│   ├── page.tsx             # 메인 (Toolbar + SplitPanel + StatusBar)
-│   ├── globals.css          # 다크 테마 CSS 변수
+│   ├── layout.tsx           # 루트 레이아웃 (Pretendard + SSR data-theme cookie)
+│   ├── page.tsx             # ▶ F11 랜딩 (Header/Hero/Bento/HowItWorks/BetaBanner/Footer)
+│   ├── app/
+│   │   └── page.tsx         # ▶ 분석 앱 (Toolbar + SplitPanel + StatusBar + DeepLinkHandler + Feedback)
+│   ├── globals.css          # [data-theme='light'|'dark'] 이중 팔레트 + brand tokens
 │   └── proxy/
 │       └── kakao-sdk/route.ts  # Kakao SDK 서버 프록시 (ORB 회피)
 ├── components/
+│   ├── landing/             # Header, Hero, RoleSelector, HeroVisual, Bento, HowItWorks, BetaBanner, Footer (F11)
+│   ├── feedback/            # FeedbackFab, FeedbackModal, FeedbackRow, FreeLimitSurvey (F12)
 │   ├── layout/              # SplitPanel, Toolbar, StatusBar
 │   ├── map/                 # MapContainer, DistrictLayer, HeatmapLayer,
 │   │                        # MapControls, TimeSlider
 │   ├── chat/                # ChatPanel, MessageList, MessageBubble,
-│   │                        # ChatInput, SuggestionChips,
+│   │                        # ChatInput, SuggestionChips, PreviewCard (F13),
 │   │                        # AgentProgressIndicator, cards/
 │   └── report/              # ReportDocument (PDF)
 ├── stores/                  # Zustand (chat, district, map)
 ├── hooks/                   # useChat, useMapSync, useReportExport
 └── lib/
-    ├── api.ts               # fetch 래퍼
+    ├── api.ts               # fetch 래퍼 (fetchDistrictPreview, submitFeedback 포함)
     ├── sseParser.ts         # SSE 스트림 파서 (async generator)
     ├── eventHandlers.ts     # SSE event → store dispatch
     └── types.ts             # 공유 타입 (District / ChatMessage / SSEEvent …)
 ```
 
-## 2. 페이지 구성 (`app/page.tsx`)
+## 2. 라우팅 + 페이지 구성
+
+| 라우트 | 역할 |
+|---|---|
+| `/` | F11 공개 랜딩 (브랜드 + role chip + Bento + 베타 배너). FeedbackFab 노출. |
+| `/app` | 분석 앱. `?role=<r>&q=<prefill>` deep link → `chatStore.setRole()` + auto send (300ms). |
+| `/proxy/kakao-sdk` | Kakao Map SDK 서버 프록시. |
+
+`/app` 레이아웃:
 
 ```
 ┌─────────────────────────────── Toolbar ────────────────────────────────┐
 ├──────────────────────── SplitPanel (드래그 30~80%) ────────────────────┤
 │   MapContainer (Kakao Map)       │       ChatPanel (SSE streaming)    │
 │    ├ DistrictLayer (폴리곤)       │       ├ MessageList                │
-│    ├ HeatmapLayer (dynamic)      │       │   ├ MessageBubble          │
-│    ├ MapControls (zoom)          │       │   ├ AgentProgressIndicator │
-│    └ TimeSlider (0~23h)          │       │   └ Card (5종)             │
+│    ├ HeatmapLayer (dynamic)      │       │   ├ PreviewCard (F13)       │
+│    ├ MapControls (zoom)          │       │   ├ MessageBubble          │
+│    └ TimeSlider (0~23h)          │       │   ├ FeedbackRow (F12 L1)   │
+│                                  │       │   └ Card (5종)             │
 │                                  │       ├ SuggestionChips            │
 │                                  │       └ ChatInput                  │
 ├──────────────────────────────── StatusBar ─────────────────────────────┤
+│                            FeedbackFab (F12 L3) / FreeLimitSurvey (L2) │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-`useMapSync` 훅이 `districtStore.selected.source === 'map'` 이면 자동으로 `"상권 요약해줘"` 쿼리를 챗으로 전달한다.
+`useMapSync` 는 지도 클릭 시 LLM 호출 없이 `chatStore.setPreview(code)` 로 REST 프리뷰만 호출.
+사용자가 PreviewCard 의 chip 이나 "AI 분석 보기" 를 눌러야 PAE 풀파이프로 진입 (F13).
 
 ## 3. Zustand Store
 

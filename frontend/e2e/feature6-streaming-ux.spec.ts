@@ -2,7 +2,7 @@ import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete
 
 test.describe('Feature 6: Streaming UX', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
   });
 

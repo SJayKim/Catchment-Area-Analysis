@@ -1,23 +1,27 @@
-'use client';
+import {
+  Header,
+  Hero,
+  BentoFeatures,
+  HowItWorks,
+  BetaBanner,
+  Footer,
+} from '@/components/landing';
+import { FeedbackFab } from '@/components/feedback';
 
-import Toolbar from '@/components/layout/Toolbar';
-import SplitPanel from '@/components/layout/SplitPanel';
-import StatusBar from '@/components/layout/StatusBar';
-import MapContainer from '@/components/map/MapContainer';
-import ChatPanel from '@/components/chat/ChatPanel';
-import { useMapSync } from '@/hooks/useMapSync';
-
-export default function Home() {
-  useMapSync();
-
+export default function LandingPage() {
   return (
-    <div className="flex flex-col h-screen">
-      <Toolbar />
-      <SplitPanel
-        left={<MapContainer />}
-        right={<ChatPanel />}
-      />
-      <StatusBar />
-    </div>
+    <main
+      data-testid="landing-page"
+      className="min-h-screen overflow-x-hidden"
+      style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+    >
+      <Header />
+      <Hero />
+      <BentoFeatures />
+      <HowItWorks />
+      <BetaBanner />
+      <Footer />
+      <FeedbackFab />
+    </main>
   );
 }

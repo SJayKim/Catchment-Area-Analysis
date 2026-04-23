@@ -10,7 +10,7 @@ test.beforeAll(() => ensureRunDir());
 
 test.describe('Ring 1 — F08 Risk Analysis', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
   });
 

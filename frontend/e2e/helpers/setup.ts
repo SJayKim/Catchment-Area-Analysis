@@ -14,6 +14,23 @@ export const test = base.extend<{}>({
 
 export const expect = baseExpect;
 
+/**
+ * Navigate to the analysis app at /app.
+ * As of 2026-04-23 Plan (landing-onboarding-feedback), `/` is the public landing
+ * page and the actual app lives at `/app`. Use this helper in tests instead of
+ * `page.goto('/')` so future route shifts stay centralised.
+ */
+export async function gotoApp(
+  page: Page,
+  opts: { role?: string; q?: string } = {}
+) {
+  const params = new URLSearchParams();
+  if (opts.role) params.set('role', opts.role);
+  if (opts.q) params.set('q', opts.q);
+  const qs = params.toString();
+  await page.goto(qs ? `/app?${qs}` : '/app');
+}
+
 /** Known mock district centers (from mock_data.py) */
 export const DISTRICTS = {
   강남역: { code: 'DISTRICT_001', lat: 37.4979, lng: 127.0276 },

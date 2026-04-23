@@ -1,8 +1,20 @@
 import { create } from 'zustand';
 import { ChatMessage, SSEEvent, AgentStep } from '@/lib/types';
-import { sendChatMessage } from '@/lib/api';
+import {
+  sendChatMessage,
+  fetchDistrictPreview,
+  DistrictPreview,
+} from '@/lib/api';
 import { parseSSEStream } from '@/lib/sseParser';
 import { handleSSEEvent, EventHandlerContext } from '@/lib/eventHandlers';
+
+export type UserRole = 'owner' | 'investor' | 'founder';
+export type MobileTab = 'map' | 'chat';
+export type SheetSnap = 'hidden' | 'peek' | 'half' | 'full';
+const VALID_ROLES: UserRole[] = ['owner', 'investor', 'founder'];
+function isRole(v: unknown): v is UserRole {
+  return typeof v === 'string' && (VALID_ROLES as string[]).includes(v);
+}
 
 function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -25,6 +37,22 @@ interface ChatState {
   lastDistrictCode: string | null;
   agentSteps: AgentStep[];
   currentAbortController: AbortController | null;
+  role: UserRole | null;
+  preview: DistrictPreview | null;
+  previewLoading: boolean;
+  previewError: string | null;
+  messageCount: number;
+  lastTraceId: string | null;
+  /** trace_id → 피드백 제출 여부. 세션당 trace 당 1회 제한 (스팸 가드). */
+  feedbackByTrace: Record<string, 'up' | 'down'>;
+
+  mobileTab: MobileTab;
+  sheetSnap: SheetSnap;
+  unreadCount: number;
+  setMobileTab: (tab: MobileTab) => void;
+  setSheetSnap: (snap: SheetSnap) => void;
+  incrementUnread: () => void;
+  resetUnread: () => void;
 
   addMessage: (message: ChatMessage) => void;
   updateLastAssistantMessage: (content: string) => void;
@@ -36,6 +64,12 @@ interface ChatState {
   clearAgentSteps: () => void;
   addAgentStep: (step: AgentStep) => void;
   updateAgentStepStatus: (id: string, status: AgentStep['status'], label?: string) => void;
+
+  setRole: (role: UserRole | null) => void;
+  setPreview: (code: string) => Promise<void>;
+  clearPreview: () => void;
+  setLastTraceId: (traceId: string | null) => void;
+  recordFeedback: (traceId: string, value: 'up' | 'down') => void;
 
   sendMessage: (
     message: string,
@@ -57,6 +91,50 @@ export const useChatStore = create<ChatState>((set, get) => ({
   lastDistrictCode: null,
   agentSteps: [],
   currentAbortController: null,
+  role: null,
+  preview: null,
+  previewLoading: false,
+  previewError: null,
+  messageCount: 0,
+  lastTraceId: null,
+  feedbackByTrace: {},
+
+  mobileTab: 'map',
+  sheetSnap: 'hidden',
+  unreadCount: 0,
+  setMobileTab: (tab) =>
+    set((s) => ({
+      mobileTab: tab,
+      // 챗 탭 활성화 시 뱃지 초기화
+      unreadCount: tab === 'chat' ? 0 : s.unreadCount,
+    })),
+  setSheetSnap: (snap) => set({ sheetSnap: snap }),
+  incrementUnread: () => set((s) => ({ unreadCount: s.unreadCount + 1 })),
+  resetUnread: () => set({ unreadCount: 0 }),
+
+  setRole: (role) => set({ role: isRole(role) ? role : null }),
+
+  setLastTraceId: (traceId) => set({ lastTraceId: traceId }),
+
+  recordFeedback: (traceId, value) =>
+    set((s) => ({ feedbackByTrace: { ...s.feedbackByTrace, [traceId]: value } })),
+
+  setPreview: async (code) => {
+    set({ previewLoading: true, previewError: null });
+    try {
+      const role = get().role ?? undefined;
+      const preview = await fetchDistrictPreview(code, role);
+      // Ignore stale response if user selected another district meanwhile
+      const currentCode = get().lastDistrictCode;
+      if (currentCode && currentCode !== code) return;
+      set({ preview, previewLoading: false, lastDistrictCode: code });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'preview failed';
+      set({ preview: null, previewError: msg, previewLoading: false });
+    }
+  },
+
+  clearPreview: () => set({ preview: null, previewError: null }),
 
   addMessage: (message) =>
     set((state) => ({ messages: [...state.messages, message] })),
@@ -84,6 +162,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       sessionId: generateUUID(),
       lastDistrictCode: null,
       agentSteps: [],
+      preview: null,
+      previewError: null,
+      messageCount: 0,
       suggestions: [
         '이 상권의 유동인구 알려줘',
         '여기서 뭐하면 좋을까?',
@@ -106,6 +187,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sendMessage: async (message, districtCode, onMapCmd) => {
     const state = get();
     if (!message.trim() || state.isLoading) return;
+
+    // 모바일: 사용자가 질문을 보내는 순간 챗 탭 + full snap 으로 승격.
+    // (데스크톱은 SplitPanel 이라 mobileTab/sheetSnap 의미 없음 — 비용 0)
+    if (state.mobileTab !== 'chat') set({ mobileTab: 'chat', unreadCount: 0 });
+    if (state.sheetSnap !== 'full') set({ sheetSnap: 'full' });
 
     // PDF export pattern detection — handle locally, don't send to server
     const PDF_PATTERNS = /pdf|리포트.*저장|보고서.*내보|리포트.*만들|보고서.*만들|리포트.*내려|pdf.*저장/i;
@@ -143,7 +229,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
       type: 'text',
       timestamp: new Date(),
     };
-    set((s) => ({ messages: [...s.messages, userMessage] }));
+    set((s) => ({
+      messages: [...s.messages, userMessage],
+      messageCount: s.messageCount + 1,
+      // Preview is implicit, drop it once the user engages the full pipeline
+      preview: null,
+      previewError: null,
+    }));
     set({ isLoading: true, isThinking: true, agentSteps: [
       { id: 'thinking', label: '질문 분석 중...', status: 'in_progress' },
     ] });
@@ -280,3 +372,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 }));
+
+// Expose for E2E tests (Playwright) — same pattern as districtStore. Used to
+// seed `lastTraceId` / `messageCount` without driving the full SSE pipeline.
+if (typeof window !== 'undefined') {
+  (window as unknown as { __chatStore?: typeof useChatStore }).__chatStore =
+    useChatStore;
+}

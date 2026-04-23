@@ -13,7 +13,7 @@ test.beforeAll(() => ensureRunDir());
 
 test.describe('Ring 1 — F01 Map Selection', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
   });
 

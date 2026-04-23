@@ -32,6 +32,15 @@ _last_prune_time: float = 0.0
 _MAX_CONCURRENT_CHATS = 20
 _chat_semaphore = asyncio.Semaphore(_MAX_CONCURRENT_CHATS)
 
+# GAP-C helper — mirrors EXCLUSION_PATTERNS in agent.utils.rewriter so
+# chat-route auto-detection skips when the user is explicitly dropping an
+# entity ("X 말고 Y", "X 대신 Y", "X 빼고 Y", "X 제외").
+_EXCLUSION_PHRASE = re.compile(r"(말고|대신|빼고|제외)")
+
+
+def _has_exclusion_phrase(message: str) -> bool:
+    return bool(message and _EXCLUSION_PHRASE.search(message))
+
 
 async def _get_session(session_id: str) -> dict:
     """Get or create session, pruning expired entries."""
@@ -170,8 +179,11 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                 district_center = d.get("center")
                 district_type = d.get("type", "발달상권")
 
-        # 세션에도 없으면 자동감지
-        if not body.district_code:
+        # 세션에도 없으면 자동감지 — 단, 사용자가 명시적으로 배제 표현을
+        # 사용한 경우엔 skip (GAP-C: "홍대 말고 성수로 비교" 같이 첫 토큰이
+        # 제외 대상인데 auto-detect 가 그걸 집어가면 Planner 가 뒤늦게 되살려
+        # 지도가 엉뚱한 상권으로 이동하는 문제 회피).
+        if not body.district_code and not _has_exclusion_phrase(body.message):
             detected = await da.districts.detect_district_by_name(body.message)
             if detected:
                 body.district_code = detected["code"]
@@ -277,6 +289,17 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                         # Collect text for history
                         if event.get("type") == "text":
                             collected_text += event.get("content", "")
+
+                        # LLMOps L1 — request_id ↔ Langfuse trace_id 운영 로그 조인.
+                        # trace_id=None 은 Langfuse 비활성/샘플링 탈락/timeout 시그널.
+                        if event.get("type") == "done":
+                            logger.info(
+                                "agent_done request_id=%s session_id=%s district=%s trace_id=%s",
+                                getattr(request.state, "request_id", "") or "-",
+                                session_id,
+                                body.district_code or "-",
+                                event.get("trace_id") or "-",
+                            )
 
                         yield {"data": json.dumps(event, ensure_ascii=False, default=str)}
 

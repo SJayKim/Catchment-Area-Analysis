@@ -96,8 +96,12 @@ services:
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
       LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
       LANGFUSE_HOST: ${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      # Langfuse environment 태깅 — prod 는 반드시 "production" (Cloud UI 에서 dev 와 격리).
+      LANGFUSE_TRACING_ENVIRONMENT: ${LANGFUSE_TRACING_ENVIRONMENT:-production}
       LANGFUSE_SAMPLING_RATE: ${LANGFUSE_SAMPLING_RATE:-1.0}
       LANGFUSE_SESSION_SALT: ${LANGFUSE_SESSION_SALT:-}
+      # MITM/사내망 이슈가 있으면 --env-file 로 true override. 기본은 반드시 false.
+      LANGFUSE_OTEL_INSECURE: ${LANGFUSE_OTEL_INSECURE:-false}
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }

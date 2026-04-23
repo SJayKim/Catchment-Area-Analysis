@@ -282,30 +282,36 @@ if violations:
 
 ### 4.1 작업 체크리스트 (W1~W4)
 
-**W1 — 고빈도 이슈 선제 처리**
-- [ ] GAP-A #1: `_candidate_words` 2글자 prefix 허용 (`repositories/real/districts.py`)
-- [ ] GAP-A #2: 3-stage ranking 함수 + `pg_trgm` 인덱스 추가 (신규 마이그레이션 `004_add_pg_trgm.py`)
-- [ ] GAP-A #3: Planner 에서 Top1-Top2 ambiguity 감지 시 abstain 카드 반환 경로
-- [ ] GAP-D #1: `classify_tool_results` 유틸 (`agent/nodes/respond.py`)
-- [ ] GAP-D #2: empty/partial 분기 + attribution 프롬프트 규칙
-- [ ] GAP-D #3: 후처리 정규식 검증 + structlog 경고 로깅
+**W1 — 고빈도 이슈 선제 처리** ✅ 2026-04-23 완료
+- [x] GAP-A #1: `_candidate_words` 2글자 prefix 허용 (`repositories/real/districts.py`)
+- [x] GAP-A #2: 3-stage ranking 함수 (`agent/utils/entity_matching.py`). pg_trgm 은 불필요 — 1,650 rows 규모에 Python-side RapidFuzz-lite(=stdlib difflib + prefix coverage + type boost) 가 ms 단위
+- [x] GAP-A #3: Planner 에서 Top1-Top2 ambiguity 감지 → `ambiguous_districts` state + Respond prompt 경고 섹션
+- [x] GAP-D #1: `classify_tool_results` + `scan_unattributed_numbers` 유틸 (`agent/utils/abstention.py`)
+- [x] GAP-D #2: empty/partial 분기 프롬프트 addendum + attribution rule (`ATTRIBUTION_PROMPT_RULE`)
+- [x] GAP-D #3: 후처리 정규식 검증 + structlog 경고 로깅 (`respond_node` 말미)
 
-**W2 — Coreference / Rewriter**
-- [ ] GAP-E #1: coreference 패턴 감지 유틸 (`agent/nodes/rewriter.py` 신규)
-- [ ] GAP-E #2: PAE 그래프에 conditional rewriter sub-node 추가 (`agent/graph.py`)
-- [ ] GAP-E #3: `anchor_district` / `anchor_category` state 주입
-- [ ] GAP-C #1: Planner 2-pass 재분석 — 엔티티 부족 시 LLM re-extract
+**W2 — Coreference / Rewriter** ✅ 2026-04-23 완료
+- [x] GAP-E #1: coreference 패턴 감지 유틸 (`agent/utils/rewriter.py`, Tier 1 rule + Tier 2 LLM fallback)
+- [x] GAP-E #2: Planner pre-process 로 통합 — 그래프 노드 추가 없이 동등 효과 (`planner_node` 맨 앞에서 `rule_rewrite` 호출)
+- [x] GAP-E #3: `anchor_district_code` / `anchor_district_name` / `anchor_category` 추출 + 히스토리 walk
+- [x] GAP-C #1: `EXCLUSION_PATTERNS` (말고/대신/빼고/제외) → Planner 에서 multi-district 필터 + chat.py auto-detect skip
 
-**W3 — Learned Aliases**
-- [ ] GAP-B #1: `learned_aliases` 테이블 마이그레이션 (`005_learned_aliases.py`)
-- [ ] GAP-B #2: `CategoryResolver` LLM fallback + INSERT/UPDATE 로직
-- [ ] GAP-B #3: `AbstainSignal` 처리 — Actor 에서 선택지 카드 발행
-- [ ] GAP-B #4: hit_count ≥ 5 promote 야간 잡 (`scripts/promote_aliases.py`)
+**W3 — Learned Aliases** ✅ 2026-04-23 부분 완료
+- [x] GAP-B #1: `learned_aliases` 테이블 마이그레이션 (`alembic/versions/004_learned_aliases.py` — 003 이 충돌했으므로 004 로 번호 조정)
+- [x] GAP-B #2: `CategoryResolver.record_learned_alias` + `load_from_db` 에서 learned_aliases read 로직
+- [ ] GAP-B #2b: LLM miss-path fallback (`resolve` async 전환 필요) — **deferred**, 현재는 manual curation + 기존 category_metadata.aliases 로 커버
+- [ ] GAP-B #3: `AbstainSignal` 처리 — Actor 에서 선택지 카드 발행 — deferred, ambiguous_districts Respond 알림으로 대체
+- [ ] GAP-B #4: hit_count ≥ 5 promote 야간 잡 (`scripts/promote_aliases.py`) — deferred
 
-**W4 — UX**
+**W4 — UX** ⏳ deferred
 - [ ] GAP-F #1: Card 컴포넌트 5종에 PDF 버튼 prop
 - [ ] GAP-F #2: `useReportExport({ messageId })` 파라미터화
 - [ ] GAP-F #3: `ReportDocument` 가 messageId 기반 서브셋 렌더링 지원
+
+> W3 deferred 항목은 LLM 호출 경로 async 리팩토링 + 새 UI 컴포넌트가 필요하므로
+> 별도 세션으로 분리. 현재 accuracy 개선의 **주된 효과 (74→85+ 목표)** 는 W1+W2
+> 로 이미 달성 가능: GAP-A, GAP-C, GAP-D, GAP-E 가 모두 체감 빈도 "높음/중간" 이고
+> GAP-B/F 는 "낮음".
 
 ### 4.2 재검토 (Self-Review Gate)
 

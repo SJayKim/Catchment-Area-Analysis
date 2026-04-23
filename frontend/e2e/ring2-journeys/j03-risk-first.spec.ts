@@ -33,7 +33,7 @@ test('J03 risk-first — 건대 risk → recommend safer → confirm summary', a
     ],
   });
   packet.attach(page);
-  await page.goto('/');
+  await page.goto('/app');
   await waitForMapReady(page);
 
   await sendChatMessage(page, '건대입구 위험해?');

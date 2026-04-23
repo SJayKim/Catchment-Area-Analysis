@@ -84,6 +84,76 @@ export async function fetchHeatmapAll(quarter?: string): Promise<HeatmapAllData>
   return res.json();
 }
 
+export interface PreviewTopCategory {
+  category_code: string | null;
+  category_name: string;
+  store_count: number;
+  share_pct: number;
+}
+
+export interface PreviewFloatingPopulation {
+  quarter: string | null;
+  daily_total: number | null;
+  prev_quarter_total: number | null;
+  prev_quarter_delta_pct: number | null;
+  peak_hour: number | null;
+}
+
+export interface DistrictPreview {
+  district_code: string;
+  district_name: string;
+  district_type: string;
+  data_quarter: string;
+  center_lng: number | null;
+  center_lat: number | null;
+  top_categories: PreviewTopCategory[];
+  floating_population: PreviewFloatingPopulation;
+  suggested_questions: string[];
+}
+
+export type FeedbackValue = 'up' | 'down';
+
+export interface FeedbackPayload {
+  trace_id: string;
+  value: FeedbackValue;
+  reason?: string;
+  comment?: string;
+}
+
+/**
+ * POST `/api/feedback/score` — thin Langfuse score proxy.
+ * Backend translates `value` (up/down) to Langfuse numeric (+1/-1) and
+ * silently drops when Langfuse is not wired (HTTP 204).
+ */
+export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
+  const res = await fetch(`${API_BASE}/feedback/score`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok && res.status !== 204) {
+    throw new Error(`Feedback failed: ${res.status}`);
+  }
+}
+
+export async function fetchDistrictPreview(
+  code: string,
+  role?: string
+): Promise<DistrictPreview> {
+  const params = new URLSearchParams();
+  if (role) params.set('role', role);
+  const query = params.toString();
+  const url = `${API_BASE}/districts/${encodeURIComponent(code)}/preview${
+    query ? `?${query}` : ''
+  }`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch preview: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function sendChatMessage(
   message: string,
   sessionId: string,

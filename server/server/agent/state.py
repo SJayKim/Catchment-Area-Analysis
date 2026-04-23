@@ -46,6 +46,10 @@ class AgentState(TypedDict):
     intent_confidence: float
     referenced_districts: list[str]
     referenced_category: str | None
+    # GAP-A: list of {query, top: {code,name,score}, alternatives: [...]} when
+    # Planner detected a Top1/Top2 tie in district name matching. Actor can
+    # surface a disambiguation card from this state.
+    ambiguous_districts: list[dict]
 
     # --- plan (PAE: set by Planner) ---
     plan: list[ToolPlanStep]

@@ -5,6 +5,7 @@ import { useMapStore } from '@/stores/mapStore';
 import { Deck } from '@deck.gl/core';
 import { HeatmapLayer as DeckHeatmapLayer } from '@deck.gl/aggregation-layers';
 import { fetchHeatmapAll } from '@/lib/api';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 
 interface HeatmapLayerProps {
   mapInstance: React.RefObject<any>;
@@ -37,6 +38,7 @@ function getViewState(map: any) {
 export default function HeatmapLayer({ mapInstance }: HeatmapLayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const deckRef = useRef<Deck | null>(null);
+  const bp = useBreakpoint();
   const {
     heatmapEnabled,
     heatmapTimeSlot,
@@ -139,7 +141,8 @@ export default function HeatmapLayer({ mapInstance }: HeatmapLayerProps) {
       data: points,
       getPosition: (d: any) => [d.lng, d.lat],
       getWeight: (d: any) => d.weight,
-      radiusPixels: 60,
+      // 모바일 화면은 작아 radius 60 이 과도함 → 40 으로 축소해 INP 개선
+      radiusPixels: bp === 'mobile' ? 40 : 60,
       intensity: 1,
       threshold: 0.05,
       colorRange: COLOR_RANGE,
@@ -147,7 +150,7 @@ export default function HeatmapLayer({ mapInstance }: HeatmapLayerProps) {
     });
 
     deck.setProps({ layers: [layer] });
-  }, [heatmapData, heatmapTimeSlot]);
+  }, [heatmapData, heatmapTimeSlot, bp]);
 
   // Sync once when deck.gl first renders
   useEffect(() => {

@@ -2,7 +2,7 @@ import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete
 
 test.describe('Feature 2: 대화 컨텍스트 유지', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
   });
 

@@ -262,7 +262,7 @@ test.describe('Ring 3 — Regression 2026-04-17', () => {
     clearProdHits();
     const baseBefore = before; // unused but kept for trace
 
-    await page.goto('/');
+    await page.goto('/app');
     const fetchResult = await page.evaluate(async () => {
       try {
         const r = await fetch('https://marketscope.robitlabs.co.kr/health');

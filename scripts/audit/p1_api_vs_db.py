@@ -30,11 +30,14 @@ BASE = "http://openapi.seoul.go.kr:8088"
 
 
 def load_env() -> str:
-    env_path = Path(__file__).resolve().parents[2] / ".env"
+    root = Path(__file__).resolve().parents[2]
+    # .env.dev 우선 (로컬 audit), 없으면 .env (prod 배포 컨텍스트)
+    dev = root / ".env.dev"
+    env_path = dev if dev.exists() else root / ".env"
     for line in env_path.read_text(encoding="utf-8").splitlines():
         if line.startswith("SEOUL_OPENDATA_API_KEY="):
             return line.split("=", 1)[1].strip()
-    raise RuntimeError("SEOUL_OPENDATA_API_KEY missing")
+    raise RuntimeError(f"SEOUL_OPENDATA_API_KEY missing in {env_path}")
 
 
 def fetch_page(service: str, key: str, start: int, end: int) -> dict:

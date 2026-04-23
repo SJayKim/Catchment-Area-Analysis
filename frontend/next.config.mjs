@@ -3,12 +3,15 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
 
-// root .env 자동 로드 — 어떤 환경에서든 단일 .env로 동작
-// 우선순위: 환경변수(Docker/CI) > frontend/.env.local > root/.env
+// root env 자동 로드.
+// 우선순위: 환경변수(Docker/CI) > frontend/.env.local > root/.env.dev > root/.env
+// .env 는 prod 배포용, .env.dev 는 로컬 개발용 (config.py 관례와 동일).
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const rootEnvPath = resolve(__dirname, '..', '.env');
-if (existsSync(rootEnvPath)) {
-  config({ path: rootEnvPath, override: false }); // 기존 값 유지
+const devEnvPath = resolve(__dirname, '..', '.env.dev');
+const prodEnvPath = resolve(__dirname, '..', '.env');
+const envPath = existsSync(devEnvPath) ? devEnvPath : prodEnvPath;
+if (existsSync(envPath)) {
+  config({ path: envPath, override: false }); // 기존 값 유지
 }
 
 /** @type {import('next').NextConfig} */

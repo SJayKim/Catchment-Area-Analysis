@@ -4,13 +4,13 @@ Checks that required keys exist and have the right shape. Runs on host
 (no docker dependency) so failures surface before a 10-minute build burns.
 
 Usage:
-    python scripts/validate_env.py            # uses ./.env
+    python scripts/validate_env.py            # .env.dev 우선, 없으면 .env
     python scripts/validate_env.py path/to/.env
 
 Exit codes:
     0 — all checks pass
     1 — one or more validations failed
-    2 — .env file missing
+    2 — env file missing
 """
 
 from __future__ import annotations
@@ -45,9 +45,14 @@ PLACEHOLDER_PATTERN = re.compile(r"your_.*_(key|here)", re.IGNORECASE)
 
 
 def main(argv: list[str]) -> int:
-    env_path = Path(argv[1]) if len(argv) > 1 else Path(".env")
+    if len(argv) > 1:
+        env_path = Path(argv[1])
+    else:
+        # .env.dev 가 있으면 우선 (로컬 개발용), 없으면 .env (prod 배포용)
+        dev = Path(".env.dev")
+        env_path = dev if dev.exists() else Path(".env")
     if not env_path.exists():
-        print(f"[validate_env] ❌ .env not found: {env_path.resolve()}", file=sys.stderr)
+        print(f"[validate_env] ❌ env file not found: {env_path.resolve()}", file=sys.stderr)
         return 2
 
     env = _parse_env(env_path)

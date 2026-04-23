@@ -2,7 +2,7 @@ import { test, expect, waitForMapReady, sendChatMessage, waitForCard } from './h
 
 test.describe('Feature 5: Card Rendering', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
   });
 

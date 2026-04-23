@@ -2,7 +2,7 @@ import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete
 
 test.describe('Feature 4: Agent Progress Indicator', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
   });
 

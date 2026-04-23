@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import { fetchDistricts } from '@/lib/api';
 import { useDistrictStore } from '@/stores/districtStore';
 import { useMapStore } from '@/stores/mapStore';
@@ -83,10 +84,15 @@ export default function Toolbar() {
   return (
     <div className="h-12 flex items-center px-4 gap-3 flex-shrink-0 z-10"
       style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-      {/* Logo */}
-      <h1 className="text-lg font-bold whitespace-nowrap" style={{ color: 'var(--bg-accent)' }}>
+      {/* Logo — clicking returns to landing */}
+      <Link
+        href="/"
+        data-testid="toolbar-logo"
+        className="text-lg font-bold whitespace-nowrap hover:opacity-80 transition-opacity"
+        style={{ color: 'var(--brand-deep-blue)' }}
+      >
         MarketScope AI
-      </h1>
+      </Link>
 
       {/* Search */}
       <div className="relative flex-1 max-w-md" ref={dropdownRef}>

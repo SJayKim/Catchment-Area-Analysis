@@ -24,7 +24,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SEED_DUMP = PROJECT_ROOT / "data" / "seed" / "marketscope_seed.dump"
 SHP_FILE = PROJECT_ROOT / "data" / "shp" / "OA-15560.shp"
 RESIDENT_CSV = PROJECT_ROOT / "data" / "csv" / "OA-15584.csv"
-ENV_FILE = PROJECT_ROOT / ".env"
+# .env.dev 우선 (로컬 개발), 없으면 .env (prod 배포 컨텍스트)
+_ENV_DEV = PROJECT_ROOT / ".env.dev"
+_ENV_PROD = PROJECT_ROOT / ".env"
+ENV_FILE = _ENV_DEV if _ENV_DEV.exists() else _ENV_PROD
 ENV_EXAMPLE = PROJECT_ROOT / ".env.example"
 DOCKER_COMPOSE = PROJECT_ROOT / "docker-compose.yml"
 SERVER_DIR = PROJECT_ROOT / "server"
@@ -85,12 +88,14 @@ def check_prerequisites() -> list[str]:
     compose = _find_docker_compose()
 
     if not ENV_FILE.exists():
-        _print(f".env not found. Copying from .env.example...", "yellow")
+        # 로컬 setup 이므로 .env.dev 로 신규 생성 (prod .env 는 별도 수동 생성)
+        target = _ENV_DEV
+        _print(f"{target.name} not found. Copying from .env.example...", "yellow")
         if ENV_EXAMPLE.exists():
-            shutil.copy(ENV_EXAMPLE, ENV_FILE)
-            _print(f"Created {ENV_FILE}. Edit it with your API keys if running --full.", "yellow")
+            shutil.copy(ENV_EXAMPLE, target)
+            _print(f"Created {target}. Edit it with your API keys if running --full.", "yellow")
         else:
-            _print(".env.example not found either. Create .env manually.", "red")
+            _print(f".env.example not found either. Create {target.name} manually.", "red")
             sys.exit(1)
 
     # Check Docker daemon

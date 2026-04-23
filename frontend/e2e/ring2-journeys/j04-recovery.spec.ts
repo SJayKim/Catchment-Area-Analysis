@@ -32,7 +32,7 @@ test('J04 error recovery — vague query → recover via search', async ({ page 
     ],
   });
   packet.attach(page);
-  await page.goto('/');
+  await page.goto('/app');
   await waitForMapReady(page);
 
   // Step 1: vague

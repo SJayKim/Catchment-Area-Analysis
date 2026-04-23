@@ -4,13 +4,17 @@ import { useEffect } from 'react';
 import { useChat } from '@/hooks/useChat';
 import { useReportExport } from '@/hooks/useReportExport';
 import { useDistrictStore } from '@/stores/districtStore';
+import { useChatStore } from '@/stores/chatStore';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import SuggestionChips from './SuggestionChips';
+import PreviewCard from './PreviewCard';
 
 export default function ChatPanel() {
   const { messages, isLoading, isThinking, suggestions, agentSteps, sendMessage } = useChat();
   const selected = useDistrictStore((s) => s.selected);
+  const preview = useChatStore((s) => s.preview);
+  const previewLoading = useChatStore((s) => s.previewLoading);
 
   const { generatePDF, isGenerating } = useReportExport({
     districtName: selected?.name || '',
@@ -68,7 +72,36 @@ export default function ChatPanel() {
       </div>
 
       {/* Messages */}
-      <MessageList messages={messages} isThinking={isThinking} isLoading={isLoading} agentSteps={agentSteps} />
+      <MessageList
+        messages={messages}
+        isThinking={isThinking}
+        isLoading={isLoading}
+        agentSteps={agentSteps}
+        previewSlot={
+          preview ? (
+            <PreviewCard
+              preview={preview}
+              disabled={isLoading}
+              onQuestion={(q) => sendMessage(q)}
+              onDeepAnalysis={() =>
+                sendMessage(`${preview.district_name} 상권 자세히 분석해줘`)
+              }
+            />
+          ) : previewLoading ? (
+            <div
+              data-testid="district-preview-loading"
+              className="rounded-2xl p-4 animate-pulse"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-muted)',
+              }}
+            >
+              프리뷰 불러오는 중...
+            </div>
+          ) : null
+        }
+      />
 
       {/* Suggestions */}
       <SuggestionChips

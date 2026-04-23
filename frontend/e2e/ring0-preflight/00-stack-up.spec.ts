@@ -45,18 +45,18 @@ test.describe('Ring 0 — Pre-flight', () => {
     await packet.finalize(page);
   });
 
-  test('R0-2 frontend root reachable', async ({ page }) => {
+  test('R0-2 frontend app route reachable', async ({ page }) => {
     const packet = new EvalPacket({
-      id: 'R0-2-frontend-root',
-      title: 'Frontend / 200',
-      story: '프론트엔드 루트(/)가 200 HTML을 반환해야 한다.',
-      steps: ['GET /', '응답 200 + HTML'],
+      id: 'R0-2-frontend-app',
+      title: 'Frontend /app 200',
+      story: '분석 앱 라우트(/app)가 200 HTML을 반환해야 한다.',
+      steps: ['GET /app', '응답 200 + HTML'],
       mode: 'Mock',
       ring: 0,
-      criteria: ['프론트엔드 / 응답 200', 'body에 next.js 마커 (id=__next)'],
+      criteria: ['프론트엔드 /app 응답 200', 'body에 next.js 마커 (id=__next)'],
     });
     packet.attach(page);
-    const resp = await page.goto('/');
+    const resp = await page.goto('/app');
     expect(resp?.status()).toBe(200);
     await page.waitForLoadState('domcontentloaded');
     const html = await page.content();
@@ -68,6 +68,40 @@ test.describe('Ring 0 — Pre-flight', () => {
       checks: [
         { criterion: 'HTTP 200', met: resp?.status() === 200, evidence: `status=${resp?.status()}` },
         { criterion: 'next marker', met: hasNext, evidence: hasNext ? 'present' : 'absent' },
+      ],
+    });
+    await packet.finalize(page);
+  });
+
+  test('R0-LANDING-STACK landing route at /', async ({ page }) => {
+    // 2026-04-23 Plan: / is now the public landing page, /app is the analysis app.
+    const packet = new EvalPacket({
+      id: 'R0-LANDING-STACK',
+      title: 'Landing / 200 + hero marker',
+      story: '랜딩 페이지(/)가 200 HTML + hero section 마커를 반환해야 한다.',
+      steps: ['GET /', 'hero-section data-testid 확인'],
+      mode: 'Mock',
+      ring: 0,
+      criteria: ['/ 응답 200', 'data-testid="hero-section" 존재'],
+    });
+    packet.attach(page);
+    const resp = await page.goto('/');
+    expect(resp?.status()).toBe(200);
+    await page.waitForLoadState('domcontentloaded');
+    const heroVisible = await page
+      .locator('[data-testid="hero-section"]')
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
+    packet.writeAutoVerdict({
+      result: heroVisible ? 'PASS' : 'FAIL',
+      reason: heroVisible ? 'Hero section rendered' : 'Hero section missing',
+      checks: [
+        { criterion: 'HTTP 200', met: resp?.status() === 200, evidence: `status=${resp?.status()}` },
+        {
+          criterion: 'hero-section visible',
+          met: heroVisible,
+          evidence: heroVisible ? 'visible' : 'missing',
+        },
       ],
     });
     await packet.finalize(page);

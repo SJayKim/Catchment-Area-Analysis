@@ -55,7 +55,7 @@ test.describe('Ring 1 — F06 Heatmap', () => {
       criteria: ['히트맵 버튼 존재', 'click 후 console error 0'],
     });
     packet.attach(page);
-    await page.goto('/');
+    await page.goto('/app');
     await page.waitForTimeout(2000);
     // Look for heatmap button (🔥 emoji or '히트맵' text)
     const heatBtn = page

@@ -24,7 +24,7 @@ export default function MapControls({ onZoomIn, onZoomOut }: MapControlsProps) {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <button
           onClick={onZoomIn}
-          className="block w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+          className="block w-11 h-11 md:w-9 md:h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
           title="확대"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,7 +34,7 @@ export default function MapControls({ onZoomIn, onZoomOut }: MapControlsProps) {
         <div className="h-px bg-gray-200" />
         <button
           onClick={onZoomOut}
-          className="block w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+          className="block w-11 h-11 md:w-9 md:h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
           title="축소"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,7 +47,7 @@ export default function MapControls({ onZoomIn, onZoomOut }: MapControlsProps) {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <button
           onClick={() => toggleLayer('polygon')}
-          className={`w-9 h-9 flex items-center justify-center transition-colors ${
+          className={`w-11 h-11 md:w-9 md:h-9 flex items-center justify-center transition-colors ${
             isPolygonActive
               ? 'text-primary-600 bg-primary-50'
               : 'text-gray-400 hover:bg-gray-100'
@@ -69,7 +69,7 @@ export default function MapControls({ onZoomIn, onZoomOut }: MapControlsProps) {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <button
           onClick={toggleHeatmap}
-          className={`w-9 h-9 flex items-center justify-center transition-colors ${
+          className={`w-11 h-11 md:w-9 md:h-9 flex items-center justify-center transition-colors ${
             heatmapEnabled
               ? 'text-orange-600 bg-orange-50'
               : 'text-gray-400 hover:bg-gray-100'

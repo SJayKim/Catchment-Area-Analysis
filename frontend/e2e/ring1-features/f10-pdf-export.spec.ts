@@ -22,7 +22,7 @@ test.describe('Ring 1 — F10 PDF Export', () => {
       criteria: ['PDF 버튼 존재', '다운로드 이벤트 또는 console error 0'],
     });
     packet.attach(page);
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
     await sendChatMessage(page, '강남역 분석해줘');
     await page.waitForTimeout(2000);

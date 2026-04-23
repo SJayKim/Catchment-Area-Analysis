@@ -2,7 +2,7 @@ import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete
 
 test.describe('Feature 1: 폴리곤 클릭 → 자동 SummaryCard', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
   });
 

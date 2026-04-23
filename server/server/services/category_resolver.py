@@ -32,21 +32,24 @@ class CategoryResolver:
 
     def __init__(self) -> None:
         self._keywords: dict[str, str] = {}
+        self._session_factory = None  # lazy — set by load_from_db
 
     def load_defaults(self) -> None:
         """Load built-in keyword mappings (mock mode)."""
         self._keywords = dict(_DEFAULT_KEYWORDS)
 
     async def load_from_db(self, session_factory) -> None:
-        """Load keywords from category_metadata table (real mode).
+        """Load keywords from category_metadata + learned_aliases (real mode).
 
         Starts with default keywords as a base, then merges DB keywords on top.
-        This ensures common keywords like "카페" are always available even if
-        the DB table lacks them.
+        Stores ``session_factory`` on the instance so :meth:`record_learned_alias`
+        can write back asynchronously at request time.
         """
-        from sqlalchemy import select
+        from sqlalchemy import select, text
 
         from server.models.category import CategoryMetadata
+
+        self._session_factory = session_factory
 
         # Always start with defaults as base
         self._keywords = dict(_DEFAULT_KEYWORDS)
@@ -76,6 +79,19 @@ class CategoryResolver:
                                 self._keywords[alias] = row.category_code
                                 count += 1
 
+                # GAP-B: learned_aliases (confidence ≥ 0.7 only) — table may
+                # not exist on older databases that have not yet run 004.
+                try:
+                    learned_rows = await session.execute(
+                        text("SELECT alias, code FROM learned_aliases WHERE confidence >= 0.7")
+                    )
+                    for alias, code in learned_rows.all():
+                        if alias and code and alias not in self._keywords:
+                            self._keywords[alias] = code
+                            count += 1
+                except Exception:
+                    logger.debug("learned_aliases table not available — run alembic 004 to enable")
+
                 if count == 0:
                     logger.info("category_metadata table is empty, using defaults only")
                 else:
@@ -86,6 +102,49 @@ class CategoryResolver:
                     )
         except Exception:
             logger.warning("Failed to load categories from DB, using defaults only", exc_info=True)
+
+    async def record_learned_alias(
+        self,
+        alias: str,
+        code: str,
+        confidence: float,
+        source: str = "llm_gemini_flash",
+    ) -> None:
+        """Persist a new alias → code mapping so future requests are zero-LLM.
+
+        Idempotent: upsert on the alias primary key, bumps ``hit_count`` and
+        ``last_used_at``. Silent no-op when the table is missing or writes fail
+        (resolver must not throw from the request path).
+        """
+        if not self._session_factory or not alias or not code:
+            return
+        try:
+            from sqlalchemy import text
+
+            async with self._session_factory() as session:
+                await session.execute(
+                    text(
+                        """
+                        INSERT INTO learned_aliases (alias, code, confidence, source)
+                        VALUES (:alias, :code, :confidence, :source)
+                        ON CONFLICT (alias) DO UPDATE SET
+                            hit_count = learned_aliases.hit_count + 1,
+                            last_used_at = NOW(),
+                            confidence = GREATEST(learned_aliases.confidence, EXCLUDED.confidence)
+                        """
+                    ),
+                    {
+                        "alias": alias[:200],
+                        "code": code,
+                        "confidence": max(0.0, min(1.0, confidence)),
+                        "source": source,
+                    },
+                )
+                await session.commit()
+            # Reflect in-process so the rest of this request sees it too.
+            self._keywords.setdefault(alias, code)
+        except Exception:
+            logger.debug("record_learned_alias failed (table missing?)", exc_info=True)
 
     def resolve(self, message: str) -> str | None:
         """Return the first matching category_code, or None."""

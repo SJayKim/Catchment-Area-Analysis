@@ -19,7 +19,7 @@ test('NEG-1 no district selected → graceful guide', async ({ page }) => {
     criteria: ['textarea 재활성화', 'console error 0', '응답 텍스트 존재'],
   });
   packet.attach(page);
-  await page.goto('/');
+  await page.goto('/app');
   await waitForMapReady(page);
   await sendChatMessage(page, '분석해줘');
   await page.waitForTimeout(2000);

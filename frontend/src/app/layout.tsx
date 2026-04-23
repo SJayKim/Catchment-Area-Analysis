@@ -1,24 +1,70 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import Script from 'next/script';
+import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
-
 export const metadata: Metadata = {
-  title: 'MarketScope AI - 상권분석',
-  description: '지도 기반 AI 챗봇으로 서울시 상권을 분석하는 서비스',
+  title: 'MarketScope AI — 서울 1,650개 상권 AI 분석',
+  description:
+    '지도 한 번 클릭으로 유동인구·매출·업종을 3초 안에 요약. 베타 기간 무료.',
+  openGraph: {
+    title: 'MarketScope AI',
+    description: '서울 1,650개 상권을 AI가 읽어드립니다.',
+    type: 'website',
+    locale: 'ko_KR',
+  },
 };
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  userScalable: true,
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
+};
+
+type ThemePref = 'light' | 'dark' | 'system';
+
+function resolveTheme(raw: string | undefined): ThemePref {
+  if (raw === 'light' || raw === 'dark' || raw === 'system') return raw;
+  return 'light'; // 한국 B2C 기본값
+}
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const themeCookie = cookies().get('theme')?.value;
+  const theme = resolveTheme(themeCookie);
+  // 'system' 은 attribute 미지정 → CSS @media (prefers-color-scheme) 가 처리
+  const dataThemeAttr = theme === 'system' ? undefined : theme;
+
   return (
-    <html lang="ko" className="h-full">
-      <body className={`${inter.className} h-full`}
-        style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <html
+      lang="ko"
+      className="h-full"
+      data-theme={dataThemeAttr}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Pretendard Variable — 한글 big-type + variable weight/width
+            공식 CDN (jsdelivr) 의 dynamic subset CSS 사용 */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+        />
+      </head>
+      <body
+        className="h-full"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          color: 'var(--text-primary)',
+        }}
+      >
         {children}
       </body>
     </html>

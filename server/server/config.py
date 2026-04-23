@@ -2,8 +2,13 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
-# Resolve .env from project root (one level above server/)
-_ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
+# env 관례: .env = prod (배포 시 존재), .env.dev = 로컬 개발 오버라이드 (gitignored).
+# 로컬 host 에서 uvicorn 직접 실행 시 prod 키 오염 방지 — .env.dev 가 있으면 우선 로드.
+# Docker 컨테이너는 compose `environment:` 블록으로 env 를 주입하므로 file 로딩과 무관.
+_ROOT = Path(__file__).resolve().parents[2]
+_ENV_DEV = _ROOT / ".env.dev"
+_ENV_PROD = _ROOT / ".env"
+_ENV_FILE = _ENV_DEV if _ENV_DEV.exists() else _ENV_PROD
 
 
 class Settings(BaseSettings):
@@ -42,6 +47,10 @@ class Settings(BaseSettings):
     langfuse_sampling_rate: float = 1.0
     # session_id 해싱용 salt. 배포별로 고유값. 비워두면 인스턴스 기동 시 랜덤 생성.
     langfuse_session_salt: str = ""
+    # OTEL span export 시 TLS 검증 비활성화. 사내 MITM/corporate proxy 환경에서 필요.
+    # 공식 OTEL HTTP exporter 는 verify disable 을 공식 지원 안 함 → SDK 내부 session monkey-patch.
+    # ⚠ 프로덕션 기본 False 유지. 로컬 dev 에서 SSL_CERT_FILE / REQUESTS_CA_BUNDLE 로 해결 불가할 때만 true.
+    langfuse_otel_insecure: bool = False
 
     @property
     def langfuse_enabled(self) -> bool:

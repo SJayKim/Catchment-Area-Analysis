@@ -135,7 +135,7 @@ test.describe('Ring 3 — P0 Regression', () => {
       criteria: ['DOM에 안정성/생존/리스크/위험 키워드'],
     });
     packet.attach(page);
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
     await sendChatMessage(page, '강남역 위험해?');
     await page.waitForTimeout(3000);
@@ -163,7 +163,7 @@ test.describe('Ring 3 — P0 Regression', () => {
       criteria: ['StatusBar 최종이 건대', '강남/홍대 잔존 표시 없음'],
     });
     packet.attach(page);
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
     await clickPolygonByCode(page, 'D3001', { name: '강남역', lat: 37.4979, lng: 127.0276 });
     await page.waitForTimeout(200);
@@ -198,7 +198,7 @@ test.describe('Ring 3 — P0 Regression', () => {
       criteria: ['2차 응답 정상', 'console error 0'],
     });
     packet.attach(page);
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
     await sendChatMessage(page, '강남역 분석');
     await page.reload();

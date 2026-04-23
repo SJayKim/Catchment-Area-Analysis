@@ -344,11 +344,45 @@ def _format_history(history: list[dict]) -> str:
 
 def build_respond_prompt(state: AgentState) -> str:
     """Assemble the full respond prompt from state."""
-    sections = [RESPOND_SYSTEM_PROMPT]
+    from server.agent.utils.abstention import (
+        ABSTENTION_PROMPT_ADDENDUM_EMPTY,
+        ABSTENTION_PROMPT_ADDENDUM_PARTIAL,
+        ATTRIBUTION_PROMPT_RULE,
+        classify_tool_results,
+    )
+
+    sections = [RESPOND_SYSTEM_PROMPT, ATTRIBUTION_PROMPT_RULE]
 
     # District mode
     district_section = _MOCK_DISTRICT_SECTION if settings.use_mock else _REAL_DISTRICT_SECTION
     sections.append(district_section)
+
+    # GAP-D: tool-results triage — injects abstention template when we have no
+    # / partial evidence so the LLM cannot confabulate from priors.
+    tool_results = state.get("tool_results") or {}
+    tool_errors = state.get("tool_errors") or {}
+    status = classify_tool_results(tool_results, tool_errors)
+    if status == "empty":
+        sections.append(ABSTENTION_PROMPT_ADDENDUM_EMPTY)
+    elif status == "partial":
+        sections.append(ABSTENTION_PROMPT_ADDENDUM_PARTIAL)
+
+    # GAP-A: ambiguity notice — nudges LLM to ask for clarification instead of
+    # silently picking Top1.
+    ambiguous = state.get("ambiguous_districts") or []
+    if ambiguous:
+        lines = []
+        for amb in ambiguous:
+            top = amb.get("top") or {}
+            alts = amb.get("alternatives") or []
+            alt_labels = ", ".join(f"{a.get('name')}({a.get('code')})" for a in alts)
+            lines.append(f"- Top1: {top.get('name')}({top.get('code')}), 근접 후보: {alt_labels or '(없음)'}")
+        sections.append(
+            "## ⚠️ 상권 매칭 모호\n"
+            "사용자 질의에 근접 매칭 상권이 여러 개 있습니다. 답변 서두에 "
+            "어느 상권을 분석했는지 명시하고, 다른 후보가 의도였다면 말씀해 "
+            "달라고 짧게 되물으세요.\n" + "\n".join(lines)
+        )
 
     # Conversation history
     history = state.get("conversation_history") or []
@@ -356,12 +390,10 @@ def build_respond_prompt(state: AgentState) -> str:
         sections.append(f"## 이전 대화\n{_format_history(history)}")
 
     # Tool results
-    tool_results = state.get("tool_results") or {}
     if tool_results:
         sections.append(f"## 수집된 데이터\n{_format_tool_results(tool_results)}")
 
     # Tool errors
-    tool_errors = state.get("tool_errors") or {}
     if tool_errors:
         errors_text = "\n".join(f"- {k}: {v}" for k, v in tool_errors.items())
         sections.append(
@@ -447,5 +479,24 @@ async def respond_node(
         collected_text += notice
         if event_queue:
             await event_queue.put({"type": "text", "content": notice})
+
+    # GAP-D post-hoc: log unattributed numeric claims. We don't mutate the
+    # streamed text (the user already saw it) but we emit a structlog warning
+    # with violation count so Langfuse / observability can pick it up and
+    # Pass 3 tuning can tighten the attribution prompt rule.
+    from server.agent.utils.abstention import scan_unattributed_numbers
+
+    violations = scan_unattributed_numbers(collected_text)
+    if violations:
+        logger.warning(
+            "respond_hallucination_risk",
+            extra={
+                "session_id": state.get("session_id"),
+                "district_code": state.get("district_code"),
+                "user_intent": state.get("user_intent"),
+                "violation_count": len(violations),
+                "violation_samples": violations[:5],
+            },
+        )
 
     return {"collected_response": collected_text}

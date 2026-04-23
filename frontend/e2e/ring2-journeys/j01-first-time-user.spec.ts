@@ -45,7 +45,7 @@ test('J01 first-time user — 강남역 click → summary → recommend → comp
     ],
   });
   packet.attach(page);
-  await page.goto('/');
+  await page.goto('/app');
   await waitForMapReady(page);
 
   // Step 1: select 강남

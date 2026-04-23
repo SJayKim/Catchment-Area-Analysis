@@ -27,7 +27,7 @@ test('J05 PDF share — analyze + compare → PDF download', async ({ page }) =>
     ],
   });
   packet.attach(page);
-  await page.goto('/');
+  await page.goto('/app');
   await waitForMapReady(page);
 
   await sendChatMessage(page, '강남역 분석해줘');

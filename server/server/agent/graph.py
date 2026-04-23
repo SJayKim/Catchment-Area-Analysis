@@ -236,12 +236,16 @@ async def run_agent(
     """
     from server.agent.state import AgentState
     from server.services.langfuse_tracer import (
-        flush as _lf_flush,
-    )
-    from server.services.langfuse_tracer import (
+        build_langchain_metadata,
+        build_langchain_tags,
         get_langfuse_handler,
         get_trace_id,
     )
+    from server.services.langfuse_tracer import (
+        flush as _lf_flush,
+    )
+
+    lf_tags = build_langchain_tags()
 
     # Bounded queue so a slow/disconnected SSE consumer naturally blocks the
     # LLM/tool producers (backpressure) instead of growing memory unbounded.
@@ -249,6 +253,7 @@ async def run_agent(
 
     # Langfuse callback (best-effort). None 이면 trace 없이 진행.
     lf_handler = get_langfuse_handler(session_id=session_id, request_id=request_id)
+    lf_metadata = build_langchain_metadata(lf_handler)
 
     initial_state: AgentState = {  # type: ignore[typeddict-item]
         "messages": [HumanMessage(content=message)],
@@ -287,6 +292,9 @@ async def run_agent(
             astream_config: dict[str, Any] = {}
             if lf_handler is not None:
                 astream_config["callbacks"] = [lf_handler]
+                astream_config["metadata"] = lf_metadata
+                astream_config["tags"] = lf_tags
+                astream_config["run_name"] = "marketscope.pae"
 
             async for update in compiled.astream(
                 initial_state,

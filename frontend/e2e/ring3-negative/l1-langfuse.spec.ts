@@ -467,7 +467,7 @@ test.describe('Ring 3 — LLMOps L1 Langfuse wiring', () => {
       if (msg.type() === 'error') errors.push(msg.text());
     });
 
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto('/app', { waitUntil: 'domcontentloaded', timeout: 30000 });
     // 폴리곤 로딩을 기다릴 필요는 없음(채팅만 사용)
     const textarea = page.locator('textarea[placeholder*="물어보세요"]');
     await textarea.waitFor({ state: 'visible', timeout: 15000 });

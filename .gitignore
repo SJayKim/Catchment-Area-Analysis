@@ -9,7 +9,9 @@ build/
 .venv/
 
 # Environment secrets
+# .env 는 prod 배포용 (git 커밋 금지). .env.dev 는 로컬 개발용.
 .env
+.env.dev
 .env.local
 .env.backup
 .env.e2e

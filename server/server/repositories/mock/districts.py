@@ -30,16 +30,33 @@ class MockDistrictRepository:
     async def detect_district_by_name(self, message: str) -> dict | None:
         for code, d in DISTRICTS.items():
             if d["name"] in message:
-                return {"code": code, "name": d["name"]}
+                return {
+                    "code": code,
+                    "name": d["name"],
+                    "score": 1.0,
+                    "ambiguous": False,
+                }
         return None
 
     async def detect_districts_in_message(self, message: str) -> list[dict]:
-        """Find all districts whose names appear in the message (deduped, max 5)."""
+        """Find all districts whose names appear in the message (deduped, max 5).
+
+        Mock fixtures use distinct, non-overlapping names so ambiguity never
+        arises. The returned dicts match the real repo's shape so callers
+        (Planner) can treat both backends uniformly.
+        """
         found: list[dict] = []
         seen: set[str] = set()
         for code, d in DISTRICTS.items():
             if d["name"] in message and code not in seen:
-                found.append({"code": code, "name": d["name"]})
+                found.append(
+                    {
+                        "code": code,
+                        "name": d["name"],
+                        "score": 1.0,
+                        "ambiguous": False,
+                    }
+                )
                 seen.add(code)
                 if len(found) >= 5:
                     break

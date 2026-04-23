@@ -32,7 +32,7 @@ test('J02 comparison shopper — 3-way compare → cafe analysis → simulation'
     ],
   });
   packet.attach(page);
-  await page.goto('/');
+  await page.goto('/app');
   await waitForMapReady(page);
 
   await sendChatMessage(page, '강남역, 홍대입구, 건대입구를 비교해줘');

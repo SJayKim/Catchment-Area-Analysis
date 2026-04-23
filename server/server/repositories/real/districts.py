@@ -3,9 +3,18 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from server.agent.utils.entity_matching import (
+    RankedCandidate,
+    pick_best,
+    rank_candidates,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class RealDistrictRepository:
@@ -140,6 +149,10 @@ class RealDistrictRepository:
 
         Also generates shortened forms by stripping location suffixes
         (e.g. "홍대입구" -> "홍대") to match DB names that may differ.
+
+        2-character candidates are preserved (e.g. "성수", "종로") to support
+        short-form district references — filtering to 3+ chars lives in the
+        matcher, not here.
         """
         words = re.findall(r"[\w가-힣]{2,10}", message)
         candidates: list[str] = []
@@ -169,138 +182,126 @@ class RealDistrictRepository:
         return candidates
 
     async def detect_district_by_name(self, message: str) -> dict | None:
-        from sqlalchemy import literal, select
+        """Single-district detection (first candidate wins).
 
-        from server.models.district import District
-
-        async with self._sf() as session:
-            for candidate in self._candidate_words(message):
-                # 1순위: 정확 매칭
-                row = (
-                    await session.execute(
-                        select(District.district_code, District.district_name)
-                        .where(District.district_name == candidate)
-                        .limit(1)
-                    )
-                ).first()
-                if row:
-                    return {"code": row.district_code, "name": row.district_name}
-
-                # 2순위: prefix 매칭 (3글자 이상만)
-                if len(candidate) >= 3:
-                    row = (
-                        await session.execute(
-                            select(District.district_code, District.district_name)
-                            .where(District.district_name.ilike(f"{candidate}%"))
-                            .limit(1)
-                        )
-                    ).first()
-                    if row:
-                        return {"code": row.district_code, "name": row.district_name}
-
-                # 3순위: contains 매칭 (2글자 이상)
-                if len(candidate) >= 2:
-                    row = (
-                        await session.execute(
-                            select(District.district_code, District.district_name)
-                            .where(District.district_name.ilike(f"%{candidate}%"))
-                            .limit(1)
-                        )
-                    ).first()
-                    if row:
-                        return {"code": row.district_code, "name": row.district_name}
-
-                # 4순위: 역방향 prefix (DB 이름이 candidate의 prefix인 경우)
-                if len(candidate) >= 3:
-                    row = (
-                        await session.execute(
-                            select(District.district_code, District.district_name)
-                            .where(literal(candidate).ilike(District.district_name + "%"))
-                            .limit(1)
-                        )
-                    ).first()
-                    if row:
-                        return {"code": row.district_code, "name": row.district_name}
-
+        Delegates to the same pool + ranker as ``detect_districts_in_message``
+        so 2-char queries (e.g. "성수") are handled consistently. Returns the
+        first candidate that clears ``TOP1_MIN``; ambiguous matches are still
+        returned (with the ``alternatives`` key) so the caller can decide.
+        """
+        for candidate in self._candidate_words(message):
+            pool = await self._fetch_match_pool(candidate)
+            if not pool:
+                continue
+            ranked = rank_candidates(candidate, pool)
+            best, alts, is_ambiguous = pick_best(ranked)
+            if best is None:
+                continue
+            result: dict = {
+                "code": best.code,
+                "name": best.name,
+                "score": round(best.score, 4),
+                "ambiguous": is_ambiguous,
+            }
+            if alts:
+                result["alternatives"] = [a.to_dict() for a in alts]
+            return result
         return None
 
-    async def detect_districts_in_message(self, message: str) -> list[dict]:
-        """Find all districts whose names match candidates from the message.
+    async def _fetch_match_pool(self, candidate: str) -> list[tuple[str, str, str | None]]:
+        """Fetch every (code, name, type) row that *might* match a candidate.
 
-        Returns a deduped list (max 5) of {"code", "name"}, preserving discovery
-        order. Used by the planner for multi-district intents (comparison).
-
-        Matching priority: exact > prefix > contains > reverse-prefix.
+        We pull a deliberately loose pool (prefix + contains + reverse prefix)
+        and let the Python-side ranker score. 1,650 rows is tiny, so a single
+        index-backed ``ilike`` is the fastest path even when the candidate is
+        2 chars.
         """
-        from sqlalchemy import literal, select
+        from sqlalchemy import literal, or_, select
 
         from server.models.district import District
 
+        conditions = [District.district_name == candidate]
+        # Prefix — always allowed (including 2-char queries like "성수").
+        conditions.append(District.district_name.ilike(f"{candidate}%"))
+        if len(candidate) >= 3:
+            conditions.append(District.district_name.ilike(f"%{candidate}%"))
+            conditions.append(literal(candidate).ilike(District.district_name + "%"))
+
+        stmt = (
+            select(District.district_code, District.district_name, District.district_type)
+            .where(or_(*conditions))
+            .limit(25)
+        )
+        async with self._sf() as session:
+            rows = (await session.execute(stmt)).all()
+        return [(r.district_code, r.district_name, r.district_type) for r in rows]
+
+    async def detect_districts_in_message(self, message: str) -> list[dict]:
+        """Find all districts referenced in the message with ranking + abstention.
+
+        Behaviour (GAP-A, 2026-04-23):
+        - Accepts 2-char queries via prefix-only matching (e.g. "성수" → "성수역_2").
+        - Uses hybrid string similarity to rank candidates when the raw DB
+          ilike matches multiple rows.
+        - Marks an entry ``ambiguous=True`` when Top1 and Top2 are within the
+          abstention band (``CLOSE_DELTA``). ``alternatives`` carries up to 2
+          runner-up candidates so the Planner/Actor can surface a choice card.
+
+        Returns ``list[dict]`` max 5 — each dict has ``{code, name, score,
+        ambiguous, alternatives}``. Back-compat: callers that only read
+        ``code`` / ``name`` keep working.
+        """
         found: list[dict] = []
         seen_codes: set[str] = set()
 
-        async with self._sf() as session:
-            for candidate in self._candidate_words(message):
-                if len(found) >= 5:
-                    break
+        for candidate in self._candidate_words(message):
+            if len(found) >= 5:
+                break
+            pool = await self._fetch_match_pool(candidate)
+            if not pool:
+                continue
 
-                # 1순위: 정확 매칭
-                row = (
-                    await session.execute(
-                        select(District.district_code, District.district_name)
-                        .where(District.district_name == candidate)
-                        .limit(1)
+            ranked = rank_candidates(candidate, pool)
+            best, alts, is_ambiguous = pick_best(ranked)
+            if best is None:
+                if logger.isEnabledFor(logging.DEBUG):
+                    top = ranked[0] if ranked else None
+                    logger.debug(
+                        "detect_districts: %r → no candidate above TOP1_MIN (top=%s)",
+                        candidate,
+                        top.to_dict() if top else None,
                     )
-                ).first()
-                if row and row.district_code not in seen_codes:
-                    found.append({"code": row.district_code, "name": row.district_name})
-                    seen_codes.add(row.district_code)
-                    continue
+                continue
+            if best.code in seen_codes:
+                continue
 
-                # 2순위: prefix 매칭 (3글자 이상만)
-                if len(candidate) >= 3:
-                    row = (
-                        await session.execute(
-                            select(District.district_code, District.district_name)
-                            .where(District.district_name.ilike(f"{candidate}%"))
-                            .limit(1)
-                        )
-                    ).first()
-                    if row and row.district_code not in seen_codes:
-                        found.append({"code": row.district_code, "name": row.district_name})
-                        seen_codes.add(row.district_code)
-                        continue
+            entry: dict = {
+                "code": best.code,
+                "name": best.name,
+                "score": round(best.score, 4),
+                "ambiguous": is_ambiguous,
+            }
+            if is_ambiguous or alts:
+                entry["alternatives"] = [a.to_dict() for a in alts]
+            found.append(entry)
+            seen_codes.add(best.code)
 
-                # 3순위: contains 매칭 (3글자 이상으로 제한 — 2글자 축약어는 과잉 매칭)
-                # 예: "강남역" → suffix strip 후 "강남" (len=2) 이 %강남% contains 로
-                # "강남구청역" 같은 무관 상권을 끌어오는 문제 방지.
-                if len(candidate) >= 3:
-                    row = (
-                        await session.execute(
-                            select(District.district_code, District.district_name)
-                            .where(District.district_name.ilike(f"%{candidate}%"))
-                            .limit(1)
-                        )
-                    ).first()
-                    if row and row.district_code not in seen_codes:
-                        found.append({"code": row.district_code, "name": row.district_name})
-                        seen_codes.add(row.district_code)
-                        continue
-
-                # 4순위: 역방향 prefix (DB 이름이 candidate의 prefix인 경우)
-                if len(candidate) >= 3:
-                    row = (
-                        await session.execute(
-                            select(District.district_code, District.district_name)
-                            .where(literal(candidate).ilike(District.district_name + "%"))
-                            .limit(1)
-                        )
-                    ).first()
-                    if row and row.district_code not in seen_codes:
-                        found.append({"code": row.district_code, "name": row.district_name})
-                        seen_codes.add(row.district_code)
+            if is_ambiguous:
+                logger.info(
+                    "detect_districts: ambiguous match for %r → %s vs %s (Δ=%.3f)",
+                    candidate,
+                    best.to_dict(),
+                    alts[0].to_dict() if alts else None,
+                    best.score - (alts[0].score if alts else 0.0),
+                )
 
         return found
+
+    # Typed accessor retained for callers that only want top-1 codes; keeps
+    # the Planner's existing ``m["code"] for m in multi`` comprehension valid.
+    _rank_candidates = staticmethod(rank_candidates)
+    _pick_best = staticmethod(pick_best)
+    _RankedCandidate = RankedCandidate
 
     async def list_districts(
         self, search: str | None, district_type: str | None, limit: int, offset: int

@@ -89,6 +89,13 @@ async def lifespan(app: FastAPI):
     await cache.close()
     if engine is not None:
         await engine.dispose()
+    # Langfuse best-effort flush — pending trace 가 SIGTERM 직후 드랍되지 않도록.
+    try:
+        from server.services.langfuse_tracer import shutdown as lf_shutdown
+
+        lf_shutdown()
+    except Exception:
+        logger.debug("langfuse shutdown hook failed", exc_info=True)
     logger.info("MarketScope AI shutdown complete")
 
 
@@ -136,11 +143,13 @@ app.add_middleware(MetricsMiddleware)
 # Register routers
 from server.api.routes.chat import router as chat_router
 from server.api.routes.districts import router as districts_router
+from server.api.routes.feedback import router as feedback_router
 from server.api.routes.map_data import router as map_data_router
 
 app.include_router(districts_router)
 app.include_router(map_data_router)
 app.include_router(chat_router)
+app.include_router(feedback_router)
 app.include_router(metrics_router)
 
 

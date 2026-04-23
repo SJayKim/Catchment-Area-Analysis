@@ -25,6 +25,9 @@
 | F08 | 점포 이력 / 리스크 | 1A · 1B | ✅ 완료 (store_history 실데이터 미적재) | Free (Phase 2 에서 Premium) | [features/F08-store-history-risk.md](features/F08-store-history-risk.md) |
 | F09 | 매출 시뮬레이션 | 3 | ✅ 완료 (What-If UI 버튼 제외) | Premium | [features/F09-revenue-simulation.md](features/F09-revenue-simulation.md) |
 | F10 | PDF 리포트 저장 | 3 | ✅ 완료 | Premium | [features/F10-report-export.md](features/F10-report-export.md) |
+| F11 | 랜딩 + 역할 온보딩 | UX | ✅ 구현 (Phase A) | Free | [features/F11-landing.md](features/F11-landing.md) |
+| F12 | 피드백 수집 3-layer | UX | ✅ 구현 (Phase C) | Free | [features/F12-feedback.md](features/F12-feedback.md) |
+| F13 | 상권 프리뷰 (Zero-LLM) | UX | ✅ 구현 (Phase B) | Free | [features/F13-district-preview.md](features/F13-district-preview.md) |
 
 ## Phase 요약
 

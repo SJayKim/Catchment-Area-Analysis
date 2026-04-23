@@ -1,8 +1,8 @@
 ---
 name: status-update
-description: docs/status/current-status.md 에 오늘 날짜 진행 기록을 추가. Phase 섹션 구조/이모지 관례 보존.
+description: docs/status/current-status.md 에 오늘 날짜 진행 기록을 추가. Phase 섹션 구조/이모지 관례 보존. 400줄 초과 시 status-compress 자동 선행.
 user-invocable: true
-allowed-tools: Read, Edit, Bash
+allowed-tools: Read, Edit, Bash, Skill
 ---
 
 ## 입력
@@ -10,6 +10,15 @@ allowed-tools: Read, Edit, Bash
 `$ARGUMENTS` = 진행 요약 문장 (선택). 비어 있으면 최근 git log 로 자동 생성.
 
 ## 절차
+
+### 0. 줄 수 프리체크 (400줄 가드)
+
+```bash
+wc -l docs/status/current-status.md
+```
+
+- **> 400** → `/status-compress` 먼저 호출 (Skill 로 체이닝). 압축 완료 후 본 절차 1 부터 재개.
+- ≤ 400 → 바로 1 번으로.
 
 ### 1. 파일 읽기
 ```

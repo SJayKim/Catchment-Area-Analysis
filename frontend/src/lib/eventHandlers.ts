@@ -1,5 +1,6 @@
 import { ChatMessage, SSEEvent, AgentStep, CompareCardData, District } from './types';
 import { useDistrictStore } from '@/stores/districtStore';
+import { useChatStore } from '@/stores/chatStore';
 
 export const TOOL_LABELS: Record<string, { progress: string; done: string }> = {
   get_floating_population_tool: { progress: '유동인구 조회 중...', done: '유동인구 조회 완료' },
@@ -158,6 +159,12 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
       };
       set({ messages: [...(get() as unknown as { messages: ChatMessage[] }).messages, cardMessage] });
 
+      // 모바일 — 지도 탭에 있으면 카드 수신 시 뱃지 증가 (챗 탭이면 바로 확인되므로 skip)
+      const chatState = useChatStore.getState();
+      if (chatState.mobileTab !== 'chat') {
+        chatState.incrementUnread();
+      }
+
       // Sync compareList when comparison card arrives — Agent가 채팅으로
       // 비교 의도를 감지해 도구를 실행했으면 지도 하이라이트도 자동 갱신.
       // (수동 UI 플로우: 비교모드 토글 + 폴리곤 클릭 도 계속 유효)
@@ -202,8 +209,8 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
         set({ isThinking: false, agentSteps: [] });
       }
       if (event.trace_id) {
-        // Langfuse trace 상관용 — L4 피드백 버튼에서 trace_id 를 재사용 예정
-        console.debug('[marketscope] trace_id:', event.trace_id);
+        // L1 card feedback (👍👎) — FeedbackRow 가 chatStore.lastTraceId 를 참조
+        set({ lastTraceId: event.trace_id });
       }
       break;
 

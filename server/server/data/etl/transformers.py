@@ -197,9 +197,16 @@ def transform_floating_pop(raw: dict) -> list[dict]:
 def transform_estimated_sales(raw: dict) -> dict:
     """Transform estimated sales API row.
 
-    The ``*_AMT`` fields (THSMON_SELNG_AMT, MDW_SELNG_AMT, ...) are raw
+    The ``*_AMT`` fields (THSMON_SELNG_AMT, MDWK_SELNG_AMT, ...) are raw
     quarterly aggregates in won per Seoul OpenData FAQ. They are stored
     verbatim; conversion to monthly happens in real-mode repositories.
+
+    As of the 2025-10 `VwsmTrdarSelngQq` schema revision the weekday /
+    weekend / time-slot keys were renamed:
+
+    - ``MDW_SELNG_AMT`` → ``MDWK_SELNG_AMT``
+    - ``WND_SELNG_AMT`` → ``WKEND_SELNG_AMT``
+    - ``TMZON_{1..6}_SELNG_AMT`` → ``TMZON_{00_06, 06_11, 11_14, 14_17, 17_21, 21_24}_SELNG_AMT``
     """
     year = str(raw.get("STDR_YR_CD", ""))
     qu = str(raw.get("STDR_QU_CD", ""))
@@ -211,8 +218,8 @@ def transform_estimated_sales(raw: dict) -> dict:
         "quarter": f"{year}Q{qu}",
         "monthly_sales": _safe_bigint(raw.get("THSMON_SELNG_AMT")),
         "sales_count": _safe_int(raw.get("THSMON_SELNG_CO")) or None,
-        "weekday_sales": _safe_bigint(raw.get("MDW_SELNG_AMT")),
-        "weekend_sales": _safe_bigint(raw.get("WND_SELNG_AMT")),
+        "weekday_sales": _safe_bigint(raw.get("MDWK_SELNG_AMT")),
+        "weekend_sales": _safe_bigint(raw.get("WKEND_SELNG_AMT")),
         "male_sales": _safe_bigint(raw.get("ML_SELNG_AMT")),
         "female_sales": _safe_bigint(raw.get("FML_SELNG_AMT")),
         "age_10_sales": _safe_bigint(raw.get("AGRDE_10_SELNG_AMT")),
@@ -221,12 +228,12 @@ def transform_estimated_sales(raw: dict) -> dict:
         "age_40_sales": _safe_bigint(raw.get("AGRDE_40_SELNG_AMT")),
         "age_50_sales": _safe_bigint(raw.get("AGRDE_50_SELNG_AMT")),
         "age_60_plus_sales": _safe_bigint(raw.get("AGRDE_60_ABOVE_SELNG_AMT")),
-        "time_1_sales": _safe_bigint(raw.get("TMZON_1_SELNG_AMT")),
-        "time_2_sales": _safe_bigint(raw.get("TMZON_2_SELNG_AMT")),
-        "time_3_sales": _safe_bigint(raw.get("TMZON_3_SELNG_AMT")),
-        "time_4_sales": _safe_bigint(raw.get("TMZON_4_SELNG_AMT")),
-        "time_5_sales": _safe_bigint(raw.get("TMZON_5_SELNG_AMT")),
-        "time_6_sales": _safe_bigint(raw.get("TMZON_6_SELNG_AMT")),
+        "time_1_sales": _safe_bigint(raw.get("TMZON_00_06_SELNG_AMT")),
+        "time_2_sales": _safe_bigint(raw.get("TMZON_06_11_SELNG_AMT")),
+        "time_3_sales": _safe_bigint(raw.get("TMZON_11_14_SELNG_AMT")),
+        "time_4_sales": _safe_bigint(raw.get("TMZON_14_17_SELNG_AMT")),
+        "time_5_sales": _safe_bigint(raw.get("TMZON_17_21_SELNG_AMT")),
+        "time_6_sales": _safe_bigint(raw.get("TMZON_21_24_SELNG_AMT")),
     }
 
 

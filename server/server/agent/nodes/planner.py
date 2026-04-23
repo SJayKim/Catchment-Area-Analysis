@@ -21,6 +21,19 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
+def _matches_excluded(name: str, excluded_tokens: list[str]) -> bool:
+    """Return True when a district name should be dropped due to an exclusion
+    token surfaced by the rewriter (``"홍대 말고 성수"`` → excludes "홍대")."""
+    if not name or not excluded_tokens:
+        return False
+    for token in excluded_tokens:
+        if not token:
+            continue
+        if token in name or name in token:
+            return True
+    return False
+
+
 def _classify_by_rules(message: str) -> tuple[str | None, float]:
     """Fast rule-based intent classification. Returns (intent, confidence)."""
     config = load_intent_config()
@@ -188,6 +201,65 @@ async def planner_node(state: AgentState) -> dict:
     district_code = state.get("district_code", "")
     district_name = state.get("district_name", "")
 
+    # GAP-E / GAP-C: pre-Planner rewrite. Rule-first so the happy path is free.
+    # Falls back to a Gemini flash rewrite (~200ms) only when coreference
+    # tokens remain unresolved.
+    from server.agent.utils.rewriter import (
+        llm_rewrite_message,
+        rule_rewrite,
+    )
+
+    rewrite = rule_rewrite(
+        message,
+        history=history,
+        current_district_code=district_code or None,
+        current_district_name=district_name or None,
+    )
+    if rewrite.needs_llm_fallback:
+        try:
+            from server.agent.history import ConversationHistory
+
+            h = ConversationHistory()
+            h.turns = list(history)
+            history_text = h.format_for_planner() if history else ""
+        except Exception:
+            history_text = ""
+        llm_rw = await llm_rewrite_message(
+            message=message,
+            history_text=history_text,
+            district_name=district_name,
+        )
+        if llm_rw:
+            rewrite.rewritten = llm_rw["rewritten"]
+            if llm_rw.get("anchor_district_name"):
+                rewrite.anchor_district_name = llm_rw["anchor_district_name"]
+            if llm_rw.get("anchor_category"):
+                rewrite.anchor_category = llm_rw["anchor_category"]
+
+    if rewrite.rewritten != message or rewrite.excluded_tokens:
+        logger.info(
+            "planner.rewrite session=%s raw=%r → %r (anchor=%s, excluded=%s)",
+            state.get("session_id"),
+            message,
+            rewrite.rewritten,
+            rewrite.anchor_district_name,
+            rewrite.excluded_tokens,
+        )
+    message = rewrite.rewritten
+
+    # GAP-C: if the pre-selected district (usually auto-detected by chat.py
+    # from the *original* message) collides with an exclusion token, drop it.
+    # Without this, "홍대 말고 성수로" auto-picks "홍대입구역(홍대)" upstream and
+    # the comparison still ends up with 홍대 ∪ 성수.
+    if rewrite.excluded_tokens and _matches_excluded(district_name, rewrite.excluded_tokens):
+        logger.info(
+            "planner.exclude-anchor dropping auto-detected district %s (%s)",
+            district_code,
+            district_name,
+        )
+        district_code = ""
+        district_name = ""
+
     # 1. Rule-based classification
     intent, confidence = _classify_by_rules(message)
 
@@ -223,6 +295,7 @@ async def planner_node(state: AgentState) -> dict:
     # detect_districts_in_message scans every district name in the message
     # (with Korean particle stripping + stopwords), enabling queries like
     # "강남역과 홍대입구를 비교해줘" to populate both codes.
+    ambiguous_districts: list[dict] = []
     if intent == "comparison":
         try:
             from server.repositories import get_data_access
@@ -232,12 +305,36 @@ async def planner_node(state: AgentState) -> dict:
             logger.warning("detect_districts_in_message failed", exc_info=True)
             multi = []
 
+        # GAP-C: honour rewriter-detected exclusion tokens ("홍대 말고 성수"). We
+        # drop any candidate whose matched name contains (or is contained by)
+        # the excluded token.
+        if rewrite.excluded_tokens:
+            before = len(multi)
+            multi = [m for m in multi if not _matches_excluded(m.get("name", ""), rewrite.excluded_tokens)]
+            if len(multi) != before:
+                logger.info(
+                    "planner.exclude session=%s dropped=%d via tokens=%s",
+                    state.get("session_id"),
+                    before - len(multi),
+                    rewrite.excluded_tokens,
+                )
+
         if multi:
             multi_codes = [m["code"] for m in multi]
             # Priority: explicit selection first, then message-discovered
             if district_code and district_code not in multi_codes:
                 multi_codes.insert(0, district_code)
             referenced_districts = multi_codes[:3]  # CompareCard caps at 3
+
+            # GAP-A: capture ambiguous entries so Actor can emit a choice card.
+            ambiguous_districts = [
+                {
+                    "top": {"code": m["code"], "name": m.get("name"), "score": m.get("score")},
+                    "alternatives": m.get("alternatives") or [],
+                }
+                for m in multi
+                if m.get("ambiguous")
+            ]
         elif len(referenced_districts) < 2 and district_code:
             if district_code not in referenced_districts:
                 referenced_districts.insert(0, district_code)
@@ -261,19 +358,42 @@ async def planner_node(state: AgentState) -> dict:
     # 5. Determine response mode
     response_mode = "direct" if intent in ("general", "ambiguous") or not plan else "tool_assisted"
 
-    # If no district selected and tool-assisted → ambiguous
+    # If no district selected and tool-assisted → ambiguous. Comparison is
+    # exempt when the planner already discovered 2+ districts from the
+    # message (e.g. GAP-C "홍대 말고 성수역이랑 건대 비교" — the map pre-selection
+    # is dropped but the comparison targets are well-defined).
     if response_mode == "tool_assisted" and not district_code:
-        intent = "ambiguous"
-        plan = []
-        response_mode = "direct"
+        if intent == "comparison" and len(referenced_districts) >= 2:
+            pass  # plan is valid without an explicit map-selected district
+        else:
+            intent = "ambiguous"
+            plan = []
+            response_mode = "direct"
 
-    return {
+    logger.info(
+        "planner.final session=%s intent=%s district=%s refs=%s plan_size=%d mode=%s",
+        state.get("session_id"),
+        intent,
+        district_code,
+        referenced_districts,
+        len(plan),
+        response_mode,
+    )
+    # Propagate excludeAnchor drops so Respond-side context does not leak the
+    # pre-selected district back into the prompt ("## 현재 컨텍스트 - 상권: 홍대
+    # (홍대입구역)").
+    out: dict = {
         "user_intent": intent,
         "intent_confidence": confidence,
         "referenced_districts": referenced_districts,
         "referenced_category": referenced_category,
+        "ambiguous_districts": ambiguous_districts,
         "plan": plan,
         "plan_reasoning": f"의도: {intent}, 계획: {len(plan)}개 도구 호출",
         "response_mode": response_mode,
         "execution_round": (state.get("execution_round") or 0) + 1,
     }
+    if not district_code and state.get("district_code"):
+        out["district_code"] = ""
+        out["district_name"] = ""
+    return out

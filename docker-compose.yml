@@ -79,20 +79,19 @@ services:
     depends_on:
       migrate: { condition: service_completed_successfully }
 
-  # --- Production 서비스 ---
+  # --- 로컬 개발 스택 ---
+  # env 는 .env.dev 에서 자동 로드 (USE_MOCK/API KEY/LANGFUSE_* 등 전부).
+  # environment: 블록은 Docker 네트워크 전용 override 만 유지 — env_file 값을 덮어씀.
   backend:
     build: { context: ./server, target: runner }
     ports: ["8000:8000"]
+    env_file: .env.dev
     environment:
-      USE_MOCK: ${USE_MOCK:-false}
+      # Docker 내부 네트워크로 강제 override (host localhost URL 무시)
       DATABASE_URL: postgresql+asyncpg://marketscope:devpassword@db:5432/marketscope
       DATABASE_URL_SYNC: postgresql://marketscope:devpassword@db:5432/marketscope
       REDIS_URL: redis://redis:6379/0
       CORS_ORIGINS: '["http://localhost:3000","http://localhost:80","http://localhost","http://frontend:3000"]'
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
-      AGENT_MODE: ${AGENT_MODE:-pae}
-      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -167,7 +166,7 @@ services:
     command: uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
     ports: ["8000:8000"]
     volumes: [./server:/app]
-    env_file: .env
+    env_file: .env.dev
     environment:
       DATABASE_URL: postgresql+asyncpg://marketscope:devpassword@db:5432/marketscope
       REDIS_URL: redis://redis:6379/0
@@ -181,8 +180,8 @@ services:
     command: npx next dev --port 3000
     ports: ["3000:3000"]
     volumes: [./frontend:/app, /app/node_modules]
+    env_file: .env.dev
     environment:
-      NEXT_PUBLIC_KAKAO_MAP_KEY: ${NEXT_PUBLIC_KAKAO_MAP_KEY:-}
       NEXT_PUBLIC_API_URL: http://backend-dev:8000
     depends_on: [backend-dev]
 

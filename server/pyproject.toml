@@ -24,9 +24,12 @@ dependencies = [
     "langchain-anthropic>=0.3",
     "langchain-google-genai>=2.0",
     "langchain-core>=0.3",
-    # v3+ 는 `langchain` 풀패키지 의존성. 현 스택(langchain-core만)과 호환되는 v2 계열 고정.
-    # ADR: docs/plan/infra/llmops-l1-adr-hosting.md
-    "langfuse>=2.0,<3.0",
+    # langfuse v3 는 `langchain` 풀패키지 + modern `langchain_core` 에 의존.
+    # v2 는 legacy `langchain.callbacks.base` 를 요구했고 langchain 1.x 에서 제거됨 → v3 로 상향.
+    # `langfuse_tracer.py` 가 `langfuse.langchain.CallbackHandler` + `TraceContext(trace_id=...)` 패턴 사용.
+    # ADR: docs/plan/infra/llmops-l1-adr-hosting.md · docs/plan/infra/llmops-l1-verification.md
+    "langfuse>=3,<4",
+    "langchain>=1,<2",
     # SSE
     "sse-starlette>=2.0",
     # Middleware

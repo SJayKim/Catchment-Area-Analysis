@@ -35,7 +35,7 @@ test.beforeAll(() => ensureRunDir());
 
 test.describe('Ring 1 — F02 Agent Chat', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/app');
     await waitForMapReady(page);
   });
 
