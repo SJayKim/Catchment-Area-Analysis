@@ -1,6 +1,6 @@
 [project]
 name = "marketscope-server"
-version = "0.3.0"
+version = "0.4.0"
 description = "MarketScope AI - 상권분석 AI 서비스 백엔드"
 requires-python = ">=3.12"
 dependencies = [
