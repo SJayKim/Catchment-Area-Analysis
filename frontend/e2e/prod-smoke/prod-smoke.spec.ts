@@ -23,14 +23,18 @@ test.describe('Production smoke', () => {
     expect(html.includes('_next') || html.includes('__next')).toBeTruthy();
   });
 
-  test('P2 kakao-sdk proxy serves JavaScript', async () => {
+  test('P2 kakao-sdk proxy serves JavaScript (new path)', async () => {
     const ctx = await request.newContext();
-    const resp = await ctx.get(`${BASE}/api/kakao-sdk`);
+    // 2026-04-23 cut-over: /api/kakao-sdk (frontend route) → /proxy/kakao-sdk
+    const resp = await ctx.get(`${BASE}/proxy/kakao-sdk`);
     expect(resp.status()).toBe(200);
     const body = await resp.text();
     expect(body.length).toBeGreaterThan(100);
-    // Must look like JS (not an HTML error page)
     expect(body).not.toContain('<!DOCTYPE');
+
+    // Legacy path must 404 (confirms cut-over happened)
+    const legacy = await ctx.get(`${BASE}/api/kakao-sdk`);
+    expect(legacy.status()).toBe(404);
   });
 
   test('P3 polygons API returns GeoJSON FeatureCollection', async () => {

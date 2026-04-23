@@ -93,6 +93,11 @@ services:
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       AGENT_MODE: ${AGENT_MODE:-pae}
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_HOST: ${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      LANGFUSE_SAMPLING_RATE: ${LANGFUSE_SAMPLING_RATE:-1.0}
+      LANGFUSE_SESSION_SALT: ${LANGFUSE_SESSION_SALT:-}
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }

@@ -1,11 +1,25 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-22
-> **MVP 운영 READY — Consumer 100/100, 완성도 80/100 (안정성 85 · 효율성 82 · 정확성 74)**
-> 프로덕션: `marketscope.robitlabs.co.kr` 라이브 (외부 리버스 프록시 + SSE 스트리밍 정상)
-> E2E 회귀: Ring 0~3 전체 그린 (Mock 39/39 · Real 24/24) + Ops OPS-01/02 + L1 Langfuse 7/7
-> 관측성 L1: Langfuse trace wiring 완료 (graceful degrade · SSE `done.trace_id`)
+> 최종 갱신: 2026-04-23
+> **프로덕션 동기화 완료 ✅ — `a5bef97` 기반 재배포, 13 커밋 밀려 있던 운영을 HEAD 로 끌어올림**
+> 프로덕션: `marketscope.robitlabs.co.kr` 라이브 — prod-smoke E2E 7/7 PASS (58s)
+> E2E 회귀: Ring 0~3 전체 그린 (Mock 39/39 · Real 24/24) + Ops OPS-01/02 + L1 Langfuse 7/7 + prod-smoke 7/7
+> 관측성 L1: Langfuse trace wiring 완료 (graceful degrade · SSE `done.trace_id`), **프로덕션 env 배선 완료**
 > 다음 권장: Accuracy Gap Fix W1~W4 (정확성 74 → 85+). [Plan](../plan/fix/accuracy-gap-fix.md) · Phase 2 착수 전 선행 권장
+
+## 2026-04-23 — 운영 재배포 (HEAD 동기화)
+
+- **Before**: `f6c1229` 시점 빌드 (2026-04-16), 13 커밋 뒤처짐
+- **After**: `a5bef97` 기반 재빌드, migrate/seed exit 0, backend healthy
+- **Plan**: [production-redeploy-2026-04-23.md](../plan/infra/production-redeploy-2026-04-23.md)
+- **변경**:
+  - `docker-compose.prod.yml` backend env 에 `LANGFUSE_*` 5 변수 전달 (graceful degrade)
+  - migrate 서비스가 `python scripts/cleanup_alembic.py && alembic upgrade head` 실행 — `003 overlaps 001` 오염 자동 해소 (cleanup 0 행, 이미 깨끗)
+  - frontend `/api/kakao-sdk` → `/proxy/kakao-sdk` 자동 cut-over (nginx 예외 블록은 dead config, 후속 정리 대상)
+- **검증**:
+  - `curl /proxy/kakao-sdk` = 200 (4095 bytes), `/api/kakao-sdk` = 404 (cut-over 완료)
+  - prod-smoke 7/7 PASS (58.1s): P5 summary `insights.perStoreSales` 27.3M/월, P6 recommend 편의점 2.09억/월 (모두 월 단위 정상)
+- **배포 메모**: `migrate` 서비스가 자체 이미지(`catchment-area-analysis-migrate`)를 써서 `build backend frontend` 만으론 구 이미지 유지 → 최초 `up -d` 에서 migrate exit 2 (`cleanup_alembic.py` not found). `build migrate` 별도 실행으로 해소. 향후 **compose 모든 빌드 서비스(migrate/seed/backend/frontend) 를 rebuild** 체크리스트에 추가.
 
 ---
 
