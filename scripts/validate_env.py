@@ -69,6 +69,20 @@ def main(argv: list[str]) -> int:
             "Frontend auto-appends /api — keep the root domain only."
         )
 
+    # NEXT_PUBLIC_API_URL must not point at the frontend's own port.
+    # chat SSE 는 Next.js rewrite 프록시를 통하면 버퍼링되므로 backend 로 direct 호출해야 함.
+    # 이 값이 localhost:3000 / :3001 처럼 frontend 포트로 잘못 설정되면 SSE 가 무응답처럼 보임.
+    # (2026-04-22 재발 이력 — feedback_next_public_api_url_frontend_port.md)
+    FRONTEND_PORTS = ("3000", "3001")
+    for port in FRONTEND_PORTS:
+        if f"localhost:{port}" in api_url or f"127.0.0.1:{port}" in api_url:
+            errors.append(
+                f"NEXT_PUBLIC_API_URL points at frontend port :{port} (got {api_url!r}). "
+                "This routes chat SSE through Next.js rewrite and buffers the stream. "
+                "Use the backend URL (e.g. http://localhost:8000) or production API origin."
+            )
+            break
+
     # LLM key: at least one alternative must be set
     if not any(env.get(k) and not PLACEHOLDER_PATTERN.search(env[k]) for k in LLM_ALTERNATIVES):
         errors.append(

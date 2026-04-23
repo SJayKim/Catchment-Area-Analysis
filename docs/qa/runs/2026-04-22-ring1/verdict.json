@@ -1,0 +1,29 @@
+{
+  "run_date": "2026-04-22",
+  "ring": 1,
+  "mode": "Real (USE_MOCK=false)",
+  "frontend_url": "http://localhost:3000",
+  "backend_url": "http://localhost:8000",
+  "total": 30,
+  "passed": 8,
+  "failed": 20,
+  "skipped": 2,
+  "duration_minutes": 22.3,
+  "root_cause": "Frontend dev server (npm run dev) crashed/became unresponsive after F02-H1 test timed out. All subsequent page.goto('/') calls returned net::ERR_ABORTED or net::ERR_CONNECTION_RESET. The first test (F02-H1) hit the 60s beforeEach timeout while trying to load the page — likely the devserver was overwhelmed or entered a bad state during the first spec run.",
+  "passed_tests": [
+    "F01-H1", "F01-H2", "F01-H3", "F01-H4", "F01-H5",
+    "F06-H1",
+    "M01-H2", "M01-E1"
+  ],
+  "failed_tests": [
+    "F02-H1", "F02-H2", "F02-H3", "F02-H4",
+    "F03-H1", "F03-H2", "F03-H3", "F03-H4",
+    "F04-H1", "F04-E1",
+    "F05-H1", "F05-H2", "F05-H3", "F05-H4", "F05-E1",
+    "F06-H2",
+    "F07-H1", "F08-H1", "F09-H1", "F10-H1"
+  ],
+  "skipped_tests": ["M01-H1", "M01-H3"],
+  "baseline_regression": "INFRA — dev server instability, not feature regression",
+  "auto_pass": false
+}
