@@ -77,6 +77,9 @@ select = ["E", "F", "I", "UP", "B"]
 "server/agent/nodes/respond.py" = ["E501"]
 "server/agent/prompts/*.py" = ["E501"]
 "server/agent/graph.py" = ["E501"]
+# Abstention/Rewriter 프롬프트 상수 및 JSON 스키마 예시 라인.
+"server/agent/utils/abstention.py" = ["E501"]
+"server/agent/utils/rewriter.py" = ["E501"]
 # FastAPI 미들웨어/라우터 등록 순서가 의존하는 import — 상단 이동 시 순서 어긋남.
 "server/main.py" = ["E402"]
 # Typer CLI 관례: Option/Argument 를 기본값으로 호출. 가독성 유지 위해 허용.
