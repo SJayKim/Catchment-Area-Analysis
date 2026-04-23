@@ -2,8 +2,9 @@
 
 > 최종 갱신: 2026-04-23 (저녁)
 > **프로덕션 v0.4.0 동기화 완료 ✅ — `c6cc60e` 기반 재배포 (저녁), 오전 `60b6de3` 대비 6 커밋 / +13,038 / -577 반영**
-> 프로덕션: `marketscope.robitlabs.co.kr` 라이브 — prod-smoke + 신규 2 endpoint 검증 PASS
+> 프로덕션: `marketscope.robitlabs.co.kr` 라이브 — prod-smoke 28/28 + 신규 2 endpoint 검증 PASS
 > 배포 변경: alembic 004 (`learned_aliases`) · `/`=랜딩/`/app`=챗맵 라우트 분리 · Planner Entity Linking + Abstention + Rewriter · `/api/districts/{code}/preview` · `/api/feedback/score`
+> **E2E 회귀 (2026-04-23 저녁)**: 106 test · 94 PASS · 4 FAIL (전부 test infra) · 8 SKIP · **서비스 회귀 0** · ops 5종 전수 PASS. [Run log](../qa/runs/e2e-run-2026-04-23-full.md)
 > E2E 회귀: Ring 0~3 전체 그린 (Mock 39/39 · Real 24/24) + Ops OPS-01/02 + L1 Langfuse 7/7 + prod-smoke 7/7
 > 관측성 L1: Langfuse **trace 실제 발행 확인 완료** (dev 로컬 sanity — `done.trace_id=9d59e6455eeb42f685b71f8057915377` + `agent_done` 로그 동일 값 매핑) · langfuse SDK **v2→v3 포팅** (v2 의 legacy langchain 의존 해소) · `agent_done` 운영 로그 조인 추가. 프로덕션 env 배선 완료. [Plan](../plan/infra/llmops-l1-verification.md)
 > **2026-04-23 env 관례 분리**: `.env`=프로덕션 · `.env.dev`=로컬 개발 (pydantic/Next.js/scripts 전부 `.env.dev` 우선 로드) · Langfuse prod 워크스페이스 키 분리(`pk-lf-07a3fa78…`) + `LANGFUSE_TRACING_ENVIRONMENT` 태깅으로 dev/prod trace 격리
@@ -13,6 +14,24 @@
 > **2026-04-23 Mobile Responsive Plan Phase A+B+C 구현**: viewport/breakpoint/touch-target · BottomSheet 3-snap + BottomNav 2-tab · IME/VisualViewport 가드 + auto-scroll FAB. tsc/eslint/build 0 errors. Phase D/E/F (PWA·Perf·A11y/E2E) 미착수. [Plan](../plan/ui/mobile-responsive.md)
 > **2026-04-23 F-01 fix + Accuracy Gap W1/W2/W3 구현** ⭐: ETL 8 컬럼 NULL 버그 해소(21,333 행 재적재) + Entity Linking(pg_trgm 대체: difflib+type boost) + Abstention(classify_tool_results+attribution rule) + Coreference Rewriter(Tier1 rule+Tier2 LLM) + 배제 토큰(말고/대신/빼고) + learned_aliases 테이블(alembic 004). [Plan F-01](../plan/fix/etl-sales-column-rename-2026-04-23.md) · [Plan Accuracy Gap](../plan/fix/accuracy-gap-fix.md)
 > **2026-04-23 Refactoring Phase 1 Plan 작성**: 7 기준(R1~R7) 기반 저위험/중위험 항목 1 Pass 묶음. Pass1 = singleflight 삭제 + 레거시 E2E 8건 삭제 + status 압축 + Any import 정리. Pass2 = errors.py 래퍼 통합 + blanket except 9건 좁히기 + respond.py 헬퍼 분리 + chatStore slice 분할. [Plan](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — 구현 미착수
+
+## 2026-04-23 (저녁) — E2E 전체 회귀 Run (v0.4.0 검증)
+
+- **Scope**: prod-smoke (live prod, 4 viewport × 7 test) + ring0~3 (e2e stack, chromium) + ops 전수.
+- **Run log**: [e2e-run-2026-04-23-full.md](../qa/runs/e2e-run-2026-04-23-full.md)
+- **집계**: **106 test · 94 PASS · 4 FAIL · 8 SKIP (PASS 88.7%)**, 총 ~12분.
+  - prod-smoke 28/28 (P5 강남역 `perStoreSales=27.3M 원/월` + P6 보문역 편의점 `2.09억/월` 월 단위 회귀 0)
+  - ring0 5/5 · ring1 40/42 · ring2 4/5 (J05 PDF skip) · ring3 17/26 (7 Real-only skip + 2 플레이크)
+  - ops 커버리지: OPS-01 `/api/health/detail` 11 필드 + OPS-02 `/metrics` + prodGuard + `/proxy/kakao-sdk` + SALES-UNIT grep — 전수 PASS.
+- **FAIL 4건 모두 test infra 이슈** (서비스 회귀 0):
+  - F01-H3 `clickPolygonByCode` store fallback timing
+  - F12-FAB-KAKAO skip guard 버그 (`NEXT_PUBLIC_KAKAO_CHANNEL_URL` 미설정)
+  - P0-6 fast district switch Mock 타이밍 플레이크
+  - 3-REG-VALIDATE-ENV-FAIL Playwright 컨테이너 내부 `python3` 경로 이슈
+- **Memory 후보**: `feedback_env_e2e_crlf.md` (.env.e2e CRLF 로 preflight 공가드 false-fail) · `feedback_postgis_init_race.md` (fresh volume pg_isready false-positive).
+- **Playwright 실행 수단**: `mcr.microsoft.com/playwright:v1.58.0-jammy` 공식 이미지 + `--network host`. 호스트 npm/node 설치 無.
+
+---
 
 ## 2026-04-23 (저녁) — v0.4.0 프로덕션 재배포 `c6cc60e`
 
