@@ -16,9 +16,49 @@ from server.config import settings
 logger = logging.getLogger(__name__)
 
 
+# Coreference tokens that refer to *multiple* districts already mentioned in
+# history — e.g. "이 두 곳 비교", "둘 중 어디", "위 비교 정리" — none of which are
+# captured by the single-anchor COREF_PATTERN in rewriter.py.
+_COMPARE_COREF_PATTERN = re.compile(
+    r"(이\s*두\s*곳|이\s*세\s*곳|두\s*곳\s*다|세\s*곳\s*다|둘\s*다|둘\s*중"
+    r"|세\s*상권|이\s*상권들|이것들|양쪽|위\s*비교|위\s*두|이\s*비교"
+    r"|이\s*내용|이\s*비교\+?추천)"
+)
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
+
+# P0-4 clarification templates — emitted when Planner can't build a meaningful
+# tool plan (coref without anchor, exclusion leaves 0 targets, comparison with
+# <2 districts). Avoids handing control to Respond where the LLM will fall back
+# to priors (observed S7/S8 regression in 2026-04-24 eval).
+_CLARIFICATION_TEMPLATES: dict[str, dict] = {
+    "coref_no_anchor": {
+        "text": (
+            "이전에 분석한 상권 정보가 남아있지 않아 '거기/저기/방금' 이 어느 상권인지 "
+            "특정할 수 없어요. 비교하거나 분석하실 상권 이름을 직접 알려주시겠어요? "
+            "(예: '강남역이랑 홍대입구역 유동인구 비교')"
+        ),
+        "suggestions": ["강남역 상권 요약", "홍대 vs 성수 비교", "건대 창업 추천 업종"],
+    },
+    "comparison_under_2": {
+        "text": (
+            "비교 분석을 위해서는 최소 2개 상권이 필요합니다. 두 상권을 모두 알려주시겠어요? "
+            "(예: '강남역이랑 홍대입구역 매출 비교')"
+        ),
+        "suggestions": ["강남역 vs 홍대 매출", "성수역 vs 건대 유동인구", "명동 vs 서울역 비교"],
+    },
+    "exclusion_left_empty": {
+        "text": (
+            "말씀하신 상권을 제외하고 나니 비교할 상권이 남지 않아요. 분석하실 상권 2개를 "
+            "다시 알려주시겠어요? (예: '성수역이랑 건대 비교')"
+        ),
+        "suggestions": ["성수역이랑 건대 비교", "강남역 vs 서울역", "홍대입구역 요약"],
+    },
+}
 
 
 def _matches_excluded(name: str, excluded_tokens: list[str]) -> bool:
@@ -34,9 +74,27 @@ def _matches_excluded(name: str, excluded_tokens: list[str]) -> bool:
     return False
 
 
+_LONG_REPORT_TRIGGER = re.compile(
+    r"(상세.*분석|종합.*분석|전체.*분석|분석.*보고서|보고서.*형태|상세.*리포트|리포트.*형태)"
+)
+_LONG_REPORT_TOPICS: tuple[re.Pattern[str], ...] = tuple(
+    re.compile(p) for p in (r"유동", r"매출", r"점포", r"추천", r"리스크", r"폐업", r"시뮬")
+)
+_RECOMMEND_OVERRIDE = re.compile(r"(추천|어떤.*업종|가장.*좋은.*업종|업종.*뭐|업종\s*추천)")
+
+
 def _classify_by_rules(message: str) -> tuple[str | None, float]:
     """Fast rule-based intent classification. Returns (intent, confidence)."""
     config = load_intent_config()
+
+    # UJ4 long synthesis: single-turn "상세/종합 분석 보고서" + 3+ topic keywords
+    # should produce the full fan-out summary plan, not fall through to whichever
+    # topic keyword (리스크, 추천, 매출…) the risk/recommendation pattern lands on
+    # first.
+    if _LONG_REPORT_TRIGGER.search(message):
+        hits = sum(1 for p in _LONG_REPORT_TOPICS if p.search(message))
+        if hits >= 3:
+            return "summary", 0.9
 
     # Follow-up markers → need LLM
     if config.follow_up_markers.search(message):
@@ -49,6 +107,12 @@ def _classify_by_rules(message: str) -> tuple[str | None, float]:
             if intent == "summary":
                 continue
             if pattern.search(message):
+                # UJ1 "안전한 창업 업종 추천": risk pattern eats "안전" but the
+                # user really wants a recommendation coloured by safety. When
+                # both risk keywords and a recommend-verb coexist, prefer
+                # recommendation.
+                if intent == "risk" and _RECOMMEND_OVERRIDE.search(message):
+                    return "recommendation", 0.85
                 return intent, 0.9
         return None, 0.0
 
@@ -61,7 +125,14 @@ def _classify_by_rules(message: str) -> tuple[str | None, float]:
     if len(matched) == 1:
         return matched[0], 0.9
     if len(matched) > 1:
-        return None, 0.4  # ambiguous → LLM
+        # "알려줘/분석/어때" (summary) 는 다른 의도와 자주 공존한다. 구체 의도가
+        # 섞여 있으면 구체적인 쪽을 우선 — 그래야 "대학가 상권이랑 번화가 상권
+        # 차이점 알려줘" 같이 summary+comparison 동시매칭이 LLM 로 넘어가지
+        # 않고 comparison 으로 직행한다.
+        for preferred in ("comparison", "simulation", "risk", "recommendation", "category_analysis"):
+            if preferred in matched:
+                return preferred, 0.85
+        return None, 0.4
 
     return None, 0.0  # no match → LLM
 
@@ -339,6 +410,43 @@ async def planner_node(state: AgentState) -> dict:
             if district_code not in referenced_districts:
                 referenced_districts.insert(0, district_code)
 
+        # P0 (UJ2 / UJ4): comparison intent fallback to history.
+        # We already ran detect_districts_in_message with full 1,650-name
+        # coverage. When that + session-last-district combined yield <2, the
+        # user is implicitly referring to districts from earlier turns — be it
+        # via a compare-coref token ("이 두 곳", "위 비교"), via category words
+        # ("대학가 상권이랑 번화가 상권 차이점"), or via plain elision. We are
+        # already gated by ``intent == "comparison"`` so this never fires on
+        # single-district intents. Explicit message-level mentions always win
+        # because we only enter here after those were exhausted.
+        if len(referenced_districts) < 2:
+            try:
+                from server.repositories import get_data_access
+
+                history_codes: list[str] = list(referenced_districts)
+                for turn in reversed(history[-6:]):
+                    if turn.get("role") != "user":
+                        continue
+                    content = turn.get("content") or ""
+                    if not content:
+                        continue
+                    matches = await get_data_access().districts.detect_districts_in_message(content)
+                    for m in matches or []:
+                        code = m.get("code")
+                        if code and code not in history_codes:
+                            history_codes.append(code)
+                    if len(history_codes) >= 3:
+                        break
+                if len(history_codes) >= 2:
+                    logger.info(
+                        "planner.compare-coref session=%s injected_from_history=%s",
+                        state.get("session_id"),
+                        history_codes[:3],
+                    )
+                    referenced_districts = history_codes[:3]
+            except Exception:
+                logger.warning("compare-coref history fallback failed", exc_info=True)
+
     # 3. Greeting → skip entire agent pipeline (no LLM call needed)
     if intent == "greeting":
         return {
@@ -355,7 +463,42 @@ async def planner_node(state: AgentState) -> dict:
     # 4. Build plan
     plan = _build_plan(intent, district_code, referenced_districts, referenced_category)
 
-    # 5. Determine response mode
+    # 5. P0-4: detect states where the plan cannot produce grounded output and
+    # Respond would hallucinate from priors. Emit a deterministic clarification
+    # instead of entering the LLM stage.
+    clarification_key: str | None = None
+    if rewrite.coref_detected and not rewrite.anchor_district_name and not district_code:
+        clarification_key = "coref_no_anchor"
+    elif intent == "comparison" and len(referenced_districts) < 2:
+        if rewrite.excluded_tokens:
+            clarification_key = "exclusion_left_empty"
+        else:
+            clarification_key = "comparison_under_2"
+
+    if clarification_key:
+        tmpl = _CLARIFICATION_TEMPLATES[clarification_key]
+        logger.info(
+            "planner.clarification session=%s reason=%s refs=%s excluded=%s",
+            state.get("session_id"),
+            clarification_key,
+            referenced_districts,
+            rewrite.excluded_tokens,
+        )
+        return {
+            "user_intent": "clarification",
+            "intent_confidence": 1.0,
+            "referenced_districts": [],
+            "referenced_category": None,
+            "ambiguous_districts": [],
+            "plan": [],
+            "plan_reasoning": f"clarification: {clarification_key}",
+            "response_mode": "clarification_direct",
+            "execution_round": (state.get("execution_round") or 0) + 1,
+            "clarification_text": tmpl["text"],
+            "clarification_suggestions": list(tmpl["suggestions"]),
+        }
+
+    # 6. Determine response mode
     response_mode = "direct" if intent in ("general", "ambiguous") or not plan else "tool_assisted"
 
     # If no district selected and tool-assisted → ambiguous. Comparison is
@@ -369,6 +512,37 @@ async def planner_node(state: AgentState) -> dict:
             intent = "ambiguous"
             plan = []
             response_mode = "direct"
+
+    # P1: ambiguous with no district anchor → clarification instead of free-form
+    # Respond. Prevents LLM hallucination with fake attribution tags when the
+    # query has a recommendation/category/risk intent but no district resolved
+    # (e.g. "성수 카페말고 어떤 업종 추천?" with district extraction dropped).
+    if intent == "ambiguous" and not district_code and not referenced_districts:
+        logger.info(
+            "planner.clarification session=%s reason=district_missing original_intent=ambiguous",
+            state.get("session_id"),
+        )
+        return {
+            "user_intent": "clarification",
+            "intent_confidence": 1.0,
+            "referenced_districts": [],
+            "referenced_category": None,
+            "ambiguous_districts": [],
+            "plan": [],
+            "plan_reasoning": "clarification: district_missing",
+            "response_mode": "clarification_direct",
+            "execution_round": (state.get("execution_round") or 0) + 1,
+            "clarification_text": (
+                "어떤 상권을 분석해 드릴까요? 상권 이름을 구체적으로 알려주시면 "
+                "요약·비교·추천·리스크·시뮬레이션을 공공데이터 기반으로 분석해 드립니다. "
+                "(예: '강남역 요약', '홍대 vs 성수 비교', '성수역에서 카페 말고 추천 업종')"
+            ),
+            "clarification_suggestions": [
+                "강남역 상권 요약",
+                "홍대 vs 성수 비교",
+                "성수역 카페 말고 추천 업종",
+            ],
+        }
 
     logger.info(
         "planner.final session=%s intent=%s district=%s refs=%s plan_size=%d mode=%s",

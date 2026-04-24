@@ -1,0 +1,251 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54052101713452, "lng": 127.06941385153138, "zoom": 4}, "district_code": "3120053", "district_name": "건대입구역(건대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120053", "category_code": null}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120053", "category_code": null}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120053", "category_code": null}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120053", "category_code": null}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120053", "category_code": null}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120053", "category_code": null}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "죄송합니다. 건대입구역 상권의 유동인구 데이터가 현"}
+
+data: {"type": "text", "content": "재 수집되지 않았습니다. \n\n현재 확보된 데이터로는 **매출과"}
+
+data: {"type": "text", "content": " 점포 현황**만 분석 가능한 상황입니다:\n\n**매출 현황**:"}
+
+data: {"type": "text", "content": " 월 추정 매출 260억원 `(get_estimated_sales)`으로 상당한 규"}
+
+data: {"type": "text", "content": "모의 상권이며, 건당 평균 결제액이 21,210원으"}
+
+data: {"type": "text", "content": "로 적당한 객단가를 보입니다.\n\n**고객층 추"}
+
+data: {"type": "text", "content": "정**: 매출 데이터 기준으로 20대가"}
+
+data: {"type": "text", "content": " 32.9%로 가장 많고, 17~21시(저녁 시간대)에 34"}
+
+data: {"type": "text", "content": ".5%의 매출이 집중되어 **대학가"}
+
+data: {"type": "text", "content": " 특성**을 보여줍니다.\n\n유동인구 구체적인 수치가"}
+
+data: {"type": "text", "content": " 필요하시다면, 서울시 열린데이터광장이나 상권정"}
+
+data: {"type": "text", "content": "보시스템에서 별도 확인하시는 것을 권"}
+
+data: {"type": "text", "content": "합니다. 다른 분석이 필요하시면 말씀해 "}
+
+data: {"type": "text", "content": "주세요!"}
+
+data: {"type": "suggestion", "questions": ["건대입구역(건대)에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done", "trace_id": "2bf0ea6d1e34533544266eae3c1b06c2", "quality_match_rate": 0.25}
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54052101713452, "lng": 127.06941385153138, "zoom": 4}, "district_code": "3120053", "district_name": "건대입구역(건대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "건"}
+
+data: {"type": "text", "content": "대입구역 상권의 저녁 피크 시간대는 **17~21시(오후 5시~9시)**입니다 `"}
+
+data: {"type": "text", "content": "(get_estimated_sales)`.\n\n이 시간대에 전체 매출의 **34"}
+
+data: {"type": "text", "content": ".5%**가 집중되어 있어, 하루 중 가장 활발한 상업 활동이 이루어지는 골"}
+
+data: {"type": "text", "content": "든타임입니다.\n\n**시간대별 매출 분포**:\n- 17~"}
+
+data: {"type": "text", "content": "21시: 34.5% (피크)\n- 14~17시: 21.8% (오후)"}
+
+data: {"type": "text", "content": "  \n- 11~14시: 20.8% (점심)\n- 21~24시: 15"}
+
+data: {"type": "text", "content": ".5% (야간)\n\n이는 전형적인 **대학가 패턴**으로, 오"}
+
+data: {"type": "text", "content": "후 수업 후부터 저녁 시간까지 대학생들"}
+
+data: {"type": "text", "content": "의 식사·모임·쇼핑이 집"}
+
+data: {"type": "text", "content": "중되는 특성을 보여줍니다. 카페, 음식점, 주"}
+
+data: {"type": "text", "content": "점 등을 운영한다면 이 시간대 운영에 집"}
+
+data: {"type": "text", "content": "중하는 것이 효율적일 것 같습니다."}
+
+data: {"type": "suggestion", "questions": ["건대입구역(건대)에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done", "trace_id": "59c28823ddcae0a2b789cba305d7e8a2", "quality_match_rate": 0.0}
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54052101713452, "lng": 127.06941385153138, "zoom": 4}, "district_code": "3120053", "district_name": "건대입구역(건대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120053", "category_code": "CS200009"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120053", "category_code": "CS200009"}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120053", "category_code": "CS200009"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120053", "category_code": "CS200009"}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120053", "category_code": "CS200009"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120053", "category_code": "CS200009"}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "건대입구역 상"}
+
+data: {"type": "text", "content": "권에는 **호프-간이주점이 126개** 있습니다 `(get_store_info)`.\n\n**"}
+
+data: {"type": "text", "content": "주점 현황 세부사항**:\n- **점포 수**: 126개 (전체 업"}
+
+data: {"type": "text", "content": "종 중 3위)\n- **신규 개업**: 6개\n- **폐업**: 4개  "}
+
+data: {"type": "text", "content": "\n- **순증감**: +2개 (소폭 증가)"}
+
+data: {"type": "text", "content": "\n\n126개는 상당히 많은 수치로, 한"}
+
+data: {"type": "text", "content": "식음식점(156개) 다음으로 많은 업종입니다."}
+
+data: {"type": "text", "content": " 이는 **대학가 특성**을 잘 보여주는 지표로, 대학생들의 모임과 회"}
+
+data: {"type": "text", "content": "식 문화가 활발함을 의미합니다.\n\n다만 폐업("}
+
+data: {"type": "text", "content": "4개)도 함께 발생하고 있어 경쟁이 치열한 업종임"}
+
+data: {"type": "text", "content": "을 알 수 있습니다. 신규 창업을 고려하신다면 차"}
+
+data: {"type": "text", "content": "별화된 컨셉이나 메뉴로 경"}
+
+data: {"type": "text", "content": "쟁력을 확보하는 것이 중요할 것 같습니다."}
+
+data: {"type": "suggestion", "questions": ["건대입구역(건대)에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done", "trace_id": "2bc3d158d8ffba891a9780b07341a4c5", "quality_match_rate": 0.5}
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54052101713452, "lng": 127.06941385153138, "zoom": 4}, "district_code": "3120053", "district_name": "건대입구역(건대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "recommendation", "steps": ["업종 추천 분석"]}
+
+data: {"type": "tool", "name": "recommend_business", "input": {"district_code": "3120053"}, "progress_label": "업종 추천 분석 중..."}
+
+data: {"type": "tool_end", "name": "recommend_business", "done_label": "업종 추천 완료"}
+
+data: {"type": "card", "card_type": "recommend", "data": {"district_code": "3120053", "quarter": "2025Q4", "recommendations": [{"rank": 1, "category_name": "편의점", "category_code": "CS300002", "score": 100.0, "per_store_sales": 184053847, "store_count": 8, "close_rate": 0.0, "age_match": 70.7, "monthly_sales": 1472430777, "reasons": ["점포당 월매출 18405만원", "타겟 고객 매칭률 71%", "경쟁 점포 8개 (밀집도 0.5%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 2, "category_name": "의약품", "category_code": "CS300018", "score": 30.6, "per_store_sales": 65310421, "store_count": 20, "close_rate": 0.0, "age_match": 79.4, "monthly_sales": 1306208429, "reasons": ["점포당 월매출 6531만원", "타겟 고객 매칭률 79%", "경쟁 점포 20개 (밀집도 1.3%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 3, "category_name": "안경", "category_code": "CS300016", "score": 23.9, "per_store_sales": 38959491, "store_count": 9, "close_rate": 0.0, "age_match": 80.1, "monthly_sales": 350635426, "reasons": ["점포당 월매출 3896만원", "타겟 고객 매칭률 80%", "경쟁 점포 9개 (밀집도 0.6%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 4, "category_name": "육류판매", "category_code": "CS300007", "score": 17.8, "per_store_sales": 33000000, "store_count": 5, "close_rate": 0.0, "age_match": 70.7, "monthly_sales": 165000000, "reasons": ["점포당 월매출 3300만원", "타겟 고객 매칭률 71%", "경쟁 점포 5개 (밀집도 0.3%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 5, "category_name": "치과의원", "category_code": "CS200007", "score": 15.6, "per_store_sales": 29223831, "store_count": 13, "close_rate": 0.0, "age_match": 70.0, "monthly_sales": 379909806, "reasons": ["점포당 월매출 2922만원", "타겟 고객 매칭률 70%", "경쟁 점포 13개 (밀집도 0.8%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}], "total_categories_analyzed": 35, "dataSources": [{"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "건대입구역에서 가장 안전한 창업 업종은 편의점입니다.**\n\n## **1순"}
+
+data: {"type": "text", "content": "위: 편의점** \n- **점포당 월매출**: 1억 8,405만원 "}
+
+data: {"type": "text", "content": "`(recommend_business)` - 압도적 수익성"}
+
+data: {"type": "text", "content": "\n- **경쟁 현황**: 8개 점포로 밀집도 0.5% (매"}
+
+data: {"type": "text", "content": "우 여유로운 경쟁 환경)\n- **폐업률**: 0.0% (완전 무"}
+
+data: {"type": "text", "content": "폐업)\n- **고객 매칭**: 70.7% (대학가 특성과 잘 맞음)"}
+
+data: {"type": "text", "content": "\n- **창업비**: 소자본 카테고리\n\n## **상위 5개 업종 안"}
+
+data: {"type": "text", "content": "전성 비교**\n\n| 순위 | 업종 | 점포당 월매출 | 경쟁점포 | 폐업률 | "}
+
+data: {"type": "text", "content": "고객매칭률 |\n|------|------|---------------|----------|--------|------------|"}
+
+data: {"type": "text", "content": "\n| 1위 | **편의점** | **1억 8,405만원** | 8개 | **0.0"}
+
+data: {"type": "text", "content": "%** | 70.7% |\n| 2위 | 의약품 | 6,531만원 | 20개 | **0.0%** | 79.4% |"}
+
+data: {"type": "text", "content": "\n| 3위 | 안경 | 3,896만원 | 9개 | **0.0%** | 80.1% |\n| 4위 | 육류판매 | 3,300만원 | 5개 |"}
+
+data: {"type": "text", "content": " **0.0%** | 70.7% |\n| 5위 | 치과의원 | 2,922만원 | 13개 | **0.0%** | 70.0% |\n\n## **편"}
+
+data: {"type": "text", "content": "의점 추천 이유**\n1. **압도적 수익성**: 다른 업종 대비 3~"}
+
+data: {"type": "text", "content": "6배 높은 매출\n2. **낮은 경쟁 밀도**: 전체 상"}
+
+data: {"type": "text", "content": "권 대비 0.5%만 차지\n3. **대학가 최적화**: 24시간 운"}
+
+data: {"type": "text", "content": "영, 간편식품 수요 높음\n4. **무폐업 기"}
+
+data: {"type": "text", "content": "록**: 안정성 최고 등급"}
+
+data: {"type": "text", "content": "\n\n## **주의사항**\n- 프랜차이즈 가맹비와 운영 규"}
+
+data: {"type": "text", "content": "정 준수 필요\n- 24시간 운영에 따른 인건비 부담\n- **추"}
+
+data: {"type": "text", "content": "정치이며 실제와 다를 수 있습니다**\n\n2위"}
+
+data: {"type": "text", "content": " 의약품이나 다른 업종 상세 분석이 "}
+
+data: {"type": "text", "content": "궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["편의점 상세 분석해줘", "건대입구역 리스크 확인해줘", "다른 상권에서 편의점은 어때?", "2위 업종은 어때?"]}
+
+data: {"type": "done", "trace_id": "670c9d9fcaea434da4922ace6c39588c", "quality_match_rate": 0.138}
+

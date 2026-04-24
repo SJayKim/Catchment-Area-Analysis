@@ -1,0 +1,98 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120189", "3120227", "3120149"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120189": {"district_code": "3120189", "district_name": "강남역", "floating_pop": 7453202, "main_age": "20대", "store_count": 5111, "close_rate": 2.3, "monthly_sales": 139568168199, "status": "stable", "quarter": "2025Q4", "sales_per_store": 27307409, "pop_per_store": 1458}, "3120227": {"district_code": "3120227", "district_name": "잠실역", "floating_pop": 1113657, "main_age": "40대", "store_count": 2251, "close_rate": 2.4, "monthly_sales": 107329997143, "status": "stable", "quarter": "2025Q4", "sales_per_store": 47681029, "pop_per_store": 495}, "3120149": {"district_code": "3120149", "district_name": "여의도역(여의도)", "floating_pop": 1602573, "main_age": "30대", "store_count": 2768, "close_rate": 1.8, "monthly_sales": 66622997257, "status": "stable", "quarter": "2025Q4", "sales_per_store": 24069002, "pop_per_store": 579}}, "district_codes": ["3120189", "3120227", "3120149"], "winners": {"highest_pop": "강남역", "highest_sales": "강남역", "lowest_close_rate": "여의도역(여의도)", "best_efficiency": "잠실역"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "잠실역 상권을 분석했습니다.** 혹"}
+
+data: {"type": "text", "content": "시 잠실새내역이나 잠실나루역을 의도하"}
+
+data: {"type": "text", "content": "셨다면 말씀해 주세요!\n\n## 카페 창업 관점 "}
+
+data: {"type": "text", "content": "3개 상권 비교 분석\n\n**잠실역이 카페 창업에"}
+
+data: {"type": "text", "content": " 가장 유리합니다.** 점포당 매출 효율이 압도적으로 높고"}
+
+data: {"type": "text", "content": ", 40대 중심의 안정적 고객층을 보유하고 있어"}
+
+data: {"type": "text", "content": " 카페 사업에 적합합니다.\n\n### 📊 핵심 지표 비교\n\n|"}
+
+data: {"type": "text", "content": " 상권 | 점포당 월매출 | 유동인구 | 폐업률 | 주력"}
+
+data: {"type": "text", "content": " 연령층 |\n|------|---------------|----------|--------|-------------|\n| **잠실역** | **"}
+
+data: {"type": "text", "content": "4,768만원** | 111만명 | 2.4% | 40대 |\n| 강남역 | "}
+
+data: {"type": "text", "content": "2,731만원 | 745만명 | 2.3% | 20대 |\n| 여의도역 | 2,407만원 | 160만명 | 1.8"}
+
+data: {"type": "text", "content": "% | 30대 |\n\n### 🎯 상권별 카페 창업 적합도\n\n**1순위:"}
+
+data: {"type": "text", "content": " 잠실역** ⭐⭐⭐⭐⭐\n- **매출 효율**: 점포당 4"}
+
+data: {"type": "text", "content": ",768만원으로 강남역 대비 **1.7배** 높음 "}
+
+data: {"type": "text", "content": "`(compare_districts)`\n- **고객층**: 40대 중심으로 카페 이용 "}
+
+data: {"type": "text", "content": "빈도가 높고 객단가 안정적\n- **경쟁 강"}
+
+data: {"type": "text", "content": "도**: 상대적으로 포화도가 낮아 진입 기회 존"}
+
+data: {"type": "text", "content": "재\n- **입지 특성**: 롯데월드, 석촌호수 등 관"}
+
+data: {"type": "text", "content": "광지 인접으로 주말 수요도 기대\n\n**2순위: "}
+
+data: {"type": "text", "content": "여의도역** ⭐⭐⭐\n- **안정성**: 폐업률 1.8%로 가장 낮음 "}
+
+data: {"type": "text", "content": "`(compare_districts)`\n- **고객층**: 30대 직장인 중심으로 모닝커피, 점"}
+
+data: {"type": "text", "content": "심 후 커피 수요 안정적\n- **한계"}
+
+data: {"type": "text", "content": "**: 점포당 매출 2,407만원으로 효율성 아쉬움\n- **특징**: 평일 중"}
+
+data: {"type": "text", "content": "심 상권으로 주말 매출 한계\n\n**3순위: 강남역** ⭐⭐\n- **유"}
+
+data: {"type": "text", "content": "동인구**: 745만명으로 압도적이지만 경쟁 과열 `(compare_districts)`\n- **"}
+
+data: {"type": "text", "content": "고객층**: 20대 중심으로 트렌디한 카페 선호하나 가격 민"}
+
+data: {"type": "text", "content": "감\n- **리스크**: 높은 임대료 대비 점포당 매출 효율 "}
+
+data: {"type": "text", "content": "낮음\n- **경쟁**: 프랜차이즈 카페 밀집으로 차별화 어려움\n\n### "}
+
+data: {"type": "text", "content": "💡 카페 창업 전략 제안\n\n**잠실역 추천 이유**:"}
+
+data: {"type": "text", "content": "\n- 40대 고객층의 **높은 구매력**과 **충성"}
+
+data: {"type": "text", "content": "도**\n- 점포당 매출 효율 **1.7배** 우위로 수익성 확보 "}
+
+data: {"type": "text", "content": "용이\n- 관광지 접근성으로 **다양한 고객층** 확"}
+
+data: {"type": "text", "content": "보 가능\n\n**⚠️ 주의사항**: 이 분석은 전체 상권 매출"}
+
+data: {"type": "text", "content": " 기반 추정치이며, 카페업종"}
+
+data: {"type": "text", "content": " 세부 데이터는 미포함입니다. 실제 창업 전"}
+
+data: {"type": "text", "content": " 해당 지역 카페 밀집도와 임"}
+
+data: {"type": "text", "content": "대료를 별도 조사하시기 바랍니다.\n\n각 상권의 구"}
+
+data: {"type": "text", "content": "체적인 카페업종 현황이나 추천"}
+
+data: {"type": "text", "content": " 입지가 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done", "trace_id": "409b311596f9d18d98dfaad87182f5fe", "quality_match_rate": 0.643}
+

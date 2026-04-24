@@ -1,0 +1,206 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.51398695310821, "lng": 127.1012733877303, "zoom": 4}, "district_code": "3120227", "district_name": "잠실역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120227"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "잠실역", "districtType": "발달상권", "summary": "하루 평균 유동인구 111만 3천명, 월 추정 매출 1073억 2천만원의 안정적인 발달상권입니다.", "monthlySales": 107329997143, "floatingPopulation": {"dailyAvg": 1113657, "peakHour": 6, "byHour": [{"hour": 0, "pop": 128055}, {"hour": 6, "pop": 228294}, {"hour": 11, "pop": 210898}, {"hour": 14, "pop": 226020}, {"hour": 17, "pop": 226670}, {"hour": 21, "pop": 93720}]}, "topCategories": [{"name": "일반의류", "count": 596}, {"name": "한식음식점", "count": 136}, {"name": "커피-음료", "count": 87}, {"name": "신발", "count": 86}, {"name": "화장품", "count": 82}], "status": "stable", "closeRate": {"current": 2.4, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 53.1%, 차이 6.2%p)", "ageInsight": "40대 (21.8%)", "perStoreSales": 47681029, "franchiseRatio": 12.7, "weekendUplift": -46.7}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "상위 50%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "잠실역은 하루 111만명이 몰리는 초대형 발달상권으"}
+
+data: {"type": "text", "content": "로, 여성·40대 중심의 안정적인 쇼핑 중심지입니다.**\n\n## "}
+
+data: {"type": "text", "content": "핵심 지표 분석\n\n**유동인구**: 하루 평균 111만 3천명 `(get_district"}
+
+data: {"type": "text", "content": "_summary)`으로 서울 평균(9만 2천명) 대비 **"}
+
+data: {"type": "text", "content": "12.1배**에 달하는 초"}
+
+data: {"type": "text", "content": "대형 상권입니다. 발달상권 중에서도 **상"}
+
+data: {"type": "text", "content": "위 25%** 수준이며, 오후 6시에 22만 8천명으로 피크를 기"}
+
+data: {"type": "text", "content": "록합니다. 여성 비중이 53.1%로 남성보다 6.2%p 높고, 40대가"}
+
+data: {"type": "text", "content": " 21.8%로 가장 많은 연령층입니다.\n\n**매출 현황**: 월 추정 매출 1,"}
+
+data: {"type": "text", "content": "073억원 `(get_district_summary)`으로 발달상권 중 **상위 25%**에 속하는 대"}
+
+data: {"type": "text", "content": "형 상권입니다. 점포당 월 매출은 4,768만원으로 서울 평균(4,600만원) 대비 103"}
+
+data: {"type": "text", "content": "% 수준으로 양호합니다. 다만 주말 매출이 평"}
+
+data: {"type": "text", "content": "일 대비 46.7% 낮아 평일 중심 상권 특성을 보입니다.\n\n**점포 현황**:"}
+
+data: {"type": "text", "content": " 총 2,251개 점포 중 일반의류(596개), 한식음식점(136개), 커피·"}
+
+data: {"type": "text", "content": "음료(87개) 순으로 분포되어 있습니다. 프랜차이즈 비율"}
+
+data: {"type": "text", "content": "은 12.7%로 개인 사업자 중심이며, 폐업률 2.4%"}
+
+data: {"type": "text", "content": " `(get_district_summary)`는 서울 평균(6.5%) 대비 **매우 낮아** 안정적인 상"}
+
+data: {"type": "text", "content": "권입니다.\n\n## 기회와 특징\n\n**강점**:\n- 초대형 유"}
+
+data: {"type": "text", "content": "동인구와 안정적인 매출 규모\n- 매우 낮은 폐업률(2.4%)로 사"}
+
+data: {"type": "text", "content": "업 안정성 높음\n- 여성·40대 타겟 업종에 최"}
+
+data: {"type": "text", "content": "적화된 고객층\n- 의류·패션 중심의 차"}
+
+data: {"type": "text", "content": "별화된 업종 구성\n\n**주의사항**:\n- 주말 매출 의존도가 낮아 평일 집중"}
+
+data: {"type": "text", "content": " 전략 필요\n- 대형 상권 특성상 높은 임대료 예상\n- 의류업종"}
+
+data: {"type": "text", "content": " 집중으로 해당 분야 경쟁 치열\n\n잠실역에"}
+
+data: {"type": "text", "content": "서 **창업을 고려 중**이시거나,"}
+
+data: {"type": "text", "content": " **다른 상권과 비교** 분석이 필요하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["잠실역에서 뭐하면 좋을까?", "잠실역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done", "trace_id": "9c38148e0f1ab4b22e497cc7ef947941", "quality_match_rate": 0.409}
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.556527241992235, "lng": 126.93641815639678, "zoom": 4}, "district_code": "3120094", "district_name": "신촌역(신촌역, 신촌로터리)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120094"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "신촌역(신촌역, 신촌로터리)", "districtType": "발달상권", "summary": "하루 평균 유동인구 608만 4천명, 월 추정 매출 321억 4천만원의 안정적인 발달상권입니다.", "monthlySales": 32143700871, "floatingPopulation": {"dailyAvg": 6084637, "peakHour": 17, "byHour": [{"hour": 0, "pop": 1096626}, {"hour": 6, "pop": 1027759}, {"hour": 11, "pop": 862459}, {"hour": 14, "pop": 915909}, {"hour": 17, "pop": 1383505}, {"hour": 21, "pop": 798379}]}, "topCategories": [{"name": "한식음식점", "count": 296}, {"name": "일반의류", "count": 193}, {"name": "호프-간이주점", "count": 153}, {"name": "커피-음료", "count": 105}, {"name": "부동산중개업", "count": 79}], "status": "stable", "closeRate": {"current": 3.3, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 56.1%, 차이 12.2%p)", "ageInsight": "20대 (47.8%)", "perStoreSales": 15826539, "franchiseRatio": 13.2, "weekendUplift": -69.2}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 75%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "신촌역은 하루 608만명이 몰리는 초대형 발달상권으로, 20대 중심의 대"}
+
+data: {"type": "text", "content": "학가 특성을 보이는 안정적인 상권입니다.**\n\n##"}
+
+data: {"type": "text", "content": " 핵심 지표 분석\n\n**유동인구**: 하루 평균 608만 4천명 `(get_district_summary)`으로 서울 평균(9만 2천명) 대비"}
+
+data: {"type": "text", "content": " **66배**에 달하는 초대형 상권입니다. 발달상권 중에서도 **상위 25%** 수준이며, 오후 5"}
+
+data: {"type": "text", "content": "시에 138만 3천명으로 피크를 기록합니다. 여성 비중이 56.1%로 남성보다 12"}
+
+data: {"type": "text", "content": ".2%p 높고, **20대가 47.8%**로 압도적으로 많아 전형"}
+
+data: {"type": "text", "content": "적인 **대학가 상권** 특성을 보입니다.\n\n**매출 현황**: 월 추정 매출 321억 4천"}
+
+data: {"type": "text", "content": "만원 `(get_district_summary)`으로 발달상권 중 **상위 75%** 수준입니다. 점"}
+
+data: {"type": "text", "content": "포당 월 매출은 1,583만원으로 발달상권 평균(4,600만원)"}
+
+data: {"type": "text", "content": "의 34% 수준이어서 매출 효율은"}
+
+data: {"type": "text", "content": " 상대적으로 낮습니다. 주말 매출이 평일 대비 69"}
+
+data: {"type": "text", "content": ".2% 낮아 **평일 중심** 소비 패턴을 보입니다.\n\n**"}
+
+data: {"type": "text", "content": "점포 현황**: 총 2,031개 점포 중 한식음식점(296개), 일반의류(193개), 호프·간이주점(153개)"}
+
+data: {"type": "text", "content": " 순으로 많습니다. 프랜차이즈 비율은 13.2%로 낮아 개인"}
+
+data: {"type": "text", "content": " 사업자 중심이며, 폐업률 3.3%는 서울 평균(6.5%) "}
+
+data: {"type": "text", "content": "대비 절반 수준으로 **매우 안정적**입니다.\n\n## 기"}
+
+data: {"type": "text", "content": "회와 리스크\n\n**기회**:\n- 초대형 유동인구와 안정적인 폐업률\n- 20"}
+
+data: {"type": "text", "content": "대 중심의 명확한 타겟층\n- 개인 사업자 친화적 환경 ("}
+
+data: {"type": "text", "content": "낮은 프랜차이즈 비율)\n\n**주의사항**:\n- 점포당 매출 효"}
+
+data: {"type": "text", "content": "율이 상대적으로 낮음\n- 주말 매출 의존도가 낮아 평일 집"}
+
+data: {"type": "text", "content": "중 필요\n- 대학가 특성상 방학철"}
+
+data: {"type": "text", "content": " 매출 변동 가능성\n\n**신촌은 안정적이지"}
+
+data: {"type": "text", "content": "만 효율성보다는 볼륨에 의존하는 상권으로, 20"}
+
+data: {"type": "text", "content": "대 타겟 사업에 적합합니다.**\n\n구"}
+
+data: {"type": "text", "content": "체적인 업종 추천이나 다른 상권과의 비교가 궁금하시면 말"}
+
+data: {"type": "text", "content": "씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["신촌역에서 뭐하면 좋을까?", "신촌역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done", "trace_id": "5c7b9bd0efe97a44edfbea34e0af2e26", "quality_match_rate": 0.429}
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.582743254343704, "lng": 127.00131926203204, "zoom": 4}, "district_code": "3120012", "district_name": "대학로(혜화역)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120012", "3120094", "3120227"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120012": {"district_code": "3120012", "district_name": "대학로(혜화역)", "floating_pop": 3707421, "main_age": "20대", "store_count": 985, "close_rate": 2.6, "monthly_sales": 20003031923, "status": "stable", "quarter": "2025Q4", "sales_per_store": 20307647, "pop_per_store": 3764}, "3120094": {"district_code": "3120094", "district_name": "신촌역(신촌역, 신촌로터리)", "floating_pop": 6084637, "main_age": "20대", "store_count": 2031, "close_rate": 3.3, "monthly_sales": 32143700871, "status": "stable", "quarter": "2025Q4", "sales_per_store": 15826539, "pop_per_store": 2996}, "3120227": {"district_code": "3120227", "district_name": "잠실역", "floating_pop": 1113657, "main_age": "40대", "store_count": 2251, "close_rate": 2.4, "monthly_sales": 107329997143, "status": "stable", "quarter": "2025Q4", "sales_per_store": 47681029, "pop_per_store": 495}}, "district_codes": ["3120012", "3120094", "3120227"], "winners": {"highest_pop": "신촌역(신촌역, 신촌로터리)", "highest_sales": "잠실역", "lowest_close_rate": "잠실역", "best_efficiency": "잠실역"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "대학가 상권(대학로·신촌)과 번화가 상권(잠실)"}
+
+data: {"type": "text", "content": "은 고객층과 소비 패턴에서 뚜렷한 차이를 보입니다.**\n\n## "}
+
+data: {"type": "text", "content": "핵심 차이점 분석\n\n### **고객층 구성**\n- **대학가**: 20대가 압도적 "}
+
+data: {"type": "text", "content": "(대학로 47.8%, 신촌 47.8%) -"}
+
+data: {"type": "text", "content": " 학생 중심\n- **번화가**: 40대가 최다 (잠실 21.8%)"}
+
+data: {"type": "text", "content": " - 직장인·가족 단위 고객\n\n### **매출 효"}
+
+data: {"type": "text", "content": "율성**\n- **대학로**: 점포당 월 2,031만원 `(compare_districts)`\n- **신촌**: 점포당 "}
+
+data: {"type": "text", "content": "월 1,583만원 `(compare_districts)`  \n- **잠실**: 점포당 월 4,768만원 `(compare_districts)`\n\n**번화가가"}
+
+data: {"type": "text", "content": " 대학가 대비 2~3배 높은 점포당 매출**"}
+
+data: {"type": "text", "content": "을 기록합니다. 이는 객단가와 구매력 차이 때문입니다.\n\n###"}
+
+data: {"type": "text", "content": " **유동인구 vs 실구매력**\n- **신촌**: 608만명"}
+
+data: {"type": "text", "content": "으로 최대 유동인구지만 점포당 매출은 최"}
+
+data: {"type": "text", "content": "저\n- **잠실**: 111만명으로 상대적으로 적지만 점포당 매출은 최고\n\n**대"}
+
+data: {"type": "text", "content": "학가는 \"많이 오지만 적게 "}
+
+data: {"type": "text", "content": "쓰는\" 구조, 번화가는 \"적게 와도 많이 쓰는"}
+
+data: {"type": "text", "content": "\" 구조**입니다.\n\n### **사업 안정성**\n- **폐업률**: 대학로 2.6% "}
+
+data: {"type": "text", "content": "< 잠실 2.4% < 신촌 3.3% `(compare_districts)`\n- **대학로가 가장 안정적**, 신촌은 경쟁이 상대적으로 치열\n\n## 창업 시사점\n\n**대학가 상권 특징**:\n- ✅ 높은 유동인구, 낮은 폐업률\n- ⚠️ 낮은 객단가, 가격 민감도 높음\n- 💡 **적합업종**: 저가 음식점, 카페, 치킨·분식 등\n\n**번화가 상권 특징**:\n- ✅ 높은 구매력, 우수한 매출 효율\n- ⚠️ 높은 임대료, 치열한 경쟁\n- 💡 **적합업종**: 프리미엄 음식점,"}
+
+data: {"type": "text", "content": " 브랜드 매장, 서비스업\n\n각 상권별 구체"}
+
+data: {"type": "text", "content": "적인 업종 추천이나 투자 비용 분"}
+
+data: {"type": "text", "content": "석이 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done", "trace_id": "0d56b21184d3eb92c04b729994062784", "quality_match_rate": 0.455}
+

@@ -1,0 +1,35 @@
+[sweep] preflight skipped (REQUIRE_TRACE=0)
+[sweep] base=http://localhost:8000  out=docs\qa\runs\user-journey-2026-04-24\pass3  scenarios=16  filter=''
+[sweep] (1/16) running UJ1-cafe-startup-강남  turns=4
+[sweep] (1/16) UJ1-cafe-startup-강남  6/6 = 100%  PASS  (47.1s)
+[sweep] (2/16) running UJ1-restaurant-홍대  turns=4
+[sweep] (2/16) UJ1-restaurant-홍대  6/6 = 100%  PASS  (61.8s)
+[sweep] (3/16) running UJ1-retail-성수  turns=4
+[sweep] (3/16) UJ1-retail-성수  5/5 = 100%  PASS  (46.4s)
+[sweep] (4/16) running UJ1-pub-건대  turns=4
+[sweep] (4/16) UJ1-pub-건대  6/6 = 100%  PASS  (66.7s)
+[sweep] (5/16) running UJ2-switch-강남-종로  turns=4
+[sweep] (5/16) UJ2-switch-강남-종로  6/7 = 86%  PASS  (54.4s)
+[sweep] (6/16) running UJ2-switch-홍대-성수  turns=3
+[sweep] (6/16) UJ2-switch-홍대-성수  6/6 = 100%  PASS  (47.9s)
+[sweep] (7/16) running UJ2-switch-명동-남대문  turns=3
+[sweep] (7/16) UJ2-switch-명동-남대문  4/4 = 100%  PASS  (47.7s)
+[sweep] (8/16) running UJ2-switch-잠실-신촌  turns=3
+[sweep] (8/16) UJ2-switch-잠실-신촌  4/4 = 100%  PASS  (48.9s)
+[sweep] (9/16) running UJ3-3way-major  turns=1
+[sweep] (9/16) UJ3-3way-major  7/7 = 100%  PASS  (20.4s)
+[sweep] (10/16) running UJ3-3way-retail-hubs  turns=1
+[sweep] (10/16) UJ3-3way-retail-hubs  6/6 = 100%  PASS  (15.1s)
+[sweep] (11/16) running UJ3-3way-young-picks  turns=1
+[sweep] (11/16) UJ3-3way-young-picks  6/6 = 100%  PASS  (11.2s)
+[sweep] (12/16) running UJ3-3way-cafe-best  turns=1
+[sweep] (12/16) UJ3-3way-cafe-best  7/7 = 100%  PASS  (21.4s)
+[sweep] (13/16) running UJ4-full-report-강남  turns=4
+[sweep] (13/16) UJ4-full-report-강남  5/5 = 100%  PASS  (74.7s)
+[sweep] (14/16) running UJ4-report-from-recommend  turns=4
+[sweep] (14/16) UJ4-report-from-recommend  5/5 = 100%  PASS  (49.0s)
+[sweep] (15/16) running UJ4-report-from-compare  turns=3
+[sweep] (15/16) UJ4-report-from-compare  4/4 = 100%  PASS  (40.9s)
+[sweep] (16/16) running UJ4-long-synthesis  turns=1
+[sweep] (16/16) UJ4-long-synthesis  6/6 = 100%  PASS  (53.6s)
+[sweep] done.  docs\qa\runs\user-journey-2026-04-24\pass3/summary.md

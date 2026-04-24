@@ -1,0 +1,62 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.522684878692864, "lng": 126.92625102372656, "zoom": 4}, "district_code": "3120149", "district_name": "여의도역(여의도)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120149", "3120003", "3120020"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120149": {"district_code": "3120149", "district_name": "여의도역(여의도)", "floating_pop": 1602573, "main_age": "30대", "store_count": 2768, "close_rate": 1.8, "monthly_sales": 66622997257, "status": "stable", "quarter": "2025Q4", "sales_per_store": 24069002, "pop_per_store": 579}, "3120003": {"district_code": "3120003", "district_name": "광화문역", "floating_pop": 1262097, "main_age": "40대", "store_count": 1840, "close_rate": 2.0, "monthly_sales": 24586005235, "status": "stable", "quarter": "2025Q4", "sales_per_store": 13361959, "pop_per_store": 686}, "3120020": {"district_code": "3120020", "district_name": "시청역_1번", "floating_pop": 59670, "main_age": "40대", "store_count": 216, "close_rate": 2.8, "monthly_sales": 6169857482, "status": "stable", "quarter": "2025Q4", "sales_per_store": 28564155, "pop_per_store": 276}}, "district_codes": ["3120149", "3120003", "3120020"], "winners": {"highest_pop": "여의도역(여의도)", "highest_sales": "여의도역(여의도)", "lowest_close_rate": "여의도역(여의도)", "best_efficiency": "시청역_1번"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "여의도역이 압도적으로 가장 큰 오피스 상권입니다.**\n\n## 규"}
+
+data: {"type": "text", "content": "모 비교 분석\n\n**유동인구 규모**:"}
+
+data: {"type": "text", "content": "\n- **여의도역**: 160만 2천명 `(compare_districts)` -"}
+
+data: {"type": "text", "content": " 압도적 1위\n- **광화문역**: 126만 2천명 `(compare_districts)` - 2위 \n- **시청역**:"}
+
+data: {"type": "text", "content": " 5만 9천명 `(compare_districts)` - 3위\n\n여의도는 광화문 대"}
+
+data: {"type": "text", "content": "비 **1.27배**, 시청 대비 **26.8배**"}
+
+data: {"type": "text", "content": "의 유동인구를 보유하고 있어 규모 면에서 압도적입니다.\n\n**매출 규모**:"}
+
+data: {"type": "text", "content": "\n- **여의도역**: 월 666억원 `(compare_districts)` - 1위\n- **광화문역**: 월 246억원 `(compare_districts"}
+
+data: {"type": "text", "content": ")` - 2위  \n- **시청역**: 월 62억원 `(compare_districts)` - 3위\n\n여의도는 광화문 대비 **2.7배**, 시청 대비"}
+
+data: {"type": "text", "content": " **10.8배**의 매출을 기록하며 경제 "}
+
+data: {"type": "text", "content": "규모에서도 최대입니다.\n\n**점포 수**:\n- **여의도"}
+
+data: {"type": "text", "content": "역**: 2,768개 `(compare_districts)` - 1위\n- **광화문역**: 1,840개 `(compare_districts)` - 2위\n- **시청역**: 216개 `(compare_districts"}
+
+data: {"type": "text", "content": ")` - 3위\n\n## 오피스 상권 특성\n\n세 상권 모두 **30~"}
+
+data: {"type": "text", "content": "40대 직장인** 중심이지만, 여의도는 **30대**(금융권"}
+
+data: {"type": "text", "content": " 젊은 직장인), 광화문·시청은 **40대**(공무원·"}
+
+data: {"type": "text", "content": "대기업 중간관리직) 중심으로 고"}
+
+data: {"type": "text", "content": "객층에 차이가 있습니다 `(compare_districts)`.\n\n**결"}
+
+data: {"type": "text", "content": "론**: 오피스 상권 규모로는 **여의도 >> 광화문 "}
+
+data: {"type": "text", "content": "> 시청** 순입니다. 여의도는 국내 최대 금융 중심지답게 모"}
+
+data: {"type": "text", "content": "든 지표에서 압도적 우위를 보입니다.\n\n각 상권별 추"}
+
+data: {"type": "text", "content": "천 업종이나 창업 적합성이 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done", "trace_id": "57872d5e28777679d61790834599d560", "quality_match_rate": 0.889}
+

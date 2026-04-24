@@ -1,0 +1,80 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120189", "3120103", "3120052"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120189": {"district_code": "3120189", "district_name": "강남역", "floating_pop": 7453202, "main_age": "20대", "store_count": 5111, "close_rate": 2.3, "monthly_sales": 139568168199, "status": "stable", "quarter": "2025Q4", "sales_per_store": 27307409, "pop_per_store": 1458}, "3120103": {"district_code": "3120103", "district_name": "홍대입구역(홍대)", "floating_pop": 4106209, "main_age": "20대", "store_count": 2981, "close_rate": 4.0, "monthly_sales": 53200280285, "status": "stable", "quarter": "2025Q4", "sales_per_store": 17846454, "pop_per_store": 1377}, "3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}}, "district_codes": ["3120189", "3120103", "3120052"], "winners": {"highest_pop": "강남역", "highest_sales": "강남역", "lowest_close_rate": "강남역", "best_efficiency": "강남역"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "강남역이 모든 핵심 지표에서 압도적 우위를 보"}
+
+data: {"type": "text", "content": "이는 초대형 상권이며, 홍대와 성수역은 각각 다른 매력"}
+
+data: {"type": "text", "content": "을 가진 중형 상권입니다.**\n\n## 📊 핵심 지표 비교"}
+
+data: {"type": "text", "content": "\n\n### 유동인구 (월 기준)\n- **강남역**: 745만명 `(compare"}
+
+data: {"type": "text", "content": "_districts)` - 압도적 1위\n- **홍대입구역**: 411만명 -"}
+
+data: {"type": "text", "content": " 강남역의 55% 수준\n- **성수역**: 141만명 - 강남역의 19% 수준\n\n### 매"}
+
+data: {"type": "text", "content": "출 규모\n- **강남역**: 월 1,396억원 `(compare_districts)` - 초대형 상권\n- **"}
+
+data: {"type": "text", "content": "홍대입구역**: 월 532억원 - 강남역의 38% 수준  \n- **성수역**: 월 221억원 - 강남역"}
+
+data: {"type": "text", "content": "의 16% 수준\n\n### 점포당 매출 효율\n- **강남역**: 2,731만원 `(compare_districts)` - 최고"}
+
+data: {"type": "text", "content": " 효율\n- **홍대입구역**: 1,785만원 - 강남역의 65% 수준\n- **성수역**: 1,450만원 - 강남역의 53"}
+
+data: {"type": "text", "content": "% 수준\n\n## 🎯 각 상권별 특징\n\n### 강남역 - \"초"}
+
+data: {"type": "text", "content": "대형 비즈니스 상권\"\n- **장점**: 최대 유동인구, 최고 매출, 최저 폐업률("}
+
+data: {"type": "text", "content": "2.3%)\n- **특징**: 점포당 유동인구 1,458명으로 고객 확"}
+
+data: {"type": "text", "content": "보 용이\n- **적합**: 대자본 투입 가능한"}
+
+data: {"type": "text", "content": " 프리미엄 업종, 체인점\n\n### 홍대입구역 - \""}
+
+data: {"type": "text", "content": "젊은층 문화 상권\"  \n- **장점**: 20대 중심 활발한 소"}
+
+data: {"type": "text", "content": "비층, 중간 규모 안정성\n- **주의**: 폐업률 4"}
+
+data: {"type": "text", "content": ".0%로 세 곳 중 가장 높음\n- **적합**: 트렌디한 F&B,"}
+
+data: {"type": "text", "content": " 엔터테인먼트 업종\n\n### 성수역 - \"신흥 로컬 상권\"\n- **장점**: 상대적 저"}
+
+data: {"type": "text", "content": "렴한 진입비용, 폐업률 2.4%로 안정적\n- **특징**: 점포당 유"}
+
+data: {"type": "text", "content": "동인구 926명으로 아담한 규모\n- **적합**: 개인 창업, 로"}
+
+data: {"type": "text", "content": "컬 타겟 업종\n\n## ⚖️ 종합 판단\n\n**대자본 &"}
+
+data: {"type": "text", "content": " 프리미엄 전략** → **강남역**\n- 높은 임대료를"}
+
+data: {"type": "text", "content": " 감당할 수 있고, 최대 매출을 노린"}
+
+data: {"type": "text", "content": "다면\n\n**젊은 고객 & 트렌드 민감** → **홍대입구"}
+
+data: {"type": "text", "content": "역**  \n- 20대 타겟, 문화/엔터 업종이라"}
+
+data: {"type": "text", "content": "면\n\n**안정적 소규모 창업** → **성수역**\n- 적은 자본으"}
+
+data: {"type": "text", "content": "로 안정적 운영을 원한다면\n\n어떤 상권이 더 궁금"}
+
+data: {"type": "text", "content": "하시거나, 각 상권별 추천 업종을 알고 싶으시면 말"}
+
+data: {"type": "text", "content": "씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done", "trace_id": "de9b040ce7caed4e797222d002cd3679", "quality_match_rate": 0.45}
+

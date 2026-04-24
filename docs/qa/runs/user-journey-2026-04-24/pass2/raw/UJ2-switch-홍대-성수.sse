@@ -1,0 +1,252 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120103"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "홍대입구역(홍대)", "districtType": "발달상권", "summary": "하루 평균 유동인구 410만 6천명, 월 추정 매출 532억원의 안정적인 발달상권입니다.", "monthlySales": 53200280285, "floatingPopulation": {"dailyAvg": 4106209, "peakHour": 17, "byHour": [{"hour": 0, "pop": 759987}, {"hour": 6, "pop": 543843}, {"hour": 11, "pop": 554696}, {"hour": 14, "pop": 694293}, {"hour": 17, "pop": 988851}, {"hour": 21, "pop": 564539}]}, "topCategories": [{"name": "한식음식점", "count": 316}, {"name": "일반의류", "count": 264}, {"name": "호프-간이주점", "count": 246}, {"name": "커피-음료", "count": 224}, {"name": "미용실", "count": 190}], "status": "stable", "closeRate": {"current": 4.0, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 52.7%, 차이 5.4%p)", "ageInsight": "20대 (43.5%)", "perStoreSales": 17846454, "franchiseRatio": 8.7, "weekendUplift": -45.3}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 50%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "홍대입구역은 20대 중심의 초대형 발달상권으로, 서울에서 가장 활발한 "}
+
+data: {"type": "text", "content": "젊음의 거리입니다.**\n\n## 유동인구 분석\n하루 평균 **410만 6천명**"}
+
+data: {"type": "text", "content": " `(get_district_summary)`의 압도적인 유동인구를 자랑합니다. 이"}
+
+data: {"type": "text", "content": "는 서울 평균(9만 2천명) 대비 **44."}
+
+data: {"type": "text", "content": "6배**에 달하는 수치로, 발달상권 중에서도 **"}
+
+data: {"type": "text", "content": "상위 25%**에 속하는 초대형 상권입니다. "}
+
+data: {"type": "text", "content": "\n\n오후 5시(17시)에 **98만 9"}
+
+data: {"type": "text", "content": "천명**으로 피크를 기록하는 전형적인 **퇴근 후 유"}
+
+data: {"type": "text", "content": "흥형 상권**이며, 새벽 0시에도 76만명"}
+
+data: {"type": "text", "content": "이 몰려 **24시간 활성화**된 특별"}
+
+data: {"type": "text", "content": "한 상권입니다.\n\n## 매출 현황\n월 추정 매출 **532억원** `(get_district_summary)`으로 "}
+
+data: {"type": "text", "content": "발달상권 중 **상위 50%** 수준입니다. 하지만 점포당 월 "}
+
+data: {"type": "text", "content": "매출은 **1,785만원**으로 발달상권 평균(4,600만원)의 **38.8%**"}
+
+data: {"type": "text", "content": " 수준에 그쳐, 높은 유동인구 대비 매"}
+
+data: {"type": "text", "content": "출 효율은 아쉬운 편입니다.\n\n## 점포 구성과 경"}
+
+data: {"type": "text", "content": "쟁 환경\n총 **2,982개** 점포가 밀집해"}
+
+data: {"type": "text", "content": " 있으며, 주요 업종은:\n- **한식음식점** 316개\n- **일반의"}
+
+data: {"type": "text", "content": "류** 264개  \n- **호프-간이주점** 246개\n- **커피-음료** 224개\n- **미용실** 190개\n\n프랜차이즈 비율"}
+
+data: {"type": "text", "content": "은 **8.7%**로 낮아 개인 창업자에게 유"}
+
+data: {"type": "text", "content": "리한 환경입니다.\n\n## 고객층 특성\n- **20대가 43.5%**"}
+
+data: {"type": "text", "content": "로 압도적 비중\n- **여성 고객 52.7%**로 여성 친"}
+
+data: {"type": "text", "content": "화적 상권\n- 주말 매출이 평일 대비 **45.3% "}
+
+data: {"type": "text", "content": "낮아** 평일 중심 소비 패턴\n\n## 기회와 리스크\n**"}
+
+data: {"type": "text", "content": "✅ 기회 요소:**\n- 서울 최고 수준의 유동인구\n- "}
+
+data: {"type": "text", "content": "낮은 폐업률 4.0% (서울 평균 6.5% 대비 "}
+
+data: {"type": "text", "content": "우수)\n- 개인 창업 친화적 환경 (낮은 프랜차이즈 비"}
+
+data: {"type": "text", "content": "율)\n- 20대 타겟 사업에 최적"}
+
+data: {"type": "text", "content": "\n\n**⚠️ 주의 요소:**\n- 점포당 매출 효율 저"}
+
+data: {"type": "text", "content": "조 (높은 임대료 대비)\n- 치열한 경쟁 ("}
+
+data: {"type": "text", "content": "2,982개 점포 밀집)\n- 주말 매출 의존도 낮음\n\n홍대는 **젊은 고"}
+
+data: {"type": "text", "content": "객층을 타겟**으로 하는 사업에는 최적이지만, **"}
+
+data: {"type": "text", "content": "높은 임대료와 치열한 경쟁**을 감안한 차별화 "}
+
+data: {"type": "text", "content": "전략이 필수입니다.\n\n구체적인 업종 추천이나 다른 상권과의 비교 분석이"}
+
+data: {"type": "text", "content": " 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["홍대입구역에서 뭐하면 좋을까?", "홍대입구역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done", "trace_id": "5501f816d41f0c8c632b60c870a01960", "quality_match_rate": 0.478}
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54467215910094, "lng": 127.05667376479036, "zoom": 4}, "district_code": "3120052", "district_name": "성수역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120052"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "성수역", "districtType": "발달상권", "summary": "하루 평균 유동인구 141만 2천명, 월 추정 매출 221억 3천만원의 안정적인 발달상권입니다.", "monthlySales": 22132857556, "floatingPopulation": {"dailyAvg": 1412369, "peakHour": 14, "byHour": [{"hour": 0, "pop": 136547}, {"hour": 6, "pop": 264790}, {"hour": 11, "pop": 281809}, {"hour": 14, "pop": 312134}, {"hour": 17, "pop": 307268}, {"hour": 21, "pop": 109821}]}, "topCategories": [{"name": "한식음식점", "count": 144}, {"name": "일반의류", "count": 121}, {"name": "부동산중개업", "count": 99}, {"name": "화장품", "count": 72}, {"name": "컴퓨터및주변장치판매", "count": 56}], "status": "stable", "closeRate": {"current": 2.4, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 53.7%, 차이 7.4%p)", "ageInsight": "20대 (27.3%)", "perStoreSales": 14503839, "franchiseRatio": 7.3, "weekendUplift": -70.7}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "하위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "성수역은 20대 중심의 안정적인 발달상권으로, 높은 유동인구 대비 매출 효"}
+
+data: {"type": "text", "content": "율이 아쉬운 상권입니다.**\n\n## 유동인구 분석\n하루 평균 **141만 2천명** `(get_district_summary)`의 높"}
+
+data: {"type": "text", "content": "은 유동인구를 보입니다. 이는 서울 평균(9만 2천명) 대비 **15.3"}
+
+data: {"type": "text", "content": "배**에 달하는 수치로, 발달상권 중에서도 **상위 25%**에 속합니다. \n\n오후 2시(14시)에 **"}
+
+data: {"type": "text", "content": "31만 2천명**으로 피크를 기록하는 **오후형 상권**이며, 새벽 0시에도"}
+
+data: {"type": "text", "content": " 13만 6천명이 몰려 야간 활동도 활발합니다."}
+
+data: {"type": "text", "content": " 홍대와 비교하면 유동인구는 약 1/"}
+
+data: {"type": "text", "content": "3 수준이지만, 여전히 상당한 규모입니다.\n\n## 매"}
+
+data: {"type": "text", "content": "출 현황\n월 추정 매출 **221억 3천만원** `(get_district_summary)`으로, 발달상권 중"}
+
+data: {"type": "text", "content": " **하위 25%** 수준입니다. 점포당 월 매출은 **1"}
+
+data: {"type": "text", "content": ",450만원**으로 발달상권 평균(4,600만원)의 **31.5%"}
+
+data: {"type": "text", "content": "**에 불과해 매출 효율이 상당히 아"}
+
+data: {"type": "text", "content": "쉽습니다.\n\n여성 고객 비중이 **53.7%**로 7.4%p 높고, **20대가"}
+
+data: {"type": "text", "content": " 27.3%**를 차지하는 젊은 상권 특성을 보"}
+
+data: {"type": "text", "content": "입니다. 주말 매출은 평일 대비 **70.7% 낮아**"}
+
+data: {"type": "text", "content": " 평일 중심 상권입니다.\n\n## 점포 현황 및 안정성\n**"}
+
+data: {"type": "text", "content": "한식음식점(144개)**, **일반의류(121개)**, **부동산중개업(99개)** 순"}
+
+data: {"type": "text", "content": "으로 업종이 분포되어 있습니다. 프랜차이즈 비율은 **7.3%**"}
+
+data: {"type": "text", "content": "로 매우 낮아 개인 사업자 중심 상"}
+
+data: {"type": "text", "content": "권입니다.\n\n폐업률은 **2.4%** `(get_district_summary)`로 서울 평균(6.5"}
+
+data: {"type": "text", "content": "%) 대비 매우 낮아 **상위 25% 우수** 수"}
+
+data: {"type": "text", "content": "준의 안정성을 보입니다.\n\n## 기회와 리스크\n**기회**:\n- 높은 유동인구와"}
+
+data: {"type": "text", "content": " 매우 낮은 폐업률\n- 개인 창업 친"}
+
+data: {"type": "text", "content": "화적 환경 (낮은 프랜차이즈 비율)\n- 20대 여성 중심의"}
+
+data: {"type": "text", "content": " 명확한 타겟층\n\n**주의사항**:\n- 유동인구 대비 현"}
+
+data: {"type": "text", "content": "저히 낮은 매출 효율\n- 평일 중심 상권으로 주말 매출 부진\n- 발달상권 중"}
+
+data: {"type": "text", "content": " 매출 하위권\n\n성수역은 **안정적이지만 수"}
+
+data: {"type": "text", "content": "익성 개선이 필요한 상권**입니다. 특정 업종 분"}
+
+data: {"type": "text", "content": "석이나 홍대와의 상세 비교가"}
+
+data: {"type": "text", "content": " 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["성수역에서 뭐하면 좋을까?", "성수역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done", "trace_id": "fde10c3bd4f1f45789d720e80ddd1ca1", "quality_match_rate": 0.429}
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54467215910094, "lng": 127.05667376479036, "zoom": 4}, "district_code": "3120052", "district_name": "성수역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120052", "3120103"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120103": {"district_code": "3120103", "district_name": "홍대입구역(홍대)", "floating_pop": 4106209, "main_age": "20대", "store_count": 2981, "close_rate": 4.0, "monthly_sales": 53200280285, "status": "stable", "quarter": "2025Q4", "sales_per_store": 17846454, "pop_per_store": 1377}, "3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}}, "district_codes": ["3120103", "3120052"], "winners": {"highest_pop": "홍대입구역(홍대)", "highest_sales": "홍대입구역(홍대)", "lowest_close_rate": "성수역", "best_efficiency": "홍대입구역(홍대)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "홍대는 압도적 규모의 유흥형 상권, 성수는 안정적 효"}
+
+data: {"type": "text", "content": "율의 오피스형 상권으로 성격이 "}
+
+data: {"type": "text", "content": "뚜렷하게 구분됩니다.**\n\n## 핵심 지표 비교\n\n**유동인구**: 홍대 410"}
+
+data: {"type": "text", "content": "만 6천명 vs 성수 141만 2천명 `(compare_districts)` - 홍대가 **2"}
+
+data: {"type": "text", "content": ".9배** 더 많습니다. 홍대는 서울 최"}
+
+data: {"type": "text", "content": "대급 유동인구를 자랑하는 반면, 성수도 발달상권 상위 25%"}
+
+data: {"type": "text", "content": " 수준의 높은 인구를 보입니다.\n\n**매출 규모**: 홍대 월"}
+
+data: {"type": "text", "content": " 532억원 vs 성수 월 221억원 `(compare_districts)` - 홍대가 **2.4배** 더 큽니다. 하"}
+
+data: {"type": "text", "content": "지만 점포당 매출 효율을 보면 홍대 1,785만원, 성수 1,450만"}
+
+data: {"type": "text", "content": "원으로 격차가 줄어듭니다.\n\n**안정성**: 성수 폐업률 2.4% vs 홍대 4"}
+
+data: {"type": "text", "content": ".0% `(compare_districts)` - **성수가 더 안정적**입니다. 성수는 서울 평균(6.5%) 대"}
+
+data: {"type": "text", "content": "비 매우 낮은 폐업률을 보여 리스크가 적습니다"}
+
+data: {"type": "text", "content": ".\n\n## 각 상권 특성 분석\n\n**홍대입구역**:\n- **장점**: 압"}
+
+data: {"type": "text", "content": "도적 유동인구, 높은 점포당 매출, 24시간 활성화\n- **단점**: 높은 폐업률("}
+
+data: {"type": "text", "content": "4.0%), 치열한 경쟁, 높은 임대료 예상\n- **적합 업"}
+
+data: {"type": "text", "content": "종**: 유흥, 카페, 패션, 외식 등 젊은층 타"}
+
+data: {"type": "text", "content": "겟\n\n**성수역**:\n- **장점**: 매우 낮은 폐업률(2.4%), 안정적 운"}
+
+data: {"type": "text", "content": "영 환경, 상대적 진입 용이\n- **단점**: 상대적으"}
+
+data: {"type": "text", "content": "로 낮은 매출 효율, 유동인구 밀도 아쉬움\n- **적"}
+
+data: {"type": "text", "content": "합 업종**: 오피스 상권 특성상 점심/"}
+
+data: {"type": "text", "content": "커피/편의점 등 직장인 대상\n\n## 창업 관"}
+
+data: {"type": "text", "content": "점 종합 판단\n\n**대박을 노린"}
+
+data: {"type": "text", "content": "다면 → 홍대**: 높은 리스크-높은 리"}
+
+data: {"type": "text", "content": "턴 구조\n**안정적 운영을 원한다면 → 성수**: 낮은 "}
+
+data: {"type": "text", "content": "리스크-중간 리턴 구조\n\n두 상권 모두 20대 중심이지만, 홍대는 유"}
+
+data: {"type": "text", "content": "흥·문화 소비, 성수는 직장인 일상 소비 중심으로"}
+
+data: {"type": "text", "content": " 고객 니즈가 다릅니다.\n\n어떤 업"}
+
+data: {"type": "text", "content": "종을 고려 중이신지,"}
+
+data: {"type": "text", "content": " 또는 더 자세한 리스크 분석이 필요하신"}
+
+data: {"type": "text", "content": "지 알려주시면 맞춤 분석을 도와드리"}
+
+data: {"type": "text", "content": "겠습니다!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done", "trace_id": "b7083c2076d090fa17e313d2dcfbcc36", "quality_match_rate": 0.5}
+
