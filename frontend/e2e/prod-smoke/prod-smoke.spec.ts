@@ -217,4 +217,104 @@ test.describe('Production smoke', () => {
     );
     expect(fatal, `fatal console errors: ${fatal.join(' | ')}`).toHaveLength(0);
   });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // P8/P9 — baked-in URL regression guards.
+  // 2026-04-24 hotfix (current-status.md): `.env` 잔여 dev 값
+  // `NEXT_PUBLIC_API_URL=http://localhost:3000` 이 프론트엔드 번들에 baked-in
+  // 되어 브라우저 `/api/chat` 호출이 사용자 localhost 로 향하던 회귀를 조기 감지.
+  // Plan: docs/plan/infra/prod-baked-url-smoke-2026-04-24.md
+  // ──────────────────────────────────────────────────────────────────────────
+
+  test('P8 real-browser chat round-trip — bundle URL + SSE render', async ({
+    page,
+  }, testInfo) => {
+    // Desktop chromium 전용: mobile project 는 BottomSheet DOM 이 달라 selector 안정성 ↓.
+    // Regression 은 bundle 이 공유되므로 1 viewport 로도 충분히 잡힘.
+    test.skip(
+      testInfo.project.name !== 'chromium',
+      'P8 runs on desktop chromium only; bundle is shared across viewports'
+    );
+
+    const consoleErrors: string[] = [];
+    page.on('pageerror', (e) => consoleErrors.push(String(e)));
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+
+    // `/app` 로드 → ChatInput 노출 대기
+    await page.goto(`${BASE}/app`, { waitUntil: 'domcontentloaded' });
+    const textarea = page.locator('textarea[placeholder*="물어보세요"]');
+    await expect(textarea).toBeVisible({ timeout: 15000 });
+
+    // `/api/chat` POST 응답을 감시하면서 전송
+    const chatResponsePromise = page.waitForResponse(
+      (r) => r.url().endsWith('/api/chat') && r.request().method() === 'POST',
+      { timeout: 60000 }
+    );
+    await textarea.fill('강남역 상권 요약 알려줘');
+    await textarea.press('Enter');
+
+    const chatResp = await chatResponsePromise;
+    expect(
+      chatResp.status(),
+      `POST /api/chat must hit prod origin, got ${chatResp.url()}`
+    ).toBe(200);
+    // 회귀 시 request URL 이 `http://localhost:3000/api/chat` 이 되는데 그 경우
+    // page.waitForResponse 는 mixed-content 차단으로 응답을 영영 못 봄 → 60s timeout 으로 fail.
+    const postedTo = new URL(chatResp.url());
+    expect(
+      postedTo.host,
+      `Chat request must target prod host, got ${postedTo.host}`
+    ).toBe(new URL(BASE).host);
+
+    // Assistant 렌더 확인 — 첫 `.markdown-body` 안에 한국어 분석 문구가 나오는지
+    const assistantBody = page.locator('.markdown-body').first();
+    await expect(assistantBody).toBeVisible({ timeout: 45000 });
+    await expect(assistantBody).toContainText(/유동인구|매출|상권/, {
+      timeout: 45000,
+    });
+
+    // Mixed-Content 콘솔 에러 0 — baked-in http://localhost → https 페이지에서 차단 시 여기에 잡힘
+    const regression = consoleErrors.filter(
+      (e) =>
+        /mixed content/i.test(e) ||
+        /ERR_BLOCKED_BY_CLIENT/.test(e) ||
+        /localhost:\d+/.test(e)
+    );
+    expect(
+      regression,
+      `baked-URL regression signals: ${regression.join(' | ')}`
+    ).toHaveLength(0);
+  });
+
+  test('P9 JS bundle must not contain dev URLs', async ({}, testInfo) => {
+    // chromium 에서 1회만 실행 (정적 fetch — viewport 무관)
+    test.skip(
+      testInfo.project.name !== 'chromium',
+      'P9 is a static bundle scan; one project is enough'
+    );
+
+    const ctx = await request.newContext();
+    const appHtml = await (await ctx.get(`${BASE}/app`)).text();
+    const chunkPaths = Array.from(
+      new Set(appHtml.match(/\/_next\/static\/chunks\/[^"'\s]+\.js/g) ?? [])
+    );
+    expect(chunkPaths.length, '`/app` must reference Next.js chunks').toBeGreaterThan(0);
+
+    const DEV_URL = /\bhttps?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\b/;
+    const offenders: string[] = [];
+    for (const path of chunkPaths) {
+      const resp = await ctx.get(`${BASE}${path}`);
+      if (resp.status() !== 200) continue;
+      const body = await resp.text();
+      const match = body.match(DEV_URL);
+      if (match) offenders.push(`${path} → ${match[0]}`);
+    }
+
+    expect(
+      offenders,
+      `dev URL baked into bundle (NEXT_PUBLIC_* misconfig?):\n  ${offenders.join('\n  ')}`
+    ).toEqual([]);
+  });
 });

@@ -1,7 +1,8 @@
 # 현재 진행 상황
 
 > 최종 갱신: 2026-04-24
-> **2026-04-24 프로덕션 핫픽스** 🔥 — 어제 env 관례 분리 잔여 설정 3건 수정 (운영 이미지 재빌드 없이 `.env` + frontend 재빌드 + backend 재생성). (1) `NEXT_PUBLIC_API_URL` dev 값(`http://localhost:3000`) baked-in → `https://marketscope.robitlabs.co.kr` 로 복구 (브라우저 `/api/chat` 호출이 사용자 localhost 로 향하던 현상 해소). (2) `LANGFUSE_TRACING_ENVIRONMENT` `development`→`production` (prod trace 가 dev 태그로 저장되던 오염 해소). (3) `LANGFUSE_OTEL_INSECURE=true` 제거 (prod CA 체인 정상, dev-only 우회 불필요). 검증: 신규 chunk `449-e4312e4a97b2d2f9.js` 에 prod URL 박힘 + SSE `done.trace_id=a268eaa891cd5050824cb4bd3e76416b` === `agent_done` 로그. **prod-smoke server-side curl 로는 baked-in URL 회귀 미탐지** — 차후 Playwright headed mode 의 real-browser smoke 추가 검토.
+> **2026-04-24 프로덕션 핫픽스** 🔥 — 어제 env 관례 분리 잔여 설정 3건 수정 (운영 이미지 재빌드 없이 `.env` + frontend 재빌드 + backend 재생성). (1) `NEXT_PUBLIC_API_URL` dev 값(`http://localhost:3000`) baked-in → `https://marketscope.robitlabs.co.kr` 로 복구 (브라우저 `/api/chat` 호출이 사용자 localhost 로 향하던 현상 해소). (2) `LANGFUSE_TRACING_ENVIRONMENT` `development`→`production` (prod trace 가 dev 태그로 저장되던 오염 해소). (3) `LANGFUSE_OTEL_INSECURE=true` 제거 (prod CA 체인 정상, dev-only 우회 불필요). 검증: 신규 chunk `449-e4312e4a97b2d2f9.js` 에 prod URL 박힘 + SSE `done.trace_id=a268eaa891cd5050824cb4bd3e76416b` === `agent_done` 로그.
+> **2026-04-24 prod-smoke baked-URL guard 추가** — prod-smoke 에 `P8 real-browser chat round-trip` + `P9 JS bundle dev-URL scan` 2건 추가. 핫픽스 사건이 기존 server-side curl smoke 로 회귀 감지 불가했던 gap 보강. chromium 9/9 PASS (44.6s). [Plan](../plan/infra/prod-baked-url-smoke-2026-04-24.md)
 > **프로덕션 v0.4.0 동기화 완료 ✅ — `c6cc60e` 기반 재배포 (저녁), 오전 `60b6de3` 대비 6 커밋 / +13,038 / -577 반영**
 > 프로덕션: `marketscope.robitlabs.co.kr` 라이브 — prod-smoke 28/28 + 신규 2 endpoint 검증 PASS
 > 배포 변경: alembic 004 (`learned_aliases`) · `/`=랜딩/`/app`=챗맵 라우트 분리 · Planner Entity Linking + Abstention + Rewriter · `/api/districts/{code}/preview` · `/api/feedback/score`
