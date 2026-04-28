@@ -27,7 +27,10 @@
 - **Plan**: [district-click-race-2026-04-28.md](../plan/fix/district-click-race-2026-04-28.md)
 - 사용자 1차 보고: "상권 A 클릭 → AI 리포트까지 본 뒤 다른 상권 누르면 먹통" — Auto mode 로 진단 → Plan → 구현 → 검증 일괄 진행 (Round 1).
 - 사용자 2차 보고: "다른 지역 상권 프리뷰 불러오기 작동안한다" → Round 2 hotfix 3종 추가: (a) `useMapSync` 가드를 `lastHandledRef` + 실제 렌더된 `preview.district_code` 비교로 완화 — sendMessage 가 `preview: null` 로 wipe 한 뒤 같은 상권 다시 클릭해도 `setPreview` 재호출 보장. (b) `setPreview` 에 10s **watchdog timeout** + finally 의 defensive `previewLoading=false` reset — fetch hang 시 사용자 stuck 방지. (c) `ChatPanel` 의 `previewError` UI 명시 (에러 메시지 + "다시 시도" 버튼, `data-testid=district-preview-error|retry`).
-- ⚠ **운영 안내**: 본 fix 는 git main `7941726` (Round 1) + 후속 commit 에 반영. 프로덕션 (`marketscope.robitlabs.co.kr`) 은 미배포 상태이므로 **prod 재배포 전까지는 사용자 측 동일 증상 지속**. dev 환경은 `docker compose up -d --build frontend backend` 로 재빌드 후 확인.
+- ⚠ **운영 안내**: 본 fix 는 git main `7941726` (Round 1) + `ba9553f` (Round 2). 프로덕션 (`marketscope.robitlabs.co.kr`) 및 사용자 docker container 는 모두 미배포 상태 (`server.js` 에 `currentRequestId` 0건 grep 으로 확인) 이므로 **재빌드 + 재기동 전까지 동일 증상 지속**.
+- ✅ **검증**: host dev stack (USE_MOCK=true backend :8001 + next dev :3001) 으로 9/9 PASS, **재빌드된 docker frontend 이미지 (`sha256:7853e2e5…`) 를 :3010 에 띄워 real DB + real backend 환경 3/3 PASS**. 자세한 시나리오 자산: `frontend/e2e/ring1-features/f01-preview-{rapid-switch,ui-click,stress,real-db}.spec.ts` (4 spec / 12 test).
+- 🔧 **Iteration log**: Iter1 backend probe (preview API 4-11ms, chat 진행 중 preview 동시 호출 정상) · Iter2 store-단위 시나리오 2/2 · Iter3 UI 클릭 4/4 (A→AI→B→AI / 3-rapid / same-district / chat-in-flight input) · Iter4 stress 3/3 (chat-origin → map-origin / watchdog timeout / 5-thrash) · Iter5 docker rebuilt :3010 real DB 3/3.
+- 🔧 **사용자 환경 가이드**: `:3000` 은 `robitlabs_home_container` (다른 프로젝트) 점유 중. 본 프로젝트 docker frontend 를 사용하려면 (a) 임시 verifier `fix-verify-fe` 컨테이너 :3010 사용, (b) `robitlabs_home_container` 잠시 stop 후 `docker compose up -d frontend`, 또는 (c) docker-compose.yml 의 frontend port mapping 을 :3010 등으로 영구 변경.
 
 ### 진단 — 6 근본 원인
 | # | 위치 | 메커니즘 | 심각도 |
