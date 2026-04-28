@@ -28,6 +28,20 @@ function generateId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/**
+ * Module-private state for setPreview race protection.
+ *
+ * Problem: when the user clicks district A then quickly clicks B, two
+ * fetches race. The previous lastDistrictCode-based guard picked up the
+ * *first-arriving* response and dropped the latest one — exactly backwards.
+ *
+ * Solution: a monotonic sequence counter + AbortController. The latest
+ * caller wins, in-flight earlier requests are cancelled, and any response
+ * whose seq != _previewSeq is silently dropped.
+ */
+let _previewSeq = 0;
+let _previewAbort: AbortController | null = null;
+
 interface ChatState {
   messages: ChatMessage[];
   isLoading: boolean;
@@ -37,6 +51,13 @@ interface ChatState {
   lastDistrictCode: string | null;
   agentSteps: AgentStep[];
   currentAbortController: AbortController | null;
+  /**
+   * Monotonic counter incremented at the start of every sendMessage. SSE
+   * event handlers compare ctx.requestId against this value and discard
+   * stale events from previously aborted streams. See
+   * docs/plan/fix/district-click-race-2026-04-28.md §3.1.2.
+   */
+  currentRequestId: number;
   role: UserRole | null;
   preview: DistrictPreview | null;
   previewLoading: boolean;
@@ -91,6 +112,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   lastDistrictCode: null,
   agentSteps: [],
   currentAbortController: null,
+  currentRequestId: 0,
   role: null,
   preview: null,
   previewLoading: false,
@@ -120,15 +142,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((s) => ({ feedbackByTrace: { ...s.feedbackByTrace, [traceId]: value } })),
 
   setPreview: async (code) => {
+    // Cancel any in-flight preview fetch and bump the sequence.
+    _previewAbort?.abort();
+    const ac = new AbortController();
+    _previewAbort = ac;
+    const seq = ++_previewSeq;
+
     set({ previewLoading: true, previewError: null });
     try {
       const role = get().role ?? undefined;
-      const preview = await fetchDistrictPreview(code, role);
-      // Ignore stale response if user selected another district meanwhile
-      const currentCode = get().lastDistrictCode;
-      if (currentCode && currentCode !== code) return;
+      const preview = await fetchDistrictPreview(code, role, ac.signal);
+      // A newer setPreview call has won the race — discard this response.
+      if (seq !== _previewSeq) return;
       set({ preview, previewLoading: false, lastDistrictCode: code });
     } catch (err) {
+      // Intentional cancellation by a newer click — silent drop.
+      if (ac.signal.aborted) return;
+      if (seq !== _previewSeq) return;
       const msg = err instanceof Error ? err.message : 'preview failed';
       set({ preview: null, previewError: msg, previewLoading: false });
     }
@@ -165,6 +195,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       preview: null,
       previewError: null,
       messageCount: 0,
+      currentRequestId: 0,
       suggestions: [
         '이 상권의 유동인구 알려줘',
         '여기서 뭐하면 좋을까?',
@@ -186,7 +217,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   sendMessage: async (message, districtCode, onMapCmd) => {
     const state = get();
-    if (!message.trim() || state.isLoading) return;
+    if (!message.trim()) return;
+
+    // Pre-empt any in-flight stream so a new send (e.g. user clicked a
+    // different district mid-stream) cancels the old one and starts fresh.
+    // The previous stream's finally block sees a different controller (set
+    // below) and skips state cleanup; the previous stream's late SSE events
+    // are filtered by the requestId staleness guard in eventHandlers.
+    if (state.isLoading && state.currentAbortController) {
+      state.currentAbortController.abort();
+    }
 
     // 모바일: 사용자가 질문을 보내는 순간 챗 탭 + full snap 으로 승격.
     // (데스크톱은 SplitPanel 이라 mobileTab/sheetSnap 의미 없음 — 비용 0)
@@ -250,24 +290,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
     };
     set((s) => ({ messages: [...s.messages, assistantMessage] }));
 
+    // Allocate a monotonic request id so staleness-aware event handlers can
+    // discard SSE events that arrive after a newer send has started.
+    const requestId = get().currentRequestId + 1;
     const firstTextReceived = { current: false };
     const ctx: EventHandlerContext = {
       get: get as EventHandlerContext['get'],
       set: (partial) => set(partial as Partial<ChatState>),
       firstTextReceived,
       onMapCmd,
+      requestId,
     };
 
     // Abort any in-flight request so a new send cancels the old stream
     // cleanly on both network (fetch signal) and reader (finally cancel)
     // sides. The server-side disconnect detection (P0-4) then cancels the
-    // LangGraph task.
+    // LangGraph task. (Defensive — already aborted at function entry.)
     const prior = get().currentAbortController;
     if (prior) {
       prior.abort();
     }
     const controller = new AbortController();
-    set({ currentAbortController: controller });
+    set({ currentAbortController: controller, currentRequestId: requestId });
 
     const MAX_RETRIES = 2;
     const BASE_DELAY_MS = 1000;

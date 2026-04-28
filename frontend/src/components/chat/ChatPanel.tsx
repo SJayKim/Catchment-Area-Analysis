@@ -81,7 +81,11 @@ export default function ChatPanel() {
           preview ? (
             <PreviewCard
               preview={preview}
-              disabled={isLoading}
+              // Allow CTA even while a previous stream is still finishing —
+              // sendMessage aborts the old stream and starts a new one. This
+              // is the core fix for the "click district A → AI report → click
+              // district B → 먹통" race condition.
+              disabled={false}
               onQuestion={(q) => sendMessage(q)}
               onDeepAnalysis={() =>
                 sendMessage(`${preview.district_name} 상권 자세히 분석해줘`)
@@ -107,11 +111,12 @@ export default function ChatPanel() {
       <SuggestionChips
         suggestions={suggestions}
         onSelect={sendMessage}
-        disabled={isLoading}
+        // Same rationale as PreviewCard above — never lock chips on isLoading.
+        disabled={false}
       />
 
       {/* Input */}
-      <ChatInput onSend={sendMessage} disabled={isLoading} />
+      <ChatInput onSend={sendMessage} disabled={false} />
     </div>
   );
 }

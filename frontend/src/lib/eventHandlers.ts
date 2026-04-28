@@ -31,6 +31,7 @@ function generateId(): string {
 export interface EventHandlerContext {
   get: () => {
     agentSteps: AgentStep[];
+    currentRequestId: number;
     addAgentStep: (step: AgentStep) => void;
     updateAgentStepStatus: (id: string, status: AgentStep['status'], label?: string) => void;
     updateLastAssistantMessage: (content: string) => void;
@@ -38,10 +39,27 @@ export interface EventHandlerContext {
   set: (partial: Record<string, unknown>) => void;
   firstTextReceived: { current: boolean };
   onMapCmd?: (event: SSEEvent) => void;
+  /**
+   * Monotonic request id captured when this stream started. Compared
+   * against chatStore.currentRequestId on every SSE event — events from
+   * pre-empted streams are silently dropped to prevent UI tearing during
+   * rapid district-switch interactions.
+   */
+  requestId: number;
+}
+
+function isStale(ctx: EventHandlerContext): boolean {
+  return ctx.requestId !== ctx.get().currentRequestId;
 }
 
 export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void {
   const { get, set } = ctx;
+
+  // Staleness gate — silently drop every event from streams that have been
+  // pre-empted by a newer sendMessage. This prevents the late `done` of an
+  // aborted stream from clearing isLoading on the active one, late `text`
+  // chunks from being appended to the new assistant message, etc.
+  if (isStale(ctx)) return;
 
   switch (event.type) {
     case 'thinking': {
@@ -134,7 +152,13 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
           }
         }
         get().addAgentStep({ id: 'final', label: '분석 완료', status: 'completed' });
-        setTimeout(() => { set({ agentSteps: [], isThinking: false }); }, 1500);
+        const myReq = ctx.requestId;
+        setTimeout(() => {
+          // If a newer sendMessage replaced our requestId during the 1.5s
+          // delay, the new stream's agentSteps must be preserved.
+          if (myReq !== ctx.get().currentRequestId) return;
+          set({ agentSteps: [], isThinking: false });
+        }, 1500);
       }
       get().updateLastAssistantMessage(event.content);
       break;

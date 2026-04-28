@@ -138,7 +138,8 @@ export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
 
 export async function fetchDistrictPreview(
   code: string,
-  role?: string
+  role?: string,
+  signal?: AbortSignal
 ): Promise<DistrictPreview> {
   const params = new URLSearchParams();
   if (role) params.set('role', role);
@@ -147,7 +148,7 @@ export async function fetchDistrictPreview(
     query ? `?${query}` : ''
   }`;
 
-  const res = await fetch(url);
+  const res = await fetch(url, { signal });
   if (!res.ok) {
     throw new Error(`Failed to fetch preview: ${res.status}`);
   }

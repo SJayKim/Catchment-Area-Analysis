@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
 > 최종 갱신: 2026-04-28
+> **2026-04-28 District click race / "먹통" fix** ⭐ — Plan [district-click-race-2026-04-28](../plan/fix/district-click-race-2026-04-28.md). 사용자 보고 ("상권 A → AI 리포트 → 상권 B 클릭하면 먹통") 6 근본 원인 진단 (C1 `chatStore.sendMessage:189 if (state.isLoading) return` / C2 `ChatPanel disabled={isLoading}` / C3 `setPreview lastDistrictCode` race / C4 SSE late-`done` overrides / C5 backend per-session lock 부재 / C6 1.5s setTimeout). 적용 패턴: **Stale-while-cancel + Monotonic requestId** (frontend `currentRequestId` + `EventHandlerContext.requestId` + `isStale(ctx)` 가드) · **AbortController + seq counter** (`setPreview` race 정상화, `lastDistrictCode` 의존성 제거) · **Per-session async cancellation** (`_session_inflight` 레지스트리 + `_claim_session_slot`/`_register_session_task`/`_release_session_task`, `_INFLIGHT_CANCEL_TIMEOUT=2s`). 변경 7 파일 (frontend 4 + backend 1 + e2e 신규 + pytest 신규) + memory 4건 신규 (`feedback_chat_inflight_guard` / `feedback_setpreview_lastcode_race` / `feedback_sse_done_staleness` / `feedback_session_concurrency_lock`). 검증: ruff PASS · tsc 0 error · **pytest 49/50** (신규 4 + 기존 45, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · Playwright `f01-rapid-switch.spec.ts` 작성 (도커 e2e stack 별도 회귀 권장).
 > **2026-04-28 프로덕션 재배포 (`52ae7db → 04376a4`, 4 커밋) + Tool 함수명 노출 fix** ⭐ — Plan [prod-deploy-2026-04-28](../plan/infra/prod-deploy-2026-04-28.md). 4 days old prod 컨테이너 (alembic 004) 에서 alembic 005 (estimated_sales COMMENT) + Langfuse 11차원/6스코어 + W1 entity_matching X시장 boost + planner clarification 3종 + numeric_sanity evaluator + respond.py 502→280 LOC + lucide-react 신규 의존성 반영. **추가 핫픽스**: LLM 응답에 raw 함수명 (`(get_district_summary)`) 노출 사용자 보고 → `ATTRIBUTION_PROMPT_RULE` 자연어 출처 표기 강제 + `_ToolTagSanitizer` 11종 tool 이름 stream-level 가드 + RESPOND rule 13 정정 + 잉여 `scan_unattributed_numbers` 호출 제거. 라이브 검증: prod-smoke 30/30 PASS (4 viewport) · ring0 stack-up 7/9 (R0-2/LANDING 은 prodGuard 의도 차단) · stats-aggregate 4/4 PASS · live SSE raw tool name leak **0건**.
 > **2026-04-28 Langfuse 전체 통계 집계 Plan + Phase 1+2 구현** ⭐ — Plan [langfuse-aggregate-stats-2026-04-28](../plan/infra/langfuse-aggregate-stats-2026-04-28.md). v3 tracer 에 `district_type_for` / `attach_summary_observation` (start_observation 우회) / `emit_score` 헬퍼 + graph finally 에서 11 차원 metadata + 6 score emit. 신규 unit 10/10 + Playwright stats-aggregate 16/16 PASS. SSE `done.trace_id` 동봉 + `agent_done` 로그 매핑 정상. dev MITM SSL 갭은 graceful degrade 로 swallow (prod 영향 0). Phase 3+4 (REST ETL + 월간 KPI 마크다운) 은 별도 세션.
 > **2026-04-27 P0 우선순위 6건** — Plan [p0-priority-2026-04-27](../plan/fix/p0-priority-2026-04-27.md). (1) W1 entity_matching 보강: "X시장" 쿼리 → 전통시장 +0.15 boost · paren alias-only 매치 dampen. unit 6/6. (2) RESPOND XML leak `_XMLTagSanitizer` + 프롬프트 rule 13 unit 6/6. (3) Planner empty-plan clarification 3종 unit 4/4. (4) Eval district_code 하드코딩 제거 + drift guard. (5) status-compress 517→383 LOC. (6) Refactor Pass 2: `api/errors.py` `raise_db_unavailable / raise_not_found` 헬퍼 적용. ruff/tsc/pytest 22/22 PASS.
@@ -17,6 +18,61 @@
 > **2026-04-23 Mobile Responsive Plan Phase A+B+C 구현**: viewport/breakpoint/touch-target · BottomSheet 3-snap + BottomNav 2-tab · IME/VisualViewport 가드 + auto-scroll FAB. tsc/eslint/build 0 errors. Phase D/E/F (PWA·Perf·A11y/E2E) 미착수. [Plan](../plan/ui/mobile-responsive.md)
 > **2026-04-23 F-01 fix + Accuracy Gap W1/W2/W3 구현** ⭐: ETL 8 컬럼 NULL 버그 해소(21,333 행 재적재) + Entity Linking(pg_trgm 대체: difflib+type boost) + Abstention(classify_tool_results+attribution rule) + Coreference Rewriter(Tier1 rule+Tier2 LLM) + 배제 토큰(말고/대신/빼고) + learned_aliases 테이블(alembic 004). [Plan F-01](../plan/fix/etl-sales-column-rename-2026-04-23.md) · [Plan Accuracy Gap](../plan/fix/accuracy-gap-fix.md)
 > **2026-04-23 Refactoring Phase 1 Plan 작성**: 7 기준(R1~R7) 기반 저위험/중위험 항목 1 Pass 묶음. Pass1 = singleflight 삭제 + 레거시 E2E 8건 삭제 + status 압축 + Any import 정리. Pass2 = errors.py 래퍼 통합 + blanket except 9건 좁히기 + respond.py 헬퍼 분리 + chatStore slice 분할. [Plan](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — 구현 미착수
+
+---
+
+## 2026-04-28 — District click race / "먹통" fix
+
+### 개요
+- **Plan**: [district-click-race-2026-04-28.md](../plan/fix/district-click-race-2026-04-28.md)
+- 사용자 보고: "상권 A 클릭 → AI 리포트까지 본 뒤 다른 상권 누르면 먹통" — Auto mode 로 진단 → Plan → 구현 → 검증 일괄 진행.
+
+### 진단 — 6 근본 원인
+| # | 위치 | 메커니즘 | 심각도 |
+|---|------|----------|--------|
+| C1 | `chatStore.ts:189` | `if (state.isLoading) return` 가 새 send 즉시 무시 | CRITICAL |
+| C2 | `ChatPanel.tsx:84,110,114` | PreviewCard CTA / Chips / Input 모두 `disabled={isLoading}` 잠금 | CRITICAL |
+| C3 | `chatStore.setPreview:128-129` | `lastDistrictCode` 기반 race 가드가 stale 응답 채택 | HIGH |
+| C4 | `eventHandlers.ts:206-215` | 이전 stream 의 늦은 `done` 이 새 stream `isLoading=true` 덮음 | HIGH |
+| C5 | `chat.py:227` | per-session lock 부재 — 같은 session_id 동시 진입 시 ConversationHistory race | MED |
+| C6 | `eventHandlers.ts:137` | 1.5s setTimeout 이 새 stream agentSteps 비움 | LOW |
+
+### 적용 패턴 (AI/시스템)
+- **Stale-while-cancel + Monotonic requestId** (frontend) — `chatStore.currentRequestId` 카운터 + `EventHandlerContext.requestId` capture + `isStale(ctx)` 가드로 모든 SSE event drop. `text` 의 1.5s setTimeout 콜백 안에서도 `myReq !== ctx.get().currentRequestId` 재확인.
+- **AbortController + Monotonic seq** (frontend) — `_previewSeq` / `_previewAbort` 모듈 private state. `setPreview` 진입 시 이전 fetch cancel + seq++. 응답 도착 시 `seq !== _previewSeq` 면 폐기. `lib/api.ts::fetchDistrictPreview` 에 `signal?: AbortSignal` 추가 (backwards-compatible).
+- **Per-session async cancellation** (backend) — `_session_inflight: dict[str, asyncio.Task]` 레지스트리 + `_claim_session_slot` (이전 task `cancel()` + `wait_for(timeout=2s)`) + `_register_session_task` / `_release_session_task`. `event_generator` 진입 시 claim → register, finally 에서 release.
+
+### 변경 (7 파일)
+| 파일 | 변경 |
+|------|------|
+| `frontend/src/stores/chatStore.ts` | `currentRequestId` 카운터 추가 · `sendMessage` 진입 가드 abort+restart · `setPreview` AbortController + monotonic seq · `clearMessages` 리셋 |
+| `frontend/src/lib/eventHandlers.ts` | `EventHandlerContext.requestId` 추가 · `isStale()` helper · 진입 가드 + 1.5s setTimeout 가드 |
+| `frontend/src/components/chat/ChatPanel.tsx` | PreviewCard / Chips / Input `disabled={false}` 분리 |
+| `frontend/src/lib/api.ts` | `fetchDistrictPreview(code, role, signal?)` 시그니처 확장 |
+| `server/server/api/routes/chat.py` | `_session_inflight` + 3 helper + `event_generator` 통합 |
+| `server/tests/test_chat_session_concurrency.py` | 신규 4 testcase (cancel previous · no-op unknown · register/release · newer task no-evict) |
+| `frontend/e2e/ring1-features/f01-rapid-switch.spec.ts` | 신규 2 spec (RAPID-SWITCH · RAPID-CHIP) — `__chatStore.currentRequestId` 단조 증가 + 두 user message 검증 |
+
+### 검증
+- ✅ ruff (server) — All checks passed
+- ✅ tsc (frontend) — 0 error
+- ✅ **pytest 49/50 PASS** — 신규 4건 + 기존 45건. 1 fail = `test_smoke::langfuse_enabled` host env pre-existing (변경 무관)
+- 🔧 Playwright f01-rapid-switch.spec.ts 작성 — docker e2e stack 별도 회귀 권장
+
+### Memory 신규 4건
+- `feedback_chat_inflight_guard.md` — sendMessage isLoading 시 abort+restart, return 무시 금지
+- `feedback_setpreview_lastcode_race.md` — fetch race 가드는 monotonic seq + AbortController
+- `feedback_sse_done_staleness.md` — `handleSSEEvent` 진입 시 ctx.requestId vs store.currentRequestId 비교
+- `feedback_session_concurrency_lock.md` — per-session in-flight task cancel + wait, 글로벌 semaphore 부족
+
+### 사용자 시나리오 변화
+- **이전**: 상권 A → AI 분석 진행 중 → 상권 B 클릭 → "AI 분석 보기" 버튼 클릭 시 `state.isLoading=true` 가드로 silent return → 사용자에게는 freeze 와 동일.
+- **현재**: 상권 A → AI 분석 진행 중 → 상권 B 클릭 → "AI 분석 보기" 클릭 → 프론트가 A 의 fetch abort + 새 send 시작. 백엔드는 A 의 LangGraph task `cancel()` + 2s 종료 대기 후 B 진행. SSE 이벤트 인터리브 0건 (staleness 가드).
+
+### 다음 P0
+- 🔧 docker e2e stack 에서 `f01-rapid-switch.spec.ts` 회귀 (RAPID-SWITCH + RAPID-CHIP)
+- 🔧 100ms debounce 검토 — 동일 chip 빠른 더블클릭 시 user message 2건 추가되는 동작 정제 (현재는 의도된 동작이지만 UX 보강 여지)
+- 🔧 `PreviewCard` / `ChatInput` 진행 중 hint 텍스트 ("진행 중인 분석을 중단하고 새로 시작합니다") — Phase 4 polish
 
 ---
 

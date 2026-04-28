@@ -32,6 +32,43 @@ _last_prune_time: float = 0.0
 _MAX_CONCURRENT_CHATS = 20
 _chat_semaphore = asyncio.Semaphore(_MAX_CONCURRENT_CHATS)
 
+# Per-session in-flight task registry — used to pre-empt the previous chat
+# when the same session_id sends a new request (e.g. user clicked another
+# district while the AI was still streaming the previous report). Without
+# this, two concurrent agent runs would race on `ConversationHistory` and
+# the front-end would also juggle two SSE streams. See
+# docs/plan/fix/district-click-race-2026-04-28.md §3.4.
+_session_inflight: dict[str, asyncio.Task] = {}
+_session_inflight_lock = asyncio.Lock()
+_INFLIGHT_CANCEL_TIMEOUT = 2.0  # seconds
+
+
+async def _claim_session_slot(session_id: str) -> None:
+    """Cancel and await the previous in-flight task for this session, if any."""
+    async with _session_inflight_lock:
+        prev = _session_inflight.pop(session_id, None)
+    if prev is None or prev.done():
+        return
+    prev.cancel()
+    try:
+        await asyncio.wait_for(prev, timeout=_INFLIGHT_CANCEL_TIMEOUT)
+    except (asyncio.CancelledError, TimeoutError):
+        pass
+    except Exception:
+        # Defensive — never let a cancellation cleanup error propagate.
+        logger.exception("session_inflight cancel failed: %s", session_id)
+
+
+async def _register_session_task(session_id: str, task: asyncio.Task) -> None:
+    async with _session_inflight_lock:
+        _session_inflight[session_id] = task
+
+
+async def _release_session_task(session_id: str, task: asyncio.Task) -> None:
+    async with _session_inflight_lock:
+        if _session_inflight.get(session_id) is task:
+            del _session_inflight[session_id]
+
 # GAP-C helper — mirrors EXCLUSION_PATTERNS in agent.utils.rewriter so
 # chat-route auto-detection skips when the user is explicitly dropping an
 # entity ("X 말고 Y", "X 대신 Y", "X 빼고 Y", "X 제외").
@@ -217,10 +254,18 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
 
     async def event_generator():
         sse_connection_opened()
+        # Pre-empt any prior in-flight chat for this session. The frontend's
+        # rapid district-switch flow is the primary trigger.
+        await _claim_session_slot(session_id)
+        current_task = asyncio.current_task()
+        if current_task is not None:
+            await _register_session_task(session_id, current_task)
         try:
             async for event in _event_generator_inner():
                 yield event
         finally:
+            if current_task is not None:
+                await _release_session_task(session_id, current_task)
             sse_connection_closed()
 
     async def _event_generator_inner():
