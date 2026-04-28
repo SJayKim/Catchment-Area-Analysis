@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
 > 최종 갱신: 2026-04-28
+> **2026-04-28 (저녁) Prod 재배포 — district-click-race fix 라이브 적용** ⭐ — Plan [prod-redeploy-2026-04-28-evening](../plan/infra/prod-redeploy-2026-04-28-evening.md). 이전 세션의 dev/prod compose project-name 충돌로 prod frontend(`:3200`) 가 stop → `marketscope.robitlabs.co.kr` 502. A 방식 (destructive) 으로 Plan 4 Pass 진행. **frontend `sha256:46815639...` + backend `6be3098215b9` 정상 기동**. Live smoke P1~P9 ALL PASS — 외부 도메인 200 (5회 105~277ms), Playwright real-DB spec 3/3 PASS (A→B→A · A→AI→B · 3-rapid). fix baked 확인 (`currentRequestId` 2 hits / `_session_inflight` 11 hits). prev-2026-04-28b tag 부여 (rollback safety).
 > **2026-04-28 District click race / "먹통" fix** ⭐ — Plan [district-click-race-2026-04-28](../plan/fix/district-click-race-2026-04-28.md). 사용자 보고 ("상권 A → AI 리포트 → 상권 B 클릭하면 먹통") 6 근본 원인 진단 (C1 `chatStore.sendMessage:189 if (state.isLoading) return` / C2 `ChatPanel disabled={isLoading}` / C3 `setPreview lastDistrictCode` race / C4 SSE late-`done` overrides / C5 backend per-session lock 부재 / C6 1.5s setTimeout). 적용 패턴: **Stale-while-cancel + Monotonic requestId** (frontend `currentRequestId` + `EventHandlerContext.requestId` + `isStale(ctx)` 가드) · **AbortController + seq counter** (`setPreview` race 정상화, `lastDistrictCode` 의존성 제거) · **Per-session async cancellation** (`_session_inflight` 레지스트리 + `_claim_session_slot`/`_register_session_task`/`_release_session_task`, `_INFLIGHT_CANCEL_TIMEOUT=2s`). 변경 7 파일 (frontend 4 + backend 1 + e2e 신규 + pytest 신규) + memory 4건 신규 (`feedback_chat_inflight_guard` / `feedback_setpreview_lastcode_race` / `feedback_sse_done_staleness` / `feedback_session_concurrency_lock`). 검증: ruff PASS · tsc 0 error · **pytest 49/50** (신규 4 + 기존 45, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · Playwright `f01-rapid-switch.spec.ts` 작성 (도커 e2e stack 별도 회귀 권장).
 > **2026-04-28 프로덕션 재배포 (`52ae7db → 04376a4`, 4 커밋) + Tool 함수명 노출 fix** ⭐ — Plan [prod-deploy-2026-04-28](../plan/infra/prod-deploy-2026-04-28.md). 4 days old prod 컨테이너 (alembic 004) 에서 alembic 005 (estimated_sales COMMENT) + Langfuse 11차원/6스코어 + W1 entity_matching X시장 boost + planner clarification 3종 + numeric_sanity evaluator + respond.py 502→280 LOC + lucide-react 신규 의존성 반영. **추가 핫픽스**: LLM 응답에 raw 함수명 (`(get_district_summary)`) 노출 사용자 보고 → `ATTRIBUTION_PROMPT_RULE` 자연어 출처 표기 강제 + `_ToolTagSanitizer` 11종 tool 이름 stream-level 가드 + RESPOND rule 13 정정 + 잉여 `scan_unattributed_numbers` 호출 제거. 라이브 검증: prod-smoke 30/30 PASS (4 viewport) · ring0 stack-up 7/9 (R0-2/LANDING 은 prodGuard 의도 차단) · stats-aggregate 4/4 PASS · live SSE raw tool name leak **0건**.
 > **2026-04-28 Langfuse 전체 통계 집계 Plan + Phase 1+2 구현** ⭐ — Plan [langfuse-aggregate-stats-2026-04-28](../plan/infra/langfuse-aggregate-stats-2026-04-28.md). v3 tracer 에 `district_type_for` / `attach_summary_observation` (start_observation 우회) / `emit_score` 헬퍼 + graph finally 에서 11 차원 metadata + 6 score emit. 신규 unit 10/10 + Playwright stats-aggregate 16/16 PASS. SSE `done.trace_id` 동봉 + `agent_done` 로그 매핑 정상. dev MITM SSL 갭은 graceful degrade 로 swallow (prod 영향 0). Phase 3+4 (REST ETL + 월간 KPI 마크다운) 은 별도 세션.
@@ -18,6 +19,54 @@
 > **2026-04-23 Mobile Responsive Plan Phase A+B+C 구현**: viewport/breakpoint/touch-target · BottomSheet 3-snap + BottomNav 2-tab · IME/VisualViewport 가드 + auto-scroll FAB. tsc/eslint/build 0 errors. Phase D/E/F (PWA·Perf·A11y/E2E) 미착수. [Plan](../plan/ui/mobile-responsive.md)
 > **2026-04-23 F-01 fix + Accuracy Gap W1/W2/W3 구현** ⭐: ETL 8 컬럼 NULL 버그 해소(21,333 행 재적재) + Entity Linking(pg_trgm 대체: difflib+type boost) + Abstention(classify_tool_results+attribution rule) + Coreference Rewriter(Tier1 rule+Tier2 LLM) + 배제 토큰(말고/대신/빼고) + learned_aliases 테이블(alembic 004). [Plan F-01](../plan/fix/etl-sales-column-rename-2026-04-23.md) · [Plan Accuracy Gap](../plan/fix/accuracy-gap-fix.md)
 > **2026-04-23 Refactoring Phase 1 Plan 작성**: 7 기준(R1~R7) 기반 저위험/중위험 항목 1 Pass 묶음. Pass1 = singleflight 삭제 + 레거시 E2E 8건 삭제 + status 압축 + Any import 정리. Pass2 = errors.py 래퍼 통합 + blanket except 9건 좁히기 + respond.py 헬퍼 분리 + chatStore slice 분할. [Plan](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — 구현 미착수
+
+---
+
+## 2026-04-28 (저녁) — Prod 재배포 (district-click-race fix → 라이브 적용)
+
+### 개요
+- **Plan**: [prod-redeploy-2026-04-28-evening.md](../plan/infra/prod-redeploy-2026-04-28-evening.md)
+- 이전 세션의 dev/prod compose **project name 충돌** 로 prod frontend (`:3200`) 가 stop 된 상태였음 → `marketscope.robitlabs.co.kr` 502. 동시에 git main `441ef62` (Round 1+2 race fix) 라이브 미반영.
+- A 방식 (destructive) Plan 작성 후 4 Pass 진행. 외부 nginx 변경 없음, db/redis volume 보존.
+
+### Pass 1 — 사전 점검
+- `:3200` 비어있고 `:8000` 만 dev backend 점유 확인. `.env` (prod) 정상. git head `441ef62`.
+
+### Pass 2 — 빌드 + 기동
+- `fix-verify-fe` 임시 컨테이너 stop+rm
+- `.env.dev` → `.bak` 임시 이동 (prod URL bake 보호)
+- `docker compose -f docker-compose.prod.yml build frontend backend migrate` (frontend `sha256:46815639...`)
+- `docker compose -f docker-compose.prod.yml up -d` — db / redis healthy, migrate exit 0, backend healthy 22s, frontend started 8s
+- `.env.dev` 복구
+
+### Pass 3 — Live Smoke (P1~P9 ALL PASS)
+| # | 검증 | 결과 |
+|---|------|------|
+| P1 | `127.0.0.1:3200` | 200, MarketScope 페이지 |
+| P2 | `127.0.0.1:8000/health` | `{"status":"ok"}` |
+| P3 | `https://marketscope.robitlabs.co.kr` | **200** (502 → 회복) |
+| P4 | `/api/health/detail` | use_mock=false, llm_provider=anthropic |
+| P5 | `/api/districts?limit=2` | total=1650 |
+| P6 | `/api/districts/3120189/preview` | 강남역 + top 3 업종 |
+| P7 | Playwright `f01-preview-real-db.spec.ts` × prod URL | **3/3 PASS** (A→B→A · A→AI→B · 3-rapid) |
+| P8 | fix baked 검증 | frontend `currentRequestId` 2 hits · backend `_session_inflight` 11 hits |
+| P9 | SSE `/api/chat` curl | 강남역 요약 카드 (perStoreSales=27M+) + 인사 fast-path 정상 |
+
+### Pass 4 — Cleanup + Rollback Safety
+- `prev-2026-04-28b` tag 부여: frontend `46815639e4f6` / backend `6be3098215b9`
+- 외부 도메인 5회 roundtrip 모두 200 (105~277ms)
+- 컨테이너 4종 healthy: frontend `:3200` / backend `:8000` / db / redis
+
+### 사용자 시나리오 시점별 변화
+| 시점 | 상권 A 분석 → 다른 상권 B 클릭 | 사용자 체감 |
+|------|------|------|
+| ~Round 1 push 전 | sendMessage isLoading return + ChatPanel disabled | "먹통" |
+| Round 1+2 push 후 (`ba9553f`) | 코드 fix OK 그러나 prod 미배포 | 동일 증상 |
+| **본 재배포 후** (`46815639...`) | abort+restart + watchdog + useMapSync 가드 완화 | **PreviewCard B 즉시 표시 + AI 분석 정상 진행** ✅ |
+
+### 후속
+- 🔧 dev/prod compose project name 충돌 — `docker-compose.prod.yml` 에 `name: marketscope-prod` 추가 검토 (다음 세션)
+- 🔧 prod-smoke spec 자동화 (`f01-preview-real-db.spec.ts` 를 prod-smoke 묶음에 추가)
 
 ---
 
