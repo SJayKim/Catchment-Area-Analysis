@@ -1,0 +1,132 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.559384746976406, "lng": 126.94474022913569, "zoom": 4}, "district_code": "3130178", "district_name": "이대 앞 스타트업 상점가", "district_type": "전통시장"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3130178"}, "progress_label": "상권 요약 분석 중..."}
+
+
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "이대 앞 스타트업 상점가", "districtType": "전통시장", "summary": "하루 평균 유동인구 6만명, 월 추정 매출 3억 1천만원의 안정적인 전통시장입니다.", "monthlySales": 314275542, "floatingPopulation": {"dailyAvg": 60480, "peakHour": 6, "byHour": [{"hour": 0, "pop": 11072}, {"hour": 6, "pop": 12816}, {"hour": 11, "pop": 10700}, {"hour": 14, "pop": 10284}, {"hour": 17, "pop": 9908}, {"hour": 21, "pop": 5700}]}, "topCategories": [{"name": "일반의류", "count": 26}, {"name": "한식음식점", "count": 11}, {"name": "미용실", "count": 8}, {"name": "일식음식점", "count": 6}, {"name": "화장품", "count": 6}], "status": "stable", "closeRate": {"current": 2.7, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 77.4%, 차이 54.8%p)", "ageInsight": "20대 (46.8%)", "perStoreSales": 2831311, "franchiseRatio": 7.2, "weekendUplift": -75.4}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "전통시장", "sampleCount": 320, "rankings": {"floatingPop": "상위 25%", "monthlySales": "하위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 75%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 15000, "monthly_sales": 7000000000, "close_rate": 4.8, "store_count": 140, "per_store_sales": 32000000}}}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "여의도는 금융·대기업 중심지로 스타트업 사무실 "}
+
+
+
+data: {"type": "text", "content": "입지로는 신중한 검토가 필요합니다.**\n\n현재 분석 중"}
+
+
+
+data: {"type": "text", "content": "인 **이대 앞 스타트업 상점가**와 여의도를 비교해보면:\n\n## 이대 앞 스"}
+
+
+
+data: {"type": "text", "content": "타트업 상점가 특성\n- **유동인구**: 하루 평균 6만명 `"}
+
+
+
+data: {"type": "text", "content": "(get_district_summary)`, 전통시장 중 상위 25% "}
+
+
+
+data: {"type": "text", "content": "수준\n- **고객층**: 여성 77.4%, 20대 46.8%"}
+
+
+
+data: {"type": "text", "content": "로 젊은 여성층 중심 `(get_district_summary)`"}
+
+
+
+data: {"type": "text", "content": "\n- **상권 성격**: 전통시장이지만 \"스타트업 상점가\"라"}
+
+
+
+data: {"type": "text", "content": "는 이름처럼 젊은 창업자들이 모이는 공"}
+
+
+
+data: {"type": "text", "content": "간\n- **임대료**: 전통시장 특성상 상대적으로 저렴한 편\n\n## 스"}
+
+
+
+data: {"type": "text", "content": "타트업 사무실 입지 고려사항\n\n**이대 앞 장점**:\n- 젊은 인"}
+
+
+
+data: {"type": "text", "content": "재 풀 접근성 (대학가 인근)\n- 상"}
+
+
+
+data: {"type": "text", "content": "대적으로 저렴한 임대료\n- 창업 친화적 분위기"}
+
+
+
+data: {"type": "text", "content": "\n- 다양한 F&B, 생활편의시설\n\n**여의도 일반적 특"}
+
+
+
+data: {"type": "text", "content": "성** (참고용):\n- 금융·대기업 밀집으로 B"}
+
+
+
+data: {"type": "text", "content": "2B 네트워킹 유리\n- 높은 임대료와 운영비용"}
+
+
+
+data: {"type": "text", "content": "\n- 정장 문화, 격식 있는 비즈니스 환경"}
+
+
+
+data: {"type": "text", "content": "\n- 대중교통 접근성 우수\n\n**추천**: 스타트업 초기 단"}
+
+
+
+data: {"type": "text", "content": "계라면 이대 앞 같은 창업 친화적 환경이"}
+
+
+
+data: {"type": "text", "content": ", 성장 단계에서 대기업 파트"}
+
+
+
+data: {"type": "text", "content": "너십이 중요하다면 여의도가 적합할 수 있습니다.\n\n여의도 구"}
+
+
+
+data: {"type": "text", "content": "체적인 상권 데이터나 다른 스타트업 "}
+
+
+
+data: {"type": "text", "content": "밀집 지역 비교 분석이 필요하시면 말씀해 주세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["이대 앞 스타트업 상점가에서 뭐하면 좋을까?", "이대 앞 스타트업 상점가 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "da09b8b7169379d60f7f2da83ea4e869"}
+
+
+

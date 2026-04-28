@@ -16,8 +16,8 @@ echo "USE_MOCK=$USE_MOCK"
 
 ## 2. Mock 모드 (`USE_MOCK=true`)
 
-- `server/app/data/mock_data.py` (또는 유사 경로) 존재 확인
-- 5개 상권(D3001~D3005) 정의 여부 grep
+- `server/server/agent/tools/mock_data.py` (정의) + `server/server/repositories/mock/` (repo 래퍼) 존재 확인
+- 5개 상권(D3001~D3005: 강남역/홍대/건대/명동/서울역) 정의 여부 grep
 - 이상 없으면 "Mock OK" 반환 후 종료
 
 ## 3. Real 모드 (`USE_MOCK=false` 또는 미설정)
@@ -26,8 +26,10 @@ echo "USE_MOCK=$USE_MOCK"
 docker compose ps db                    # DB Running 여부
 cd server && alembic heads              # head revision
 cd server && alembic current            # 현재 적용 버전
-ls server/alembic/versions/             # 003_* 마이그레이션 존재
+ls server/alembic/versions/             # 001~005 마이그레이션 존재
 ```
+
+> 현재 alembic head: **005** (`005_estimated_sales_column_comment`). 마이그레이션 5종: 001 initial / 002 default_unit_price / 003 category_aliases (PostGIS 1,650 상권) / 004 learned_aliases / 005 estimated_sales 컬럼 코멘트.
 
 ## 4. 불일치 시 수정 명령 제시
 
@@ -35,8 +37,9 @@ ls server/alembic/versions/             # 003_* 마이그레이션 존재
 |------|------|
 | DB down | `docker compose up -d db` |
 | 마이그레이션 미적용 | `cd server && alembic upgrade head` |
-| Migration 003 누락 | `/plan-new data migration-003-recovery` 로 복구 Plan 작성 |
-| USE_MOCK 미설정 | `.env` 에 `USE_MOCK=true` 또는 `false` 명시 |
+| Migration 003 누락 (1,650 상권 없음) | `/plan-new data migration-003-recovery` 로 복구 Plan 작성 |
+| Migration 005 미적용 | `cd server && alembic upgrade head` (단순 컬럼 코멘트) |
+| USE_MOCK 미설정 | `.env.dev`(로컬) 또는 `.env`(프로덕션)에 `USE_MOCK=true/false` 명시 |
 
 ## 출력 예시
 

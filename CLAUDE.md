@@ -29,8 +29,8 @@ Catchment-Area-Analysis/
 │   │   ├── data/etl/       # 공공데이터 수집
 │   │   ├── repositories/   # mock/, real/ 분리 + protocols.py
 │   │   ├── models/         # SQLAlchemy
-│   │   └── services/       # cache, circuit_breaker, category_resolver
-│   └── alembic/            # 001~003 마이그레이션
+│   │   └── services/       # cache, circuit_breaker, category_resolver, langfuse_tracer
+│   └── alembic/            # 001~005 마이그레이션
 ├── data/                    # SHP 폴리곤, seed 덤프
 ├── scripts/                 # 운영 유틸 (verify_sales_units, validate_env, setup_db, …)
 ├── nginx/                   # 내장 + 외부 리버스 프록시 설정
@@ -48,7 +48,7 @@ docs/
 │   ├── overview.md                 # 전체 요약 (먼저 읽기)
 │   ├── backend.md                  # FastAPI / API / 서비스
 │   ├── frontend.md                 # Next.js / Zustand / SSE 파서
-│   ├── agent.md                    # PAE 그래프 / Tool 11종
+│   ├── agent.md                    # PAE 그래프 / Tool 9종
 │   ├── data.md                     # DB 스키마 / 레포 / ETL / 캐시
 │   └── deployment.md               # Docker / Nginx / 환경변수
 ├── spec/                            # 계층 2: 기능 스펙
@@ -83,11 +83,11 @@ docker compose up -d
 docker compose up -d db redis
 
 # Frontend
-cd frontend && npm install && npm run dev        # port 3001
+cd frontend && npm install && npm run dev        # port 3000
 
 # Backend
 cd server && pip install -e ".[dev]"
-uvicorn server.main:app --reload --port 8002
+uvicorn server.main:app --reload --port 8000
 
 # 테스트
 cd frontend && npm test                           # Playwright E2E
@@ -116,7 +116,7 @@ cd server && ruff check --fix . && ruff format .  # Python
 - **공간 쿼리**: PostGIS `ST_Intersects`, `ST_AsGeoJSON`
 - **Mock/Real 전환**: `USE_MOCK` 플래그 + Repository 패턴 (`mock/` · `real/`)
 - **캐싱**: Redis (TTL 24h) + 메모리 fallback (graceful degradation)
-- **Circuit Breaker + Singleflight**: LLM/DB 장애 격리
+- **Circuit Breaker**: LLM 호출 3-state 격리 (CLOSED → OPEN → HALF_OPEN)
 
 ## 코딩 컨벤션
 

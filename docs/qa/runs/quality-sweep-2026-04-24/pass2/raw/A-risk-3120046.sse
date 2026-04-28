@@ -1,0 +1,70 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.53492844487996, "lng": 126.99478115147303, "zoom": 4}, "district_code": "3120046", "district_name": "이태원(이태원역)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "risk", "steps": ["점포 이력/리스크 분석"]}
+
+data: {"type": "tool", "name": "get_store_history", "input": {"district_code": "3120046"}, "progress_label": "리스크 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_store_history", "done_label": "리스크 분석 완료"}
+
+data: {"type": "card", "card_type": "risk", "data": {"district_code": "3120046", "stability": {"score": null, "grade": "데이터 부족", "message": "2분기 이상 데이터가 쌓이면 리스크 분석이 가능합니다", "quarters_analyzed": 1}, "survival_by_category": [], "risk_categories": [{"category": "자동차부품", "close_rate": 100.0, "warning": "폐업률 매우 높음"}, {"category": "네일숍", "close_rate": 25.0, "warning": "폐업률 매우 높음"}, {"category": "스포츠 강습", "close_rate": 11.1, "warning": "폐업률 높음"}, {"category": "사진관", "close_rate": 11.1, "warning": "폐업률 높음"}, {"category": "일식음식점", "close_rate": 9.5, "warning": "폐업률 높음"}, {"category": "호프-간이주점", "close_rate": 9.4, "warning": "폐업률 높음"}, {"category": "중식음식점", "close_rate": 6.7, "warning": "폐업률 높음"}, {"category": "가방", "close_rate": 3.8, "warning": "폐업률 높음"}], "quarterly_trend": [{"quarter": "2025Q4", "store_count": 1389, "open": 38, "close": 36}], "benchmarks": {"districtType": "발달상권", "seoulAvgCloseRate": 5.9}, "dataSources": [{"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "이태원 상권은 현재 데이터 부족으로 종합적 리스크 평"}
+
+data: {"type": "text", "content": "가가 어려우나, 일부 업종에서"}
+
+data: {"type": "text", "content": " 높은 폐업률이 관찰됩니다.**\n\n## 📊 현재 상황 ("}
+
+data: {"type": "text", "content": "2025Q4 기준)\n\n**전체 점포 현황**: 총 1,389"}
+
+data: {"type": "text", "content": "개 점포가 운영 중이며, 신규 개업 38개, 폐업 36개로"}
+
+data: {"type": "text", "content": " 순증가 2개 점포를 기록했"}
+
+data: {"type": "text", "content": "습니다 `(get_store_history)`. 이는 상권이 안정적으로 유"}
+
+data: {"type": "text", "content": "지되고 있음을 의미합니다.\n\n## ⚠️ 주요 리스크 요소\n\n### 고"}
+
+data: {"type": "text", "content": "위험 업종 (폐업률 8% 이상)\n- **자동차부품**: 100% 폐업률 - 매우 위험\n- **네일숍"}
+
+data: {"type": "text", "content": "**: 25.0% 폐업률 - 매우 위험  \n- **스포츠 강습**: 11.1% 폐업률 - 높은"}
+
+data: {"type": "text", "content": " 위험\n- **사진관**: 11.1% 폐업률 - 높은 위험\n\n### 중위험 업종 (서울 평균 초"}
+
+data: {"type": "text", "content": "과)\n- **일식음식점**: 9.5% 폐업률\n- **호프·간이주점**: 9.4% 폐업률  \n- **중식음식점**: 6.7% "}
+
+data: {"type": "text", "content": "폐업률\n\n이들 업종의 폐업률은 모두 서울 평균 5.9%를 상"}
+
+data: {"type": "text", "content": "회합니다 `(get_store_history)`.\n\n## 🔍 분석의 한계"}
+
+data: {"type": "text", "content": "\n\n**데이터 부족**: 현재 1분기 데이터만 확보되어 있어 안정성 점"}
+
+data: {"type": "text", "content": "수나 계절별 트렌드 분석이 불가능합니다."}
+
+data: {"type": "text", "content": " 2분기 이상 데이터가 축적되면 더 정확한 리스크 분석이 가능할 것입니다 "}
+
+data: {"type": "text", "content": "`(get_store_history)`.\n\n## 💡 창업 시사점\n\n1. **업종 선택 신중**: 위 "}
+
+data: {"type": "text", "content": "고위험 업종 진입 시 특별한 차별화 전략 필요\n2. **안정적"}
+
+data: {"type": "text", "content": " 순증가**: 전체적으로는 점포 수가 증가하고"}
+
+data: {"type": "text", "content": " 있어 상권 자체는 성장세\n3. **추가 분"}
+
+data: {"type": "text", "content": "석 필요**: 매출, 유동인구, 임대료 등 종합적 데이터로 리스크를"}
+
+data: {"type": "text", "content": " 재평가해야 함\n\n**면책사항**: 위 분석은 카드 매출 기반 "}
+
+data: {"type": "text", "content": "추정치이며 실제와 다를 수 있습니다.\n\n궁금한 특"}
+
+data: {"type": "text", "content": "정 업종이 있거나 매출·유동인구 분석이 필요하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["이태원 추천 업종 알려줘", "매출 분석해줘", "다른 상권 비교해줘"]}
+
+data: {"type": "done"}
+

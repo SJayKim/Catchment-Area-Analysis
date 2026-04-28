@@ -1,0 +1,55 @@
+{
+  "id": "A-other-top-sales",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-other-top-sales-d10b9dcb",
+  "turns": [
+    {
+      "events_count": 11,
+      "text": "요청하신 분석에 필요한 공공데이터를 조회하지 못했습니다. 다른 상권을 선택하시거나, 비교/추천 대상을 명확히 알려주시면 다시 분석해드리겠습니다.\n\n서울시 상권별 매출 순위 분석을 원하신다면, 구체적인 상권명(예: 강남역, 홍대입구, 명동 등)을 말씀해 주시거나 특정 지역 범위를 지정해 주세요. 그러면 해당 상권들의 매출 데이터를 비교 분석해드리겠습니다.",
+      "tools": [],
+      "tool_inputs": [],
+      "cards": [],
+      "suggestions": [
+        "여기에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 0,
+      "plan_steps": [],
+      "intent": null,
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 5.8,
+      "user_message": "서울 매출 높은 상권 top 5"
+    }
+  ],
+  "rubric": {
+    "score": 3,
+    "max": 4,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=198 need=150"
+      ]
+    ]
+  },
+  "total_elapsed_s": 5.8
+}

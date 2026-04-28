@@ -175,6 +175,22 @@ def _build_pae_graph(event_queue: asyncio.Queue):
         )
         return {"final_response": "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다."}
 
+    async def _clarification(state: AgentState) -> dict:
+        """P0-4: deterministic clarification when Planner flagged an empty-plan
+        coreference/exclusion/comparison-under-2 case. Emits fixed text +
+        suggestions and skips LLM."""
+        text = state.get("clarification_text") or (
+            "질문을 조금 더 구체적으로 알려주시겠어요? 분석할 상권 이름을 직접 언급해 주세요."
+        )
+        suggestions = state.get("clarification_suggestions") or [
+            "강남역 상권 분석",
+            "홍대 vs 성수 비교",
+            "건대 창업 추천 업종",
+        ]
+        await event_queue.put({"type": "text", "content": text})
+        await event_queue.put({"type": "suggestion", "questions": suggestions})
+        return {"final_response": text}
+
     async def _actor(state: AgentState) -> dict:
         return await actor_node(state, event_queue)
 
@@ -187,6 +203,8 @@ def _build_pae_graph(event_queue: asyncio.Queue):
     def route_after_planner(state) -> str:
         if state.get("response_mode") == "greeting_direct":
             return "greeting"
+        if state.get("response_mode") == "clarification_direct":
+            return "clarification"
         if state.get("response_mode") == "direct" or not state.get("plan"):
             return "respond"
         return "actor"
@@ -202,6 +220,7 @@ def _build_pae_graph(event_queue: asyncio.Queue):
     graph = StateGraph(AgentState)
     graph.add_node("planner", _planner)
     graph.add_node("greeting", _greeting)
+    graph.add_node("clarification", _clarification)
     graph.add_node("actor", _actor)
     graph.add_node("evaluator", _evaluator)
     graph.add_node("respond", _respond)
@@ -210,9 +229,15 @@ def _build_pae_graph(event_queue: asyncio.Queue):
     graph.add_conditional_edges(
         "planner",
         route_after_planner,
-        {"actor": "actor", "respond": "respond", "greeting": "greeting"},
+        {
+            "actor": "actor",
+            "respond": "respond",
+            "greeting": "greeting",
+            "clarification": "clarification",
+        },
     )
     graph.add_edge("greeting", END)
+    graph.add_edge("clarification", END)
     graph.add_edge("actor", "evaluator")
     graph.add_conditional_edges("evaluator", route_after_evaluator, {"respond": "respond", "planner": "planner"})
     graph.add_edge("respond", END)
@@ -281,9 +306,11 @@ async def run_agent(
 
     # Store suggestions from evaluator for the final yield
     final_suggestions: list[str] = []
+    final_quality_flags: list[dict] = []
+    final_quality_match_rate: float | None = None
 
     async def _run_graph():
-        nonlocal final_suggestions
+        nonlocal final_suggestions, final_quality_flags, final_quality_match_rate
         emitted_card_count = 0  # track to avoid re-emitting accumulated cards
 
         try:
@@ -343,7 +370,14 @@ async def run_agent(
                         if sug:
                             final_suggestions[:] = sug
 
-                    # respond node streams text tokens directly via event_queue
+                    elif node_name == "respond":
+                        # L3: capture quality_flags from numeric_sanity evaluator
+                        qf = state_update.get("quality_flags") or []
+                        if qf:
+                            final_quality_flags = qf
+                        qmr = state_update.get("quality_match_rate")
+                        if qmr is not None:
+                            final_quality_match_rate = qmr
 
         except Exception:
             logger.exception("PAE agent execution failed")
@@ -388,4 +422,8 @@ async def run_agent(
     trace_id = get_trace_id(lf_handler)
     if trace_id:
         done_payload["trace_id"] = trace_id
+    if final_quality_flags:
+        done_payload["quality_flags"] = final_quality_flags
+    if final_quality_match_rate is not None:
+        done_payload["quality_match_rate"] = final_quality_match_rate
     yield done_payload

@@ -3,16 +3,127 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
+import re
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from server.agent.prompts.system import sanitize_prompt_value
 from server.agent.state import AgentState
+from server.agent.utils.formatting import _format_history, _format_tool_results
 from server.config import settings
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Streaming XML/tool-call sanitizer
+# ---------------------------------------------------------------------------
+#
+# Claude Sonnet 4 occasionally emits XML-framed tool-call tokens in the
+# response body when it judges that additional tool fetches would help —
+# even though the Respond node is purely a final-answer stage. The front-end
+# does not parse these and would render them as raw text. We strip them
+# mid-stream so the user never sees the leak.
+#
+# Approach: a tiny state machine that buffers the tail of each chunk until we
+# can decide whether an opening ``<`` starts a banned tag or normal markdown
+# (inline backticks, literal less-than in prose, etc.). Whitelisted HTML tags
+# pass through untouched.
+
+
+# Banned tag names — conservative list that matches the Anthropic-style
+# function-call XML dialects. We also match the ``antml:`` prefix that the
+# harness itself uses for function call blocks.
+_BANNED_TAG_PATTERN = re.compile(
+    r"^<\s*/?\s*(tool_use|tool_result|tool_calls|tool_call|tool_name|"
+    r"get_district_[a-z_]*|get_floating_[a-z_]*|get_estimated_[a-z_]*|"
+    r"get_store_[a-z_]*|get_population_[a-z_]*|get_[a-z_]+_info|"
+    r"compare_districts|recommend_business|estimate_revenue|"
+    r"detect_[a-z_]+|parameter|parameters|invoke|function|function_calls|"
+    r"antml:[a-z_]+)"
+    r"(\s[^>]*)?>",
+    re.IGNORECASE,
+)
+# Whitelisted inline HTML we pass through untouched (markdown renderers accept them).
+_SAFE_TAG_PATTERN = re.compile(r"^</?(br|strong|em|b|i|u|code|sub|sup)(\s[^>]*)?/?>", re.IGNORECASE)
+_MAX_TAG_BUFFER = 256  # when pending buffer grows past this without a ``>``, flush as literal.
+
+
+class _XMLTagSanitizer:
+    """Incremental sanitizer for the respond stream.
+
+    Usage:
+        s = _XMLTagSanitizer()
+        for chunk in stream:
+            safe = s.feed(chunk)
+            if safe:
+                emit(safe)
+        tail = s.flush()
+        if tail:
+            emit(tail)
+    """
+
+    __slots__ = ("_pending", "_dropped_count")
+
+    def __init__(self) -> None:
+        self._pending: str = ""
+        self._dropped_count: int = 0
+
+    @property
+    def dropped_count(self) -> int:
+        return self._dropped_count
+
+    def feed(self, chunk: str) -> str:
+        if not chunk:
+            return ""
+        buf = self._pending + chunk
+        out: list[str] = []
+        i = 0
+        n = len(buf)
+        while i < n:
+            lt = buf.find("<", i)
+            if lt == -1:
+                out.append(buf[i:])
+                i = n
+                break
+            # Emit text up to the ``<``
+            if lt > i:
+                out.append(buf[i:lt])
+            # Look for the matching ``>``. If not yet present, stash the tail.
+            gt = buf.find(">", lt + 1)
+            if gt == -1:
+                # Unterminated tag — keep pending unless buffer is huge.
+                tail = buf[lt:]
+                if len(tail) > _MAX_TAG_BUFFER:
+                    # Probably not a tag; flush as literal.
+                    out.append(tail)
+                    self._pending = ""
+                    return "".join(out)
+                self._pending = tail
+                return "".join(out)
+            candidate = buf[lt : gt + 1]
+            if _BANNED_TAG_PATTERN.match(candidate):
+                self._dropped_count += 1
+                i = gt + 1
+                continue
+            if _SAFE_TAG_PATTERN.match(candidate):
+                out.append(candidate)
+                i = gt + 1
+                continue
+            # Unknown tag-shaped token. Conservative: treat as literal text so
+            # we don't strip legitimate math-like content (e.g. ``<3 points``).
+            out.append(candidate)
+            i = gt + 1
+
+        self._pending = ""
+        return "".join(out)
+
+    def flush(self) -> str:
+        """Flush any pending buffer at stream end — emits whatever was stashed."""
+        tail = self._pending
+        self._pending = ""
+        return tail
+
 
 # ---------------------------------------------------------------------------
 # Respond system prompt (replaces tool-selection rules from old system.py)
@@ -39,6 +150,11 @@ RESPOND_SYSTEM_PROMPT = """\
 10. benchmarks(벤치마크) 데이터가 있으면 반드시 순위/백분위를 언급하세요 (예: "발달상권 중 상위 25%").
 11. **할루시네이션 금지**: [수집된 데이터]에 없는 구체적 수치(점포 수, 매출액, 비율 등)를 절대 생성하지 마세요. 도구 데이터가 부족하면 "해당 데이터가 부족합니다"라고 안내하고, 정성적 분석으로 전환하세요. 이전 대화에서 언급된 수치를 반복 인용할 때도 "이전 분석 기준"임을 명시하세요.
 12. **업종 추천 시 전체 커버**: recommend_business 데이터에 여러 업종이 포함되면, 1순위만 다루지 말고 상위 3~5개 업종 모두 핵심 지표(매출, 폐업률, 점포 수)를 간단히 비교하세요. 사용자가 다양한 대안을 비교할 수 있어야 합니다.
+13. **출력 포맷 — 자연어 마크다운만 허용**: 응답은 반드시 자연어 한국어 + 마크다운 서식만 사용합니다. 아래 형식은 **어떤 경우에도 출력 금지**:
+    - XML/HTML 태그 (`<tool_use>`, `<tool_result>`, `<get_district_*>`, `<get_floating_*>`, `<parameter>`, `<invoke>`, `<function>`, `<*>` 등)
+    - Tool 호출 JSON (`{"name": "...", "input": {...}}`, `<tool_calls>[...]</tool_calls>`)
+    - 코드 블록으로 감싼 tool call 문법
+    수집된 데이터가 부족해서 "추가 조회가 필요하다"고 느껴지더라도, tool 호출 문법을 모방하지 마세요. 대신 "해당 데이터가 부족하여 답변할 수 없습니다" 라고 자연어로 안내하세요. (수치 출처 표기 `(tool_name)` 은 일반 괄호 표기이므로 허용됩니다.)
 
 ## 수치 해석 원칙 — 3단 해석법
 모든 주요 수치는 3단계로 해석하세요:
@@ -63,6 +179,19 @@ RESPOND_SYSTEM_PROMPT = """\
 - **건당 평균 결제액** = total_monthly_sales ÷ total_sales_count
 - **순유입** = open_count − close_count (양수면 성장, 음수면 위축)
 - **프랜차이즈 비율** = franchise_count ÷ total_stores × 100
+
+## 매출 수치 표현 규칙 (SALES_NUMBER_PRESENTATION_RULES) — 필수
+월 매출 총액을 언급할 때는 아래 3요소를 **한 문단**에 묶어 표현하세요:
+(1) 절대값 + attribution tag `(tool_name)`
+(2) 같은 상권 유형(발달/골목/관광특구/전통시장) 내 **분위 컨텍스트**. 가능하면 "p95(N억) 대비 M배" 또는 "상위 N%"
+(3) **점포당 월 매출** (= total_monthly_sales ÷ total_stores) — 사업자 체감 수치
+
+예시:
+> "월 추정 매출 1,104억원 `(get_district_summary)` 입니다. 발달상권 p95(492억) 대비 2.24배, 상위 5% 수준의 초대형 상권. 다만 점포당 월 매출은 2,679만원으로 발달상권 평균(4,600만원)의 58% 수준이어서 매출 효율은 중간권입니다."
+
+주의:
+- `estimated_sales.monthly_sales` 는 서울 열린데이터 **분기 누적(THSMON_SELNG_AMT)** 원시값입니다. Repository 가 `/3` 환산해 월 추정치로 노출하므로, 응답 본문에서는 "월 추정 매출" 로만 언급하고 "분기" / "누적" 같은 단어는 사용하지 마세요.
+- "상위 25%" 같은 3분위 라벨은 p95 초과 초고액 상권을 뭉뚱그립니다. benchmarks 에 p95/p99 정보가 있으면 "상위 5%" / "상위 1%" 같은 세밀한 라벨을 우선 쓰세요.
 
 ## 응답 구조 템플릿
 아래 구조를 따르되, 질문 유형에 맞게 유연하게 조절하세요:
@@ -118,228 +247,6 @@ _REAL_DISTRICT_SECTION = """
 # ---------------------------------------------------------------------------
 # Prompt builder
 # ---------------------------------------------------------------------------
-
-
-def _compute_hints(name: str, data: dict) -> str | None:
-    """Auto-compute derived metrics from tool results for LLM context."""
-    hints: list[str] = []
-    try:
-        if name == "get_floating_population" and "error" not in data:
-            # Peak type classification
-            peak = data.get("peak_hour", 0)
-            if 7 <= peak <= 9:
-                peak_type = "출근형"
-            elif 11 <= peak <= 13:
-                peak_type = "점심형"
-            elif 17 <= peak <= 19:
-                peak_type = "퇴근형"
-            elif 20 <= peak or peak <= 5:
-                peak_type = "야간형"
-            else:
-                peak_type = "기타"
-            hints.append(f"피크 유형: {peak_type} (피크 시간 {peak}시)")
-
-            # Day vs night ratio
-            by_hour = data.get("by_hour", [])
-            if by_hour:
-                day_pop = sum(h["population"] for h in by_hour if 6 <= h["time_slot"] <= 21)
-                night_pop = sum(h["population"] for h in by_hour if h["time_slot"] < 6 or h["time_slot"] > 21)
-                total = day_pop + night_pop
-                if total > 0:
-                    hints.append(f"주간(06~21시) 비율: {day_pop / total * 100:.1f}%")
-
-            # Gender insight
-            gender = data.get("gender", {})
-            m = gender.get("male_ratio", 50)
-            f = gender.get("female_ratio", 50)
-            diff = abs(m - f)
-            if diff >= 5:
-                dominant = "남성" if m > f else "여성"
-                hints.append(f"성별 특성: {dominant} 우세 ({dominant} {max(m, f):.1f}%, 차이 {diff:.1f}%p)")
-
-            # Top age group
-            age = data.get("age_distribution", {})
-            if age:
-                sorted_age = sorted(age.items(), key=lambda x: x[1], reverse=True)
-                top1, top2 = sorted_age[0], sorted_age[1] if len(sorted_age) > 1 else (None, None)
-                hints.append(f"주요 연령층: {top1[0]}({top1[1]:.1f}%)")
-                if top2:
-                    hints.append(f"2순위 연령층: {top2[0]}({top2[1]:.1f}%)")
-
-        elif name == "get_estimated_sales" and "error" not in data:
-            sales = data.get("total_monthly_sales", 0)
-            count = data.get("total_sales_count", 0)
-            weekday = data.get("weekday_sales", 0)
-            weekend = data.get("weekend_sales", 0)
-
-            # Per-transaction amount
-            if count > 0:
-                avg_tx = sales / count
-                hints.append(f"건당 평균 결제액: {avg_tx:,.0f}원")
-
-            # Weekend share
-            total_wk = weekday + weekend
-            if total_wk > 0:
-                wk_share = weekend / total_wk * 100
-                hints.append(f"주말 매출 비중: {wk_share:.1f}%")
-                uplift = ((weekend - weekday) / weekday * 100) if weekday > 0 else 0
-                hints.append(f"주말 매출 증감률(vs 평일): {uplift:+.1f}%")
-
-            # QoQ growth
-            quarterly = data.get("quarterly_sales", [])
-            if len(quarterly) >= 2:
-                prev = quarterly[-2].get("monthly_sales", 0)
-                curr = quarterly[-1].get("monthly_sales", 0)
-                if prev > 0:
-                    qoq = (curr - prev) / prev * 100
-                    hints.append(f"QoQ 매출 성장률: {qoq:+.1f}%")
-                if len(quarterly) >= 5:
-                    old = quarterly[-5].get("monthly_sales", 0)
-                    if old > 0:
-                        annual = (curr - old) / old * 100
-                        hints.append(f"연간(4분기) 매출 성장률: {annual:+.1f}%")
-
-            # Peak time slot
-            time_sales = data.get("time_sales", {})
-            if time_sales:
-                peak_slot = max(time_sales, key=time_sales.get)
-                peak_val = time_sales[peak_slot]
-                if sales > 0:
-                    share = peak_val / sales * 100
-                    hints.append(f"매출 피크 시간대: {peak_slot} ({share:.1f}%)")
-
-            # Dominant age
-            age_sales = data.get("age_sales", {})
-            if age_sales:
-                top_age = max(age_sales, key=age_sales.get)
-                if sales > 0:
-                    share = age_sales[top_age] / sales * 100
-                    hints.append(f"매출 최다 연령층: {top_age} ({share:.1f}%)")
-
-        elif name == "get_store_info" and "error" not in data:
-            total = data.get("total_stores", 0)
-            franchise = data.get("franchise_count", 0)
-            opened = data.get("open_count", 0)
-            closed = data.get("close_count", 0)
-
-            if total > 0:
-                fran_ratio = franchise / total * 100
-                hints.append(f"프랜차이즈 비율: {fran_ratio:.1f}%")
-
-            net = opened - closed
-            net_label = "순유입" if net >= 0 else "순유출"
-            hints.append(f"점포 {net_label}: {net:+d}개 (개업 {opened} - 폐업 {closed})")
-
-            # Top category concentration
-            cats = data.get("top_categories", [])
-            if cats and total > 0:
-                top3_stores = sum(c["store_count"] for c in cats[:3])
-                conc = top3_stores / total * 100
-                top3_names = ", ".join(c["category_name"] for c in cats[:3])
-                hints.append(f"상위 3개 업종 집중도: {conc:.1f}% ({top3_names})")
-
-        elif name == "compare_districts" and "error" not in data:
-            districts = data.get("districts", {})
-            if len(districts) >= 2:
-                items = list(districts.values())
-                # Winners by metric
-                winners = {}
-                for metric, label in [
-                    ("floating_pop", "유동인구"),
-                    ("monthly_sales", "월매출"),
-                    ("close_rate", "폐업률(낮을수록 좋음)"),
-                    ("store_count", "점포수"),
-                ]:
-                    valid = [d for d in items if metric in d and "error" not in d]
-                    if valid:
-                        if metric == "close_rate":
-                            best = min(valid, key=lambda d: d[metric])
-                        else:
-                            best = max(valid, key=lambda d: d[metric])
-                        winners[label] = best.get("district_name", best.get("district_code"))
-                if winners:
-                    hints.append("지표별 우위 상권: " + " / ".join(f"{k}: {v}" for k, v in winners.items()))
-
-                # Sales per store efficiency
-                eff_parts = []
-                for d in items:
-                    if "error" in d:
-                        continue
-                    ms = d.get("monthly_sales", 0)
-                    sc = d.get("store_count", 0)
-                    if sc > 0:
-                        per_store = ms / sc
-                        eff_parts.append(
-                            f"{d.get('district_name', d.get('district_code'))}: 점포당 {per_store / 10000:,.0f}만원"
-                        )
-                if eff_parts:
-                    hints.append("점포당 매출 효율: " + " / ".join(eff_parts))
-
-        elif name == "get_store_history" and "error" not in data:
-            bench = data.get("benchmarks", {})
-            avg_cr = bench.get("seoulAvgCloseRate")
-            if avg_cr:
-                hints.append(f"서울 평균 폐업률: {avg_cr}% ({bench.get('districtType', '전체')} 기준)")
-            # Quarterly trend summary
-            trend = data.get("quarterly_trend", [])
-            if len(trend) >= 2:
-                latest = trend[-1]
-                prev = trend[-2]
-                net_latest = latest.get("open", 0) - latest.get("close", 0)
-                net_prev = prev.get("open", 0) - prev.get("close", 0)
-                hints.append(f"최근 분기 순증감: {net_latest:+d}개 (이전 분기: {net_prev:+d}개)")
-            # Risk categories summary
-            risk_cats = data.get("risk_categories", [])
-            high_risk = [c for c in risk_cats if c.get("close_rate", 0) > 8]
-            if high_risk:
-                names = ", ".join(c.get("category", "?") for c in high_risk[:3])
-                hints.append(f"고위험 업종(폐업률 8%+): {names}")
-
-        elif name == "recommend_business" and "error" not in data:
-            recs = data.get("recommendations", [])
-            for rec in recs[:5]:
-                cr = rec.get("close_rate", 0)
-                if cr > 8:
-                    hints.append(f"{rec.get('category_name', '?')}: 폐업률 {cr}% (고위험)")
-                sc = rec.get("store_count", 0)
-                if sc > 200:
-                    hints.append(f"{rec.get('category_name', '?')}: 점포 {sc}개 (과포화 가능)")
-            # Quick comparison of top 5
-            if len(recs) >= 2:
-                comparison = []
-                for rec in recs[:5]:
-                    name_r = rec.get("category_name", "?")
-                    score = rec.get("score", 0)
-                    cr_r = rec.get("close_rate", 0)
-                    cost = rec.get("startup_cost", 0)
-                    comparison.append(f"{rec.get('rank')}위 {name_r}(점수:{score}, 폐업률:{cr_r}%, 창업비:{cost}만원)")
-                hints.append("전체 추천 요약: " + " / ".join(comparison))
-
-    except Exception:
-        pass  # Hints are best-effort; never block the response
-
-    return "\n".join(hints) if hints else None
-
-
-def _format_tool_results(tool_results: dict[str, dict]) -> str:
-    """Pretty-print tool results + derived hints for the LLM prompt."""
-    parts: list[str] = []
-    for name, data in tool_results.items():
-        section = f"### {name}\n```json\n{json.dumps(data, ensure_ascii=False, default=str)[:4000]}\n```"
-        hints = _compute_hints(name, data)
-        if hints:
-            section += f"\n\n**[파생 지표 힌트]**\n{hints}"
-        parts.append(section)
-    return "\n\n".join(parts)
-
-
-def _format_history(history: list[dict]) -> str:
-    """Format conversation history for the respond prompt."""
-    lines: list[str] = []
-    for t in history[-6:]:  # Last 3 turns (6 entries)
-        role = "사용자" if t.get("role") == "user" else "AI"
-        lines.append(f"[{role}] {t.get('content', '')}")
-    return "\n".join(lines)
 
 
 def build_respond_prompt(state: AgentState) -> str:
@@ -455,6 +362,16 @@ async def respond_node(
     ]
 
     collected_text = ""
+    sanitizer = _XMLTagSanitizer()
+
+    async def _emit(raw: str) -> None:
+        nonlocal collected_text
+        safe = sanitizer.feed(raw)
+        if not safe:
+            return
+        collected_text += safe
+        if event_queue:
+            await event_queue.put({"type": "text", "content": safe})
 
     # Bound entire streaming loop — partial text is kept on timeout so the
     # user sees what was generated before the slow tier hung.
@@ -463,22 +380,37 @@ async def respond_node(
             async for chunk in llm.astream(messages):
                 content = chunk.content
                 if isinstance(content, str) and content:
-                    collected_text += content
-                    if event_queue:
-                        await event_queue.put({"type": "text", "content": content})
+                    await _emit(content)
                 elif isinstance(content, list):
                     for block in content:
                         text = block.get("text", "") if isinstance(block, dict) else str(block)
                         if text:
-                            collected_text += text
-                            if event_queue:
-                                await event_queue.put({"type": "text", "content": text})
+                            await _emit(text)
+        # Flush any tail pending in the sanitizer (incomplete tag / trailing text).
+        tail = sanitizer.flush()
+        if tail:
+            collected_text += tail
+            if event_queue:
+                await event_queue.put({"type": "text", "content": tail})
     except TimeoutError:
         logger.warning("Respond LLM stream timed out after %.1fs", settings.llm_timeout_slow)
+        tail = sanitizer.flush()
+        if tail:
+            collected_text += tail
+            if event_queue:
+                await event_queue.put({"type": "text", "content": tail})
         notice = "\n\n(응답이 지연되어 일부만 표시합니다.)"
         collected_text += notice
         if event_queue:
             await event_queue.put({"type": "text", "content": notice})
+
+    # P0-1 telemetry: count of banned-tag fragments we had to strip.
+    if sanitizer.dropped_count:
+        logger.warning(
+            "respond_xml_leak_stripped session=%s count=%d",
+            state.get("session_id"),
+            sanitizer.dropped_count,
+        )
 
     # GAP-D post-hoc: log unattributed numeric claims. We don't mutate the
     # streamed text (the user already saw it) but we emit a structlog warning
@@ -489,14 +421,47 @@ async def respond_node(
     violations = scan_unattributed_numbers(collected_text)
     if violations:
         logger.warning(
-            "respond_hallucination_risk",
-            extra={
-                "session_id": state.get("session_id"),
-                "district_code": state.get("district_code"),
-                "user_intent": state.get("user_intent"),
-                "violation_count": len(violations),
-                "violation_samples": violations[:5],
-            },
+            "respond_hallucination_risk session=%s district=%s intent=%s count=%d samples=%s",
+            state.get("session_id"),
+            state.get("district_code"),
+            state.get("user_intent"),
+            len(violations),
+            violations[:5],
         )
 
-    return {"collected_response": collected_text}
+    # data-trust-reliability-2026-04-24 L3: numeric sanity against tool results.
+    # Detects silent entity mismatch (LLM used numbers from a different district
+    # than the user asked about) and benchmark-outlier hallucinations.
+    from server.agent.utils.numeric_sanity import evaluate_response
+
+    tool_results_post = state.get("tool_results") or {}
+    report = evaluate_response(collected_text, tool_results_post)
+    quality_flags: list[dict] = []
+    if report.flags:
+        payload = report.as_payload()
+        quality_flags = payload["flags"]
+        logger.warning(
+            "respond_numeric_sanity session=%s district=%s match_rate=%.2f flag_count=%d rules=%s",
+            state.get("session_id"),
+            state.get("district_code"),
+            payload["match_rate"],
+            len(quality_flags),
+            [f["rule"] for f in quality_flags][:5],
+        )
+        # Emit a single SSE `warning` event listing severities.
+        if event_queue and any(f["severity"] == "warning" for f in quality_flags):
+            await event_queue.put(
+                {
+                    "type": "warning",
+                    "rules": [f["rule"] for f in quality_flags if f["severity"] == "warning"],
+                    "match_rate": payload["match_rate"],
+                }
+            )
+
+    return {
+        "collected_response": collected_text,
+        "quality_flags": quality_flags,
+        "quality_match_rate": (
+            round(report.matched_numbers / report.total_numbers, 3) if report.total_numbers else 1.0
+        ),
+    }

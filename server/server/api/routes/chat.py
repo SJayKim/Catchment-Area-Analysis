@@ -167,27 +167,32 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
         session["last_district_code"] = body.district_code
         session["last_district_name"] = district_name
 
-    # Auto-detect district from message text — ONLY when no explicit code
+    # Auto-detect district from message text — ONLY when no explicit code.
+    # Always *try* detection; only fall back to session when detection misses.
+    # This fixes two bugs observed in Pass 1 sweep:
+    #   (a) "아니 건대 요약으로 해줘" — session has 강남역, we'd reuse it
+    #       instead of switching to the newly-named 건대.
+    #   (b) "성수 카페말고 추천" — blanket 말고 skip drops 성수 detection,
+    #       leaving Planner without a district → hallucination fallback.
+    # Exclusion still takes effect via the Planner rewriter's excluded_tokens
+    # (applied to the referenced-districts list).
     if not body.district_code:
-        # 먼저 세션 컨텍스트 복원 시도
-        if session.get("last_district_code"):
-            body.district_code = session["last_district_code"]
-            district_name = session.get("last_district_name", "미선택")
-            d = await da.districts.resolve_district(body.district_code)
-            if d:
-                data_quarter = d.get("quarter", "최신")
-                district_center = d.get("center")
-                district_type = d.get("type", "발달상권")
+        from server.agent.utils.rewriter import EXCLUSION_PATTERNS
 
-        # 세션에도 없으면 자동감지 — 단, 사용자가 명시적으로 배제 표현을
-        # 사용한 경우엔 skip (GAP-C: "홍대 말고 성수로 비교" 같이 첫 토큰이
-        # 제외 대상인데 auto-detect 가 그걸 집어가면 Planner 가 뒤늦게 되살려
-        # 지도가 엉뚱한 상권으로 이동하는 문제 회피).
-        if not body.district_code and not _has_exclusion_phrase(body.message):
-            detected = await da.districts.detect_district_by_name(body.message)
-            if detected:
+        excluded: set[str] = set()
+        for pat in EXCLUSION_PATTERNS:
+            for m in pat.finditer(body.message or ""):
+                tok = m.group(1)
+                if tok:
+                    excluded.add(tok)
+
+        detected = await da.districts.detect_district_by_name(body.message)
+        if detected:
+            det_name = detected.get("name", "")
+            det_in_excluded = any(e in det_name or det_name in e for e in excluded)
+            if not det_in_excluded:
                 body.district_code = detected["code"]
-                district_name = detected["name"]
+                district_name = det_name
                 d = await da.districts.resolve_district(detected["code"])
                 if d:
                     data_quarter = d.get("quarter", "최신")
@@ -195,6 +200,16 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                     district_type = d.get("type", "발달상권")
                 session["last_district_code"] = detected["code"]
                 session["last_district_name"] = detected["name"]
+
+        # Detection missed → fall back to session's last district.
+        if not body.district_code and session.get("last_district_code"):
+            body.district_code = session["last_district_code"]
+            district_name = session.get("last_district_name", "미선택")
+            d = await da.districts.resolve_district(body.district_code)
+            if d:
+                data_quarter = d.get("quarter", "최신")
+                district_center = d.get("center")
+                district_type = d.get("type", "발달상권")
 
     # Conversation history
     history: ConversationHistory = session["history"]

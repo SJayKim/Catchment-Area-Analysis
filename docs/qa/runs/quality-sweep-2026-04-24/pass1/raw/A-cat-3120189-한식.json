@@ -1,0 +1,85 @@
+{
+  "id": "A-cat-3120189-한식",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-cat-3120189-한식-65ede564",
+  "turns": [
+    {
+      "events_count": 37,
+      "text": "**강남역 한식음식점은 410개로 전체 업종 중 3위를 차지하며, 활발한 창업과 폐업이 동시에 일어나는 역동적인 시장입니다.**\n\n## 📊 한식음식점 현황 분석\n\n**점포 규모**: 총 410개 점포로 강남역 전체 164개 점포 대비 약 2.5배에 달하는 대규모 업종입니다 `(get_store_info)`. 일반의원(476개), 부동산중개업(447개)에 이어 3위를 기록하고 있습니다.\n\n**창업·폐업 동향**: \n- 신규 개업: 12개 `(get_store_info)`\n- 폐업: 14개 `(get_store_info)`\n- **순감소**: -2개 (시장이 소폭 위축)\n\n이는 한식 시장의 **높은 진입장벽과 경쟁 강도**를 보여줍니다. 많은 창업자들이 도전하지만, 동시에 경쟁에서 밀려나는 점포도 많다는 의미입니다.\n\n## 💡 한식 창업 시사점\n\n**기회 요소**:\n- 강남역 고객층의 50대 비중이 50.8%로 높아 `(get_estimated_sales)` 한식에 대한 수요 기반이 탄탄합니다\n- 점심시간(11~14시) 매출이 19.2%, 저녁시간(17~21시) 매출이 28.9%로 `(get_estimated_sales)` 식사 시간대 집중 매출 구조가 한식과 잘 맞습니다\n\n**주의 요소**:\n- 410개라는 **높은 점포 밀도**로 인한 치열한 경쟁\n- 신규 개업(12개) 대비 폐업(14개)이 많아 시장 포화 신호\n- 건당 평균 결제액 50만원대 `(get_estimated_sales)`의 고객층에 맞는 차별화된 컨셉 필요\n\n**한식 세부 업종별 리스크 분석**이나 **다른 음식 업종과의 비교 분석**이 궁금하시면 말씀해 주세요!",
+      "tools": [
+        "get_estimated_sales",
+        "get_store_info"
+      ],
+      "tool_inputs": [
+        {
+          "name": "get_estimated_sales",
+          "input": {
+            "district_code": "3120189",
+            "category_code": "CS200001"
+          }
+        },
+        {
+          "name": "get_store_info",
+          "input": {
+            "district_code": "3120189",
+            "category_code": "CS200001"
+          }
+        }
+      ],
+      "cards": [],
+      "suggestions": [
+        "CS200001 리스크 분석해줘",
+        "다른 업종은 어때?",
+        "강남역 전체 요약해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "업종별 매출 조회",
+        "업종별 점포 현황 조회"
+      ],
+      "intent": "category_analysis",
+      "trace_id": "546b8536b97f5a355ba056c2554348cf",
+      "done": true,
+      "elapsed_s": 20.03,
+      "user_message": "강남역 한식 점포 현황 알려줘"
+    }
+  ],
+  "rubric": {
+    "score": 5,
+    "max": 6,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=811 need=200"
+      ],
+      [
+        "intent_any",
+        false,
+        "got=category_analysis need-any=['category', 'summary']"
+      ],
+      [
+        "tool_names_include_any",
+        true,
+        "got=['get_estimated_sales', 'get_store_info'] need-any=['get_estimated_sales', 'get_store_info']"
+      ]
+    ]
+  },
+  "total_elapsed_s": 20.03
+}

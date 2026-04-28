@@ -1,0 +1,94 @@
+
+> marketscope-frontend@0.4.0 test:e2e:ring1
+> playwright test ring1-features --project=chromium
+
+
+Running 44 tests using 1 worker
+
+  ✓   1 [chromium] › e2e\ring1-features\f01-map-selection.spec.ts:20:7 › Ring 1 — F01 Map Selection › F01-H1 page load → map + polygon API call (24.8s)
+  ✓   2 [chromium] › e2e\ring1-features\f01-map-selection.spec.ts:55:7 › Ring 1 — F01 Map Selection › F01-H2 toolbar search 강남 → select → StatusBar (23.5s)
+  ✓   3 [chromium] › e2e\ring1-features\f01-map-selection.spec.ts:89:7 › Ring 1 — F01 Map Selection › F01-H3 store-driven select (polygon click fallback) (22.8s)
+  ✓   4 [chromium] › e2e\ring1-features\f01-map-selection.spec.ts:116:7 › Ring 1 — F01 Map Selection › F01-H5 Kakao SDK proxy path (/proxy/kakao-sdk, 4dbd598 회귀) (47.5s)
+  ✓   5 [chromium] › e2e\ring1-features\f01-map-selection.spec.ts:159:7 › Ring 1 — F01 Map Selection › F01-H4 fast switch (P0-6 stale closure regression) (23.0s)
+  ✓   6 [chromium] › e2e\ring1-features\f02-agent-chat.spec.ts:42:7 › Ring 1 — F02 Agent Chat › F02-H1 SSE flow has thinking + tool + done (41.0s)
+  ✓   7 [chromium] › e2e\ring1-features\f02-agent-chat.spec.ts:89:7 › Ring 1 — F02 Agent Chat › F02-H2 인사 → 도구 호출 없이 직접 응답 (22.7s)
+  ✓   8 [chromium] › e2e\ring1-features\f02-agent-chat.spec.ts:126:7 › Ring 1 — F02 Agent Chat › F02-H3 모호한 입력 → graceful 안내 (37.0s)
+  ✓   9 [chromium] › e2e\ring1-features\f02-agent-chat.spec.ts:155:7 › Ring 1 — F02 Agent Chat › F02-H4 컨텍스트 유지 (강남 → "홍대랑 비교") (51.3s)
+  ✓  10 [chromium] › e2e\ring1-features\f03-summary-report.spec.ts:17:7 › Ring 1 — F03 Summary Report › F03-H1 강남역 요약 → 4 라벨 + 수치 (39.5s)
+  ✓  11 [chromium] › e2e\ring1-features\f03-summary-report.spec.ts:48:7 › Ring 1 — F03 Summary Report › F03-H2 데이터 출처/기준 분기 명시 (34.5s)
+  ✓  12 [chromium] › e2e\ring1-features\f03-summary-report.spec.ts:75:7 › Ring 1 — F03 Summary Report › F03-H4 monthly_sales 키 회귀 (4dbd598 _enrich_sales 변경) (41.9s)
+  ✓  13 [chromium] › e2e\ring1-features\f03-summary-report.spec.ts:152:7 › Ring 1 — F03 Summary Report › F03-H3 후속 제안 칩 ≥1 (36.4s)
+  ✓  14 [chromium] › e2e\ring1-features\f04-category-deep.spec.ts:19:7 › Ring 1 — F04 Category Deep Analysis › F04-H1 "강남역 카페 어때?" → 카페 + 수치 응답 (35.2s)
+  ✓  15 [chromium] › e2e\ring1-features\f04-category-deep.spec.ts:47:7 › Ring 1 — F04 Category Deep Analysis › F04-E1 없는 업종 → 정중한 폴백 (38.0s)
+  ✓  16 [chromium] › e2e\ring1-features\f05-compare.spec.ts:17:7 › Ring 1 — F05 Compare › F05-H1 강남 vs 홍대 비교 (34.4s)
+  ✓  17 [chromium] › e2e\ring1-features\f05-compare.spec.ts:46:7 › Ring 1 — F05 Compare › F05-H2 강남/홍대/건대 3개 비교 (37.5s)
+  ✘  18 [chromium] › e2e\ring1-features\f05-compare.spec.ts:71:7 › Ring 1 — F05 Compare › F05-H3 비교모드 다색 하이라이트 store 상태 (4dbd598 회귀) (37.4s)
+  ✘  19 [chromium] › e2e\ring1-features\f05-compare.spec.ts:118:7 › Ring 1 — F05 Compare › F05-H4 한글 조사 처리 (과/를 회귀) (38.3s)
+  ✓  20 [chromium] › e2e\ring1-features\f05-compare.spec.ts:153:7 › Ring 1 — F05 Compare › F05-E1 4개 비교 → 안내 메시지 (37.9s)
+  ✓  21 [chromium] › e2e\ring1-features\f06-heatmap.spec.ts:15:7 › Ring 1 — F06 Heatmap › F06-H1 heatmap API at hour 9 (199ms)
+  ✓  22 [chromium] › e2e\ring1-features\f06-heatmap.spec.ts:46:7 › Ring 1 — F06 Heatmap › F06-H2 heatmap toggle UI smoke (3.6s)
+  ✓  23 [chromium] › e2e\ring1-features\f07-recommend.spec.ts:17:7 › Ring 1 — F07 Recommend › F07-H1 강남역 → 업종 추천 Top 5 (35.2s)
+  ✓  24 [chromium] › e2e\ring1-features\f08-risk.spec.ts:17:7 › Ring 1 — F08 Risk Analysis › F08-H1 "강남역 위험해?" → 리스크 카드 (34.5s)
+  ✓  25 [chromium] › e2e\ring1-features\f09-simulation.spec.ts:17:7 › Ring 1 — F09 Simulation › F09-H1 "강남역 카페 월 매출 얼마나?" (34.4s)
+  ✓  26 [chromium] › e2e\ring1-features\f10-pdf-export.spec.ts:13:7 › Ring 1 — F10 PDF Export › F10-H1 PDF 버튼 존재 + 다운로드 트리거 (37.3s)
+  ✓  27 [chromium] › e2e\ring1-features\f11-landing.spec.ts:11:7 › Ring 1 — F11 Landing › 1-F11-HERO — hero headline + CTA + Pretendard font (523ms)
+  ✓  28 [chromium] › e2e\ring1-features\f11-landing.spec.ts:33:7 › Ring 1 — F11 Landing › 1-F11-ROLE — role chip swaps hero copy + persists in localStorage (546ms)
+  ✓  29 [chromium] › e2e\ring1-features\f11-landing.spec.ts:51:7 › Ring 1 — F11 Landing › 1-F11-CHIP-PREFILL — starter chip navigates to /app with q= + role= (949ms)
+  ✓  30 [chromium] › e2e\ring1-features\f11-landing.spec.ts:70:7 › Ring 1 — F11 Landing › 1-F11-BENTO — 6 cells rendered with data-testid (518ms)
+  ✓  31 [chromium] › e2e\ring1-features\f11-landing.spec.ts:80:7 › Ring 1 — F11 Landing › 1-F11-BETA-BANNER — beta banner visible with free messaging (499ms)
+  ✓  32 [chromium] › e2e\ring1-features\f11-landing.spec.ts:88:7 › Ring 1 — F11 Landing › 1-F11-HERO-VISUAL — cross-fade frames rendered (508ms)
+  -  33 [chromium] › e2e\ring1-features\f12-feedback.spec.ts:11:7 › Ring 1 — F12 Feedback FAB › 1-F12-FAB-KAKAO — FAB opens kakao URL when NEXT_PUBLIC_KAKAO_CHANNEL_URL set
+  ✓  34 [chromium] › e2e\ring1-features\f12-feedback.spec.ts:56:7 › Ring 1 — F12 Card Thumbs (L1) › 1-F12-CARD-THUMBS — feedback row POST /api/feedback/score (914ms)
+  -  35 [chromium] › e2e\ring1-features\f12-feedback.spec.ts:108:7 › Ring 1 — F12 Free Limit Survey (L2) › 1-F12-SURVEY — 5-emoji rating pushes GA4 dataLayer event
+  -  36 [chromium] › e2e\ring1-features\m01-mock-data.spec.ts:16:7 › Ring 1 — M01 Mock Data › M01-H1 polygons GeoJSON ≥5 mock features
+  ✓  37 [chromium] › e2e\ring1-features\m01-mock-data.spec.ts:51:7 › Ring 1 — M01 Mock Data › M01-H2 districts search 강남 ≥1 hit (153ms)
+  -  38 [chromium] › e2e\ring1-features\m01-mock-data.spec.ts:80:7 › Ring 1 — M01 Mock Data › M01-H3 mock summary endpoint returns numbers
+  ✓  39 [chromium] › e2e\ring1-features\m01-mock-data.spec.ts:118:7 › Ring 1 — M01 Mock Data › M01-E1 search nonexistent → empty 200 (154ms)
+  ✓  40 [chromium] › e2e\ring1-features\preview-api.spec.ts:24:7 › Ring 1 — Preview API › 1-PREVIEW-API — response shape + role-based suggestions (182ms)
+  ✓  41 [chromium] › e2e\ring1-features\preview-api.spec.ts:50:7 › Ring 1 — Preview API › 1-PREVIEW-CACHE — second call faster (Redis hit) (127ms)
+  ✓  42 [chromium] › e2e\ring1-features\preview-api.spec.ts:65:7 › Ring 1 — Preview API › 3-NEG-PREVIEW-BAD-CODE — unknown code → 404 (105ms)
+  ✓  43 [chromium] › e2e\ring1-features\mobile-sheet-open.spec.ts:9:5 › BottomNav 챗 탭 → 시트 full 유지 (iOS 회귀) (1.4s)
+  ✓  44 [chromium] › e2e\ring1-features\mobile-sheet-open.spec.ts:37:5 › 핸들 작은 탭(deadzone) 은 시트 스냅을 바꾸지 않는다 (1.5s)
+
+
+  1) [chromium] › e2e\ring1-features\f05-compare.spec.ts:71:7 › Ring 1 — F05 Compare › F05-H3 비교모드 다색 하이라이트 store 상태 (4dbd598 회귀) 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mtrue[39m
+    Received: [31mfalse[39m
+
+      111 |       ],
+      112 |     });
+    > 113 |     expect(lenOk).toBe(true);
+          |                   ^
+      114 |     expect(modeOk).toBe(true);
+      115 |     await packet.finalize(page);
+      116 |   });
+        at C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\frontend\e2e\ring1-features\f05-compare.spec.ts:113:19
+
+    Error Context: test-results\ring1-features-f05-compare-26cf3--하이라이트-store-상태-4dbd598-회귀--chromium\error-context.md
+
+  2) [chromium] › e2e\ring1-features\f05-compare.spec.ts:118:7 › Ring 1 — F05 Compare › F05-H4 한글 조사 처리 (과/를 회귀) 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mtrue[39m
+    Received: [31mfalse[39m
+
+      147 |       checks: [{ criterion: '2 distinct + mode', met: ok, evidence: `${state.codes.length}/${state.mode}` }],
+      148 |     });
+    > 149 |     expect(ok).toBe(true);
+          |                ^
+      150 |     await packet.finalize(page);
+      151 |   });
+      152 |
+        at C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\frontend\e2e\ring1-features\f05-compare.spec.ts:149:16
+
+    Error Context: test-results\ring1-features-f05-compare-ded01-are-F05-H4-한글-조사-처리-과-를-회귀--chromium\error-context.md
+
+  2 failed
+    [chromium] › e2e\ring1-features\f05-compare.spec.ts:71:7 › Ring 1 — F05 Compare › F05-H3 비교모드 다색 하이라이트 store 상태 (4dbd598 회귀) 
+    [chromium] › e2e\ring1-features\f05-compare.spec.ts:118:7 › Ring 1 — F05 Compare › F05-H4 한글 조사 처리 (과/를 회귀) 
+  4 skipped
+  38 passed (14.4m)

@@ -28,7 +28,7 @@ server/server/
     ├── cache.py         # Memory/Redis 이중 캐시
     ├── category_resolver.py  # 한국어 키워드→category_code
     ├── circuit_breaker.py    # 3-state async CB
-    └── singleflight.py       # 중복 호출 coalescing
+    └── langfuse_tracer.py    # LLMOps L1 trace wiring (graceful degrade)
 ```
 
 ## 2. 앱 초기화 (`main.py`)
@@ -39,7 +39,7 @@ server/server/
    - `USE_MOCK=true` → `MemoryCacheService` (in-process dict)
    - `USE_MOCK=false` → `RedisCacheService` (lazy init + exponential backoff 1→2→4→60s, graceful fallback)
 2. **DataAccess (Repository Facade)**
-   - Mock factory: JSON fixture 기반 9개 repo 번들
+   - Mock factory: JSON fixture 기반 10개 repo 번들
    - Real factory: SQLAlchemy `async_sessionmaker` 주입 (pool 10 + overflow 20, pre_ping, recycle 1800s)
 3. **CategoryResolver**
    - Mock: 13종 기본값
@@ -145,11 +145,6 @@ server/server/
 - 한국어 키워드(예: `"카페"`, `"한식"`) → `category_code` 매핑
 - Mock: 13개 하드코딩
 - Real: `category_metadata(code, name, aliases[])` 로드 후 역 인덱스 구축 (싱글톤)
-
-### Singleflight (`services/singleflight.py`)
-
-- 동일 키에 대한 동시 호출을 하나로 coalescing
-- 현재는 유틸만 구현, 통합 지점은 향후 히트맵 preload 최적화에 사용 예정
 
 ## 6. 에러/로깅 규약
 

@@ -1,5 +1,8 @@
 # Intent classification patterns and tool plans.
-# Modify this file to add/change intents without touching Python code.
+# Order matters — earlier intents win when multiple patterns match.
+# Special stronger signals (리스크/폐업) must come BEFORE recommendation
+# to avoid "창업 리스크는 뭐야?" being routed to recommendation because
+# the recommendation pattern matches "창업".
 
 intents:
   greeting:
@@ -8,7 +11,7 @@ intents:
     plan: []
 
   simulation:
-    pattern: "(시뮬레이션|매출.*예상|매출.*얼마|매출.*시뮬|얼마.*벌|수익.*예상|장사.*되|매출.*전망|열면.*매출|하면.*매출)"
+    pattern: "(시뮬레이션|매출.*예상|예상.*매출|매출.*얼마|얼마.*매출|매출.*시뮬|얼마.*벌|수익.*예상|장사.*되|매출.*전망|열면.*매출|하면.*매출|차리면.*매출|차리면.*얼마|열면.*얼마)"
     plan:
       - tool: simulate_revenue
         args: { district_code: "{district_code}", category_code: "{category_code}" }
@@ -21,22 +24,22 @@ intents:
         args: { district_codes: "{referenced_districts}" }
         reason: "상권 비교 분석"
 
-  recommendation:
-    pattern: "(추천|뭐.*하면|어떤.*업종|창업|아이템)"
-    plan:
-      - tool: recommend_business
-        args: { district_code: "{district_code}" }
-        reason: "업종 추천 분석"
-
   risk:
-    pattern: "(위험|리스크|폐업|안전|생존|실패)"
+    pattern: "(위험|리스크|폐업|안전|생존|실패|안전한가)"
     plan:
       - tool: get_store_history
         args: { district_code: "{district_code}" }
         reason: "점포 이력/리스크 분석"
 
+  recommendation:
+    pattern: "(추천|뭐.*하면|어떤.*업종|창업|아이템|유망)"
+    plan:
+      - tool: recommend_business
+        args: { district_code: "{district_code}" }
+        reason: "업종 추천 분석"
+
   category_analysis:
-    pattern: "(카페|한식|커피|치킨|편의점|음식점|미용|병원|약국|중식|일식|양식|분식|주점|제과)"
+    pattern: "(카페|한식|커피|치킨|편의점|음식점|일반음식점|미용|병원|약국|중식|일식|양식|분식|주점|제과)"
     plan:
       - tool: get_estimated_sales
         args: { district_code: "{district_code}", category_code: "{category_code}" }
@@ -52,5 +55,5 @@ intents:
         args: { district_code: "{district_code}" }
         reason: "상권 종합 요약 조회"
 
-non_summary_overrides: "(비교|추천|뭐.*하면|위험|리스크|폐업|히트맵|시뮬|매출.*예상|매출.*얼마|얼마.*벌|카페|한식|커피|치킨|편의점)"
-follow_up_markers: "(그러면|그럼|그래서|그리고|또|거기|아까|방금|그\\s*상권|그\\s*지역|그곳)"
+non_summary_overrides: "(비교|추천|뭐.*하면|위험|리스크|폐업|히트맵|시뮬|매출.*예상|예상.*매출|매출.*얼마|얼마.*매출|얼마.*벌|카페|한식|커피|치킨|편의점|일반음식점)"
+follow_up_markers: "(그러면|그럼|그래서|그리고|또|거기|아까|방금|그\\s*상권|그\\s*지역|그곳|동일한?\\s*상권|위\\s*상권)"

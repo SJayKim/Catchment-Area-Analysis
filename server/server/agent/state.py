@@ -64,5 +64,18 @@ class AgentState(TypedDict):
     evaluation: EvaluationResult | None
 
     # --- response control (PAE) ---
-    response_mode: str  # "direct" | "tool_assisted"
+    response_mode: str  # "direct" | "tool_assisted" | "clarification_direct" | "greeting_direct"
     card_emissions: list[dict]
+
+    # --- clarification (PAE: set by Planner when plan would be empty) ---
+    # P0-4: when we can't build a meaningful tool plan (coref without anchor,
+    # exclusion that leaves 0 targets, comparison with <2 districts), the
+    # Planner emits a fixed clarification message and skips Respond entirely.
+    clarification_text: str
+    clarification_suggestions: list[str]
+
+    # --- quality (PAE: set by Respond post-hoc numeric_sanity) ---
+    # Post-hoc QualityReport payload. Emitted as SSE `warning` events when
+    # severity=warning and attached to `done` for observability.
+    quality_flags: list[dict]
+    quality_match_rate: float

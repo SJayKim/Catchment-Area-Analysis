@@ -1,0 +1,96 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "안"}
+
+
+
+data: {"type": "text", "content": "녕하세요! 저는 서울 상권 분석 AI 컨설턴트 **마켓스코프**입니다. 🏪"}
+
+
+
+data: {"type": "text", "content": "\n\n서울시 1,650개 상권의 공공데이터를 분석해서 창업과"}
+
+
+
+data: {"type": "text", "content": " 사업에 도움이 되는 인사이트를 제공합니다.\n\n## 🔍 제가 할 수 있는"}
+
+
+
+data: {"type": "text", "content": " 분석들:\n\n### **상권 기본 분석**\n- 유동인구,"}
+
+
+
+data: {"type": "text", "content": " 매출, 점포 현황 종합 분석\n- 고객층 특성 (연"}
+
+
+
+data: {"type": "text", "content": "령대, 성별, 시간대별 패턴)\n- 상권 성장"}
+
+
+
+data: {"type": "text", "content": "세와 안정성 평가\n\n### **업종별 심층 분석**"}
+
+
+
+data: {"type": "text", "content": " \n- 특정 업종의 매출과 경쟁 현황\n- 폐업률과 신"}
+
+
+
+data: {"type": "text", "content": "규 창업 트렌드\n- 프랜차이즈 vs 개인사업자 비중\n\n### **상권 비"}
+
+
+
+data: {"type": "text", "content": "교 분석**\n- 2~3개 상권 간 매출, 유동인구, 임대료 비교\n- "}
+
+
+
+data: {"type": "text", "content": "각 상권별 장단점과 적합한 업종 추천\n\n### **창업 "}
+
+
+
+data: {"type": "text", "content": "컨설팅**\n- 희망 업종에 최적화된 상권 추천\n- 리스크 요"}
+
+
+
+data: {"type": "text", "content": "소와 기회 포인트 분석\n- 실질적인 사"}
+
+
+
+data: {"type": "text", "content": "업 전략 제안\n\n---\n\n**어떤 상권이나 업종에 대해 "}
+
+
+
+data: {"type": "text", "content": "궁금한 점이 있으신가요?**\n예를 들어:\n- \"홍대 "}
+
+
+
+data: {"type": "text", "content": "상권 분석해줘\"\n- \"강남역과 신촌 비교해줘\" \n- \"카페 창"}
+
+
+
+data: {"type": "text", "content": "업하기 좋은 상권 추천해줘\"\n\n구체적으로 말씀해 주시면 데"}
+
+
+
+data: {"type": "text", "content": "이터 기반으로 자세히 분석해드리겠습니다!"}
+
+
+
+data: {"type": "text", "content": " 📊"}
+
+
+
+data: {"type": "suggestion", "questions": ["여기에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+
+
+data: {"type": "done", "trace_id": "c67818ebaf4138ca04afc672b98589f4"}
+
+
+

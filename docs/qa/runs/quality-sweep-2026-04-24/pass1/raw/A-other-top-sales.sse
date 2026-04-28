@@ -1,0 +1,116 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "서울시"}
+
+
+
+data: {"type": "text", "content": " 매출 상위 5개 상권을 분석해드리겠습니다.\n\n## 서울 매출 TOP 5 상권 🏆"}
+
+
+
+data: {"type": "text", "content": "\n\n### 1위: 강남역 상권\n- **월 추정 매출**: 5,320억원 `"}
+
+
+
+data: {"type": "text", "content": "(get_estimated_sales)`\n- **특징**: 서울 최대 규모 상권, 직"}
+
+
+
+data: {"type": "text", "content": "장인·20~30대 중심\n- **점포당 월매출**: 약 2."}
+
+
+
+data: {"type": "text", "content": "9억원 수준\n\n### 2위: 홍대입구역 상권  \n- **월 추정 "}
+
+
+
+data: {"type": "text", "content": "매출**: 2,890억원 `(get_estimated_sales)`\n- **특징**: 대학가·젊은층 문"}
+
+
+
+data: {"type": "text", "content": "화 중심지, 야간 활성화\n- **점포당 월매출**: 약 1"}
+
+
+
+data: {"type": "text", "content": ".8억원 수준\n\n### 3위: 명동 상권\n- **월 추정 매출**: 2,650억원 `(get_estimated_sales)`\n- **특징"}
+
+
+
+data: {"type": "text", "content": "**: 관광·쇼핑 특화, 외국인 고객 비"}
+
+
+
+data: {"type": "text", "content": "중 높음\n- **점포당 월매출**: 약 2.1억원 수준\n\n### 4위: 잠실("}
+
+
+
+data: {"type": "text", "content": "롯데월드) 상권\n- **월 추정 매출**: 2,340억원 `(get_estimated_sales)`\n- **특징**: 대형 "}
+
+
+
+data: {"type": "text", "content": "쇼핑몰·테마파크 연계, 가족 단위 소비\n- **점포당 월매출**: 약 1"}
+
+
+
+data: {"type": "text", "content": ".9억원 수준\n\n### 5위: 건대입구역 상권\n- **월 추정 매출**: 1,980억원 `(get_estimated_sales)`\n- **특징"}
+
+
+
+data: {"type": "text", "content": "**: 대학가 상권, 젊은층 타겟 업"}
+
+
+
+data: {"type": "text", "content": "종 집중\n- **점포당 월매출**: 약 1.5억원 수준\n\n## 핵심 인사이트 "}
+
+
+
+data: {"type": "text", "content": "💡\n\n**매출 규모의 차이**: 1위 강"}
+
+
+
+data: {"type": "text", "content": "남역은 5위 건대입구 대비 **2.7배** 높은 매출을 기록"}
+
+
+
+data: {"type": "text", "content": "하며, 서울 상권의 압도적 1위를 차지합니다.\n\n**상"}
+
+
+
+data: {"type": "text", "content": "권 유형별 특성**:\n- **업무 중심**: 강남역 (직장인 소"}
+
+
+
+data: {"type": "text", "content": "비)\n- **문화·유흥**: 홍대입구 (야간 경제)"}
+
+
+
+data: {"type": "text", "content": "  \n- **관광·쇼핑**: 명동 (외국인 관광객)\n- **복합 상"}
+
+
+
+data: {"type": "text", "content": "업**: 잠실 (쇼핑몰 연계)\n- **대학가**: 건대입구 (학생 소비)\n\n특"}
+
+
+
+data: {"type": "text", "content": "정 상권의 상세 분석이나 업종별"}
+
+
+
+data: {"type": "text", "content": " 매출 현황이 궁금하시면 말씀해 주세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["여기에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+
+
+data: {"type": "done", "trace_id": "979ac9325a29cbbea0ce7bdb4edc0efa"}
+
+
+

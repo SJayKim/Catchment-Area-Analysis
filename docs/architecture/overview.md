@@ -55,8 +55,8 @@
 ## 4. 핵심 아키텍처 원칙
 
 - **Mock/Real 전환**: `USE_MOCK` 플래그. Mock은 DB/Redis 없이 FastAPI 단독 기동 (JSON fixture).
-- **Repository 패턴**: `repositories/protocols.py` 에 9개 인터페이스 정의 → `mock/` · `real/` 두 구현체.
-- **Tool Registry**: Agent Tool 11종이 `@register_tool` 데코레이터로 자체 등록 (`agent/tools/registry.py`).
+- **Repository 패턴**: `repositories/protocols.py` 에 10개 인터페이스 정의 → `mock/` · `real/` 두 구현체.
+- **Tool Registry**: Agent Tool 9종이 `@register_tool` 데코레이터로 자체 등록 (`agent/tools/registry.py`).
 - **SSE 스트리밍**: thinking → plan → tool → tool_end → card → text → suggestion → done 순차 이벤트.
 - **Map–Chat 양방향 동기화**: Zustand 3 store (chat/district/map) + `useMapSync` 훅.
 - **Circuit Breaker + Singleflight**: LLM/DB 장애 시 degraded 동작, 캐시 미스 시 중복 호출 방지.
@@ -68,7 +68,7 @@
 |---|---|
 | [backend.md](backend.md) | FastAPI 앱 구성, API 라우트, 서비스(cache/circuit_breaker/category_resolver), 미들웨어, 에러 규약 |
 | [frontend.md](frontend.md) | App Router, 레이아웃·맵·챗 컴포넌트, Zustand 스토어, 훅, SSE 파서 |
-| [agent.md](agent.md) | Planner-Actor-Evaluator 그래프, Tool 11종, 프롬프트 구조, 세션 히스토리 |
+| [agent.md](agent.md) | Planner-Actor-Evaluator 그래프, Tool 9종, 프롬프트 구조, 세션 히스토리 |
 | [data.md](data.md) | DB 스키마, PostGIS 인덱스, Alembic 마이그레이션, ETL 파이프라인, 캐시 키 규약 |
 | [deployment.md](deployment.md) | Docker Compose (dev / prod), Nginx 리버스프록시, 환경변수, 운영 플래그 |
 
@@ -89,5 +89,5 @@
 - Mock 상권: 5개 (강남역 / 홍대 / 건대 / 명동 / 서울역)
 - Real 상권: 1,650개 (서울 전체)
 - ETL 적재: floating_population 9,888 / estimated_sales 21,333 / stores 75,985 / resident_population 39,288 (2025Q4 기준)
-- Agent Tool: 11종 / Card 타입: 5종 / SSE 이벤트: 9종
+- Agent Tool: 9종 (등록 기준; `get_district_benchmarks` 는 내부 헬퍼) / Card 타입: 5종 / SSE 이벤트: 9종
 - E2E: Ring 0~3 총 45 시나리오 + 최신 회귀 15 시나리오

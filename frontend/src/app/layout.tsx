@@ -3,12 +3,12 @@ import { cookies } from 'next/headers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'MarketScope AI — 서울 1,650개 상권 AI 분석',
+  title: 'MarketScope AI — 서울 1,650개 상권 분석',
   description:
-    '지도 한 번 클릭으로 유동인구·매출·업종을 3초 안에 요약. 베타 기간 무료.',
+    '지도 위 상권을 선택하면 유동인구·매출·업종 구성을 한 장의 리포트로 확인합니다. 베타 기간 무료.',
   openGraph: {
     title: 'MarketScope AI',
-    description: '서울 1,650개 상권을 AI가 읽어드립니다.',
+    description: '서울 1,650개 상권, 데이터로 읽다.',
     type: 'website',
     locale: 'ko_KR',
   },

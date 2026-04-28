@@ -1,0 +1,173 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.51398695310821, "lng": 127.1012733877303, "zoom": 4}, "district_code": "3120227", "district_name": "잠실역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120227"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "잠실역", "districtType": "발달상권", "summary": "하루 평균 유동인구 111만 3천명, 월 추정 매출 1073억 2천만원의 안정적인 발달상권입니다.", "monthlySales": 107329997143, "floatingPopulation": {"dailyAvg": 1113657, "peakHour": 6, "byHour": [{"hour": 0, "pop": 128055}, {"hour": 6, "pop": 228294}, {"hour": 11, "pop": 210898}, {"hour": 14, "pop": 226020}, {"hour": 17, "pop": 226670}, {"hour": 21, "pop": 93720}]}, "topCategories": [{"name": "일반의류", "count": 596}, {"name": "한식음식점", "count": 136}, {"name": "커피-음료", "count": 87}, {"name": "신발", "count": 86}, {"name": "화장품", "count": 82}], "status": "stable", "closeRate": {"current": 2.4, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 53.1%, 차이 6.2%p)", "ageInsight": "40대 (21.8%)", "perStoreSales": 47681029, "franchiseRatio": 12.7, "weekendUplift": -46.7}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "상위 50%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "잠실역은 하루 111만명이 몰리는 서울 최"}
+
+data: {"type": "text", "content": "상위권 발달상권으로, 쇼핑몰 중심의 안정적인 상"}
+
+data: {"type": "text", "content": "업지역입니다.**\n\n## 📊 핵심 지표 분석\n\n**유동인구**:"}
+
+data: {"type": "text", "content": " 하루 평균 111만 3천명 `(get_district_summary)`으로, 발달상권 중"}
+
+data: {"type": "text", "content": "에서도 **상위 25%**에 속하는 초대형 상권입니다"}
+
+data: {"type": "text", "content": ". 오후 6시에 22만 8천명으로 피크를 기록하며, "}
+
+data: {"type": "text", "content": "퇴근 시간대와 오후 쇼핑 시간대가 주요 집"}
+
+data: {"type": "text", "content": "객 구간입니다.\n\n**매출 규모**: 월 추정 매출 1,073억원"}
+
+data: {"type": "text", "content": " `(get_district_summary)`으로 발달상권 중 **상위 25%** 수준입니다. 점포당 월 매"}
+
+data: {"type": "text", "content": "출은 4,768만원으로 서울 평균(4,600만원) 대비 약간 높"}
+
+data: {"type": "text", "content": "은 편입니다.\n\n**업종 구성**: 일반의류(596개), 한식음식점(136개), 커피·음료(87개)"}
+
+data: {"type": "text", "content": " 순으로 **패션·쇼핑몰 중심** 상권입니다. "}
+
+data: {"type": "text", "content": "롯데월드몰과 롯데백화점의 영향으로 의류·"}
+
+data: {"type": "text", "content": "신발·화장품 등 쇼핑 업종이 압도적으로 많습니다.\n\n## 🎯 상"}
+
+data: {"type": "text", "content": "권 특성\n\n**고객층**: 여성 비중이 53.1%로 남성보"}
+
+data: {"type": "text", "content": "다 6.2%p 높으며, 40대(21.8%)가 가장 많습니다 `(get_district_summary)"}
+
+data: {"type": "text", "content": "`. 쇼핑몰 특성상 여성 고객과 중장년층 "}
+
+data: {"type": "text", "content": "선호도가 높습니다.\n\n**운영 안정성**: 폐업률 2"}
+
+data: {"type": "text", "content": ".4% `(get_district_summary)`로 서울 평균(6.5%) 대비 매우 "}
+
+data: {"type": "text", "content": "낮아 **상위 25% 우수** 수준입니다. 대"}
+
+data: {"type": "text", "content": "형 쇼핑몰 내 점포들의 안정적"}
+
+data: {"type": "text", "content": " 운영이 주요 요인입니다.\n\n**프랜차이즈 비중**: 12.7% `(get_district_summary)`로 "}
+
+data: {"type": "text", "content": "낮은 편이어서, 개인 창업자에게도 진입 기"}
+
+data: {"type": "text", "content": "회가 있습니다.\n\n## ⚖️ 기회와 리스크\n\n**✅ 기회 "}
+
+data: {"type": "text", "content": "요소**:\n- 서울 최상위권 유동인구와 매출 규모\n- 매우"}
+
+data: {"type": "text", "content": " 낮은 폐업률로 안정적 운영 환경\n- 대형 쇼핑몰 집객 효과로"}
+
+data: {"type": "text", "content": " 지속적 고객 유입\n\n**⚠️ 주의 사항**:\n- 주말 매출이 평"}
+
+data: {"type": "text", "content": "일 대비 46.7% 낮아 평일 의존도 높음 "}
+
+data: {"type": "text", "content": "`(get_district_summary)`\n- 의류 업종 포화 상태 "}
+
+data: {"type": "text", "content": "(596개 점포)\n- 대형 쇼핑몰 임대료 부담 예"}
+
+data: {"type": "text", "content": "상\n\n---\n*추정 매출은 카드 매출 기반"}
+
+data: {"type": "text", "content": "이며 현금 매출은 미포함입니다. 실제와"}
+
+data: {"type": "text", "content": " 다를 수 있습니다.*\n\n궁금한 업종이나 다른 상권과의 비교 분석이 필요하시면 말"}
+
+data: {"type": "text", "content": "씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["잠실역에서 뭐하면 좋을까?", "잠실역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done"}
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.51398695310821, "lng": 127.1012733877303, "zoom": 4}, "district_code": "3120227", "district_name": "잠실역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120227"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "잠실역", "districtType": "발달상권", "summary": "하루 평균 유동인구 111만 3천명, 월 추정 매출 1073억 2천만원의 안정적인 발달상권입니다.", "monthlySales": 107329997143, "floatingPopulation": {"dailyAvg": 1113657, "peakHour": 6, "byHour": [{"hour": 0, "pop": 128055}, {"hour": 6, "pop": 228294}, {"hour": 11, "pop": 210898}, {"hour": 14, "pop": 226020}, {"hour": 17, "pop": 226670}, {"hour": 21, "pop": 93720}]}, "topCategories": [{"name": "일반의류", "count": 596}, {"name": "한식음식점", "count": 136}, {"name": "커피-음료", "count": 87}, {"name": "신발", "count": 86}, {"name": "화장품", "count": 82}], "status": "stable", "closeRate": {"current": 2.4, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 53.1%, 차이 6.2%p)", "ageInsight": "40대 (21.8%)", "perStoreSales": 47681029, "franchiseRatio": 12.7, "weekendUplift": -46.7}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "상위 50%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "##"}
+
+data: {"type": "text", "content": " 잠실역 시간대별 유동인구 분석\n\n**잠실역은 오후 6시(퇴근시간)"}
+
+data: {"type": "text", "content": "에 22만 8천명으로 최고점을 찍는 전형적인 직장인 +"}
+
+data: {"type": "text", "content": " 쇼핑 중심 상권입니다.**\n\n### 📈 시간대별 유동인구 현황 "}
+
+data: {"type": "text", "content": "`(get_district_summary)`\n\n| 시간대 | 유동인구 | 특징 |\n|--------|----------|------|\n| **"}
+
+data: {"type": "text", "content": "오전 6시** | **22만 8천명** | 🏆 **최고 피크** (출"}
+
+data: {"type": "text", "content": "근 + 아침 쇼핑) |\n| **오후 2시** | 22"}
+
+data: {"type": "text", "content": "만 6천명 | 점심 이후 쇼핑 타임 |\n| **오후 5"}
+
+data: {"type": "text", "content": "시** | 22만 7천명 | 퇴근 전 쇼핑 + 저녁 준비 |\n| **오전 11"}
+
+data: {"type": "text", "content": "시** | 21만 1천명 | 오전 쇼핑 시간대 |\n| **"}
+
+data: {"type": "text", "content": "밤 9시** | 9만 4천명 | 저녁 식사 후 여가 시간 |\n|"}
+
+data: {"type": "text", "content": " **자정** | 12만 8천명 | 심야 유동인구 (24시간 "}
+
+data: {"type": "text", "content": "상권) |\n\n### 💡 시간대별 인사이트\n\n**🔥"}
+
+data: {"type": "text", "content": " 골든타임 (오후 2~6시)**\n- 22"}
+
+data: {"type": "text", "content": "만명대를 지속 유지하는 **4"}
+
+data: {"type": "text", "content": "시간 연속 피크존**\n- 롯데월드몰, 백"}
+
+data: {"type": "text", "content": "화점 쇼핑객 + 퇴근길 직장인이 "}
+
+data: {"type": "text", "content": "겹치는 구간\n- **카페, 패스트푸드, 테이크아웃** 업"}
+
+data: {"type": "text", "content": "종에 최적\n\n**⚡ 러시아"}
+
+data: {"type": "text", "content": "워 (오전 6시)**\n- 하루 중 가장 높은 22만 "}
+
+data: {"type": "text", "content": "8천명\n- 출근길 + 아침 쇼핑 수요가"}
+
+data: {"type": "text", "content": " 동시 발생\n- **조식, 커피, 편의점** 수"}
+
+data: {"type": "text", "content": "요 집중\n\n**🌙 심야 특징**\n- 자정에"}
+
+data: {"type": "text", "content": "도 12만 8천명 유지 (일반 상권 대비 높"}
+
+data: {"type": "text", "content": "음)\n- 24시간 쇼핑몰과 유흥시설의 영"}
+
+data: {"type": "text", "content": "향\n- **심야 배달, 편의점** 기"}
+
+data: {"type": "text", "content": "회 존재\n\n**주목할 점**: 일반적인"}
+
+data: {"type": "text", "content": " 상권과 달리 **오전 6시가 최고점**인 독"}
+
+data: {"type": "text", "content": "특한 패턴을 보입니다. 이는 지하철 환승역 + 대"}
+
+data: {"type": "text", "content": "형 쇼핑몰이 결합된 잠실역만의 특징으로, 출"}
+
+data: {"type": "text", "content": "근길과 쇼핑이 동시에 이뤄지기 때문입니다.\n\n특"}
+
+data: {"type": "text", "content": "정 시간대 타겟 업종이나 다른 상권과의 시"}
+
+data: {"type": "text", "content": "간대 비교가 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["잠실역에서 뭐하면 좋을까?", "잠실역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done"}
+

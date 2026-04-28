@@ -1,0 +1,144 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "simulation", "steps": ["매출 시뮬레이션"]}
+
+
+
+data: {"type": "tool", "name": "simulate_revenue", "input": {"district_code": "3120189", "category_code": null}, "progress_label": "매출 시뮬레이션 중..."}
+
+
+
+data: {"type": "tool_end", "name": "simulate_revenue", "done_label": "매출 시뮬레이션 완료"}
+
+
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+
+
+data: {"type": "plan", "intent": "simulation", "steps": ["매출 시뮬레이션"]}
+
+
+
+data: {"type": "tool", "name": "simulate_revenue", "input": {"district_code": "3120189", "category_code": null}, "progress_label": "매출 시뮬레이션 중..."}
+
+
+
+data: {"type": "tool_end", "name": "simulate_revenue", "done_label": "매출 시뮬레이션 완료"}
+
+
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+
+
+data: {"type": "plan", "intent": "simulation", "steps": ["매출 시뮬레이션"]}
+
+
+
+data: {"type": "tool", "name": "simulate_revenue", "input": {"district_code": "3120189", "category_code": null}, "progress_label": "매출 시뮬레이션 중..."}
+
+
+
+data: {"type": "tool_end", "name": "simulate_revenue", "done_label": "매출 시뮬레이션 완료"}
+
+
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "죄송합니다. 현재 제공되는 데이터는 2024년 4분기까"}
+
+
+
+data: {"type": "text", "content": "지의 실제 매출 데이터이며, **2030년까지의 장기 매출 예측**"}
+
+
+
+data: {"type": "text", "content": "은 지원하지 않습니다.\n\n## 현재 가능한 분석\n\n**"}
+
+
+
+data: {"type": "text", "content": "마켓스코프**에서 제공하는 매출 관"}
+
+
+
+data: {"type": "text", "content": "련 분석은 다음과 같습니다:\n\n### 📊 **현재 매출 현황 "}
+
+
+
+data: {"type": "text", "content": "분석**\n- 강남역 상권의 최신 분"}
+
+
+
+data: {"type": "text", "content": "기별 매출 규모\n- 업종별 매출 분포 및 성장률\n- 점포당 평"}
+
+
+
+data: {"type": "text", "content": "균 매출 효율성\n\n### 📈 **단기 트렌드 분석**\n- 최"}
+
+
+
+data: {"type": "text", "content": "근 4개 분기 매출 변화 추이\n- 계절별 매출 패턴 "}
+
+
+
+data: {"type": "text", "content": "분석\n- 전년 동기 대비 성장률\n\n### 🎯 **업종별 매출 시뮬레이션**\n-"}
+
+
+
+data: {"type": "text", "content": " 특정 업종(카페, 한식, 치킨 등)의 예상 매출\n- 강"}
+
+
+
+data: {"type": "text", "content": "남역에서 해당 업종의 경쟁력 분석\n\n## 추천 분석 방향\n\n1. **\""}
+
+
+
+data: {"type": "text", "content": "강남역 전체 매출 현황 분석해줘\"** - 현재 상"}
+
+
+
+data: {"type": "text", "content": "권 매출 규모 파악\n2. **\"강남역에서 카페 창업하"}
+
+
+
+data: {"type": "text", "content": "면 매출 얼마나 될까?\"** - 특정 업종 매출 예측\n3. **\"강남역 매"}
+
+
+
+data: {"type": "text", "content": "출 트렌드 어때?\"** - 최근 성장세 분석\n\n어떤 분석을"}
+
+
+
+data: {"type": "text", "content": " 원하시는지 구체적으로 말씀해 주시면, 실제 데이터를 기반으로 정확한 인"}
+
+
+
+: ping - 2026-04-24 03:01:58.936396+00:00
+
+
+
+data: {"type": "text", "content": "사이트를 제공해드리겠습니다!"}
+
+
+
+data: {"type": "suggestion", "questions": ["강남역에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+
+
+data: {"type": "done", "trace_id": "792a42c95bfba60ccd47f4ee4d66972a"}
+
+
+

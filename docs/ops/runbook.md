@@ -256,3 +256,44 @@ curl -s http://localhost/health | python -m json.tool   # Health check via nginx
 curl -s http://localhost:8000/health                     # Direct backend health
 docker stats --no-stream                                 # Resource usage snapshot
 ```
+
+### Langfuse (LLMOps L1)
+
+**Tracing sanity**
+```bash
+# 1) Container SDK version
+docker exec catchment-area-analysis-backend-1 pip show langfuse | grep Version   # Must be 3.x
+docker exec catchment-area-analysis-backend-1 python -c "from langfuse.langchain import CallbackHandler; from langfuse.types import TraceContext; print('ok')"
+
+# 2) /api/chat must return done.trace_id
+curl -s -X POST http://localhost:8000/api/chat -H "Content-Type: application/json" -d '{"message":"강남역 요약"}' --max-time 90 | grep -o '"trace_id":"[^"]*"'
+
+# 3) Backend log must carry real hex
+docker logs catchment-area-analysis-backend-1 --tail 100 | grep agent_done | tail -3
+# → trace_id=- 이면 tracing OFF. docs/plan/infra/langfuse-cost-coverage-fix-2026-04-24.md 참조.
+```
+
+**Langfuse Cloud — Models pricing 체크리스트**
+(집계된 토큰이 있어도 Models 테이블에 모델 가격이 없으면 `cost = 0`. Anthropic 대시보드와 대조 전 필수 확인.)
+
+| 모델 ID | 역할 | 확인 위치 |
+|---|---|---|
+| `claude-sonnet-4-20250514` | Planner / Respond (anthropic mode) | Langfuse Cloud → Settings → Models |
+| `claude-opus-4-*` | Fallback / 실험 | 동일 |
+| `gemini-2.5-pro` | Respond (gemini mode) | 동일 |
+| `gemini-2.5-flash` | Planner / Evaluator (gemini mode) | 동일 |
+
+**등록 방법** (Langfuse Cloud UI):
+1. Organization → Settings → Models → `+ Add model`
+2. Match pattern: 모델 ID 의 prefix (예: `claude-sonnet-4-`)
+3. Tokenizer: `openai` 기본 (Anthropic/Gemini 는 근사치, 정확 cost 는 provider 청구 기반)
+4. Input/Output price per 1K tokens: Anthropic pricing page 에서 당시 단가 입력
+5. 저장 후 신규 trace 부터 cost 계산 반영. 과거 trace 는 자동 backfill 되지 않음.
+
+**Eval harness preflight**
+```bash
+# 기본 REQUIRE_TRACE=1 — tracing OFF 상태면 자동 abort
+python3 scripts/eval/run_quality_sweep.py            # preflight 후 진행
+python3 scripts/eval/trust_scenarios.py              # preflight 후 진행
+REQUIRE_TRACE=0 python3 scripts/eval/...             # 강제 bypass (load-test 전용)
+```

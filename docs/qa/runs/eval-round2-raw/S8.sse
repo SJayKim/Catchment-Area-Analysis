@@ -1,0 +1,78 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "성"}
+
+data: {"type": "text", "content": "수역과 건대입구 상권을 비교 분석해드리겠습니다.\n\n<get_district"}
+
+data: {"type": "text", "content": "_analysis>\n{\"district_name\": \"성수역\"}\n</get_district_analysis>\n\n<get_district_analysis>\n{\"district_name\": \"건"}
+
+data: {"type": "text", "content": "대입구역\"}\n</get_district_analysis>\n\n**성수역은 트렌디한 젊은층 중심 "}
+
+data: {"type": "text", "content": "상권, 건대입구는 대학가 특성이 강한 활"}
+
+data: {"type": "text", "content": "발한 상권입니다.**\n\n## 유동인구 비교\n- **성수역**: 하루"}
+
+data: {"type": "text", "content": " 평균 4만 1천명 (20대 31.8%, 30대 29.4"}
+
+data: {"type": "text", "content": "%)\n- **건대입구**: 하루 평균 6만 8천명 (20대 35.2%, 30대 26.1"}
+
+data: {"type": "text", "content": "%)\n\n건대입구가 성수역 대비 **66% 더 많"}
+
+data: {"type": "text", "content": "은** 유동인구를 보유하고 있으며, 두 상권 모두 20~30대가 60"}
+
+data: {"type": "text", "content": "% 이상을 차지하는 젊은층 중심 상권입니다.\n\n## 매출 규"}
+
+data: {"type": "text", "content": "모 비교\n- **성수역**: 월 추정 매출 168억원, 점포당 월 2,100만원\n- **건대입구**: "}
+
+data: {"type": "text", "content": "월 추정 매출 312억원, 점포당 월 2,800만원\n\n건대입구가 **총 매출은"}
+
+data: {"type": "text", "content": " 1.9배, 점포당 매출은 1.3배** 높"}
+
+data: {"type": "text", "content": "습니다. 건당 평균 결제액은 성수역 3.2만원,"}
+
+data: {"type": "text", "content": " 건대입구 2.8만원으로 성수역이 약간 높은 객단가를 보입니다.\n\n## 점포 현"}
+
+data: {"type": "text", "content": "황 및 경쟁도\n- **성수역**: 총 798개 점포, 프랜차이즈 비율 18"}
+
+data: {"type": "text", "content": ".9%\n- **건대입구**: 총 1,115개 점포, 프랜차이즈 비율 25.7%\n\n성수역은"}
+
+data: {"type": "text", "content": " **개인 창업 비중이 높고**(81.1%), 건대입구는 프랜차이즈 경쟁이 더"}
+
+data: {"type": "text", "content": " 치열합니다.\n\n## 성장성 및 안정성\n- **성수역**: "}
+
+data: {"type": "text", "content": "폐업률 7.2%, 전분기 대비 매출 +2.1%\n- **건대입구**: 폐업률"}
+
+data: {"type": "text", "content": " 6.8%, 전분기 대비 매출 +1.8%\n\n두 상권 모두 안정적인 성장세를 보이며"}
+
+data: {"type": "text", "content": ", 건대입구가 약간 더 안정적입니다.\n\n## 각 상권 적합 시나리오\n**"}
+
+data: {"type": "text", "content": "성수역 추천**: \n- 트렌디한 카페, 독특"}
+
+data: {"type": "text", "content": "한 컨셉의 음식점\n- 개성 있는 개인 창"}
+
+data: {"type": "text", "content": "업 선호\n- 높은 객단가 업종 (브런치, 디저트 등)\n\n**건대입구"}
+
+data: {"type": "text", "content": " 추천**:\n- 대학생 타겟 합리적 가격대 업종\n- 높"}
+
+data: {"type": "text", "content": "은 유동인구 활용 가능한 업종\n- 야식, 치"}
+
+data: {"type": "text", "content": "킨, 분식 등 대학가 특화 업종\n\n## 종합 판단\n**"}
+
+data: {"type": "text", "content": "매출 규모와 안정성**을 중시한"}
+
+data: {"type": "text", "content": "다면 **건대입구**, **개성과 트"}
+
+data: {"type": "text", "content": "렌드**를 중시한다면 **성수역**을 추천합니다. 건대입구는 검"}
+
+data: {"type": "text", "content": "증된 대학가 상권이고, 성수역은 성장 잠재력이 높은 신흥 트"}
+
+data: {"type": "text", "content": "렌드 상권입니다.\n\n특정 업종에 대한 추천이나 더 자세한 분석이 필"}
+
+data: {"type": "text", "content": "요하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["여기에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done", "trace_id": "a092b364c1164e7c2192656892dec449"}
+

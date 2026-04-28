@@ -1,0 +1,60 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120189", "category_code": "음식점"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120189", "category_code": "음식점"}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "강남역 상권의 매출 데이터가 집계되지"}
+
+data: {"type": "text", "content": " 않아 정확한 음식점 현황을 파악하기 어려운 상황입니다.**\n\n현"}
+
+data: {"type": "text", "content": "재 수집된 데이터를 보면:\n- **총 매출**: 0원 `"}
+
+data: {"type": "text", "content": "(get_estimated_sales)` - 데이터 미집계 상태\n- **한식음식점**: 410"}
+
+data: {"type": "text", "content": "개 점포 `(get_store_info)`로 업종별 1위를"}
+
+data: {"type": "text", "content": " 차지하고 있어, 음식점 밀도는"}
+
+data: {"type": "text", "content": " 높은 편으로 보입니다\n\n하지만 매출 규모,"}
+
+data: {"type": "text", "content": " 고객 연령층, 시간대별 이용 패턴 등 핵심 데이터가 부족하"}
+
+data: {"type": "text", "content": "여 **맛집 밀도나 음식점 성과**를 정확히 분"}
+
+data: {"type": "text", "content": "석할 수 없습니다.\n\n**대안 분석**:\n-"}
+
+data: {"type": "text", "content": " 한식음식점이 410개로 가장 많다는 점에서 "}
+
+data: {"type": "text", "content": "음식점 경쟁은 치열할 것으로 예상됩니다\n- 신규 개"}
+
+data: {"type": "text", "content": "업 12개 vs 폐업 14개로 순유입이 -"}
+
+data: {"type": "text", "content": "2개 `(get_store_info)`인 점은 주"}
+
+data: {"type": "text", "content": "의가 필요합니다\n\n정확한 음식점 분석을 위해서는 **매출 데이터가 집계된"}
+
+data: {"type": "text", "content": " 후 다시 확인**하시거나, 다른 강남 지"}
+
+data: {"type": "text", "content": "역 상권과 비교 분석을 해보시는 것을 추천드립니다!"}
+
+data: {"type": "text", "content": " 🍕\n\n**다른 업종은 어때?** 또는 **강남역 전체 요약해줘**"}
+
+data: {"type": "text", "content": " 같은 분석도 도움이 될 것 같아요!"}
+
+data: {"type": "suggestion", "questions": ["음식점 리스크 분석해줘", "다른 업종은 어때?", "강남역 전체 요약해줘"]}
+
+data: {"type": "done"}
+

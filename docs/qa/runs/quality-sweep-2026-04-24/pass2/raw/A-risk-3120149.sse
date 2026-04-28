@@ -1,0 +1,70 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.522684878692864, "lng": 126.92625102372656, "zoom": 4}, "district_code": "3120149", "district_name": "여의도역(여의도)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "risk", "steps": ["점포 이력/리스크 분석"]}
+
+data: {"type": "tool", "name": "get_store_history", "input": {"district_code": "3120149"}, "progress_label": "리스크 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_store_history", "done_label": "리스크 분석 완료"}
+
+data: {"type": "card", "card_type": "risk", "data": {"district_code": "3120149", "stability": {"score": null, "grade": "데이터 부족", "message": "2분기 이상 데이터가 쌓이면 리스크 분석이 가능합니다", "quarters_analyzed": 1}, "survival_by_category": [], "risk_categories": [{"category": "복권방", "close_rate": 100.0, "warning": "폐업률 매우 높음"}, {"category": "당구장", "close_rate": 16.7, "warning": "폐업률 매우 높음"}, {"category": "신발", "close_rate": 10.0, "warning": "폐업률 높음"}, {"category": "스포츠클럽", "close_rate": 7.1, "warning": "폐업률 높음"}, {"category": "화초", "close_rate": 6.7, "warning": "폐업률 높음"}, {"category": "제과점", "close_rate": 5.9, "warning": "폐업률 높음"}, {"category": "중식음식점", "close_rate": 5.0, "warning": "폐업률 높음"}, {"category": "통번역서비스", "close_rate": 5.0, "warning": "폐업률 높음"}, {"category": "스포츠 강습", "close_rate": 4.7, "warning": "폐업률 높음"}], "quarterly_trend": [{"quarter": "2025Q4", "store_count": 2768, "open": 50, "close": 51}], "benchmarks": {"districtType": "발달상권", "seoulAvgCloseRate": 5.9}, "dataSources": [{"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "여의도역 상권은 전반적으로 안정적이지만, 일"}
+
+data: {"type": "text", "content": "부 업종에서 높은 폐업률이 관찰됩니다.**"}
+
+data: {"type": "text", "content": "\n\n## 주요 위험 요소\n\n### 1. **초고위험 업종**\n- **복권방**: 폐업률 100"}
+
+data: {"type": "text", "content": "% `(get_store_history)` - 진입한 모"}
+
+data: {"type": "text", "content": "든 점포가 폐업\n- **당구장**: 폐업률 16.7% `(get_store_history)` - 서울 평균("}
+
+data: {"type": "text", "content": "5.9%) 대비 2.8배 높음\n\n### 2. **고위험 업종군**\n다음 업종들"}
+
+data: {"type": "text", "content": "은 폐업률이 서울 평균을 상회하여 주의가"}
+
+data: {"type": "text", "content": " 필요합니다:\n- **신발**: 10.0% `(get_store_history)`\n- **스포츠클"}
+
+data: {"type": "text", "content": "럽**: 7.1% `(get_store_history)`\n- **화초**: 6.7% `(get_store_history)`\n- **제과점**: 5.9% `(get_store_history)`\n\n### 3. **데"}
+
+data: {"type": "text", "content": "이터 부족으로 인한 불확실성**\n- 현재 **1분"}
+
+data: {"type": "text", "content": "기 데이터만 축적**되어 안정성 분석이 제한적입"}
+
+data: {"type": "text", "content": "니다 `(get_store_history)`\n- 계절적 변동성"}
+
+data: {"type": "text", "content": "이나 중장기 트렌드 파악이 어려운 상황\n\n## 위"}
+
+data: {"type": "text", "content": "험 요인 분석\n\n**여의도 특성상"}
+
+data: {"type": "text", "content": " 예상되는 리스크**:\n- **직장인 중심 상권"}
+
+data: {"type": "text", "content": "**으로 평일/주말 매출 편차가 클 가"}
+
+data: {"type": "text", "content": "능성\n- **금융가 특성**으로 경기 변"}
+
+data: {"type": "text", "content": "동에 민감할 수 있음\n- **임대료 부담**이 높아 수익성 확"}
+
+data: {"type": "text", "content": "보가 어려운 업종들의 생존율 저하\n\n##"}
+
+data: {"type": "text", "content": " 창업 시 주의사항\n\n⚠️ **피해야 할 업종**: 복권방, 당구장, 신발 등 "}
+
+data: {"type": "text", "content": "고폐업률 업종\n⚠️ **신중 검토 필요**: 제과점, 화"}
+
+data: {"type": "text", "content": "초, 스포츠클럽 등은 입지와 차별화 전략 필수\n⚠️ **데"}
+
+data: {"type": "text", "content": "이터 한계**: 추정치이며 실제와 다를 수 있습니다\n\n더 구"}
+
+data: {"type": "text", "content": "체적인 **매출 분석**이나 **추천 업종**"}
+
+data: {"type": "text", "content": " 정보가 필요하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["여의도역 추천 업종 알려줘", "매출 분석해줘", "다른 상권 비교해줘"]}
+
+data: {"type": "done"}
+

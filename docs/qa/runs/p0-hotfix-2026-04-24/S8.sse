@@ -1,0 +1,70 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120052", "3120053"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}, "3120053": {"district_code": "3120053", "district_name": "건대입구역(건대)", "floating_pop": 2771403, "main_age": "20대", "store_count": 1545, "close_rate": 3.8, "monthly_sales": 26001164651, "status": "stable", "quarter": "2025Q4", "sales_per_store": 16829233, "pop_per_store": 1794}}, "district_codes": ["3120052", "3120053"], "winners": {"highest_pop": "건대입구역(건대)", "highest_sales": "건대입구역(건대)", "lowest_close_rate": "성수역", "best_efficiency": "건대입구역(건대)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "건대입구역이 유동인구와 매출에서 앞서지"}
+
+data: {"type": "text", "content": "만, 성수역이 안정성 면에서 우위를 보"}
+
+data: {"type": "text", "content": "이는 구조입니다.**\n\n## 핵심 지표 비교\n\n**"}
+
+data: {"type": "text", "content": "유동인구**\n- **건대입구역**: 월 277만명 `(compare"}
+
+data: {"type": "text", "content": "_districts)` - 20대 중심 대학가 특성\n- **성수역**: 월 141"}
+
+data: {"type": "text", "content": "만명 `(compare_districts)` - 건대 대비 약 절반 수준"}
+
+data: {"type": "text", "content": "\n\n**매출 규모**\n- **건대입구역**: 월 260억원 `(compare_districts)` vs **"}
+
+data: {"type": "text", "content": "성수역**: 월 221억원 `(compare_districts)`\n- 건대가 약 18% 높은 매출 "}
+
+data: {"type": "text", "content": "규모\n\n**점포당 효율성**\n- **건대입구역**: 점포당 월 1,683만원 `"}
+
+data: {"type": "text", "content": "(compare_districts)`\n- **성수역**: 점포당 월 1,450만원 `(compare_districts)`\n- 건대가 점포당 매"}
+
+data: {"type": "text", "content": "출에서도 16% 우세\n\n## 안정성 비교\n\n**폐업률** ("}
+
+data: {"type": "text", "content": "낮을수록 좋음)\n- **성수역**: 2.4% `(compare_districts)` - 매우 안정적\n- **"}
+
+data: {"type": "text", "content": "건대입구역**: 3.8% `(compare_districts)` - 성수 대비 1.6배 높음\n\n**점포 "}
+
+data: {"type": "text", "content": "규모**\n- **건대입구역**: 1,545개 점포 `(compare_districts)`\n- **성수역**: 1,526개 점포 `(compare_districts)"}
+
+data: {"type": "text", "content": "` - 비슷한 규모\n\n## 상권별 적합 시나리오\n\n**건대입구역이"}
+
+data: {"type": "text", "content": " 유리한 경우:**\n- 20대 타겟 사업 "}
+
+data: {"type": "text", "content": "(대학가 특성)\n- 높은 매출 규모가 중요한 업"}
+
+data: {"type": "text", "content": "종\n- 유동인구 의존도가 높은 사업\n\n**성수역이 유리한 경우:**\n- 안정적 운"}
+
+data: {"type": "text", "content": "영을 중시하는 창업자\n- 경쟁이 덜 치열한 환"}
+
+data: {"type": "text", "content": "경 선호\n- 장기적 관점의 사업 계획\n\n## 종합 판단\n\n건"}
+
+data: {"type": "text", "content": "대입구역은 **규모의 경제**를, 성수역은 **안정성**을 각"}
+
+data: {"type": "text", "content": "각 장점으로 가집니다. 높은 매출을 추구한"}
+
+data: {"type": "text", "content": "다면 건대, 안정적 운영을 원한다면 성수역이 적합합"}
+
+data: {"type": "text", "content": "니다.\n\n어떤 상권이 더 좋을지, 각 상권별 "}
+
+data: {"type": "text", "content": "추천 업종이나 구체적인 리스크 요소가"}
+
+data: {"type": "text", "content": " 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done", "trace_id": "549900a7404035a069de6e42fa334964"}
+

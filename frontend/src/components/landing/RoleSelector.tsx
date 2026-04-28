@@ -41,7 +41,7 @@ export default function RoleSelector({ selected, onSelect }: Props) {
                 border: `1px solid ${active ? 'var(--brand-deep-blue)' : 'var(--border-color)'}`,
               }}
             >
-              <span aria-hidden>{r.icon}</span>
+              <r.Icon size={16} strokeWidth={1.75} aria-hidden />
               {r.label}
             </button>
           );

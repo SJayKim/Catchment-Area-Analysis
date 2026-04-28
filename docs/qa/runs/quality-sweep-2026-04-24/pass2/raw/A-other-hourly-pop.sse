@@ -1,0 +1,88 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120189", "category_code": null}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120189", "category_code": null}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120189", "category_code": null}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120189", "category_code": null}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120189", "category_code": null}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120189", "category_code": null}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "강남역의"}
+
+data: {"type": "text", "content": " 시간대별 유동인구 데이터를 조회해보겠습니다.\n\n죄송합니다. 현재 수"}
+
+data: {"type": "text", "content": "집된 데이터에는 강남역의 시간대별 유동인구 정보가 포함되어 있지 않습니다. "}
+
+data: {"type": "text", "content": "\n\n대신 **매출 데이터를 통한 시간대별 활"}
+
+data: {"type": "text", "content": "동 패턴**을 분석해드릴 수 있습니다:\n\n## 강남역 시간대별 매"}
+
+data: {"type": "text", "content": "출 패턴 (2025Q4)\n\n**매출 기준 활동량"}
+
+data: {"type": "text", "content": " 분석** `(get_estimated_sales)`:\n\n- **11~14시**: 360"}
+
+data: {"type": "text", "content": "억원 (25.8%) - **점심시간 피크**\n- **17"}
+
+data: {"type": "text", "content": "~21시**: 357억원 (25.6%) - **저녁/퇴근시간 피크** \n- **14~17시**: 341억원 (24.5"}
+
+data: {"type": "text", "content": "%) - 오후 활동\n- **06~11시**: 166억원 (11.9%) - 오"}
+
+data: {"type": "text", "content": "전 활동\n- **21~24시**: 131억원 (9.4%) - 야간 활동\n- **00~06시**: "}
+
+data: {"type": "text", "content": "36억원 (2.6%) - 새벽 최저\n\n## 인사"}
+
+data: {"type": "text", "content": "이트\n\n**이중 피크 구조**: 점심시간("}
+
+data: {"type": "text", "content": "11~14시)과 저녁시간(17~21시)에 거의 동일한 수준의 매출을"}
+
+data: {"type": "text", "content": " 보이는 전형적인 **업무지구 패"}
+
+: ping - 2026-04-24 04:39:05.643640+00:00
+
+data: {"type": "text", "content": "턴**입니다.\n\n**오후 집중**: 전체 매출의 75."}
+
+data: {"type": "text", "content": "9%가 오후 2시~밤 9시 사이에 집중되어 있어, 직"}
+
+data: {"type": "text", "content": "장인 중심의 상권 특성을 보여줍니다.\n\n정확한 시간대별 유동인구 수"}
+
+data: {"type": "text", "content": "치가 필요하시다면, 서울시 열린데이터광장이나 SKT 유"}
+
+data: {"type": "text", "content": "동인구 데이터 등을 별도로 확인하시는 것을 권장드립니다."}
+
+data: {"type": "suggestion", "questions": ["강남역에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done"}
+

@@ -41,16 +41,23 @@ export default function BottomSheetHandle({ onDragDelta, onDragEnd }: Props) {
     (e: React.PointerEvent<HTMLButtonElement>) => {
       const startY = e.clientY;
       const target = e.currentTarget;
+      let moved = false;
+      // iOS Safari deadzone — `touch-action:none` + setPointerCapture 조합에서
+      // 시트가 탭 직후 커지며 핸들이 손가락 아래로 들어오면 합성 pointerup 이
+      // 발사됨. 6px 미만 이동은 탭으로 간주해 onDragEnd 를 호출하지 않음.
+      const DEADZONE_PX = 6;
       target.setPointerCapture(e.pointerId);
 
       const move = (ev: PointerEvent) => {
-        onDragDelta?.(ev.clientY - startY);
+        const dy = ev.clientY - startY;
+        if (!moved && Math.abs(dy) > DEADZONE_PX) moved = true;
+        if (moved) onDragDelta?.(dy);
       };
       const up = () => {
         target.removeEventListener('pointermove', move);
         target.removeEventListener('pointerup', up);
         target.removeEventListener('pointercancel', up);
-        onDragEnd?.();
+        if (moved) onDragEnd?.();
       };
       target.addEventListener('pointermove', move);
       target.addEventListener('pointerup', up);

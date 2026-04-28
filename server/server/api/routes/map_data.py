@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import OperationalError
 
+from server.api.errors import raise_db_unavailable
 from server.repositories import get_data_access
 from server.services.cache import get_cache_service
 
@@ -46,10 +47,7 @@ async def get_polygons(
         )
     except OperationalError:
         logger.exception("Database unavailable in get_polygons")
-        raise HTTPException(
-            status_code=503,
-            detail="Database temporarily unavailable",
-        ) from None
+        raise_db_unavailable()
 
 
 @router.get("/heatmap")
@@ -76,10 +74,7 @@ async def get_heatmap(
         )
     except OperationalError:
         logger.exception("Database unavailable in get_heatmap")
-        raise HTTPException(
-            status_code=503,
-            detail="Database temporarily unavailable",
-        ) from None
+        raise_db_unavailable()
 
 
 @router.get("/heatmap/all")
@@ -108,7 +103,4 @@ async def get_heatmap_all(
         )
     except OperationalError:
         logger.exception("Database unavailable in get_heatmap_all")
-        raise HTTPException(
-            status_code=503,
-            detail="Database temporarily unavailable",
-        ) from None
+        raise_db_unavailable()

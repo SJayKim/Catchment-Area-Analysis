@@ -171,6 +171,7 @@ SSE `type` → store action 매핑:
 | `html2canvas` | 1.4 | 차트 → 이미지 |
 | `react-markdown` + `remark-gfm` | 10.1 / 4.0 | AI 응답 마크다운 |
 | `tailwindcss` | 3.4 | 스타일 |
+| `lucide-react` | 1.9 | 랜딩 아이콘 세트 (per-icon import) |
 | `@playwright/test` | 1.58 | E2E |
 
 ## 10. E2E 테스트

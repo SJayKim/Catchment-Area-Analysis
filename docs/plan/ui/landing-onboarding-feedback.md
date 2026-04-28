@@ -3,8 +3,14 @@
 > 작성: 2026-04-23
 > 출처: `docs/plan/marketscope_improvement.md` (3개 축 — 랜딩 / 단계별 가이드 / 피드백)
 > 카테고리: `ui`
-> 상태: 계획 수립 (구현 전)
+> 상태: Phase A~D 구현 완료 (2026-04-23)
 > 선행: Accuracy Gap Fix W1~W4 (정확성 74→85+) — **동시 진행 가능하나 리소스는 Accuracy 우선**
+>
+> ⚠️ **2026-04-24 카피·아이콘 리프레시**: Phase A 에서 정한 이모지(🧑‍🍳 🏢 💡 · Bento 6 cell)와
+> Hero 카피("AI가 읽어드립니다", "3초 안에 요약해드려요", "Claude + Gemini가 해석") 는
+> [landing-copy-icon-refresh.md](landing-copy-icon-refresh.md) 에서 Lucide 아이콘 + 데이터 주체 카피로
+> 교체되었다. 아래 wireframe·chip 예시는 **의사결정 이력 보존용 원본**. 현재 카피·아이콘의
+> 권위 있는 출처는 refresh Plan 과 `components/landing/{roles.ts,BentoFeatures.tsx,HowItWorks.tsx}`.
 
 ---
 

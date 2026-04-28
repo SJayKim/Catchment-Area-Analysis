@@ -1,0 +1,66 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120103", "3120052"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120103": {"district_code": "3120103", "district_name": "홍대입구역(홍대)", "floating_pop": 4106209, "main_age": "20대", "store_count": 2981, "close_rate": 4.0, "monthly_sales": 53200280285, "status": "stable", "quarter": "2025Q4", "sales_per_store": 17846454, "pop_per_store": 1377}, "3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}}, "district_codes": ["3120103", "3120052"], "winners": {"highest_pop": "홍대입구역(홍대)", "highest_sales": "홍대입구역(홍대)", "lowest_close_rate": "성수역", "best_efficiency": "홍대입구역(홍대)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "홍대입구역이 성수역 대비 매출 규모와 효율성 모든"}
+
+data: {"type": "text", "content": " 면에서 압도적 우위를 보입니다.**\n\n## 매출 규모 비교\n\n**홍대입구역**:"}
+
+data: {"type": "text", "content": " 월 532억원 `(compare_districts)` vs **성수역**: 월 221"}
+
+data: {"type": "text", "content": "억원 `(compare_districts)`\n- 홍대가 성수 대비 **2.4배**"}
+
+data: {"type": "text", "content": " 높은 매출 규모\n- 홍대는 서울 상권 중에서도 최"}
+
+data: {"type": "text", "content": "상위권 매출 수준\n\n## 점포당 매출 효율성\n\n**홍대입구역**: 점포당 월"}
+
+data: {"type": "text", "content": " 1,785만원 `(compare_districts)` vs **성수역**: 점포당 월 1,450만원 `(compare_districts)`\n- 홍대가 성수 대비 **23%"}
+
+data: {"type": "text", "content": " 높은** 점포당 매출 효율\n- 홍대는 높은 유동인구("}
+
+data: {"type": "text", "content": "411만명 vs 141만명)와 20대 중심 소"}
+
+data: {"type": "text", "content": "비층이 매출 효율을 견인\n\n## 매출 격차의"}
+
+data: {"type": "text", "content": " 원인\n\n1. **유동인구 차이**: 홍대(411만명) vs 성수(141만명) - **2"}
+
+data: {"type": "text", "content": ".9배 격차** `(compare_districts)`\n2. **상권 규"}
+
+data: {"type": "text", "content": "모**: 홍대(2,981개 점포) vs 성수(1,526개 점포) - **1.95"}
+
+data: {"type": "text", "content": "배 격차** `(compare_districts)`\n3. **상권 성격**: 홍대는 대학가+"}
+
+data: {"type": "text", "content": "클럽가 복합 상권으로 야간"}
+
+data: {"type": "text", "content": " 소비 활발, 성수는 카페·문화 중심의 신"}
+
+data: {"type": "text", "content": "흥 상권\n\n## 시사점\n\n- **매출 중심 창업**이"}
+
+data: {"type": "text", "content": "라면 홍대가 압도적 유리\n- **성수의 장점**:"}
+
+data: {"type": "text", "content": " 낮은 폐업률(2.4% vs 4.0%)로 안정성은"}
+
+data: {"type": "text", "content": " 더 높음 `(compare_districts)`\n- **홍대의 과제**: 높은 매출만큼 임"}
+
+data: {"type": "text", "content": "대료와 경쟁도 치열할 가능성\n\n어떤 상권이 창업에"}
+
+data: {"type": "text", "content": " 더 적합한지, 또는 각 상권별 추천 업종이 궁금하시면 말"}
+
+data: {"type": "text", "content": "씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done", "trace_id": "e754bc501bc09d14172333e993d43652"}
+

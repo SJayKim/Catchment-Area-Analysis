@@ -1,0 +1,58 @@
+{
+  "id": "A-other-heatmap-pop",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-other-heatmap-pop-50649d6c",
+  "turns": [
+    {
+      "events_count": 5,
+      "text": "어떤 상권을 분석해 드릴까요? 상권 이름을 구체적으로 알려주시면 요약·비교·추천·리스크·시뮬레이션을 공공데이터 기반으로 분석해 드립니다. (예: '강남역 요약', '홍대 vs 성수 비교', '성수역에서 카페 말고 추천 업종')",
+      "tools": [],
+      "tool_inputs": [],
+      "cards": [],
+      "suggestions": [
+        "강남역 상권 요약",
+        "홍대 vs 성수 비교",
+        "성수역 카페 말고 추천 업종",
+        "여기에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 0,
+      "plan_steps": [],
+      "intent": null,
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 0.08,
+      "user_message": "유동인구 높은 곳 알려줘"
+    }
+  ],
+  "rubric": {
+    "score": 2,
+    "max": 4,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        false,
+        "got=126 need=150"
+      ]
+    ]
+  },
+  "total_elapsed_s": 0.08
+}

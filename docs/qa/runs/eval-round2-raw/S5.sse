@@ -1,0 +1,38 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.61068425930741, "lng": 126.96741393421291, "zoom": 4}, "district_code": "3110010", "district_name": "평창동서측", "district_type": "골목상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "recommendation", "steps": ["업종 추천 분석"]}
+
+data: {"type": "tool", "name": "recommend_business", "input": {"district_code": "3110010"}, "progress_label": "업종 추천 분석 중..."}
+
+data: {"type": "tool_end", "name": "recommend_business", "done_label": "업종 추천 완료"}
+
+data: {"type": "card", "card_type": "recommend", "data": {"district_code": "3110010", "quarter": "2025Q4", "recommendations": [{"rank": 1, "category_name": "슈퍼마켓", "category_code": "CS300001", "score": 100.0, "per_store_sales": 55268149, "store_count": 4, "close_rate": 0.0, "age_match": 44.8, "monthly_sales": 221072598, "reasons": ["점포당 월매출 5527만원", "경쟁 점포 4개 (밀집도 2.4%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 2, "category_name": "세탁소", "category_code": "CS200031", "score": 73.7, "per_store_sales": 15080698, "store_count": 2, "close_rate": 0.0, "age_match": 60.6, "monthly_sales": 30161397, "reasons": ["점포당 월매출 1508만원", "타겟 고객 매칭률 61%", "경쟁 점포 2개 (밀집도 1.2%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 3, "category_name": "제과점", "category_code": "CS100005", "score": 69.1, "per_store_sales": 21206805, "store_count": 3, "close_rate": 0.0, "age_match": 60.6, "monthly_sales": 63620415, "reasons": ["점포당 월매출 2121만원", "타겟 고객 매칭률 61%", "경쟁 점포 3개 (밀집도 1.8%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 4, "category_name": "육류판매", "category_code": "CS300007", "score": 45.5, "per_store_sales": 25281847, "store_count": 4, "close_rate": 0.0, "age_match": 44.8, "monthly_sales": 101127388, "reasons": ["점포당 월매출 2528만원", "경쟁 점포 4개 (밀집도 2.4%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 5, "category_name": "커피-음료", "category_code": "CS100010", "score": 10.2, "per_store_sales": 7560127, "store_count": 7, "close_rate": 0.0, "age_match": 60.6, "monthly_sales": 52920894, "reasons": ["점포당 월매출 756만원", "타겟 고객 매칭률 61%", "경쟁 점포 7개 (밀집도 4.1%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}], "total_categories_analyzed": 13, "dataSources": [{"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "죄송합니다. 현재 **평창동서측** 상권 데이터만 수집되어 있어"}
+
+data: {"type": "text", "content": "서 명동 상권의 창업 리스크를 분석할 수 없습니다.\n\n명동 상권 분"}
+
+data: {"type": "text", "content": "석을 원하시면 먼저 명동 상권 데이터를 수집해야 합니다. \n\n**현재 분"}
+
+data: {"type": "text", "content": "석 가능한 평창동서측 창업 리스크**를 간단히 말씀드"}
+
+data: {"type": "text", "content": "리면:\n- **긍정적**: 전체 폐업률 0.0%로"}
+
+data: {"type": "text", "content": " 매우 안정적\n- **주의사항**: 슈퍼마켓 외에는 점"}
+
+data: {"type": "text", "content": "포당 매출이 상대적으로 낮은 편 (세탁소 1"}
+
+data: {"type": "text", "content": ",508만원, 제과점 2,121만원)\n\n명동 상권 분석을 원하시거나,"}
+
+data: {"type": "text", "content": " 평창동서측의 구체적인 창업 리스크가 궁금하시면 말씀해 주세"}
+
+data: {"type": "text", "content": "요!"}
+
+data: {"type": "suggestion", "questions": ["슈퍼마켓 상세 분석해줘", "평창동서측 리스크 확인해줘", "다른 상권에서 슈퍼마켓은 어때?", "2위 업종은 어때?"]}
+
+data: {"type": "done", "trace_id": "91d3d7792f22a2748e96e4a5002c5602"}
+

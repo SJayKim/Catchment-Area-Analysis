@@ -1,0 +1,221 @@
+{
+  "id": "A-summary-3120227",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-summary-3120227-380fb572",
+  "turns": [
+    {
+      "events_count": 39,
+      "text": "**잠실역은 하루 111만명이 몰리는 서울 최상위권 발달상권으로, 안정적인 매출과 낮은 폐업률을 자랑하는 우수한 상업지역입니다.**\n\n## 주요 지표 분석\n\n**유동인구**: 하루 평균 111만 3천명 `(get_district_summary)`으로, 서울 평균(9만 2천명) 대비 **12배** 수준입니다. 발달상권 중에서도 **상위 25%**에 해당하는 초대형 상권이며, 오전 6시(22만 8천명)와 오후 2-5시(22만 6천명)에 피크를 보이는 **출근·쇼핑 복합형** 패턴을 보입니다.\n\n**매출 현황**: 월 추정 매출 1,073억원 `(get_district_summary)`으로 발달상권 중 **상위 25%** 수준입니다. 점포당 월 매출은 4,768만원으로 서울 평균(4,600만원) 대비 약간 높으며, 주말 매출 비중이 평일보다 46.7% 낮아 **평일 중심 상권** 특성을 보입니다.\n\n**점포 현황**: 총 2,251개 점포 중 일반의류(596개), 한식음식점(136개), 커피·음료(87개) 순으로 분포되어 있습니다. 프랜차이즈 비율은 12.7%로 개인 창업 친화적이며, **폐업률 2.4%**는 서울 평균(6.5%) 대비 현저히 낮아 매우 안정적입니다.\n\n## 기회와 특징\n\n**강점**:\n- 서울 최상위권 유동인구로 고객 확보 용이\n- 폐업률 2.4%로 발달상권 중 **상위 25%** 안정성\n- 여성 고객 비중 53.1%로 여성 타겟 업종에 유리\n- 40대 주 고객층(21.8%)으로 구매력 높음\n\n**특징**:\n- 의류·패션 중심 상권 (일반의류 596개점)\n- 평일 중심 매출 구조\n- 낮은 프랜차이즈 비율로 개인 창업 기회 많음\n\n**주의사항**:\n- 초대형 상권으로 임대료 부담 예상\n- 의류업종 포화 상태 (전체의 26.5%)\n\n잠실역에서 **뭐하면 좋을까?** 궁금하시거나, **다른 상권이랑 비교**해보고 싶으시면 말씀해 주세요!",
+      "tools": [
+        "get_district_summary"
+      ],
+      "tool_inputs": [
+        {
+          "name": "get_district_summary",
+          "input": {
+            "district_code": "3120227"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "summary",
+          "data": {
+            "districtName": "잠실역",
+            "districtType": "발달상권",
+            "summary": "하루 평균 유동인구 111만 3천명, 월 추정 매출 1073억 2천만원의 안정적인 발달상권입니다.",
+            "monthlySales": 107329997143,
+            "floatingPopulation": {
+              "dailyAvg": 1113657,
+              "peakHour": 6,
+              "byHour": [
+                {
+                  "hour": 0,
+                  "pop": 128055
+                },
+                {
+                  "hour": 6,
+                  "pop": 228294
+                },
+                {
+                  "hour": 11,
+                  "pop": 210898
+                },
+                {
+                  "hour": 14,
+                  "pop": 226020
+                },
+                {
+                  "hour": 17,
+                  "pop": 226670
+                },
+                {
+                  "hour": 21,
+                  "pop": 93720
+                }
+              ]
+            },
+            "topCategories": [
+              {
+                "name": "일반의류",
+                "count": 596
+              },
+              {
+                "name": "한식음식점",
+                "count": 136
+              },
+              {
+                "name": "커피-음료",
+                "count": 87
+              },
+              {
+                "name": "신발",
+                "count": 86
+              },
+              {
+                "name": "화장품",
+                "count": 82
+              }
+            ],
+            "status": "stable",
+            "closeRate": {
+              "current": 2.4,
+              "average": 6.5
+            },
+            "insights": {
+              "genderInsight": "여성 비중 높음 (여성 53.1%, 차이 6.2%p)",
+              "ageInsight": "40대 (21.8%)",
+              "perStoreSales": 47681029,
+              "franchiseRatio": 12.7,
+              "weekendUplift": -46.7
+            },
+            "dataQuarter": "2025Q4",
+            "dataSources": [
+              {
+                "id": "seoul_floating_pop",
+                "name": "상권-유동인구",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarFlpopQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ],
+            "benchmarks": {
+              "districtType": "발달상권",
+              "sampleCount": 120,
+              "rankings": {
+                "floatingPop": "상위 25%",
+                "monthlySales": "상위 25%",
+                "closeRate": "상위 25% (우수)",
+                "storeCount": "상위 25%",
+                "perStoreSales": "상위 50%"
+              },
+              "seoulAvg": {
+                "floating_pop": 92000,
+                "monthly_sales": 55000000000,
+                "close_rate": 5.9,
+                "store_count": 950,
+                "per_store_sales": 46000000
+              }
+            }
+          }
+        }
+      ],
+      "suggestions": [
+        "잠실역에서 뭐하면 좋을까?",
+        "잠실역 리스크 분석해줘",
+        "유동인구 시간대별로 보여줘",
+        "다른 상권이랑 비교해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "상권 종합 요약 조회"
+      ],
+      "intent": "summary",
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 15.33,
+      "user_message": "잠실역 상권 어때?"
+    }
+  ],
+  "rubric": {
+    "score": 9,
+    "max": 10,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=934 need=300"
+      ],
+      [
+        "intent",
+        true,
+        "got=summary need=summary"
+      ],
+      [
+        "tool_names_include",
+        true,
+        "missing=[] got=['get_district_summary']"
+      ],
+      [
+        "card_types_include",
+        true,
+        "missing=[] got=['summary']"
+      ],
+      [
+        "card_district_name",
+        true,
+        "got=['잠실역'] need=잠실역"
+      ],
+      [
+        "card_district_type",
+        true,
+        "got=['발달상권'] need=발달상권"
+      ],
+      [
+        "suggestion_count_min",
+        true,
+        "got=4"
+      ]
+    ]
+  },
+  "total_elapsed_s": 15.33
+}

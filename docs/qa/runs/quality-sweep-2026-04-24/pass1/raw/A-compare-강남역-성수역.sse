@@ -1,0 +1,144 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120189", "3120052"]}, "progress_label": "상권 비교 분석 중..."}
+
+
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120189": {"district_code": "3120189", "district_name": "강남역", "floating_pop": 7453202, "main_age": "20대", "store_count": 5111, "close_rate": 2.3, "monthly_sales": 139568168199, "status": "stable", "quarter": "2025Q4", "sales_per_store": 27307409, "pop_per_store": 1458}, "3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}}, "district_codes": ["3120189", "3120052"], "winners": {"highest_pop": "강남역", "highest_sales": "강남역", "lowest_close_rate": "강남역", "best_efficiency": "강남역"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "강남역이 성수역을 압도하는 초대형 상권으로, 모든 "}
+
+
+
+data: {"type": "text", "content": "핵심 지표에서 우위를 보입니다.**\n\n## 📊 핵심 지표 비교\n\n### 유동인구\n-"}
+
+
+
+data: {"type": "text", "content": " **강남역**: 월 745만명 `(compare_districts)`\n- **성수역**: 월 141"}
+
+
+
+data: {"type": "text", "content": "만명 `(compare_districts)`\n- **격차**: 강남역이 **5.3배** 많음\n\n### 매출 "}
+
+
+
+data: {"type": "text", "content": "규모\n- **강남역**: 월 1,396억원 `(compare_districts)`\n- **성수역**: 월 221억원 `(compare_districts"}
+
+
+
+data: {"type": "text", "content": ")`\n- **격차**: 강남역이 **6.3배** 높음\n\n### 점포당 효율성"}
+
+
+
+data: {"type": "text", "content": "\n- **강남역**: 점포당 월 2,731만원 `(compare_districts)`\n- **성수역**: 점포당 월 1,450만원 `(compare_districts)`\n- **효"}
+
+
+
+data: {"type": "text", "content": "율 차이**: 강남역이 **88% 더 효율적**\n\n### 안"}
+
+
+
+data: {"type": "text", "content": "정성 (폐업률)\n- **강남역**: 2.3% `(compare_districts)`\n- **성수역**: 2.4% `(compare_districts)`\n- **결"}
+
+
+
+data: {"type": "text", "content": "과**: 거의 동일한 수준의 안정성\n\n## 🎯 각 상권 특성"}
+
+
+
+data: {"type": "text", "content": "\n\n### 강남역 - 초대형 발달상권\n- **장점**: 압도적 유동인구, 높은 점"}
+
+
+
+data: {"type": "text", "content": "포당 매출, 안정적 폐업률\n- **적합**: 높은 임대료를"}
+
+
+
+data: {"type": "text", "content": " 감당할 수 있는 브랜드, 대중적 업"}
+
+
+
+data: {"type": "text", "content": "종\n- **고객층**: 20대 중심의 직장인·쇼핑객"}
+
+
+
+data: {"type": "text", "content": "\n\n### 성수역 - 중형 트렌디상권  \n- **장점**: 상대적으"}
+
+
+
+data: {"type": "text", "content": "로 낮은 진입비용, 젊은 고객층\n- **적합**: 개성있"}
+
+
+
+data: {"type": "text", "content": "는 소규모 창업, 트렌디한 업종\n- **고객층**: 20"}
+
+
+
+data: {"type": "text", "content": "대 중심의 힙한 소비층\n\n## 💡 창"}
+
+
+
+data: {"type": "text", "content": "업 관점 종합 판단\n\n**대규"}
+
+
+
+data: {"type": "text", "content": "모 자본 + 검증된 업종** → **"}
+
+
+
+data: {"type": "text", "content": "강남역**\n- 높은 유동인구로 매출 안정성 확보 가능\n- 점"}
+
+
+
+data: {"type": "text", "content": "포당 효율이 압도적으로 높음\n\n**소규모 창업 + 차별화 전략** → **성수역**"}
+
+
+
+data: {"type": "text", "content": "\n- 진입 비용 부담이 상대적으로 적음\n- 트렌드"}
+
+
+
+data: {"type": "text", "content": "에 민감한 젊은층 타겟 가능\n\n어떤 상권이 더"}
+
+
+
+data: {"type": "text", "content": " 좋을까요? 추천 업종은 각각 어떨지, 리스크도 비교"}
+
+
+
+data: {"type": "text", "content": "해볼까요?"}
+
+
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "a17b2a9304ecb0878de19451f1b5357b"}
+
+
+

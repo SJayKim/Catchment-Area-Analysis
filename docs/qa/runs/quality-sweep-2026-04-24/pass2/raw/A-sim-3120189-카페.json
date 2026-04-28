@@ -1,0 +1,134 @@
+{
+  "id": "A-sim-3120189-카페",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-sim-3120189-카페-becbc346",
+  "turns": [
+    {
+      "events_count": 32,
+      "text": "**강남역에서 카페를 창업하면 월 평균 5,159만원의 매출을 기대할 수 있습니다.** `(simulate_revenue)`\n\n## 매출 시뮬레이션 결과\n\n**예상 매출 범위**:\n- **보수적 추정**: 2,858만원 `(simulate_revenue)`\n- **평균 추정**: 5,159만원 `(simulate_revenue)`  \n- **낙관적 추정**: 8,678만원 `(simulate_revenue)`\n\n이는 강남역 내 기존 카페 410개 점포의 실제 카드매출 데이터를 기반으로 산출된 추정치입니다 `(simulate_revenue)`. **서울 평균 카페 매출(2,428만원) 대비 112.5% 높은 수준**으로, 강남역의 뛰어난 입지 조건이 반영된 결과입니다 `(simulate_revenue)`.\n\n## 매출 해석\n\n**Why 높은 매출인가?**\n- 강남역의 높은 유동인구와 직장인 중심 고객층\n- 높은 객단가를 감당할 수 있는 소비력\n- 발달상권 특성상 프리미엄 가격대 형성 가능\n\n**주의사항**:\n- 이는 **카드매출 기반 추정치**로 현금매출은 미포함입니다 `(simulate_revenue)`\n- 기존 410개 카페와의 치열한 경쟁 상황\n- 높은 임대료와 인건비로 인한 고정비 부담\n- 실제 매출은 위치, 브랜드력, 운영 역량에 따라 크게 달라질 수 있습니다\n\n**면책사항**: 본 시뮬레이션은 추정치이며 실제 매출과 다를 수 있습니다 `(simulate_revenue)`.\n\n강남역 상권 전체 분석이나 카페 업종의 경쟁 현황이 더 궁금하시다면 말씀해 주세요!",
+      "tools": [
+        "simulate_revenue"
+      ],
+      "tool_inputs": [
+        {
+          "name": "simulate_revenue",
+          "input": {
+            "district_code": "3120189",
+            "category_code": "CS100001"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "simulation",
+          "data": {
+            "district_code": "3120189",
+            "category_code": "CS100001",
+            "category_name": "",
+            "quarter": "2025Q4",
+            "simulation": {
+              "low": 28581960,
+              "avg": 51591985,
+              "high": 86777720
+            },
+            "basis": {
+              "total_monthly_sales": 21152714191,
+              "store_count": 410,
+              "additional_competitors": 0,
+              "effective_stores": 410,
+              "unit_price": null,
+              "default_unit_price": null,
+              "price_ratio": 1.0
+            },
+            "percentiles": {
+              "p25_ratio": 0.554,
+              "p75_ratio": 1.682,
+              "sample_count": 1406,
+              "reliable": true
+            },
+            "seoul_comparison": {
+              "seoul_avg": 24278033,
+              "diff_percent": 112.5,
+              "label": "높음"
+            },
+            "disclaimer": "본 시뮬레이션은 카드매출 기반 추정치이며, 실제 매출과 다를 수 있습니다.",
+            "dataSources": [
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ]
+          }
+        }
+      ],
+      "suggestions": [
+        "상권 분석해줘",
+        "업종 추천해줘",
+        "리스크 확인해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "매출 시뮬레이션"
+      ],
+      "intent": "simulation",
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 15.5,
+      "user_message": "강남역에서 카페 차리면 월 매출 얼마?"
+    }
+  ],
+  "rubric": {
+    "score": 5,
+    "max": 6,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=775 need=250"
+      ],
+      [
+        "intent_any",
+        true,
+        "got=simulation need-any=['simulation', 'category_analysis']"
+      ],
+      [
+        "tool_names_include_any",
+        true,
+        "got=['simulate_revenue'] need-any=['simulate_revenue', 'estimate_revenue', 'get_estimated_sales', 'get_store_info']"
+      ]
+    ]
+  },
+  "total_elapsed_s": 15.5
+}

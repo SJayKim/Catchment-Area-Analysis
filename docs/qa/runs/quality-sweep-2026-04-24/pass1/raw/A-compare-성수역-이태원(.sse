@@ -1,0 +1,144 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54467215910094, "lng": 127.05667376479036, "zoom": 4}, "district_code": "3120052", "district_name": "성수역", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120052", "3120046"]}, "progress_label": "상권 비교 분석 중..."}
+
+
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}, "3120046": {"district_code": "3120046", "district_name": "이태원(이태원역)", "floating_pop": 1517795, "main_age": "20대", "store_count": 1389, "close_rate": 2.6, "monthly_sales": 30263520253, "status": "stable", "quarter": "2025Q4", "sales_per_store": 21787992, "pop_per_store": 1093}}, "district_codes": ["3120052", "3120046"], "winners": {"highest_pop": "이태원(이태원역)", "highest_sales": "이태원(이태원역)", "lowest_close_rate": "성수역", "best_efficiency": "이태원(이태원역)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "이태원이 매출 효율에서 압도적 우위를 보이"}
+
+
+
+data: {"type": "text", "content": "지만, 성수역은 안정성에서 더 나은 두"}
+
+
+
+data: {"type": "text", "content": " 상권입니다.**\n\n## 핵심 지표 비교\n\n**유동인구**\n- 이태원: 월"}
+
+
+
+data: {"type": "text", "content": " 152만명 `(compare_districts)`\n- 성수역: 월 141만명 `(compare_districts"}
+
+
+
+data: {"type": "text", "content": ")`\n- **이태원이 7.5% 더 많음**\n\n**매출 규"}
+
+
+
+data: {"type": "text", "content": "모**\n- 이태원: 월 303억원 `(compare_districts)`\n- 성수역: 월 221억원 `(compare_districts)`  \n- **이태원이 "}
+
+
+
+data: {"type": "text", "content": "37% 더 높음**\n\n**점포당 매출 효율**\n- 이태원: 점포당 2,179만원 `(compare_districts)`\n- 성수"}
+
+
+
+data: {"type": "text", "content": "역: 점포당 1,450만원 `(compare_districts)`\n- **이태원이 50% 더 효율적**\n\n**안정성 "}
+
+
+
+data: {"type": "text", "content": "(폐업률)**\n- 성수역: 2.4% `(compare_districts)`\n- 이태원: 2.6% `(compare_districts)`\n- **성"}
+
+
+
+data: {"type": "text", "content": "수역이 더 안정적**\n\n## 각 상권 특성 분석\n\n**이태원의 강점**\n- 높은 객"}
+
+
+
+data: {"type": "text", "content": "단가와 매출 효율성\n- 국제적 상"}
+
+
+
+data: {"type": "text", "content": "권으로 다양한 고객층\n- 점포당 수익성"}
+
+
+
+data: {"type": "text", "content": "이 뛰어남\n\n**성수역의 강점**  \n- 낮은 폐업률로 안정적"}
+
+
+
+data: {"type": "text", "content": " 운영 환경\n- 더 많은 점포 수(1,526개 vs 1,389개)로"}
+
+
+
+data: {"type": "text", "content": " 다양한 업종 기회\n- 20대 중심의 트렌디한 상권\n\n##"}
+
+
+
+data: {"type": "text", "content": " 창업 시나리오별 추천\n\n**고수익"}
+
+
+
+data: {"type": "text", "content": " 추구형** → **이태원**\n- 높은 매출을"}
+
+
+
+data: {"type": "text", "content": " 감당할 수 있는 자본력 보유\n- 프리미엄 업"}
+
+
+
+data: {"type": "text", "content": "종이나 외국인 대상 사업\n\n**안정성 중"}
+
+
+
+data: {"type": "text", "content": "시형** → **성수역**  \n- 첫 창업이거나 리스크 "}
+
+
+
+data: {"type": "text", "content": "최소화 원함\n- 젊은 층 타"}
+
+
+
+data: {"type": "text", "content": "겟의 트렌디한 업종\n\n**종합 판단**: 이태원은"}
+
+
+
+data: {"type": "text", "content": " 수익성, 성수역은 안정성에서 각각 우위를 보입니다. 자본"}
+
+
+
+data: {"type": "text", "content": "력과 리스크 감수 능력에 따라 선택하시면 됩니다."}
+
+
+
+data: {"type": "text", "content": "\n\n각 상권의 추천 업종이나 구체적인 리스크 요"}
+
+
+
+data: {"type": "text", "content": "인이 궁금하시면 말씀해 주세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "b770c9cc39e93cfcfe22b9a2000156a6"}
+
+
+

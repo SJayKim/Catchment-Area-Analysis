@@ -1,0 +1,24 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "요"}
+
+data: {"type": "text", "content": "청하신 분석에 필요한 공공데이터를 조회하지 못했습니다. 다른 상권을 선택하시거나, 비교/추천 대상을 명확히 알"}
+
+data: {"type": "text", "content": "려주시면 다시 분석해드리겠습니다.\n\n\"강남 상권\"이라고 하시면 여"}
+
+data: {"type": "text", "content": "러 지역이 있을 수 있어요:\n- **강남역** 상"}
+
+data: {"type": "text", "content": "권\n- **신논현역** 상권  \n- **역삼역** 상권\n- **선릉역** 상권"}
+
+data: {"type": "text", "content": "\n- **압구정로데오** 상권\n\n구체적인 상권명을 알려주시면 해당 지"}
+
+data: {"type": "text", "content": "역의 유동인구, 매출, 업종 현황 등을 상세히 분석해드리겠습니다!"}
+
+data: {"type": "suggestion", "questions": ["강남역에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done"}
+

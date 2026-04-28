@@ -1,0 +1,20 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "죄송합니다. 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."}
+
+
+
+data: {"type": "suggestion", "questions": ["여기에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+
+
+data: {"type": "done", "trace_id": "3e2dfdf46b33f7ae53c9ef312a9e8428"}
+
+
+

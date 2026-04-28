@@ -30,6 +30,19 @@ def _rule_based_evaluate(state: AgentState) -> EvaluationResult:
     succeeded = set((state.get("tool_results") or {}).keys())
     failed = set((state.get("tool_errors") or {}).keys())
 
+    # Quality fix (2026-04-24 Pass 2): if any tool returned needs_category=True
+    # we must NOT re-plan identically — it will just produce the same error.
+    # Stop the loop with sufficient=True so Respond can emit a clarification.
+    tool_results = state.get("tool_results") or {}
+    for _, data in tool_results.items():
+        if isinstance(data, dict) and data.get("needs_category"):
+            return EvaluationResult(
+                sufficient=True,
+                missing_info=[],
+                proactive_suggestions=generate_proactive_suggestions(state),
+                reasoning="업종 지정 필요 — Respond 에서 clarification 유도.",
+            )
+
     # No plan → nothing to evaluate; respond with whatever we have.
     if not planned_tools:
         return EvaluationResult(
@@ -72,6 +85,16 @@ def _fast_evaluate(state: AgentState) -> EvaluationResult | None:
     planned_tools = {step["tool_name"] for step in (state.get("plan") or [])}
     succeeded_tools = set((state.get("tool_results") or {}).keys())
     failed_tools = set((state.get("tool_errors") or {}).keys())
+
+    # Same needs_category short-circuit as _rule_based_evaluate.
+    tool_results = state.get("tool_results") or {}
+    if any(isinstance(d, dict) and d.get("needs_category") for d in tool_results.values()):
+        return EvaluationResult(
+            sufficient=True,
+            missing_info=[],
+            proactive_suggestions=generate_proactive_suggestions(state),
+            reasoning="업종 지정 필요 — Respond 에서 clarification.",
+        )
 
     if planned_tools and planned_tools.issubset(succeeded_tools) and not failed_tools:
         return EvaluationResult(
@@ -152,10 +175,27 @@ async def _llm_evaluate(state: AgentState) -> EvaluationResult:
 # ---------------------------------------------------------------------------
 
 
+def _short_name(full: str) -> str:
+    """Strip Seoul-opendata 별칭 parens for user-facing suggestions.
+
+    Examples:
+        "홍대입구역(홍대)"  → "홍대입구역"
+        "건대입구역(건대)"  → "건대입구역"
+        "명동(명동거리)"    → "명동"
+        "강남역"           → "강남역"
+    """
+    if not full:
+        return full
+    idx = full.find("(")
+    if idx > 0:
+        return full[:idx].strip()
+    return full
+
+
 def generate_proactive_suggestions(state: AgentState) -> list[str]:
     """Context-aware follow-up suggestions based on intent + results."""
     intent = state.get("user_intent", "")
-    name = state.get("district_name", "여기")
+    name = _short_name(state.get("district_name", "여기"))
     results = state.get("tool_results") or {}
 
     suggestions: list[str]
@@ -219,6 +259,27 @@ def generate_proactive_suggestions(state: AgentState) -> list[str]:
 async def evaluator_node(state: AgentState) -> dict:
     """Judge tool result sufficiency. Fast path first, LLM if needed."""
     from server.services.circuit_breaker import CircuitOpenError
+
+    # 0. needs_category short-circuit — simulate_revenue (and peers) return
+    #    ``{"error": "...", "needs_category": True}`` when the user did not
+    #    specify a business category. Looping would just re-run the same tool
+    #    with the same null input; instead, hand off to Respond immediately
+    #    so it can surface the clarification template.
+    tool_results = state.get("tool_results") or {}
+    if any(isinstance(d, dict) and d.get("needs_category") for d in tool_results.values()):
+        logger.info(
+            "evaluator.needs_category short-circuit session=%s round=%s",
+            state.get("session_id"),
+            state.get("execution_round"),
+        )
+        return {
+            "evaluation": EvaluationResult(
+                sufficient=True,
+                missing_info=[],
+                proactive_suggestions=generate_proactive_suggestions(state),
+                reasoning="업종 지정 필요 — Respond 에서 clarification.",
+            )
+        }
 
     # 1. Fast path
     fast_result = _fast_evaluate(state)

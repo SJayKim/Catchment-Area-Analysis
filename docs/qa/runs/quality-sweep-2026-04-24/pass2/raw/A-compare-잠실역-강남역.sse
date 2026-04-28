@@ -1,0 +1,74 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.51398695310821, "lng": 127.1012733877303, "zoom": 4}, "district_code": "3120227", "district_name": "잠실역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120227", "3120189"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120227": {"district_code": "3120227", "district_name": "잠실역", "floating_pop": 1113657, "main_age": "40대", "store_count": 2251, "close_rate": 2.4, "monthly_sales": 107329997143, "status": "stable", "quarter": "2025Q4", "sales_per_store": 47681029, "pop_per_store": 495}, "3120189": {"district_code": "3120189", "district_name": "강남역", "floating_pop": 7453202, "main_age": "20대", "store_count": 5111, "close_rate": 2.3, "monthly_sales": 139568168199, "status": "stable", "quarter": "2025Q4", "sales_per_store": 27307409, "pop_per_store": 1458}}, "district_codes": ["3120227", "3120189"], "winners": {"highest_pop": "강남역", "highest_sales": "강남역", "lowest_close_rate": "강남역", "best_efficiency": "잠실역"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "잠실역은 점포당 매출 효율이 뛰어나고, 강남역은 절대적 규"}
+
+data: {"type": "text", "content": "모와 유동인구에서 압도적입니다.**\n\n## 지표별 우위 분"}
+
+data: {"type": "text", "content": "석\n\n**유동인구**: 강남역이 월 745만명 `"}
+
+data: {"type": "text", "content": "(compare_districts)`으로 잠실역 111만명의 **6"}
+
+data: {"type": "text", "content": ".7배**에 달합니다. 강남역은 서울 최대 규모의 유"}
+
+data: {"type": "text", "content": "동인구를 자랑하는 초대형 상권입니다.\n\n**월 매출**: 강남역 1,396"}
+
+data: {"type": "text", "content": "억원 vs 잠실역 1,073억원 `(compare_districts)`으로 강남역이 30% 높습니다. 절"}
+
+data: {"type": "text", "content": "대적 매출 규모에서 강남역이 우세합니다.\n\n**점포당 매출 효율**: 잠실역이 월"}
+
+data: {"type": "text", "content": " 4,768만원으로 강남역 2,731만원의 **1.7배** `(compare_districts)`입니다. 경"}
+
+data: {"type": "text", "content": "쟁 밀도가 상대적으로 낮아 개별 점포 수익성이 "}
+
+data: {"type": "text", "content": "뛰어납니다.\n\n**폐업률**: 잠실역 2.4% vs 강남역 2.3% `(compare_districts)`로 거의 동"}
+
+data: {"type": "text", "content": "일하게 안정적입니다.\n\n## 각 상권 적합 시나리오\n\n**잠실역이"}
+
+data: {"type": "text", "content": " 유리한 경우**:\n- 초기 자본이 제한적인"}
+
+data: {"type": "text", "content": " 소상공인\n- 안정적 수익을 원하는 업"}
+
+data: {"type": "text", "content": "종 (40대 주 고객층)\n- 경쟁 "}
+
+data: {"type": "text", "content": "밀도가 낮은 환경 선호\n- 점포당 효율성"}
+
+data: {"type": "text", "content": " 중시\n\n**강남역이 유리한 경우**:\n- 대규모 투자 가능한 프랜차이즈\n-"}
+
+data: {"type": "text", "content": " 젊은 고객층(20대) 타겟 업종\n- 높은 유동인구 활"}
+
+data: {"type": "text", "content": "용 가능한 비즈니스\n- 브랜드 인지도 구축 목"}
+
+data: {"type": "text", "content": "적\n\n## 종합 판단\n\n**안정적 수익 추구**: 잠실역 추천 "}
+
+data: {"type": "text", "content": "- 점포당 매출이 1.7배 높아 같은 투"}
+
+data: {"type": "text", "content": "자로 더 나은 수익성 기대\n**규모의"}
+
+data: {"type": "text", "content": " 경제 추구**: 강남역 추천 - 6.7배 많은 유동인구로 대형"}
+
+data: {"type": "text", "content": " 매장이나 체인점에 유"}
+
+data: {"type": "text", "content": "리\n\n어떤 업종을 고려 중이"}
+
+data: {"type": "text", "content": "신지, 또는 각 상권의 리스크 요소"}
+
+data: {"type": "text", "content": "도 비교해드릴까요?"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done"}
+

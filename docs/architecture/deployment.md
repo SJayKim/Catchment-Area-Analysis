@@ -10,11 +10,13 @@
 |---|---|---|---|
 | `db` | 5432:5432 | postgis/postgis:16-3.4 | PostgreSQL + PostGIS |
 | `redis` | 6379:6379 | redis:7-alpine | 캐시 (maxmemory 256MB, allkeys-lru) |
-| `backend` | 8002:8000 | local build | FastAPI (uvicorn) |
-| `frontend` | 3001:3000 | local build | Next.js standalone |
+| `backend` | 8000:8000 | local build | FastAPI (uvicorn) |
+| `frontend` | 3000:3000 | local build | Next.js standalone |
 | `nginx` | 8080:80 | nginx:alpine | 개발용 리버스 프록시 |
 
 모든 서비스 `restart: unless-stopped`, `healthcheck` 정의. 로컬 개발은 `docker compose up -d db redis` 만 띄우고 backend/frontend 는 호스트에서 실행해도 된다.
+
+> **E2E 전용 포트 (`docker-compose.e2e.yml`)**: 일반 dev stack 과 충돌 없이 병행하기 위해 backend `8002:8000`, frontend `3001:3000` 으로 호스트 포트만 다르게 매핑한다. Playwright `baseURL` 기본값(`http://localhost:3001`)이 이 매핑을 가정한다.
 
 ### 1.2 프로덕션 (`docker-compose.prod.yml`)
 

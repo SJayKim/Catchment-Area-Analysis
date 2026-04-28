@@ -1,0 +1,55 @@
+{
+  "id": "C-private-info",
+  "category": "C",
+  "turn_count": 1,
+  "session_id": "qs-C-private-info-ff0a7645",
+  "turns": [
+    {
+      "events_count": 15,
+      "text": "요청하신 분석에 필요한 공공데이터를 조회하지 못했습니다. 다른 상권을 선택하시거나, 비교/추천 대상을 명확히 알려주시면 다시 분석해드리겠습니다.\n\n참고로 현재 제공되는 서울시 상권분석 데이터에는 **임대료 정보가 포함되어 있지 않습니다**. 대신 다음과 같은 분석을 도움드릴 수 있어요:\n\n- **강남역 상권 전반 분석** (유동인구, 매출, 점포 현황)\n- **업종별 창업 추천** (매출 잠재력, 경쟁 현황 기반)\n- **인근 상권과의 비교** (역삼역, 선릉역 등)\n- **특정 업종 리스크 분석** (폐업률, 포화도 등)\n\n어떤 분석이 필요하신지 말씀해 주세요!",
+      "tools": [],
+      "tool_inputs": [],
+      "cards": [],
+      "suggestions": [
+        "강남역에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [],
+      "intent": null,
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 6.99,
+      "user_message": "강남역에서 임대료 얼마야?"
+    }
+  ],
+  "rubric": {
+    "score": 3,
+    "max": 4,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "must_contain_any_in_text",
+        true,
+        "need-any=['매출', '유동인구', '데이터', '임대료', '제공']"
+      ]
+    ]
+  },
+  "total_elapsed_s": 6.99
+}

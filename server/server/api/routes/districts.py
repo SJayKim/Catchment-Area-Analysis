@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.exc import OperationalError
 
+from server.api.errors import raise_db_unavailable, raise_not_found
 from server.repositories import get_data_access
 from server.services.cache import get_cache_service
 
@@ -197,10 +198,7 @@ async def list_districts(
         )
     except OperationalError:
         logger.exception("Database unavailable in list_districts")
-        raise HTTPException(
-            status_code=503,
-            detail="Database temporarily unavailable",
-        ) from None
+        raise_db_unavailable()
 
 
 @router.get("/districts/{code}", response_model=DistrictDetail)
@@ -210,16 +208,13 @@ async def get_district(code: str) -> DistrictDetail:
         da = get_data_access()
         detail = await da.districts.get_district_detail(code)
         if detail is None:
-            raise HTTPException(status_code=404, detail=f"District '{code}' not found")
+            raise_not_found("District", code)
         return DistrictDetail(**detail)
     except HTTPException:
         raise
     except OperationalError:
         logger.exception("Database unavailable in get_district")
-        raise HTTPException(
-            status_code=503,
-            detail="Database temporarily unavailable",
-        ) from None
+        raise_db_unavailable()
 
 
 @router.get("/districts/{code}/preview", response_model=DistrictPreview)
@@ -249,7 +244,7 @@ async def get_district_preview(
         # 1) 기본 메타 (name / type / quarter / center)
         detail = await da.districts.get_district_detail(code)
         if detail is None:
-            raise HTTPException(status_code=404, detail=f"District '{code}' not found")
+            raise_not_found("District", code)
 
         current_quarter = detail.get("data_quarter")
         prev_quarter = _prev_quarter(current_quarter)
@@ -296,10 +291,7 @@ async def get_district_preview(
         raise
     except OperationalError:
         logger.exception("Database unavailable in get_district_preview code=%s", code)
-        raise HTTPException(
-            status_code=503,
-            detail="Database temporarily unavailable",
-        ) from None
+        raise_db_unavailable()
     except Exception:  # pragma: no cover — defensive fallback
         logger.exception("Unexpected preview failure code=%s", code)
         # 데이터 실패 시에도 정적 suggested_questions 로 degrade

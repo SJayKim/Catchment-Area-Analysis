@@ -22,7 +22,9 @@ allowed-tools: Read, Write, Grep, Glob, Bash
 
 ### 3. Memory 훑기
 ```bash
-grep -l "<키워드>" "C:/Users/cyon1/.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/"feedback_*.md
+# 환경변수 우선, fallback 으로 절대 경로
+MEM_DIR="${CLAUDE_MEMORY_DIR:-${HOME}/.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory}"
+grep -l "<키워드>" "${MEM_DIR}"/feedback_*.md
 ```
 `$2` 에서 핵심 키워드 추출(예: sse, mock, sales, utf-8, react, playwright) 후 feedback 파일 최대 3건 수집.
 

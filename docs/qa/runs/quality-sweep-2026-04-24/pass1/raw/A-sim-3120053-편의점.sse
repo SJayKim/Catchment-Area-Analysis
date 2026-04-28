@@ -1,0 +1,124 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54052101713452, "lng": 127.06941385153138, "zoom": 4}, "district_code": "3120053", "district_name": "건대입구역(건대)", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "simulation", "steps": ["매출 시뮬레이션"]}
+
+
+
+data: {"type": "tool", "name": "simulate_revenue", "input": {"district_code": "3120053", "category_code": "CS300002"}, "progress_label": "매출 시뮬레이션 중..."}
+
+
+
+data: {"type": "tool_end", "name": "simulate_revenue", "done_label": "매출 시뮬레이션 완료"}
+
+
+
+data: {"type": "card", "card_type": "simulation", "data": {"district_code": "3120053", "category_code": "CS300002", "category_name": "", "quarter": "2025Q4", "simulation": {"low": 95708000, "avg": 184053847, "high": 336450432}, "basis": {"total_monthly_sales": 1472430777, "store_count": 8, "additional_competitors": 0, "effective_stores": 8, "unit_price": null, "default_unit_price": null, "price_ratio": 1.0}, "percentiles": {"p25_ratio": 0.52, "p75_ratio": 1.828, "sample_count": 537, "reliable": true}, "seoul_comparison": {"seoul_avg": 172271277, "diff_percent": 6.8, "label": "높음"}, "disclaimer": "본 시뮬레이션은 카드매출 기반 추정치이며, 실제 매출과 다를 수 있습니다.", "dataSources": [{"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "건대입구역에서 편의점을 창업하면 월 평균 1억"}
+
+
+
+data: {"type": "text", "content": " 8,400만원 정도의 매출을 기대할 수 있습니다.**\n\n## 매"}
+
+
+
+data: {"type": "text", "content": "출 시뮬레이션 결과\n\n**예상 매출 범위** `(simulate"}
+
+
+
+data: {"type": "text", "content": "_revenue)`:\n- **최저 수준**: 월 9,570만원\n- **평균 "}
+
+
+
+data: {"type": "text", "content": "수준**: 월 1억 8,405만원  \n- **최고 수준**: 월 3억 3,645만원\n\n이는 건"}
+
+
+
+data: {"type": "text", "content": "대 지역 편의점 8개 점포의 실제 카드매출 데이터("}
+
+
+
+data: {"type": "text", "content": "월 14억 7,243만원)를 기반으로 산"}
+
+
+
+data: {"type": "text", "content": "출한 추정치입니다.\n\n## 서울 평균과의 비교\n\n건대 편의점 예"}
+
+
+
+data: {"type": "text", "content": "상 매출은 **서울 편의점 평균(1억 7,227만원) 대비 6"}
+
+
+
+data: {"type": "text", "content": ".8% 높은 수준**입니다. 대학가 특성상 "}
+
+
+
+data: {"type": "text", "content": "젊은 고객층의 높은 이용 빈도가 매출에"}
+
+
+
+data: {"type": "text", "content": " 긍정적 영향을 미치는 것으로 보입니다.\n\n## 신뢰도와 주"}
+
+
+
+data: {"type": "text", "content": "의사항\n\n- 분석 샘플: 서울시 편"}
+
+
+
+data: {"type": "text", "content": "의점 537개 점포 데이터 기반으로 **신뢰도 높"}
+
+
+
+data: {"type": "text", "content": "음**\n- 상위 25% 점포는 평균의 1"}
+
+
+
+data: {"type": "text", "content": ".83배, 하위 25%는 평균의 52% 수준\n- **카드매출 기반 추"}
+
+
+
+data: {"type": "text", "content": "정치**로 현금 결제는 미포함\n- 실제 매"}
+
+
+
+data: {"type": "text", "content": "출은 입지, 운영 방식, 경쟁 상"}
+
+
+
+data: {"type": "text", "content": "황에 따라 달라질 수 있습니다\n\n건대 상권의 유동인구나 경"}
+
+
+
+data: {"type": "text", "content": "쟁 현황이 궁금하시면 **상권 분석**을 요청해"}
+
+
+
+data: {"type": "text", "content": "보세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["상권 분석해줘", "업종 추천해줘", "리스크 확인해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "f67c961de861920c88d6b845846413f6"}
+
+
+

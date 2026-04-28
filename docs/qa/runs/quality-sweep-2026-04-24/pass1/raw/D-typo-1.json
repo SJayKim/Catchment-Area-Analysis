@@ -1,0 +1,195 @@
+{
+  "id": "D-typo-1",
+  "category": "D",
+  "turn_count": 1,
+  "session_id": "qs-D-typo-1-92edadce",
+  "turns": [
+    {
+      "events_count": 43,
+      "text": "# 강남역 상권 분석 요약\n\n**강남역은 서울 최고 수준의 유동인구를 자랑하는 초대형 발달상권으로, 안정적인 운영 환경과 높은 매출 잠재력을 보유한 프리미엄 상권입니다.**\n\n## 📊 핵심 지표 (2025Q4 기준)\n\n### 유동인구\n- **하루 평균 745만 3천명** `(get_district_summary)` - 서울 평균(9만 2천명) 대비 **81배**의 압도적 규모\n- **오후 5시 피크**: 165만 3천명으로 최고점 기록\n- **20대 중심**: 전체 유동인구의 26.8%가 20대로 젊은 소비층 집중\n\n### 매출 현황  \n- **월 추정 매출 1,396억원** `(get_district_summary)` - 서울 평균(550억원) 대비 **2.5배**\n- **점포당 월 매출 2,731만원** `(get_district_summary)` - 서울 평균(4,600만원) 대비 **59% 수준**\n- 발달상권 중 **상위 25%** 매출 규모이나, 점포당 효율성은 **하위 25%**\n\n### 점포 환경\n- **폐업률 2.3%** `(get_district_summary)` - 서울 평균(5.9%) 대비 **절반 수준**의 안정성\n- **프랜차이즈 비율 9.7%** `(get_district_summary)` - 개인 창업 친화적 환경\n- 주요 업종: 일반의원(476개), 부동산중개업(447개), 한식음식점(410개)\n\n## 🎯 기회와 리스크\n\n### ✅ 기회 요소\n- **압도적 유동인구**: 서울 최고 수준의 고객 접점\n- **낮은 폐업률**: 안정적인 사업 환경\n- **20대 집중**: 트렌드에 민감한 젊은 소비층\n- **개인 창업 우호적**: 낮은 프랜차이즈 비율\n\n### ⚠️ 주의 요소  \n- **점포당 매출 효율 부진**: 높은 임대료 대비 개별 점포 수익성 제한\n- **주말 매출 하락**: 평일 대비 72.7% 감소하는 오피스 상권 특성\n- **치열한 경쟁**: 막대한 유동인구만큼 점포 밀도도 높음\n\n## 💡 시사점\n\n강남역은 **'규모의 경제'**가 핵심인 상권입니다. 높은 임대료를 감당할 수 있는 자본력과 대량 고객 처리 능력이 있다면 최고의 기회를, 그렇지 않다면 높은 리스크를 안게 됩니다.\n\n---\n\n**더 자세한 분석이 궁금하시다면:**\n- \"강남역에서 뭐하면 좋을까?\" - 업종별 추천 분석\n- \"강남역 리스크 분석해줘\" - 위험 요소 상세 검토  \n- \"유동인구 시간대별로 보여줘\" - 시간대별 고객 패턴\n- \"다른 상권이랑 비교해줘\" - 타 상권과의 비교 분석",
+      "tools": [
+        "get_district_summary"
+      ],
+      "tool_inputs": [
+        {
+          "name": "get_district_summary",
+          "input": {
+            "district_code": "3120189"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "summary",
+          "data": {
+            "districtName": "강남역",
+            "districtType": "발달상권",
+            "summary": "하루 평균 유동인구 745만 3천명, 월 추정 매출 1395억 6천만원의 안정적인 발달상권입니다.",
+            "monthlySales": 139568168199,
+            "floatingPopulation": {
+              "dailyAvg": 7453202,
+              "peakHour": 17,
+              "byHour": [
+                {
+                  "hour": 0,
+                  "pop": 903516
+                },
+                {
+                  "hour": 6,
+                  "pop": 1389371
+                },
+                {
+                  "hour": 11,
+                  "pop": 1360561
+                },
+                {
+                  "hour": 14,
+                  "pop": 1414726
+                },
+                {
+                  "hour": 17,
+                  "pop": 1653367
+                },
+                {
+                  "hour": 21,
+                  "pop": 731661
+                }
+              ]
+            },
+            "topCategories": [
+              {
+                "name": "일반의원",
+                "count": 476
+              },
+              {
+                "name": "부동산중개업",
+                "count": 447
+              },
+              {
+                "name": "한식음식점",
+                "count": 410
+              },
+              {
+                "name": "세무사사무소",
+                "count": 397
+              },
+              {
+                "name": "화장품",
+                "count": 240
+              }
+            ],
+            "status": "stable",
+            "closeRate": {
+              "current": 2.3,
+              "average": 6.5
+            },
+            "insights": {
+              "ageInsight": "20대 (26.8%)",
+              "perStoreSales": 27307409,
+              "franchiseRatio": 9.7,
+              "weekendUplift": -72.7
+            },
+            "dataQuarter": "2025Q4",
+            "dataSources": [
+              {
+                "id": "seoul_floating_pop",
+                "name": "상권-유동인구",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarFlpopQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ],
+            "benchmarks": {
+              "districtType": "발달상권",
+              "sampleCount": 120,
+              "rankings": {
+                "floatingPop": "상위 25%",
+                "monthlySales": "상위 25%",
+                "closeRate": "상위 25% (우수)",
+                "storeCount": "상위 25%",
+                "perStoreSales": "하위 25%"
+              },
+              "seoulAvg": {
+                "floating_pop": 92000,
+                "monthly_sales": 55000000000,
+                "close_rate": 5.9,
+                "store_count": 950,
+                "per_store_sales": 46000000
+              }
+            }
+          }
+        }
+      ],
+      "suggestions": [
+        "강남역에서 뭐하면 좋을까?",
+        "강남역 리스크 분석해줘",
+        "유동인구 시간대별로 보여줘",
+        "다른 상권이랑 비교해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "상권 종합 요약 조회"
+      ],
+      "intent": "summary",
+      "trace_id": "0e97189fdd2851c566e1b32219ee672d",
+      "done": true,
+      "elapsed_s": 16.99,
+      "user_message": "강남역 요약햊"
+    }
+  ],
+  "rubric": {
+    "score": 5,
+    "max": 5,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=1244 need=150"
+      ],
+      [
+        "intent_any",
+        true,
+        "got=summary need-any=['summary']"
+      ]
+    ]
+  },
+  "total_elapsed_s": 16.99
+}

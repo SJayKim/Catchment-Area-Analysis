@@ -1,0 +1,52 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "안녕하세요!"}
+
+
+
+data: {"type": "text", "content": " 저는 서울 상권 분석 AI 컨설턴트 '마켓스코프'입니다. \n\n서울시 1"}
+
+
+
+data: {"type": "text", "content": ",650개 상권의 유동인구, 매출, 점포 현황, 업종별 데이터를 분"}
+
+
+
+data: {"type": "text", "content": "석하여 창업과 사업 운영에 도움이 되는 인사이트"}
+
+
+
+data: {"type": "text", "content": "를 제공합니다.\n\n어떤 상권이나 업종에 대해 궁금한 점이 있으시면 언"}
+
+
+
+data: {"type": "text", "content": "제든 말씀해 주세요! \n\n예를 들어:\n- \"홍대 상권 분석해"}
+
+
+
+data: {"type": "text", "content": "줘\"\n- \"강남역과 신촌 비교해줘\" \n- \"카페 창"}
+
+
+
+data: {"type": "text", "content": "업하기 좋은 상권 추천해줘\"\n\n어떤 분석이 필"}
+
+
+
+data: {"type": "text", "content": "요하신가요?"}
+
+
+
+data: {"type": "suggestion", "questions": ["여기에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+
+
+data: {"type": "done", "trace_id": "2c9307d6e03d08fd245eca665ddb93a9"}
+
+
+

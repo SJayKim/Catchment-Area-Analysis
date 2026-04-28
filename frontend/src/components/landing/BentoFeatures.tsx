@@ -1,8 +1,18 @@
 'use client';
 
+import {
+  Columns3,
+  FileText,
+  Map,
+  MessagesSquare,
+  Target,
+  TrendingUp,
+  type LucideIcon,
+} from 'lucide-react';
+
 interface Cell {
   id: string;
-  emoji: string;
+  Icon: LucideIcon;
   title: string;
   desc: string;
   accent: 'blue' | 'teal' | 'amber' | 'rose' | 'indigo' | 'slate';
@@ -11,44 +21,44 @@ interface Cell {
 const CELLS: Cell[] = [
   {
     id: 'map',
-    emoji: '🗺️',
-    title: '지도 기반 탐색',
-    desc: '1,650개 서울 상권을 한눈에. 클릭 한 번으로 핵심 지표 프리뷰.',
+    Icon: Map,
+    title: '지도 기반 상권 탐색',
+    desc: '서울 1,650개 상권을 한 화면에서 탐색하고, 폴리곤을 클릭해 핵심 지표를 바로 확인합니다.',
     accent: 'blue',
   },
   {
     id: 'chat',
-    emoji: '💬',
-    title: '대화형 AI 리포트',
-    desc: '자연어로 질문하면 Claude + Gemini가 데이터를 해석해 답합니다.',
+    Icon: MessagesSquare,
+    title: '대화형 리포트',
+    desc: '질문을 던지면 필요한 지표를 골라 근거와 함께 답합니다.',
     accent: 'teal',
   },
   {
     id: 'compare',
-    emoji: '📊',
-    title: '2~3 상권 비교',
-    desc: '다색 하이라이트로 동시에. 매출·유동인구·점포 한 장.',
+    Icon: Columns3,
+    title: '2~3 상권 나란히 비교',
+    desc: '매출·유동인구·점포 구성을 다색 하이라이트로 같은 화면에서 대조합니다.',
     accent: 'amber',
   },
   {
     id: 'recommend',
-    emoji: '🎯',
-    title: '업종 추천',
-    desc: '예산·상권 특성 기반 Top 5 업종 점수와 근거 제공.',
+    Icon: Target,
+    title: '유망 업종 추천',
+    desc: '상권 특성과 예산 조건을 반영해 Top 5 업종을 점수와 근거로 제시합니다.',
     accent: 'rose',
   },
   {
     id: 'simulation',
-    emoji: '📈',
-    title: '매출 시뮬레이션',
-    desc: '월 예상 매출 p25/p50/p75 범위. 서울 평균 대비 자동 비교.',
+    Icon: TrendingUp,
+    title: '월 매출 시뮬레이션',
+    desc: 'p25·중앙값·p75 범위를 서울 평균과 함께 자동 비교합니다.',
     accent: 'indigo',
   },
   {
     id: 'pdf',
-    emoji: '📄',
-    title: 'PDF 리포트',
-    desc: '분석 결과를 한 번에 PDF로 저장. 고객·투자자 공유용.',
+    Icon: FileText,
+    title: 'PDF 리포트 저장',
+    desc: '분석 결과를 한 파일로 정리해 고객·투자자 공유용으로 내보냅니다.',
     accent: 'slate',
   },
 ];
@@ -77,7 +87,7 @@ export default function BentoFeatures() {
           무엇을 할 수 있나요?
         </h2>
         <p className="text-sm lg:text-base mb-10" style={{ color: 'var(--text-secondary)' }}>
-          LLM 무호출 프리뷰부터 PDF 리포트까지. 클릭만으로 이어집니다.
+          지도 클릭에서 시작해, 비교·추천·시뮬레이션·PDF까지 한 흐름으로 이어집니다.
         </p>
 
         <div
@@ -98,14 +108,14 @@ export default function BentoFeatures() {
               }}
             >
               <div
-                className="inline-flex items-center justify-center w-10 h-10 rounded-xl mb-3 text-xl"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-xl mb-3"
                 style={{
-                  backgroundColor: `color-mix(in srgb, ${ACCENT_MAP[cell.accent]} 18%, transparent)`,
+                  backgroundColor: `color-mix(in srgb, ${ACCENT_MAP[cell.accent]} 14%, transparent)`,
                   color: ACCENT_MAP[cell.accent],
                 }}
                 aria-hidden
               >
-                {cell.emoji}
+                <cell.Icon size={20} strokeWidth={1.75} />
               </div>
               <h3
                 className="text-base font-semibold mb-1"

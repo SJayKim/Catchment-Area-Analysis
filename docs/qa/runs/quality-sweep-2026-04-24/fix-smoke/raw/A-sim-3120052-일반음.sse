@@ -1,0 +1,48 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54467215910094, "lng": 127.05667376479036, "zoom": 4}, "district_code": "3120052", "district_name": "성수역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "simulation", "steps": ["매출 시뮬레이션"]}
+
+data: {"type": "tool", "name": "simulate_revenue", "input": {"district_code": "3120052", "category_code": null}, "progress_label": "매출 시뮬레이션 중..."}
+
+data: {"type": "tool_end", "name": "simulate_revenue", "done_label": "매출 시뮬레이션 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "plan", "intent": "simulation", "steps": ["매출 시뮬레이션"]}
+
+data: {"type": "tool", "name": "simulate_revenue", "input": {"district_code": "3120052", "category_code": null}, "progress_label": "매출 시뮬레이션 중..."}
+
+data: {"type": "tool_end", "name": "simulate_revenue", "done_label": "매출 시뮬레이션 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "plan", "intent": "simulation", "steps": ["매출 시뮬레이션"]}
+
+data: {"type": "tool", "name": "simulate_revenue", "input": {"district_code": "3120052", "category_code": null}, "progress_label": "매출 시뮬레이션 중..."}
+
+data: {"type": "tool_end", "name": "simulate_revenue", "done_label": "매출 시뮬레이션 완료"}
+
+data: {"type": "thinking", "step": "추가 데이터 수집 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "매"}
+
+data: {"type": "text", "content": "출 시뮬레이션을 위해서는 구체적인 업종이 필요합니다. 예를 들어 '카페', '한식음식점', '치킨전문"}
+
+data: {"type": "text", "content": "점', '편의점' 등으로 말씀해 주세요.\n\n일반음식점은 범위가 너무 넓어서 정"}
+
+data: {"type": "text", "content": "확한 분석이 어렵습니다. 성수 지역에서 어떤 종"}
+
+data: {"type": "text", "content": "류의 음식점을 고려하고 계신지 구"}
+
+data: {"type": "text", "content": "체적으로 알려주시면, 해당 업종의 매출 예상과 리스크 "}
+
+data: {"type": "text", "content": "분석을 제공해드리겠습니다."}
+
+data: {"type": "suggestion", "questions": ["성수역에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done", "trace_id": "5023f1a7144159faa51e8e72ceb5ae2d"}
+

@@ -1,0 +1,220 @@
+{
+  "id": "A-summary-3120157",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-summary-3120157-26d875a1",
+  "turns": [
+    {
+      "events_count": 38,
+      "text": "**신림역(신림)은 20대 중심의 대학가 발달상권으로, 높은 유동인구에 비해 매출 효율이 아쉬운 상권입니다.**\n\n## 핵심 지표 분석\n\n**유동인구**: 하루 평균 444만 4천명 `(get_district_summary)`으로 서울 평균(9만 2천명) 대비 **48배**에 달하는 초대형 유동인구를 보유합니다. 발달상권 중에서도 **상위 25%**에 해당하는 수준입니다. 자정(0시)에 107만명으로 피크를 기록하는 특이한 패턴을 보이며, 이는 대학가 특성상 늦은 시간까지 활동하는 젊은층이 많기 때문으로 보입니다.\n\n**매출**: 월 추정 매출 196억 1천만원 `(get_district_summary)`으로 점포당 월 1,655만원 수준입니다. 서울 평균 점포당 매출(4,600만원) 대비 **36% 수준**으로 매출 효율이 낮은 편입니다. 발달상권 중에서도 **하위 25%**에 속해 높은 유동인구 대비 매출 전환율이 아쉽습니다.\n\n**점포 현황**: 총 1,185개 점포 중 일반의류(155개), 한식음식점(122개), 부동산중개업(75개) 순으로 분포되어 있습니다. 프랜차이즈 비율 12.4% `(get_district_summary)`로 개인 사업자 중심의 상권 구조를 보입니다.\n\n## 기회와 리스크\n\n**기회**:\n- 폐업률 2.3% `(get_district_summary)`로 서울 평균(6.5%) 대비 매우 낮아 안정적\n- 20대 고객 비중 34.2%로 젊은 소비층 집중\n- 프랜차이즈 비율이 낮아 개인 창업 진입 장벽 상대적으로 낮음\n\n**주의사항**:\n- 높은 유동인구 대비 낮은 매출 효율 (구매 전환율 부진)\n- 주말 매출이 평일 대비 61.7% 낮아 주중 의존도 높음\n- 대학가 특성상 방학 시즌 매출 변동 가능성\n\n신림역은 안정적이지만 매출 효율 개선이 필요한 상권입니다. **업종 추천이나 다른 상권과의 비교 분석**이 궁금하시면 말씀해 주세요!",
+      "tools": [
+        "get_district_summary"
+      ],
+      "tool_inputs": [
+        {
+          "name": "get_district_summary",
+          "input": {
+            "district_code": "3120157"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "summary",
+          "data": {
+            "districtName": "신림역(신림)",
+            "districtType": "발달상권",
+            "summary": "하루 평균 유동인구 444만 4천명, 월 추정 매출 196억 1천만원의 안정적인 발달상권입니다.",
+            "monthlySales": 19611661376,
+            "floatingPopulation": {
+              "dailyAvg": 4444221,
+              "peakHour": 0,
+              "byHour": [
+                {
+                  "hour": 0,
+                  "pop": 1070730
+                },
+                {
+                  "hour": 6,
+                  "pop": 860470
+                },
+                {
+                  "hour": 11,
+                  "pop": 508847
+                },
+                {
+                  "hour": 14,
+                  "pop": 536366
+                },
+                {
+                  "hour": 17,
+                  "pop": 846991
+                },
+                {
+                  "hour": 21,
+                  "pop": 620817
+                }
+              ]
+            },
+            "topCategories": [
+              {
+                "name": "일반의류",
+                "count": 155
+              },
+              {
+                "name": "한식음식점",
+                "count": 122
+              },
+              {
+                "name": "부동산중개업",
+                "count": 75
+              },
+              {
+                "name": "여관",
+                "count": 66
+              },
+              {
+                "name": "피부관리실",
+                "count": 64
+              }
+            ],
+            "status": "stable",
+            "closeRate": {
+              "current": 2.3,
+              "average": 6.5
+            },
+            "insights": {
+              "ageInsight": "20대 (34.2%)",
+              "perStoreSales": 16549925,
+              "franchiseRatio": 12.4,
+              "weekendUplift": -61.7
+            },
+            "dataQuarter": "2025Q4",
+            "dataSources": [
+              {
+                "id": "seoul_floating_pop",
+                "name": "상권-유동인구",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarFlpopQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ],
+            "benchmarks": {
+              "districtType": "발달상권",
+              "sampleCount": 120,
+              "rankings": {
+                "floatingPop": "상위 25%",
+                "monthlySales": "하위 25%",
+                "closeRate": "상위 25% (우수)",
+                "storeCount": "상위 50%",
+                "perStoreSales": "하위 25%"
+              },
+              "seoulAvg": {
+                "floating_pop": 92000,
+                "monthly_sales": 55000000000,
+                "close_rate": 5.9,
+                "store_count": 950,
+                "per_store_sales": 46000000
+              }
+            }
+          }
+        }
+      ],
+      "suggestions": [
+        "신림역(신림)에서 뭐하면 좋을까?",
+        "신림역(신림) 리스크 분석해줘",
+        "유동인구 시간대별로 보여줘",
+        "다른 상권이랑 비교해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "상권 종합 요약 조회"
+      ],
+      "intent": "summary",
+      "trace_id": "f97f9b17e8708cc4c05cf89c91f675aa",
+      "done": true,
+      "elapsed_s": 14.56,
+      "user_message": "신림역 요약 부탁"
+    }
+  ],
+  "rubric": {
+    "score": 10,
+    "max": 10,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=942 need=300"
+      ],
+      [
+        "intent",
+        true,
+        "got=summary need=summary"
+      ],
+      [
+        "tool_names_include",
+        true,
+        "missing=[] got=['get_district_summary']"
+      ],
+      [
+        "card_types_include",
+        true,
+        "missing=[] got=['summary']"
+      ],
+      [
+        "card_district_name",
+        true,
+        "got=['신림역(신림)'] need=신림역(신림)"
+      ],
+      [
+        "card_district_type",
+        true,
+        "got=['발달상권'] need=발달상권"
+      ],
+      [
+        "suggestion_count_min",
+        true,
+        "got=4"
+      ]
+    ]
+  },
+  "total_elapsed_s": 14.56
+}

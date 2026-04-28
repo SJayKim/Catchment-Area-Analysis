@@ -253,27 +253,41 @@ class RealDistrictRepository:
         """
         found: list[dict] = []
         seen_codes: set[str] = set()
+        candidates = self._candidate_words(message)
+        logger.info(
+            "detect_districts: msg=%r candidates=%s",
+            message[:80],
+            candidates,
+        )
 
-        for candidate in self._candidate_words(message):
+        for candidate in candidates:
             if len(found) >= 5:
                 break
             pool = await self._fetch_match_pool(candidate)
             if not pool:
+                logger.info("detect_districts: %r → empty pool (no rows match)", candidate)
                 continue
 
             ranked = rank_candidates(candidate, pool)
             best, alts, is_ambiguous = pick_best(ranked)
             if best is None:
-                if logger.isEnabledFor(logging.DEBUG):
-                    top = ranked[0] if ranked else None
-                    logger.debug(
-                        "detect_districts: %r → no candidate above TOP1_MIN (top=%s)",
-                        candidate,
-                        top.to_dict() if top else None,
-                    )
+                top = ranked[0] if ranked else None
+                logger.info(
+                    "detect_districts: %r → below TOP1_MIN (top=%s)",
+                    candidate,
+                    top.to_dict() if top else None,
+                )
                 continue
             if best.code in seen_codes:
                 continue
+            logger.info(
+                "detect_districts: %r → %s score=%.3f alts=%d ambiguous=%s",
+                candidate,
+                f"{best.code}/{best.name}",
+                best.score,
+                len(alts),
+                is_ambiguous,
+            )
 
             entry: dict = {
                 "code": best.code,

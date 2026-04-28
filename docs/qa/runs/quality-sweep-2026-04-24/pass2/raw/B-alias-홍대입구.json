@@ -1,0 +1,196 @@
+{
+  "id": "B-alias-홍대입구",
+  "category": "B",
+  "turn_count": 1,
+  "session_id": "qs-B-alias-홍대입구-07dc9c38",
+  "turns": [
+    {
+      "events_count": 43,
+      "text": "**홍대입구역은 20대 중심의 초대형 발달상권으로, 서울에서 가장 활발한 청년 문화 중심지입니다.**\n\n## 유동인구 분석\n하루 평균 **410만 6천명** `(get_district_summary)`의 압도적인 유동인구를 기록하며, 이는 서울 평균(9만 2천명) 대비 **44.6배**에 달하는 수치입니다. 발달상권 중에서도 **상위 25%**에 속하는 최상위권 규모입니다.\n\n오후 5시(17시)에 **98만 8천명**으로 피크를 찍으며, 새벽 6시 최저점(54만 3천명) 대비 1.8배 차이를 보입니다. 전형적인 **오후~저녁형 상권** 패턴입니다.\n\n## 매출 현황\n월 추정 매출 **532억원** `(get_district_summary)`으로 발달상권 중 **상위 50%** 수준입니다. 하지만 점포당 월 매출은 **1,785만원**으로 서울 평균(4,600만원) 대비 61% 낮아 **하위 25%**에 속합니다. 이는 점포 수가 매우 많아 매출이 분산되는 구조를 의미합니다.\n\n## 고객층 특성\n- **연령**: 20대가 **43.5%**로 압도적 비중\n- **성별**: 여성 52.7%로 남성 대비 5.4%p 높음\n- **소비 패턴**: 주말 매출이 평일 대비 **45.3% 낮음** (평일 중심 소비)\n\n## 점포 현황 및 안정성\n총 **2,982개** 점포 중 상위 업종은:\n1. **한식음식점** (316개)\n2. **일반의류** (264개) \n3. **호프-간이주점** (246개)\n4. **커피-음료** (224개)\n5. **미용실** (190개)\n\n폐업률 **4.0%** `(get_district_summary)`로 서울 평균(5.9%) 대비 낮아 **상위 25%** 안정성을 보입니다. 프랜차이즈 비율은 **8.7%**로 개인 창업 친화적입니다.\n\n## 기회와 리스크\n**✅ 기회**:\n- 서울 최고 수준의 유동인구와 20대 집중도\n- 낮은 폐업률과 프랜차이즈 비율\n- 다양한 업종의 공존 가능\n\n**⚠️ 주의사항**:\n- 점포당 매출 효율성 낮음 (경쟁 과열)\n- 평일 중심 소비로 주말 매출 부진\n- 임대료 부담과 치열한 경쟁 예상\n\n홍대입구역에서 **어떤 업종을 고려 중이신지**, 또는 **다른 상권과의 비교**가 궁금하시면 말씀해 주세요!",
+      "tools": [
+        "get_district_summary"
+      ],
+      "tool_inputs": [
+        {
+          "name": "get_district_summary",
+          "input": {
+            "district_code": "3120103"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "summary",
+          "data": {
+            "districtName": "홍대입구역(홍대)",
+            "districtType": "발달상권",
+            "summary": "하루 평균 유동인구 410만 6천명, 월 추정 매출 532억원의 안정적인 발달상권입니다.",
+            "monthlySales": 53200280285,
+            "floatingPopulation": {
+              "dailyAvg": 4106209,
+              "peakHour": 17,
+              "byHour": [
+                {
+                  "hour": 0,
+                  "pop": 759987
+                },
+                {
+                  "hour": 6,
+                  "pop": 543843
+                },
+                {
+                  "hour": 11,
+                  "pop": 554696
+                },
+                {
+                  "hour": 14,
+                  "pop": 694293
+                },
+                {
+                  "hour": 17,
+                  "pop": 988851
+                },
+                {
+                  "hour": 21,
+                  "pop": 564539
+                }
+              ]
+            },
+            "topCategories": [
+              {
+                "name": "한식음식점",
+                "count": 316
+              },
+              {
+                "name": "일반의류",
+                "count": 264
+              },
+              {
+                "name": "호프-간이주점",
+                "count": 246
+              },
+              {
+                "name": "커피-음료",
+                "count": 224
+              },
+              {
+                "name": "미용실",
+                "count": 190
+              }
+            ],
+            "status": "stable",
+            "closeRate": {
+              "current": 4.0,
+              "average": 6.5
+            },
+            "insights": {
+              "genderInsight": "여성 비중 높음 (여성 52.7%, 차이 5.4%p)",
+              "ageInsight": "20대 (43.5%)",
+              "perStoreSales": 17846454,
+              "franchiseRatio": 8.7,
+              "weekendUplift": -45.3
+            },
+            "dataQuarter": "2025Q4",
+            "dataSources": [
+              {
+                "id": "seoul_floating_pop",
+                "name": "상권-유동인구",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarFlpopQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ],
+            "benchmarks": {
+              "districtType": "발달상권",
+              "sampleCount": 120,
+              "rankings": {
+                "floatingPop": "상위 25%",
+                "monthlySales": "상위 50%",
+                "closeRate": "상위 25% (우수)",
+                "storeCount": "상위 25%",
+                "perStoreSales": "하위 25%"
+              },
+              "seoulAvg": {
+                "floating_pop": 92000,
+                "monthly_sales": 55000000000,
+                "close_rate": 5.9,
+                "store_count": 950,
+                "per_store_sales": 46000000
+              }
+            }
+          }
+        }
+      ],
+      "suggestions": [
+        "홍대입구역에서 뭐하면 좋을까?",
+        "홍대입구역 리스크 분석해줘",
+        "유동인구 시간대별로 보여줘",
+        "다른 상권이랑 비교해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "상권 종합 요약 조회"
+      ],
+      "intent": "summary",
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 16.61,
+      "user_message": "홍대입구 요약해줘"
+    }
+  ],
+  "rubric": {
+    "score": 4,
+    "max": 5,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "card_district_name",
+        true,
+        "got=['홍대입구역(홍대)'] need=홍대입구역(홍대)"
+      ],
+      [
+        "card_district_type",
+        true,
+        "got=['발달상권'] need=발달상권"
+      ]
+    ]
+  },
+  "total_elapsed_s": 16.61
+}

@@ -1,0 +1,15 @@
+
+> marketscope-frontend@0.4.0 test:e2e:ring2
+> playwright test ring2-journeys --project=chromium
+
+
+Running 5 tests using 1 worker
+
+  -  1 [chromium] › e2e\ring2-journeys\j01-first-time-user.spec.ts:17:5 › J01 first-time user — 강남역 click → summary → recommend → compare
+  ✓  2 [chromium] › e2e\ring2-journeys\j02-comparison-shopper.spec.ts:14:5 › J02 comparison shopper — 3-way compare → cafe analysis → simulation (1.1m)
+  ✓  3 [chromium] › e2e\ring2-journeys\j03-risk-first.spec.ts:15:5 › J03 risk-first — 건대 risk → recommend safer → confirm summary (58.1s)
+  ✓  4 [chromium] › e2e\ring2-journeys\j04-recovery.spec.ts:14:5 › J04 error recovery — vague query → recover via search (51.6s)
+  ✓  5 [chromium] › e2e\ring2-journeys\j05-pdf-stakeholder.spec.ts:14:5 › J05 PDF share — analyze + compare → PDF download (51.3s)
+
+  1 skipped
+  4 passed (3.8m)

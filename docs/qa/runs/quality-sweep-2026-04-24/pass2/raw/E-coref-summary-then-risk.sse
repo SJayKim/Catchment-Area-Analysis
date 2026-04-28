@@ -1,0 +1,171 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120103"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "홍대입구역(홍대)", "districtType": "발달상권", "summary": "하루 평균 유동인구 410만 6천명, 월 추정 매출 532억원의 안정적인 발달상권입니다.", "monthlySales": 53200280285, "floatingPopulation": {"dailyAvg": 4106209, "peakHour": 17, "byHour": [{"hour": 0, "pop": 759987}, {"hour": 6, "pop": 543843}, {"hour": 11, "pop": 554696}, {"hour": 14, "pop": 694293}, {"hour": 17, "pop": 988851}, {"hour": 21, "pop": 564539}]}, "topCategories": [{"name": "한식음식점", "count": 316}, {"name": "일반의류", "count": 264}, {"name": "호프-간이주점", "count": 246}, {"name": "커피-음료", "count": 224}, {"name": "미용실", "count": 190}], "status": "stable", "closeRate": {"current": 4.0, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 52.7%, 차이 5.4%p)", "ageInsight": "20대 (43.5%)", "perStoreSales": 17846454, "franchiseRatio": 8.7, "weekendUplift": -45.3}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 50%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "홍대입구역은 20대 중심의 초대형 발달상권으로, 서울에서 가장 활발한 "}
+
+data: {"type": "text", "content": "젊음의 거리 중 하나입니다.**\n\n## 📊 "}
+
+data: {"type": "text", "content": "핵심 지표 분석\n\n**유동인구**: 하루 평균 410만 6천명 `(get_district_summary)`으"}
+
+data: {"type": "text", "content": "로, 이는 서울 평균(9만 2천명) 대비 **44."}
+
+data: {"type": "text", "content": "6배**에 달하는 압도적인 규모입니다."}
+
+data: {"type": "text", "content": " 오후 5시(98만 9천명)에 피크를 기록하는"}
+
+data: {"type": "text", "content": " 전형적인 **퇴근 후 유흥·문화 소비형"}
+
+data: {"type": "text", "content": " 상권**이며, 20대가 43.5%로 절반 가"}
+
+data: {"type": "text", "content": "까이를 차지합니다.\n\n**매출 현황**: 월 추정 매출 532억원 `(get_district_summary)`으로 서울 평균("}
+
+data: {"type": "text", "content": "550억원) 수준이지만, 점포당 월 매출은 1,785"}
+
+data: {"type": "text", "content": "만원으로 서울 평균(4,600만원) 대비 **61% 낮은**"}
+
+data: {"type": "text", "content": " 효율을 보입니다. 이는 점포 수가 매우 많아("}
+
+data: {"type": "text", "content": "2,982개) 매출이 분산되기 때문입니다.\n\n**점포 현황**: "}
+
+data: {"type": "text", "content": "한식음식점(316개), 일반의류(264개), 호프·간이주점(246개), 커피·음료(224개) 순"}
+
+data: {"type": "text", "content": "으로 구성되어 있으며, 프랜차이즈 비율은 8.7%로 **개인 창업 중"}
+
+data: {"type": "text", "content": "심** 상권입니다.\n\n## 🎯 기회와 리스크\n\n**✅ 기회 요소**:\n- 서"}
+
+data: {"type": "text", "content": "울 최고 수준의 유동인구 (발달상권 중 상위 25%)\n- 낮은 "}
+
+data: {"type": "text", "content": "폐업률 4.0% (서울 평균 6.5% 대비 우수)\n- 20대 "}
+
+data: {"type": "text", "content": "젊은층 집중으로 트렌드 민감 "}
+
+data: {"type": "text", "content": "업종에 유리\n- 개인 창업 친화적 환경 (낮은 프"}
+
+data: {"type": "text", "content": "랜차이즈 비율)\n\n**⚠️ 주의 요소**:\n- 점포당 매출 효"}
+
+data: {"type": "text", "content": "율 낮음 (발달상권 중 하위 25%)\n- 극심한 경쟁 (총"}
+
+data: {"type": "text", "content": " 2,982개 점포)\n- 주말 매출 45% 하락으로 평일 의"}
+
+data: {"type": "text", "content": "존도 높음\n- 높은 임대료 부담 예상\n\n## 💡 시사점\n\n홍대는"}
+
+data: {"type": "text", "content": " **브랜드 인지도와 차별화**가 생존의"}
+
+data: {"type": "text", "content": " 핵심인 상권입니다. 엄청난 유동인구에도 불구하고 점포당 효"}
+
+data: {"type": "text", "content": "율이 낮다는 것은 그만큼 경쟁이 치열함을 의미합니다. 20대 타겟의"}
+
+data: {"type": "text", "content": " 독특하고 트렌디한 컨셉이라면"}
+
+data: {"type": "text", "content": " 기회가 있지만, 일반적인 업종으로는 매"}
+
+data: {"type": "text", "content": "출 확보가 어려울 수 있습니다.\n\n*※ 추정"}
+
+data: {"type": "text", "content": " 매출은 카드 매출 기반이며 "}
+
+data: {"type": "text", "content": "현금 매출은 미포함된 수치입니다.*\n\n---\n홍대에"}
+
+data: {"type": "text", "content": "서 어떤 업종을 고려 중이신가요? 구체적인 업"}
+
+data: {"type": "text", "content": "종 추천이나 다른 상권과의 비교 분석도 도"}
+
+data: {"type": "text", "content": "움드릴 수 있습니다!"}
+
+data: {"type": "suggestion", "questions": ["홍대입구역에서 뭐하면 좋을까?", "홍대입구역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done"}
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "risk", "steps": ["점포 이력/리스크 분석"]}
+
+data: {"type": "tool", "name": "get_store_history", "input": {"district_code": "3120103"}, "progress_label": "리스크 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_store_history", "done_label": "리스크 분석 완료"}
+
+data: {"type": "card", "card_type": "risk", "data": {"district_code": "3120103", "stability": {"score": null, "grade": "데이터 부족", "message": "2분기 이상 데이터가 쌓이면 리스크 분석이 가능합니다", "quarters_analyzed": 1}, "survival_by_category": [], "risk_categories": [{"category": "가구", "close_rate": 33.3, "warning": "폐업률 매우 높음"}, {"category": "당구장", "close_rate": 21.1, "warning": "폐업률 매우 높음"}, {"category": "독서실", "close_rate": 20.0, "warning": "폐업률 매우 높음"}, {"category": "중식음식점", "close_rate": 13.5, "warning": "폐업률 높음"}, {"category": "가정용품임대", "close_rate": 12.5, "warning": "폐업률 높음"}, {"category": "제과점", "close_rate": 10.0, "warning": "폐업률 높음"}, {"category": "분식전문점", "close_rate": 9.5, "warning": "폐업률 높음"}, {"category": "한식음식점", "close_rate": 9.2, "warning": "폐업률 높음"}, {"category": "스포츠클럽", "close_rate": 9.1, "warning": "폐업률 높음"}], "quarterly_trend": [{"quarter": "2025Q4", "store_count": 2981, "open": 95, "close": 120}], "benchmarks": {"districtType": "발달상권", "seoulAvgCloseRate": 5.9}, "dataSources": [{"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "##"}
+
+data: {"type": "text", "content": " 🚨 홍대입구역 상권 리스크 분석\n\n**전체적으로는"}
+
+data: {"type": "text", "content": " 안정적이지만, 일부 업종에서 높은 폐업률이"}
+
+data: {"type": "text", "content": " 관찰되는 상권입니다.**\n\n### 📈 전반적 안"}
+
+data: {"type": "text", "content": "정성\n- **폐업률**: 전체 평균 4.0% `"}
+
+data: {"type": "text", "content": "(get_store_history)` - 서울 평균(5.9%) 대비 **1.9%"}
+
+data: {"type": "text", "content": "p 낮아** 상당히 안정적\n- **점포 변"}
+
+data: {"type": "text", "content": "동**: 2025년 4분기 기준 신규 개점 95"}
+
+data: {"type": "text", "content": "개, 폐점 120개로 **순감소 25개"}
+
+data: {"type": "text", "content": "점**\n- **리스크 등급**: 데이터 부족으로 정확한 등"}
+
+data: {"type": "text", "content": "급 산정 불가 `(get_store_history)`\n\n### ⚠️ 고위험 업종 (폐업률 8%"}
+
+data: {"type": "text", "content": " 이상)\n1. **가구** - 폐업률 33.3% (매우 위험)\n2. **당구"}
+
+data: {"type": "text", "content": "장** - 폐업률 21.1% (매우 위험) \n3. **독서실** - 폐업률 20.0% (매우 위험)\n4. **중식음식점** - "}
+
+data: {"type": "text", "content": "폐업률 13.5% (높음)\n5. **가정용품임대** - 폐업률 12.5% (높음)\n\n### 🍽"}
+
+data: {"type": "text", "content": "️ 음식업종 리스크\n- **제과점**: 10.0% 폐업률 -"}
+
+data: {"type": "text", "content": " 경쟁 과열 추정\n- **분식전문점**: 9.5% 폐업률 - 홍대 특"}
+
+data: {"type": "text", "content": "성상 치킨·야식과 경쟁\n- **한식음식점**: 9.2"}
+
+data: {"type": "text", "content": "% 폐업률 - 포화 상태\n\n### 💡 리스크 해"}
+
+data: {"type": "text", "content": "석\n**왜 이런 패턴인가?**\n- **임대료 부담**: "}
+
+data: {"type": "text", "content": "홍대 프리미엄으로 인한 고정비 압"}
+
+data: {"type": "text", "content": "박\n- **업종별 미스매치**: 가구, 독서실 등은"}
+
+data: {"type": "text", "content": " 홍대의 젊은 유흥 문화와 부조화\n- **경쟁"}
+
+data: {"type": "text", "content": " 과열**: 음식점업종은 포화 상태로 생"}
+
+data: {"type": "text", "content": "존 경쟁 치열\n\n**긍정 신호**:\n- 전체 폐업률은 서"}
+
+data: {"type": "text", "content": "울 평균 이하로 **기본 상권력은 건"}
+
+data: {"type": "text", "content": "실**\n- 높은 유동인구가 지속적 수요 창"}
+
+data: {"type": "text", "content": "출\n\n⚠️ **창업 시 주의사항**: 위 "}
+
+data: {"type": "text", "content": "고위험 업종 피하고, 홍대 고객층"}
+
+data: {"type": "text", "content": "(20대 중심)에 맞는 업종 선택이 "}
+
+data: {"type": "text", "content": "핵심입니다.\n\n구체적인 추천 업종이나 다른 상권과의"}
+
+data: {"type": "text", "content": " 리스크 비교가 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["홍대입구역 추천 업종 알려줘", "매출 분석해줘", "다른 상권 비교해줘"]}
+
+data: {"type": "done"}
+

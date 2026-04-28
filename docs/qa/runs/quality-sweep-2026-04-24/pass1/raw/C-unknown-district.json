@@ -1,0 +1,60 @@
+{
+  "id": "C-unknown-district",
+  "category": "C",
+  "turn_count": 1,
+  "session_id": "qs-C-unknown-district-34f37e00",
+  "turns": [
+    {
+      "events_count": 13,
+      "text": "죄송합니다. \"우주역\"은 서울시 상권 데이터에서 찾을 수 없습니다. \n\n서울시에는 실제로 존재하지 않는 역명인 것 같습니다. 혹시 다른 역명을 의도하셨나요?\n\n**서울 주요 역 상권 예시:**\n- 강남역, 홍대입구역, 명동역, 이태원역\n- 건대입구역, 신촌역, 압구정역, 잠실역\n- 종로3가역, 동대문역사문화공원역 등\n\n정확한 역명이나 상권명을 알려주시면 해당 지역의 상세한 상권 분석을 제공해드리겠습니다!",
+      "tools": [],
+      "tool_inputs": [],
+      "cards": [],
+      "suggestions": [
+        "여기에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 0,
+      "plan_steps": [],
+      "intent": null,
+      "trace_id": "d5f0bc1350f11ad10df4b9010678092f",
+      "done": true,
+      "elapsed_s": 5.71,
+      "user_message": "우주역 상권 분석해줘"
+    }
+  ],
+  "rubric": {
+    "score": 5,
+    "max": 5,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "abstention",
+        true,
+        "cards=0 has_decline_kw=True"
+      ],
+      [
+        "no_hallucinated_numbers",
+        true,
+        "unattr=0 threshold=8 cards=0"
+      ]
+    ]
+  },
+  "total_elapsed_s": 5.71
+}

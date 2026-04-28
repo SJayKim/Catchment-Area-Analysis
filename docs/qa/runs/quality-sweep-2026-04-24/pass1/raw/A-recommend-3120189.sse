@@ -1,0 +1,148 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "recommendation", "steps": ["업종 추천 분석"]}
+
+
+
+data: {"type": "tool", "name": "recommend_business", "input": {"district_code": "3120189"}, "progress_label": "업종 추천 분석 중..."}
+
+
+
+data: {"type": "tool_end", "name": "recommend_business", "done_label": "업종 추천 완료"}
+
+
+
+data: {"type": "card", "card_type": "recommend", "data": {"district_code": "3120189", "quarter": "2025Q4", "recommendations": [{"rank": 1, "category_name": "편의점", "category_code": "CS300002", "score": 100.0, "per_store_sales": 361153281, "store_count": 17, "close_rate": 29.4, "age_match": 72.8, "monthly_sales": 6139605781, "reasons": ["점포당 월매출 36115만원", "타겟 고객 매칭률 73%", "경쟁 점포 17개 (밀집도 0.3%)", "폐업률 주의 (29.4%)"], "saturation": "여유", "risk_flag": "폐업률 29.4% — 고위험", "cost_category": "소자본"}, {"rank": 2, "category_name": "서적", "category_code": "CS300020", "score": 29.3, "per_store_sales": 118251847, "store_count": 31, "close_rate": 0.0, "age_match": 46.0, "monthly_sales": 3665807287, "reasons": ["점포당 월매출 11825만원", "경쟁 점포 31개 (밀집도 0.6%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 3, "category_name": "치킨전문점", "category_code": "CS100007", "score": 14.9, "per_store_sales": 42766312, "store_count": 9, "close_rate": 11.1, "age_match": 72.8, "monthly_sales": 384896814, "reasons": ["점포당 월매출 4277만원", "타겟 고객 매칭률 73%", "경쟁 점포 9개 (밀집도 0.2%)", "폐업률 주의 (11.1%)"], "saturation": "여유", "risk_flag": "폐업률 11.1% — 고위험", "cost_category": "소자본"}, {"rank": 4, "category_name": "중식음식점", "category_code": "CS100002", "score": 14.9, "per_store_sales": 40875324, "store_count": 42, "close_rate": 7.1, "age_match": 72.8, "monthly_sales": 1716763642, "reasons": ["점포당 월매출 4088만원", "타겟 고객 매칭률 73%", "경쟁 점포 42개 (밀집도 0.8%)"], "saturation": "여유", "risk_flag": "폐업률 7.1% — 주의", "cost_category": "소자본"}, {"rank": 5, "category_name": "슈퍼마켓", "category_code": "CS300001", "score": 13.4, "per_store_sales": 34063355, "store_count": 32, "close_rate": 0.0, "age_match": 72.8, "monthly_sales": 1090027385, "reasons": ["점포당 월매출 3406만원", "타겟 고객 매칭률 73%", "경쟁 점포 32개 (밀집도 0.6%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}], "total_categories_analyzed": 49, "dataSources": [{"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "강남역에서는 편의점이 1순위 추천 업종이지"}
+
+
+
+data: {"type": "text", "content": "만, 높은 폐업률(29.4%)로 신중한 접근이 필요합니다.**\n\n## 상위 5"}
+
+
+
+data: {"type": "text", "content": "개 업종 비교 분석\n\n### 1순위: 편의점 (종합점수 100.0)\n-"}
+
+
+
+data: {"type": "text", "content": " **점포당 월매출**: 3억 6,115만원 `(recommend_business)"}
+
+
+
+data: {"type": "text", "content": "` - 압도적 수익성\n- **경쟁현황**: 17개 점포"}
+
+
+
+data: {"type": "text", "content": "로 밀집도 낮음 (0.3%)\n- **고객매칭**:"}
+
+
+
+data: {"type": "text", "content": " 73% - 강남역 고객층과 잘 맞음\n- **"}
+
+
+
+data: {"type": "text", "content": "⚠️ 주요 리스크**: 폐업률 29.4%로 고위험 수준\n\n### 2순위: 서적 (종합점수 29.3)\n-"}
+
+
+
+data: {"type": "text", "content": " **점포당 월매출**: 1억 1,825만원 `(recommend_business)`\n- **경쟁현황**: 31개 점포 ("}
+
+
+
+data: {"type": "text", "content": "밀집도 0.6%)\n- **✅ 안정성**: 폐업률 0.0%로 매우 안전\n- **한"}
+
+
+
+data: {"type": "text", "content": "계**: 고객매칭률 46%로 상대적으로 낮음\n\n### 3순위: 치킨"}
+
+
+
+data: {"type": "text", "content": "전문점 (종합점수 14.9)\n- **점포당 월매출**: 4,277만원 `(recommend_business)`\n- **경쟁현황**: 9개 점포로"}
+
+
+
+data: {"type": "text", "content": " 경쟁 적음 (0.2%)\n- **고객매칭**: 73%로 우수\n- **⚠️ 리"}
+
+
+
+data: {"type": "text", "content": "스크**: 폐업률 11.1%로 주의 필요\n\n### 4순위: 중식음식점 (종합점수 14.9)\n- **점포당 월매출**: 4"}
+
+
+
+data: {"type": "text", "content": ",088만원 `(recommend_business)`\n- **경쟁현황**: 42개 점포로 다소 치열 "}
+
+
+
+data: {"type": "text", "content": "(0.8%)\n- **리스크**: 폐업률 7.1%로 관리 가능한 수준\n\n### 5순위: 슈퍼마켓 "}
+
+
+
+data: {"type": "text", "content": "(종합점수 13.4)\n- **점포당 월매출**: 3,406만원 `(recommend_business)`\n- **✅ 안정성**: 폐업률 0.0%로 매우 안전"}
+
+
+
+data: {"type": "text", "content": "\n- **경쟁현황**: 32개 점포 (밀집도 0.6%)\n\n## 창업 전략 제안\n\n**"}
+
+
+
+data: {"type": "text", "content": "💰 수익성 우선**: 편의점 - 하지"}
+
+
+
+data: {"type": "text", "content": "만 높은 폐업률 원인 분석 필수\n**🛡️ 안"}
+
+
+
+data: {"type": "text", "content": "정성 우선**: 서적 또는 슈퍼마켓 - 낮은 폐업률로 안전"}
+
+
+
+data: {"type": "text", "content": "\n**⚖️ 균형**: 중식음식점 - 적당한 매"}
+
+
+
+data: {"type": "text", "content": "출과 관리 가능한 리스크\n\n**면책사항**: 위"}
+
+
+
+data: {"type": "text", "content": " 분석은 카드매출 기반 추정치이며, 현"}
+
+
+
+data: {"type": "text", "content": "금매출 미포함으로 실제와 다를 수 있습니다."}
+
+
+
+data: {"type": "text", "content": "\n\n편의점의 높은 폐업률 원인이나 다른 업"}
+
+
+
+data: {"type": "text", "content": "종 상세 분석이 궁금하시면 말씀해 주세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["편의점 상세 분석해줘", "강남역 리스크 확인해줘", "다른 상권에서 편의점은 어때?", "2위 업종은 어때?"]}
+
+
+
+data: {"type": "done", "trace_id": "01410b4638ba89d98f1a5fd61b2b93d9"}
+
+
+

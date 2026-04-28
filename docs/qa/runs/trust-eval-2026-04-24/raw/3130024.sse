@@ -1,0 +1,100 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.55994556702649, "lng": 126.97928620508011, "zoom": 4}, "district_code": "3130025", "district_name": "삼익패션타운(남대문시장)", "district_type": "전통시장"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3130025"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "삼익패션타운(남대문시장)", "districtType": "전통시장", "summary": "하루 평균 유동인구 7만 9천명, 월 추정 매출 43억 4천만원의 안정적인 전통시장입니다.", "monthlySales": 4340108809, "floatingPopulation": {"dailyAvg": 79940, "peakHour": 11, "byHour": [{"hour": 0, "pop": 4901}, {"hour": 6, "pop": 15612}, {"hour": 11, "pop": 21417}, {"hour": 14, "pop": 20918}, {"hour": 17, "pop": 13522}, {"hour": 21, "pop": 3570}]}, "topCategories": [{"name": "일반의류", "count": 453}, {"name": "유아의류", "count": 54}, {"name": "신발", "count": 33}, {"name": "가방", "count": 12}, {"name": "슈퍼마켓", "count": 8}], "status": "stable", "closeRate": {"current": 0.9, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 55.8%, 차이 11.6%p)", "ageInsight": "60대 이상 (24.2%)", "perStoreSales": 7406329, "franchiseRatio": 1.0, "weekendUplift": -70.7}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "전통시장", "sampleCount": 320, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 75%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 15000, "monthly_sales": 7000000000, "close_rate": 4.8, "store_count": 140, "per_store_sales": 32000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "삼익패션타운(남대문시장)은 의류 중심의 안정적인 전통시장으로, 중"}
+
+data: {"type": "text", "content": "장년층 고객이 주를 이루는 특"}
+
+data: {"type": "text", "content": "화 상권입니다.**\n\n## 📊 핵심 지표 분석\n\n**유동인구**:"}
+
+data: {"type": "text", "content": " 하루 평균 7만 9천명 `(get_district_summary)`으로 전통"}
+
+data: {"type": "text", "content": "시장 중 상위 25% 수준입니다. 오전"}
+
+data: {"type": "text", "content": " 11시에 2만 1천명으로 피크를 찍는 **오전형"}
+
+data: {"type": "text", "content": " 상권**이며, 오후 2시(2만 1천명)까지 높"}
+
+data: {"type": "text", "content": "은 유동량을 유지합니다. 여성 고객 비중이 55.8%로 11.6%p 높아"}
+
+data: {"type": "text", "content": " 의류 쇼핑 특성을 보여줍니다.\n\n**매출**: 월 추정 매출 43억 4천"}
+
+data: {"type": "text", "content": "만원 `(get_district_summary)`으로 전통시장 중 상위 75% 수준입니다. 하지만 점포당 월 "}
+
+data: {"type": "text", "content": "매출은 740만원으로 전통시장 평균 대비 하위 25%에 머물러"}
+
+data: {"type": "text", "content": " **매출 효율은 아쉬운 상"}
+
+data: {"type": "text", "content": "황**입니다. 주말 매출이 평일 대비 70.7% "}
+
+data: {"type": "text", "content": "낮아 평일 중심 상권 특성을 보입니다.\n\n**점포 현황**: 총 586개 점포 중 일"}
+
+data: {"type": "text", "content": "반의류가 453개(77%)로 압도적 비중을 차지합니다. 유아의류(54개),"}
+
+data: {"type": "text", "content": " 신발(33개), 가방(12개) 순으로 패션 관련 업종이 집중되어 있습니다. "}
+
+data: {"type": "text", "content": "폐업률 0.9% `(get_district_summary)`는 전통시장 평균(6.5%) 대"}
+
+data: {"type": "text", "content": "비 매우 낮아 **안정성이 뛰어납니다**.\n\n## 🎯 고"}
+
+data: {"type": "text", "content": "객층 특성\n\n**연령대**: 60대 이상이 24.2%로 가장 높은 비중을 차"}
+
+data: {"type": "text", "content": "지하며, 중장년층 중심 고객 구조입니다. 이는 전통시장 특성과"}
+
+data: {"type": "text", "content": " 의류 도매 성격이 결합된 결과로 보입니다.\n\n**시"}
+
+data: {"type": "text", "content": "간대**: 오전 11시~오후 2시가 골든타임으로, 일반적인 "}
+
+data: {"type": "text", "content": "쇼핑몰과 달리 **오전 집중형"}
+
+data: {"type": "text", "content": "** 패턴을 보입니다.\n\n## ⚡ 기회와 리스크\n\n**"}
+
+data: {"type": "text", "content": "기회 요소**:\n- 극도로 낮은 폐업률(0.9%)로 안정적 사"}
+
+data: {"type": "text", "content": "업 환경\n- 전통시장 중 상위권 유동인구 확보\n- 의"}
+
+data: {"type": "text", "content": "류 특화로 명확한 포지셔닝\n\n**주의 요소**:\n- 점"}
+
+data: {"type": "text", "content": "포당 매출 효율이 전통시장 평균 이하\n- 프랜차이즈 비율"}
+
+data: {"type": "text", "content": " 1.0%로 개인 사업자 중심이지만 차"}
+
+data: {"type": "text", "content": "별화 어려움\n- 주말 매출 저조로 평일 의존도 높음\n\n## "}
+
+data: {"type": "text", "content": "💡 시사점\n\n삼익패션타운은 **안정성은 높지만 성장성은 제"}
+
+data: {"type": "text", "content": "한적**인 상권입니다. 기존 의류 도매업"}
+
+data: {"type": "text", "content": "체들이 안정적으로 운영되고 있어 신규 진"}
+
+data: {"type": "text", "content": "입 시 차별화된 상품이나"}
+
+data: {"type": "text", "content": " 서비스가 필요합니다. 중장년층 고객 특성을 고려한 상품 구"}
+
+data: {"type": "text", "content": "성과 오전 시간대 집중 운영이 핵심입니다.\n\n*추정"}
+
+data: {"type": "text", "content": " 매출은 카드 매출 기반이며 "}
+
+data: {"type": "text", "content": "현금 매출은 미포함, 실제와 다를 수 있습"}
+
+data: {"type": "text", "content": "니다.*\n\n---\n삼익패션타운에서 뭐하면 좋을지, 다른 전통시장과"}
+
+data: {"type": "text", "content": "의 비교, 또는 리스크 분석이 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["삼익패션타운에서 뭐하면 좋을까?", "삼익패션타운 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done", "quality_match_rate": 0.182}
+

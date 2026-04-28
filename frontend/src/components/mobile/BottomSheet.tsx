@@ -66,9 +66,10 @@ export default function BottomSheet({
   }, []);
 
   const onDragEnd = useCallback(() => {
-    // 가장 가까운 snap 으로 정착
+    // 가장 가까운 snap 으로 정착. 기본값은 현재 snap — iOS 엣지케이스로
+    // liveVh 계산이 꼬여도 의도치 않게 hidden 으로 닫히지 않도록 한다.
     const target = liveVh;
-    let closest: SheetSnap = 'hidden';
+    let closest: SheetSnap = snap;
     let minDist = Infinity;
     for (const s of SNAP_ORDER) {
       const d = Math.abs(SNAP_VH[s] - target);
@@ -85,7 +86,7 @@ export default function BottomSheet({
     }
     setSnap(closest);
     setDragDelta(0);
-  }, [liveVh, dragDelta, snapIndex, setSnap]);
+  }, [liveVh, dragDelta, snapIndex, snap, setSnap]);
 
   const reduced = prefersReducedMotion();
   const transition =

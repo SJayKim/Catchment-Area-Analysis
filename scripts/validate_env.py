@@ -103,6 +103,26 @@ def main(argv: list[str]) -> int:
                 "pg_restore seed works, but Full ETL will fail."
             )
 
+    # Langfuse SDK drift guard — code paths import `langfuse.langchain.CallbackHandler`
+    # (v3). If a stale v2 (2.x) is installed in the runtime env, the import silently
+    # fails, `_tracer_valid=False`, and every LLM call burns cost without a trace.
+    # See docs/plan/infra/langfuse-cost-coverage-fix-2026-04-24.md.
+    if env.get("LANGFUSE_PUBLIC_KEY") and env.get("LANGFUSE_SECRET_KEY"):
+        try:
+            import importlib.util
+
+            if importlib.util.find_spec("langfuse.langchain") is None:
+                warnings.append(
+                    "Langfuse keys are set but `langfuse.langchain` module is missing. "
+                    "Likely stale v2 SDK — run `pip install --upgrade 'langfuse>=3,<4'` "
+                    "or rebuild the backend image. Otherwise every LLM call is billed by "
+                    "Anthropic/Google but invisible in Langfuse."
+                )
+        except Exception:
+            # Import failure here is non-fatal; worst case we fall through with no
+            # extra warning. The runtime tracer module has its own guards.
+            pass
+
     for w in warnings:
         print(f"[validate_env] ⚠ {w}")
     if errors:

@@ -1,0 +1,26 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "안녕하세요! 저는 서울 상권 분석 AI "}
+
+data: {"type": "text", "content": "컨설턴트 '마켓스코프'입니다.\n\n요"}
+
+data: {"type": "text", "content": "청하신 강남역 상권 분석에 필요한 공공데이터를 조회하지 못했습니다. 다른 상권을 선택하시거나,"}
+
+data: {"type": "text", "content": " 비교/추천 대상을 명확히 알려주시면 다시 분석해드리겠습니다.\n\n강남역 상권에 대해 "}
+
+data: {"type": "text", "content": "궁금한 점이 있으시다면:\n- 특정 업종 매출 분"}
+
+data: {"type": "text", "content": "석\n- 다른 상권과의 비교\n- 창업 추천 업"}
+
+data: {"type": "text", "content": "종\n- 유동인구 패턴 분석\n\n등 구체적인 분석 요청을 말"}
+
+data: {"type": "text", "content": "씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["강남역에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done"}
+

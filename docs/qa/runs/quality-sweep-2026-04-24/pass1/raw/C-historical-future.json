@@ -1,0 +1,90 @@
+{
+  "id": "C-historical-future",
+  "category": "C",
+  "turn_count": 1,
+  "session_id": "qs-C-historical-future-bbe828d5",
+  "turns": [
+    {
+      "events_count": 35,
+      "text": "죄송합니다. 현재 제공되는 데이터는 2024년 4분기까지의 실제 매출 데이터이며, **2030년까지의 장기 매출 예측**은 지원하지 않습니다.\n\n## 현재 가능한 분석\n\n**마켓스코프**에서 제공하는 매출 관련 분석은 다음과 같습니다:\n\n### 📊 **현재 매출 현황 분석**\n- 강남역 상권의 최신 분기별 매출 규모\n- 업종별 매출 분포 및 성장률\n- 점포당 평균 매출 효율성\n\n### 📈 **단기 트렌드 분석**\n- 최근 4개 분기 매출 변화 추이\n- 계절별 매출 패턴 분석\n- 전년 동기 대비 성장률\n\n### 🎯 **업종별 매출 시뮬레이션**\n- 특정 업종(카페, 한식, 치킨 등)의 예상 매출\n- 강남역에서 해당 업종의 경쟁력 분석\n\n## 추천 분석 방향\n\n1. **\"강남역 전체 매출 현황 분석해줘\"** - 현재 상권 매출 규모 파악\n2. **\"강남역에서 카페 창업하면 매출 얼마나 될까?\"** - 특정 업종 매출 예측\n3. **\"강남역 매출 트렌드 어때?\"** - 최근 성장세 분석\n\n어떤 분석을 원하시는지 구체적으로 말씀해 주시면, 실제 데이터를 기반으로 정확한 인사이트를 제공해드리겠습니다!",
+      "tools": [
+        "simulate_revenue",
+        "simulate_revenue",
+        "simulate_revenue"
+      ],
+      "tool_inputs": [
+        {
+          "name": "simulate_revenue",
+          "input": {
+            "district_code": "3120189",
+            "category_code": null
+          }
+        },
+        {
+          "name": "simulate_revenue",
+          "input": {
+            "district_code": "3120189",
+            "category_code": null
+          }
+        },
+        {
+          "name": "simulate_revenue",
+          "input": {
+            "district_code": "3120189",
+            "category_code": null
+          }
+        }
+      ],
+      "cards": [],
+      "suggestions": [
+        "강남역에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "매출 시뮬레이션",
+        "매출 시뮬레이션",
+        "매출 시뮬레이션"
+      ],
+      "intent": "simulation",
+      "trace_id": "792a42c95bfba60ccd47f4ee4d66972a",
+      "done": true,
+      "elapsed_s": 25.42,
+      "user_message": "2030년 강남역 매출 예측"
+    }
+  ],
+  "rubric": {
+    "score": 5,
+    "max": 5,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "must_contain_any_in_text",
+        true,
+        "need-any=['예측', '시뮬레이션', '추정', '데이터 기준']"
+      ],
+      [
+        "graceful",
+        true,
+        ""
+      ]
+    ]
+  },
+  "total_elapsed_s": 25.42
+}

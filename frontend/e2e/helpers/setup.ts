@@ -178,3 +178,41 @@ export async function verifyProgressGone(page: Page, timeout = 15000) {
   }
   return false;
 }
+
+/**
+ * Wait until `window.__districtStore` reaches the requested compare-mode shape.
+ *
+ * Real-mode chat 의 `compare` 카드는 SSE 의 마지막 phase 에 도착하므로
+ * `waitForTimeout(3000)` 같은 고정 대기로는 검증 신뢰도가 낮다 (Mock 에선 OK,
+ * Real 에선 30~60s). 이 헬퍼는 store 의 `compareList.length === expectedLen
+ * && isCompareMode === true` 가 만족될 때까지 폴링한다.
+ *
+ * 2026-04-27 F05-H3 / F05-H4 회귀 fix.
+ */
+export async function waitForCompareList(
+  page: Page,
+  expectedLen: number,
+  timeout = 60_000,
+): Promise<{ codes: string[]; mode: boolean }> {
+  await page.waitForFunction(
+    (n) => {
+      const w = window as unknown as { __districtStore?: { getState: () => unknown } };
+      const st = w.__districtStore?.getState?.() as
+        | { compareList?: { code: string }[]; isCompareMode?: boolean }
+        | undefined;
+      return (st?.compareList?.length ?? 0) === n && st?.isCompareMode === true;
+    },
+    expectedLen,
+    { timeout },
+  );
+  return await page.evaluate(() => {
+    const w = window as unknown as { __districtStore?: { getState: () => unknown } };
+    const st = w.__districtStore?.getState?.() as
+      | { compareList?: { code: string }[]; isCompareMode?: boolean }
+      | undefined;
+    return {
+      codes: st?.compareList?.map((d) => d.code) ?? [],
+      mode: !!st?.isCompareMode,
+    };
+  });
+}

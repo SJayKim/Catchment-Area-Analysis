@@ -1,0 +1,104 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.56278678812079, "lng": 126.98370073835953, "zoom": 4}, "district_code": "3120028", "district_name": "명동(명동거리)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120028"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "명동(명동거리)", "districtType": "발달상권", "summary": "하루 평균 유동인구 200만 8천명, 월 추정 매출 424억원의 안정적인 발달상권입니다.", "monthlySales": 42404439647, "floatingPopulation": {"dailyAvg": 2008692, "peakHour": 14, "byHour": [{"hour": 0, "pop": 115761}, {"hour": 6, "pop": 399806}, {"hour": 11, "pop": 449913}, {"hour": 14, "pop": 470188}, {"hour": 17, "pop": 446557}, {"hour": 21, "pop": 126467}]}, "topCategories": [{"name": "일반의류", "count": 335}, {"name": "한식음식점", "count": 176}, {"name": "화장품", "count": 162}, {"name": "분식전문점", "count": 84}, {"name": "여행사", "count": 79}], "status": "stable", "closeRate": {"current": 2.6, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 53.5%, 차이 7.0%p)", "ageInsight": "20대 (22.5%)", "perStoreSales": 24768948, "franchiseRatio": 13.8, "weekendUplift": -61.0}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 75%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "명동 관광특구는 하루 200만명이 몰리는 서"}
+
+data: {"type": "text", "content": "울 최대 규모의 관광·쇼핑 중심지로, 외국인 관광객과 "}
+
+data: {"type": "text", "content": "젊은 여성층이 주도하는 독특한 소"}
+
+data: {"type": "text", "content": "비 패턴을 보입니다.**\n\n## 📊 핵심 지표 분석\n\n**유동인구**: 하루 평균 200만 "}
+
+data: {"type": "text", "content": "8천명 `(get_district_summary)`으로 서울 평"}
+
+data: {"type": "text", "content": "균(9만 2천명)의 **21.8배"}
+
+data: {"type": "text", "content": "**에 달하는 압도적 규모입니다."}
+
+data: {"type": "text", "content": " 오후 2시(47만명)에 피크를 찍"}
+
+data: {"type": "text", "content": "는 전형적인 **관광·쇼핑형 상권**이며, 여성 비중이 53.5%로 남성보"}
+
+data: {"type": "text", "content": "다 7%p 높습니다.\n\n**매출 현황**: 월 추정 매출 424억원 `(get_district"}
+
+data: {"type": "text", "content": "_summary)`으로 발달상권 중 상위 75% 수준입니다. 하지만 점포당 월"}
+
+data: {"type": "text", "content": " 매출은 2,477만원으로 발달상권 평균(4,600만원)의 **54% 수준**에 그"}
+
+data: {"type": "text", "content": "쳐 매출 효율은 상당히 낮습니다."}
+
+data: {"type": "text", "content": " 이는 관광 특성상 계절성과 외"}
+
+data: {"type": "text", "content": "부 요인에 민감하기 때문으로 보입니다.\n\n**점포"}
+
+data: {"type": "text", "content": " 구성**: 총 1,713개 점포 중 일반의류(335개), 한식음식점(176개), 화장품(162개)이 상"}
+
+data: {"type": "text", "content": "위를 차지합니다. 프랜차이즈 비율은 13.8%로 낮아 개"}
+
+data: {"type": "text", "content": "인 사업자 중심의 상권 구조를 보입니다.\n\n## 🎯 상권 특성 분석\n\n**관"}
+
+data: {"type": "text", "content": "광 중심 구조**: \n- 20대 비중 22.5%로 "}
+
+data: {"type": "text", "content": "젊은 층 집중\n- 주말 매출이 평일 대비 **61% 낮음**"}
+
+data: {"type": "text", "content": " - 관광객은 평일에도 꾸준히 방"}
+
+data: {"type": "text", "content": "문하는 패턴\n- 오후 2시 집중도가 높아 쇼핑·"}
+
+data: {"type": "text", "content": "관광 목적의 방문이 주류\n\n**안정성 지표**:\n- 폐업률 "}
+
+data: {"type": "text", "content": "2.6%로 서울 평균(6.5%) 대비 매우 낮음\n- 발달상권 중"}
+
+data: {"type": "text", "content": " 폐업률 상위 25%(우수) 수준으로 안정적\n\n## "}
+
+data: {"type": "text", "content": "⚠️ 기회와 리스크\n\n**기회 요소**:\n- 서울 최대 유"}
+
+data: {"type": "text", "content": "동인구로 고객 접점 기회 풍부\n- 낮은 폐업률로"}
+
+data: {"type": "text", "content": " 상권 안정성 확보\n- 관광객 대상 틈새 비"}
+
+data: {"type": "text", "content": "즈니스 가능성\n\n**주의 요소**:\n- 점포당 매출 효율이 발"}
+
+data: {"type": "text", "content": "달상권 평균의 절반 수준\n- 관광 의존도 높아 외부 충격("}
+
+data: {"type": "text", "content": "팬데믹, 환율 등)에 취약\n- 높은 임대료 대비 매출 효"}
+
+data: {"type": "text", "content": "율성 문제\n- 일반의류·화"}
+
+data: {"type": "text", "content": "장품 업종 포화 상태\n\n## 💡 창업 시사점\n\n명"}
+
+data: {"type": "text", "content": "동은 **브랜드 인지도 구축**과 **관광객 타"}
+
+data: {"type": "text", "content": "겟팅**에는 최적이지만, **수익성 중"}
+
+data: {"type": "text", "content": "심의 사업**에는 신중한 접근이 필요합니다. 높은 유동인구에"}
+
+data: {"type": "text", "content": "도 불구하고 점포당 매출이 낮다는 것은 치열"}
+
+data: {"type": "text", "content": "한 경쟁과 높은 운영비용을 의미합니다.\n\n**추정치"}
+
+data: {"type": "text", "content": "이며 실제와 다를 수 있습니다. 창업 전"}
+
+data: {"type": "text", "content": " 현장 조사와 전문가 상담을 권장합니다.**\n\n---\n궁금한 점이 더"}
+
+data: {"type": "text", "content": " 있으시면 ['명동에서 뭐하면 좋을까?', '명동 리스크 분석해줘', '유동인구 시간대별로 보여줘', '다른"}
+
+data: {"type": "text", "content": " 상권이랑 비교해줘'] 중에서 선택하거나 다른 질문을 해주세요!"}
+
+data: {"type": "suggestion", "questions": ["명동에서 뭐하면 좋을까?", "명동 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done", "quality_match_rate": 0.429}
+

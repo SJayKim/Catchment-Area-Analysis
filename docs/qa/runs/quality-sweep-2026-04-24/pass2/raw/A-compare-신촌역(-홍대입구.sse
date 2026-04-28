@@ -1,0 +1,84 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.556527241992235, "lng": 126.93641815639678, "zoom": 4}, "district_code": "3120094", "district_name": "신촌역(신촌역, 신촌로터리)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120094", "3120103"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120094": {"district_code": "3120094", "district_name": "신촌역(신촌역, 신촌로터리)", "floating_pop": 6084637, "main_age": "20대", "store_count": 2031, "close_rate": 3.3, "monthly_sales": 32143700871, "status": "stable", "quarter": "2025Q4", "sales_per_store": 15826539, "pop_per_store": 2996}, "3120103": {"district_code": "3120103", "district_name": "홍대입구역(홍대)", "floating_pop": 4106209, "main_age": "20대", "store_count": 2981, "close_rate": 4.0, "monthly_sales": 53200280285, "status": "stable", "quarter": "2025Q4", "sales_per_store": 17846454, "pop_per_store": 1377}}, "district_codes": ["3120094", "3120103"], "winners": {"highest_pop": "신촌역(신촌역, 신촌로터리)", "highest_sales": "홍대입구역(홍대)", "lowest_close_rate": "신촌역(신촌역, 신촌로터리)", "best_efficiency": "홍대입구역(홍대)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "홍대가 매출 효율성에서 우세하"}
+
+data: {"type": "text", "content": "지만, 신촌이 안정성 면에서 더 나은 대"}
+
+data: {"type": "text", "content": "학가 상권 비교입니다.**\n\n## 지표별 우위 분석\n\n**"}
+
+data: {"type": "text", "content": "유동인구**: 신촌역이 **608만명** `(compare"}
+
+data: {"type": "text", "content": "_districts)`으로 홍대(411만명) 대비 **48"}
+
+data: {"type": "text", "content": "% 더 많습니다**. 신촌이 지하철 2·"}
+
+data: {"type": "text", "content": "6호선 환승역이자 연세대·이"}
+
+data: {"type": "text", "content": "화여대 접근성이 좋아 더 넓은 유동인구를 끌어모"}
+
+data: {"type": "text", "content": "으고 있습니다.\n\n**매출 효율**: 홍대가 점포당 월 **1,785만원** `(compare_districts)`으"}
+
+data: {"type": "text", "content": "로 신촌(1,583만원) 대비 **13% 높습니다**. 홍대는 클럽·펜션"}
+
+data: {"type": "text", "content": "·독특한 콘셉트 매장들이 높은 객"}
+
+data: {"type": "text", "content": "단가를 만들어내는 반면, 신촌은 학생 중심 저가 소"}
+
+data: {"type": "text", "content": "비가 많기 때문입니다.\n\n**안정성**: 신촌 폐업률 "}
+
+data: {"type": "text", "content": "**3.3%** `(compare_districts)`로 홍대(4.0%) 대비 더 안정적입니다. 대학가 특성상 "}
+
+data: {"type": "text", "content": "꾸준한 수요가 있어 리스크가 낮습니다.\n\n**점포 밀도**: 홍대가 **2"}
+
+data: {"type": "text", "content": ",981개** `(compare_districts)` 점포로 신촌(2,031개) 대비 47% 더 많아 경쟁이 치열하"}
+
+data: {"type": "text", "content": "지만, 그만큼 상권 규모도 큽니다.\n\n## 각"}
+
+data: {"type": "text", "content": " 상권 적합 시나리오\n\n**신촌 추천**: \n- 안정적 수"}
+
+data: {"type": "text", "content": "익을 원하는 초보 창업자\n- 학생 대상 저"}
+
+data: {"type": "text", "content": "가·대용량 업종 (분식, 치킨, 카페)\n- "}
+
+data: {"type": "text", "content": "넓은 상권 커버리지가 필요한 배달업\n\n**홍대 추천**:\n- 높"}
+
+data: {"type": "text", "content": "은 수익률을 추구하는 경험자\n- 트"}
+
+data: {"type": "text", "content": "렌디하고 차별화된 콘셉트 (펍, 클럽, 독"}
+
+data: {"type": "text", "content": "특한 음식점)\n- 젊은 직장인·대학생 타겟 고"}
+
+data: {"type": "text", "content": "객단가 업종\n\n## 종합 판단\n\n**안정성 우선**"}
+
+data: {"type": "text", "content": "이면 신촌, **수익성 우선**이면"}
+
+data: {"type": "text", "content": " 홍대를 추천합니다. 신촌은 유동인구 대비 점포 수가 적어"}
+
+data: {"type": "text", "content": "(점포당 2,996명) 경쟁 압박이 "}
+
+data: {"type": "text", "content": "덜하고, 홍대는 치열한 경쟁(점포당 1,377명) 속에서도 높"}
+
+data: {"type": "text", "content": "은 매출을 올리는 구조입니다.\n\n각 상권의 추천 업종이나 구"}
+
+data: {"type": "text", "content": "체적인 창업 아이템이 궁금하시면 말씀해 주세요"}
+
+data: {"type": "text", "content": "!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done"}
+

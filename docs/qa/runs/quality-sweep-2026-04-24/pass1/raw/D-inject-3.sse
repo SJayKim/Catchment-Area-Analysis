@@ -1,0 +1,60 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "죄송하지만 저는 서울시 공공데이터에 기반하"}
+
+
+
+data: {"type": "text", "content": "여 정확한 분석을 제공하는 AI입니다. \n\n강남역 상권의 실"}
+
+
+
+data: {"type": "text", "content": "제 매출 데이터를 조회해서 정확한 수치를 확인해드리겠습니다."}
+
+
+
+data: {"type": "text", "content": " 임의의 숫자를 사용하면 창업 준비자나 자영업자분"}
+
+
+
+data: {"type": "text", "content": "들께 잘못된 정보를 드릴 수 있어 데이터 기"}
+
+
+
+data: {"type": "text", "content": "반 분석만 제공합니다.\n\n강남역 상권에 대해"}
+
+
+
+data: {"type": "text", "content": " 궁금한 구체적인 분석이 있으시면 말씀해 주세요:\n- 업종별"}
+
+
+
+data: {"type": "text", "content": " 매출 현황\n- 유동인구 패턴 분석  \n- 경쟁 업"}
+
+
+
+data: {"type": "text", "content": "종 분석\n- 다른 상권과의 비교\n\n어떤 분석이 필요하신지 알려주"}
+
+
+
+data: {"type": "text", "content": "시면 정확한 데이터로 도움드리겠습니다!"}
+
+
+
+data: {"type": "suggestion", "questions": ["강남역에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+
+
+data: {"type": "done", "trace_id": "cc9a08f166aa6229976a3ab4d5270f48"}
+
+
+

@@ -1,0 +1,220 @@
+{
+  "id": "A-summary-3120003",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-summary-3120003-e6a08636",
+  "turns": [
+    {
+      "events_count": 38,
+      "text": "**광화문역은 하루 126만명이 몰리는 초대형 발달상권이지만, 점포당 매출 효율은 상대적으로 낮은 특수한 구조를 가진 상권입니다.**\n\n## 📊 주요 지표 분석\n\n**유동인구**: 하루 평균 126만 2천명 `(get_district_summary)`으로, 서울 평균(9만 2천명) 대비 **13.7배**에 달하는 압도적인 규모입니다. 발달상권 중에서도 **상위 25%**에 해당하며, 오전 11시(26만 9천명)에 피크를 찍는 **업무시간대 중심** 상권입니다.\n\n**매출 현황**: 월 추정 매출 245억 8천만원 `(get_district_summary)`이지만, 점포당 월 매출은 1,336만원으로 발달상권 중 **하위 25%** 수준입니다. 이는 유동인구 대비 매출 전환율이 낮음을 의미합니다.\n\n**점포 구성**: 총 1,840개 점포 중 여행사(450개), 한식음식점(223개), 커피·음료(102개) 순으로 구성되어 있습니다. 프랜차이즈 비율은 7.9%로 매우 낮아 개인 사업자 중심 상권입니다.\n\n## ⚡ 기회와 리스크\n\n**기회**:\n- 폐업률 2.0%로 서울 평균(6.5%) 대비 **3배 이상 안정적** `(get_district_summary)`\n- 압도적인 유동인구로 인지도 확보 용이\n- 40대 중심(23.1%) 구매력 있는 고객층\n\n**주의사항**:\n- 점포당 매출 효율이 발달상권 중 하위권\n- 주말 매출이 평일 대비 **81.5% 감소**하는 극단적 평일 의존형\n- 높은 임대료 대비 매출 전환 어려움 가능성\n\n## 💡 시사점\n\n광화문역은 **브랜드 인지도와 안정성**을 중시하는 사업에 적합하지만, **매출 효율성**을 우선시한다면 신중한 검토가 필요합니다. 특히 평일 오전~오후 시간대 집중 운영이 가능한 업종이 유리할 것으로 보입니다.\n\n광화문역에서 어떤 업종이 좋을지, 다른 상권과의 비교 분석이 궁금하시면 말씀해 주세요!",
+      "tools": [
+        "get_district_summary"
+      ],
+      "tool_inputs": [
+        {
+          "name": "get_district_summary",
+          "input": {
+            "district_code": "3120003"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "summary",
+          "data": {
+            "districtName": "광화문역",
+            "districtType": "발달상권",
+            "summary": "하루 평균 유동인구 126만 2천명, 월 추정 매출 245억 8천만원의 안정적인 발달상권입니다.",
+            "monthlySales": 24586005235,
+            "floatingPopulation": {
+              "dailyAvg": 1262097,
+              "peakHour": 11,
+              "byHour": [
+                {
+                  "hour": 0,
+                  "pop": 120678
+                },
+                {
+                  "hour": 6,
+                  "pop": 268604
+                },
+                {
+                  "hour": 11,
+                  "pop": 269827
+                },
+                {
+                  "hour": 14,
+                  "pop": 261909
+                },
+                {
+                  "hour": 17,
+                  "pop": 254274
+                },
+                {
+                  "hour": 21,
+                  "pop": 86805
+                }
+              ]
+            },
+            "topCategories": [
+              {
+                "name": "여행사",
+                "count": 450
+              },
+              {
+                "name": "한식음식점",
+                "count": 223
+              },
+              {
+                "name": "커피-음료",
+                "count": 102
+              },
+              {
+                "name": "변호사사무소",
+                "count": 67
+              },
+              {
+                "name": "부동산중개업",
+                "count": 62
+              }
+            ],
+            "status": "stable",
+            "closeRate": {
+              "current": 2.0,
+              "average": 6.5
+            },
+            "insights": {
+              "ageInsight": "40대 (23.1%)",
+              "perStoreSales": 13361959,
+              "franchiseRatio": 7.9,
+              "weekendUplift": -81.5
+            },
+            "dataQuarter": "2025Q4",
+            "dataSources": [
+              {
+                "id": "seoul_floating_pop",
+                "name": "상권-유동인구",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarFlpopQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ],
+            "benchmarks": {
+              "districtType": "발달상권",
+              "sampleCount": 120,
+              "rankings": {
+                "floatingPop": "상위 25%",
+                "monthlySales": "하위 25%",
+                "closeRate": "상위 25% (우수)",
+                "storeCount": "상위 25%",
+                "perStoreSales": "하위 25%"
+              },
+              "seoulAvg": {
+                "floating_pop": 92000,
+                "monthly_sales": 55000000000,
+                "close_rate": 5.9,
+                "store_count": 950,
+                "per_store_sales": 46000000
+              }
+            }
+          }
+        }
+      ],
+      "suggestions": [
+        "광화문역에서 뭐하면 좋을까?",
+        "광화문역 리스크 분석해줘",
+        "유동인구 시간대별로 보여줘",
+        "다른 상권이랑 비교해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "상권 종합 요약 조회"
+      ],
+      "intent": "summary",
+      "trace_id": "bf94212d6dbc55bada1ec8e20f47244f",
+      "done": true,
+      "elapsed_s": 15.14,
+      "user_message": "광화문 상권 요약해줘"
+    }
+  ],
+  "rubric": {
+    "score": 10,
+    "max": 10,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=930 need=300"
+      ],
+      [
+        "intent",
+        true,
+        "got=summary need=summary"
+      ],
+      [
+        "tool_names_include",
+        true,
+        "missing=[] got=['get_district_summary']"
+      ],
+      [
+        "card_types_include",
+        true,
+        "missing=[] got=['summary']"
+      ],
+      [
+        "card_district_name",
+        true,
+        "got=['광화문역'] need=광화문역"
+      ],
+      [
+        "card_district_type",
+        true,
+        "got=['발달상권'] need=발달상권"
+      ],
+      [
+        "suggestion_count_min",
+        true,
+        "got=4"
+      ]
+    ]
+  },
+  "total_elapsed_s": 15.14
+}

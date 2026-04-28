@@ -1,0 +1,42 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54467215910094, "lng": 127.05667376479036, "zoom": 4}, "district_code": "3120052", "district_name": "성수역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "simulation", "steps": ["매출 시뮬레이션"]}
+
+data: {"type": "tool", "name": "simulate_revenue", "input": {"district_code": "3120052", "category_code": null}, "progress_label": "매출 시뮬레이션 중..."}
+
+data: {"type": "tool_end", "name": "simulate_revenue", "done_label": "매출 시뮬레이션 완료"}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "매"}
+
+data: {"type": "text", "content": "출 시뮬레이션을 위해서는 구체적인 업종이 필요합니다. 예를 들어 '카페', '한식음식점', '치킨전문"}
+
+data: {"type": "text", "content": "점', '편의점' 등으로 말씀해 주세요.\n\n일반음식점은 범위가 너무 넓어서"}
+
+data: {"type": "text", "content": " 정확한 분석이 어려운데요. 성수 "}
+
+data: {"type": "text", "content": "지역에서 어떤 종류의 음식점을 고려하고"}
+
+data: {"type": "text", "content": " 계신지 알려주시면 더 정확한 매출 예상과 리"}
+
+data: {"type": "text", "content": "스크 분석을 해드릴 수 있습니다.\n\n예를 들어:\n- **한식음식점** ("}
+
+data: {"type": "text", "content": "백반, 찌개류 등)\n- **양식음식점** (파스타, 스"}
+
+data: {"type": "text", "content": "테이크 등) \n- **일식음식점** (초밥, 라멘 등)\n- **중식음식점** ("}
+
+data: {"type": "text", "content": "짜장면, 탕수육 등)\n- **치킨전문점**\n- **분식점** (떡볶이, 김밥 등)"}
+
+data: {"type": "text", "content": "\n\n구체적인 업종을 알려주시면 성수역 상권의 특성에 맞는 **"}
+
+data: {"type": "text", "content": "매출 예상, 경쟁 현황, 창업 리스크**"}
+
+data: {"type": "text", "content": "를 상세히 분석해드리겠습니다!"}
+
+data: {"type": "suggestion", "questions": ["상권 분석해줘", "업종 추천해줘", "리스크 확인해줘"]}
+
+data: {"type": "done", "trace_id": "c72bee83e69a33d83d20061379f0452e"}
+

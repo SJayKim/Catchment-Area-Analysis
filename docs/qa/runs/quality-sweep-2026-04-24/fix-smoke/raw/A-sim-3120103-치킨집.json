@@ -1,0 +1,135 @@
+{
+  "id": "A-sim-3120103-치킨집",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-sim-3120103-치킨집-f9dcd4ce",
+  "turns": [
+    {
+      "events_count": 27,
+      "text": "**홍대 치킨집 매출 시뮬레이션 결과, 데이터 부족으로 정확한 예상 매출을 산출할 수 없습니다.**\n\n현재 홍대입구역 상권의 치킨집 관련 데이터를 확인한 결과:\n- **기존 치킨집**: 5개 점포 운영 중 `(simulate_revenue)`\n- **월 매출 데이터**: 0원으로 집계 `(simulate_revenue)`\n- **신뢰도**: 매우 낮음 (샘플 부족) `(simulate_revenue)`\n\n**데이터 부족 원인**:\n1. 치킨집 업종의 카드매출 데이터가 충분히 수집되지 않음\n2. 기존 점포들의 매출 정보가 미집계 상태\n3. 업종별 단가 정보 부재\n\n**대안 분석 제안**:\n- 홍대 전체 상권 분석으로 입지 여건 파악\n- 다른 외식업종(한식, 분식 등) 매출 현황 비교\n- 홍대 유동인구 패턴 분석으로 치킨집 적합성 검토\n\n*본 시뮬레이션은 카드매출 기반 추정치이며, 실제 매출과 다를 수 있습니다.*\n\n홍대 상권 전반적인 분석이나 다른 외식업종 매출이 궁금하시면 말씀해 주세요!",
+      "tools": [
+        "simulate_revenue"
+      ],
+      "tool_inputs": [
+        {
+          "name": "simulate_revenue",
+          "input": {
+            "district_code": "3120103",
+            "category_code": "CS200010"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "simulation",
+          "data": {
+            "district_code": "3120103",
+            "category_code": "CS200010",
+            "category_name": "",
+            "quarter": "2025Q4",
+            "simulation": {
+              "low": 0,
+              "avg": 0,
+              "high": 0
+            },
+            "basis": {
+              "total_monthly_sales": 0,
+              "store_count": 5,
+              "additional_competitors": 0,
+              "effective_stores": 5,
+              "unit_price": null,
+              "default_unit_price": null,
+              "price_ratio": 1.0
+            },
+            "percentiles": {
+              "p25_ratio": 0.6,
+              "p75_ratio": 1.5,
+              "sample_count": 0,
+              "reliable": false
+            },
+            "seoul_comparison": null,
+            "disclaimer": "본 시뮬레이션은 카드매출 기반 추정치이며, 실제 매출과 다를 수 있습니다.",
+            "dataSources": [
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ]
+          }
+        }
+      ],
+      "suggestions": [
+        "상권 분석해줘",
+        "업종 추천해줘",
+        "리스크 확인해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "매출 시뮬레이션"
+      ],
+      "intent": "simulation",
+      "trace_id": "9dbee4277024ff629af32bcdc1e811c1",
+      "done": true,
+      "elapsed_s": 13.62,
+      "user_message": "홍대 치킨집 예상 매출?"
+    }
+  ],
+  "rubric": {
+    "score": 7,
+    "max": 7,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=503 need=250"
+      ],
+      [
+        "intent",
+        true,
+        "got=simulation need=simulation"
+      ],
+      [
+        "tool_names_include_any",
+        true,
+        "got=['simulate_revenue'] need-any=['simulate_revenue', 'get_estimated_sales']"
+      ],
+      [
+        "card_types_include_any",
+        true,
+        "got=['simulation'] need-any=['simulation']"
+      ]
+    ]
+  },
+  "total_elapsed_s": 13.62
+}

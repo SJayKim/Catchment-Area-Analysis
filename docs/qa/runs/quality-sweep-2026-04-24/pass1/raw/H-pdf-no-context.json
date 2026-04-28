@@ -1,0 +1,55 @@
+{
+  "id": "H-pdf-no-context",
+  "category": "H",
+  "turn_count": 1,
+  "session_id": "qs-H-pdf-no-context-5ec07a02",
+  "turns": [
+    {
+      "events_count": 18,
+      "text": "안녕하세요! 마켓스코프입니다. 📊\n\nPDF 리포트를 생성하려면 먼저 **분석할 상권을 선택**해주셔야 합니다.\n\n## 리포트 생성 절차\n1. **상권 선택**: 분석하고 싶은 서울 상권명을 알려주세요\n   - 예: \"강남역\", \"홍대입구\", \"명동\", \"이태원\" 등\n2. **분석 완료**: 해당 상권의 종합 분석을 진행합니다\n3. **PDF 생성**: 분석 결과를 바탕으로 전문 리포트를 작성합니다\n\n## 리포트 포함 내용\n- 📈 상권 개요 및 핵심 지표\n- 👥 유동인구 분석 (시간대별, 연령대별)\n- 💰 매출 현황 및 트렌드\n- 🏪 업종별 점포 분포\n- ⚖️ 기회와 리스크 분석\n- 💡 창업 인사이트 및 제안\n\n**어떤 상권의 리포트를 원하시나요?** 상권명을 말씀해 주시면 바로 분석을 시작하겠습니다! 🚀",
+      "tools": [],
+      "tool_inputs": [],
+      "cards": [],
+      "suggestions": [
+        "여기에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 0,
+      "plan_steps": [],
+      "intent": null,
+      "trace_id": "8932c502b1dbe0b72fec356717a5202b",
+      "done": true,
+      "elapsed_s": 9.17,
+      "user_message": "pdf 리포트 만들어줘"
+    }
+  ],
+  "rubric": {
+    "score": 4,
+    "max": 4,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "pdf_trigger_or_graceful",
+        true,
+        ""
+      ]
+    ]
+  },
+  "total_elapsed_s": 9.17
+}

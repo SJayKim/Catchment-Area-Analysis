@@ -1,4 +1,7 @@
 {
+  "env": {
+    "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+  },
   "permissions": {
     "allow": [
       "Bash(git fetch:*)",
@@ -11,7 +14,6 @@
       "Bash(node -e ':*)",
       "Bash(docker compose up:*)",
       "Bash(docker compose:*)",
-      "Bash(break)",
       "Bash(python -m alembic upgrade head)",
       "Bash(alembic upgrade:*)",
       "Bash(pip show:*)",
@@ -62,10 +64,7 @@
       "Bash(docker exec:*)",
       "Bash(tasklist:*)",
       "Bash(git check-ignore:*)",
-      "Bash(find /c/Users/cyon1/OneDrive/Desktop/Catchment-Area-Analysis -name logging.conf -o -name log*.py -o -name *metric*)",
       "Bash(USE_MOCK=true PYTHONIOENCODING=utf-8 python -m pytest -x -q)",
-      "Bash(USE_MOCK=true PYTHONIOENCODING=utf-8 python -c \"from server.middleware.metrics import MetricsMiddleware, metrics_router, sse_connection_opened, sse_connection_closed, get_sse_active_connections; print\\(''Import OK''\\)\")",
-      "Bash(USE_MOCK=true PYTHONIOENCODING=utf-8 python -c \"from server.main import app; print\\(''Routes:'', [r.path for r in app.routes]\\)\")",
       "Bash(echo \"EXIT: $?\")",
       "Bash(chmod:*)",
       "Bash(git lfs:*)"

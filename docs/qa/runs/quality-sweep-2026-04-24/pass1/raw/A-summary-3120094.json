@@ -1,0 +1,221 @@
+{
+  "id": "A-summary-3120094",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-summary-3120094-1510e107",
+  "turns": [
+    {
+      "events_count": 50,
+      "text": "**신촌역은 20대 대학생 중심의 대형 발달상권으로, 높은 유동인구와 안정적 운영 환경을 자랑하는 젊음의 거리입니다.**\n\n## 📊 핵심 지표 분석\n\n**유동인구**: 하루 평균 608만 4천명 `(get_district_summary)`으로 서울 평균(9만 2천명) 대비 **66배**에 달하는 초대형 상권입니다. 오후 5시(138만 3천명)에 피크를 기록하는 전형적인 **오후~저녁형 상권**으로, 대학가 특성상 수업 후 활동이 집중됩니다.\n\n**매출 현황**: 월 추정 매출 321억 4천만원 `(get_district_summary)`으로 서울 발달상권 중 **상위 75%** 수준입니다. 다만 점포당 월 매출은 1,583만원으로 서울 평균(4,600만원) 대비 낮은 편인데, 이는 점포 수가 많고 학생 대상 저가 업종이 많기 때문입니다.\n\n**점포 현황**: 총 2,031개 점포 중 한식음식점(296개), 일반의류(193개), 호프·간이주점(153개)이 상위를 차지합니다 `(get_district_summary)`. 프랜차이즈 비율 13.2%로 개인 창업 친화적 환경입니다.\n\n## 🎯 고객층 특성\n\n- **성별**: 여성 56.1%로 여성 고객 비중이 높음 `(get_district_summary)`\n- **연령**: 20대가 47.8%로 압도적 다수 `(get_district_summary)`\n- **소비 패턴**: 주말 매출 감소(-69.2%)로 평일 중심 소비 구조\n\n## ✅ 기회 요소\n\n- **초고밀도 유동인구**: 서울 최상위권 유동인구로 노출 효과 극대화\n- **안정적 운영**: 폐업률 3.3%로 서울 평균(6.5%) 대비 **절반 수준** `(get_district_summary)`\n- **개인 창업 우호적**: 프랜차이즈 비율 13.2%로 대기업 체인과의 경쟁 부담 적음\n- **젊은 고객층**: 20대 중심으로 트렌드 민감도 높고 새로운 브랜드 수용성 좋음\n\n## ⚠️ 주의 사항\n\n- **낮은 객단가**: 점포당 매출이 서울 평균의 34% 수준으로 대학생 대상 저가 전략 필요\n- **주말 매출 급감**: 대학가 특성상 주말 유동인구 크게 감소\n- **계절성**: 방학 기간 매출 변동 가능성\n- **높은 점포 밀도**: 2,000개 이상 점포로 치열한 경쟁\n\n## 💡 창업 시사점\n\n신촌은 **저가·고회전** 전략이 유효한 상권입니다. 높은 유동인구를 활용한 테이크아웃, 간편식, 트렌디한 아이템이 적합하며, 20대 여성을 타겟으로 한 패션·뷰티·카페 업종에서 기회가 클 것으로 보입니다.\n\n궁금한 업종 추천이나 다른 상권과의 비교 분석이 필요하시면 말씀해 주세요!",
+      "tools": [
+        "get_district_summary"
+      ],
+      "tool_inputs": [
+        {
+          "name": "get_district_summary",
+          "input": {
+            "district_code": "3120094"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "summary",
+          "data": {
+            "districtName": "신촌역(신촌역, 신촌로터리)",
+            "districtType": "발달상권",
+            "summary": "하루 평균 유동인구 608만 4천명, 월 추정 매출 321억 4천만원의 안정적인 발달상권입니다.",
+            "monthlySales": 32143700871,
+            "floatingPopulation": {
+              "dailyAvg": 6084637,
+              "peakHour": 17,
+              "byHour": [
+                {
+                  "hour": 0,
+                  "pop": 1096626
+                },
+                {
+                  "hour": 6,
+                  "pop": 1027759
+                },
+                {
+                  "hour": 11,
+                  "pop": 862459
+                },
+                {
+                  "hour": 14,
+                  "pop": 915909
+                },
+                {
+                  "hour": 17,
+                  "pop": 1383505
+                },
+                {
+                  "hour": 21,
+                  "pop": 798379
+                }
+              ]
+            },
+            "topCategories": [
+              {
+                "name": "한식음식점",
+                "count": 296
+              },
+              {
+                "name": "일반의류",
+                "count": 193
+              },
+              {
+                "name": "호프-간이주점",
+                "count": 153
+              },
+              {
+                "name": "커피-음료",
+                "count": 105
+              },
+              {
+                "name": "부동산중개업",
+                "count": 79
+              }
+            ],
+            "status": "stable",
+            "closeRate": {
+              "current": 3.3,
+              "average": 6.5
+            },
+            "insights": {
+              "genderInsight": "여성 비중 높음 (여성 56.1%, 차이 12.2%p)",
+              "ageInsight": "20대 (47.8%)",
+              "perStoreSales": 15826539,
+              "franchiseRatio": 13.2,
+              "weekendUplift": -69.2
+            },
+            "dataQuarter": "2025Q4",
+            "dataSources": [
+              {
+                "id": "seoul_floating_pop",
+                "name": "상권-유동인구",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarFlpopQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ],
+            "benchmarks": {
+              "districtType": "발달상권",
+              "sampleCount": 120,
+              "rankings": {
+                "floatingPop": "상위 25%",
+                "monthlySales": "상위 75%",
+                "closeRate": "상위 25% (우수)",
+                "storeCount": "상위 25%",
+                "perStoreSales": "하위 25%"
+              },
+              "seoulAvg": {
+                "floating_pop": 92000,
+                "monthly_sales": 55000000000,
+                "close_rate": 5.9,
+                "store_count": 950,
+                "per_store_sales": 46000000
+              }
+            }
+          }
+        }
+      ],
+      "suggestions": [
+        "신촌역(신촌역, 신촌로터리)에서 뭐하면 좋을까?",
+        "신촌역(신촌역, 신촌로터리) 리스크 분석해줘",
+        "유동인구 시간대별로 보여줘",
+        "다른 상권이랑 비교해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "상권 종합 요약 조회"
+      ],
+      "intent": "summary",
+      "trace_id": "c6ffdfac3ce1b81398aa0cf6e8e0a0c8",
+      "done": true,
+      "elapsed_s": 20.27,
+      "user_message": "신촌 상권 분석"
+    }
+  ],
+  "rubric": {
+    "score": 10,
+    "max": 10,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=1292 need=300"
+      ],
+      [
+        "intent",
+        true,
+        "got=summary need=summary"
+      ],
+      [
+        "tool_names_include",
+        true,
+        "missing=[] got=['get_district_summary']"
+      ],
+      [
+        "card_types_include",
+        true,
+        "missing=[] got=['summary']"
+      ],
+      [
+        "card_district_name",
+        true,
+        "got=['신촌역(신촌역, 신촌로터리)'] need=신촌역(신촌역, 신촌로터리)"
+      ],
+      [
+        "card_district_type",
+        true,
+        "got=['발달상권'] need=발달상권"
+      ],
+      [
+        "suggestion_count_min",
+        true,
+        "got=4"
+      ]
+    ]
+  },
+  "total_elapsed_s": 20.27
+}

@@ -1,0 +1,55 @@
+{
+  "id": "C-empty",
+  "category": "C",
+  "turn_count": 1,
+  "session_id": "qs-C-empty-f5dfbb1b",
+  "turns": [
+    {
+      "events_count": 5,
+      "text": "죄송합니다. 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      "tools": [],
+      "tool_inputs": [],
+      "cards": [],
+      "suggestions": [
+        "여기에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 0,
+      "plan_steps": [],
+      "intent": null,
+      "trace_id": "3e2dfdf46b33f7ae53c9ef312a9e8428",
+      "done": true,
+      "elapsed_s": 3.89,
+      "user_message": "   "
+    }
+  ],
+  "rubric": {
+    "score": 4,
+    "max": 4,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "graceful",
+        true,
+        ""
+      ]
+    ]
+  },
+  "total_elapsed_s": 3.89
+}

@@ -1,0 +1,118 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.57165486594782, "lng": 126.99069738816891, "zoom": 4}, "district_code": "3120009", "district_name": "종로3가역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120009"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "종로3가역", "districtType": "발달상권", "summary": "하루 평균 유동인구 590만 6천명, 월 추정 매출 1104억 3천만원의 안정적인 발달상권입니다.", "monthlySales": 110439921327, "floatingPopulation": {"dailyAvg": 5906861, "peakHour": 17, "byHour": [{"hour": 0, "pop": 591361}, {"hour": 6, "pop": 1063995}, {"hour": 11, "pop": 1167123}, {"hour": 14, "pop": 1236451}, {"hour": 17, "pop": 1324774}, {"hour": 21, "pop": 523157}]}, "topCategories": [{"name": "시계및귀금속", "count": 1925}, {"name": "조명용품", "count": 438}, {"name": "한식음식점", "count": 400}, {"name": "호프-간이주점", "count": 172}, {"name": "커피-음료", "count": 119}], "status": "stable", "closeRate": {"current": 1.6, "average": 6.5}, "insights": {"genderInsight": "남성 비중 높음 (남성 54.0%, 차이 8.0%p)", "ageInsight": "30대 (20.3%)", "perStoreSales": 26786302, "franchiseRatio": 3.0, "weekendUplift": -72.0}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "종로3가역은 시계·귀금속 특화 상권으로, 서울 최고 "}
+
+data: {"type": "text", "content": "수준의 유동인구를 자랑하지만 점포당 매출 "}
+
+data: {"type": "text", "content": "효율은 아쉬운 발달상권입니다.**\n\n## 🚶"}
+
+data: {"type": "text", "content": "‍♂️ 유동인구 분석\n하루 평균 **590만 6천명** `(get_district"}
+
+data: {"type": "text", "content": "_summary)`의 압도적인 유동인구를 기록합니다."}
+
+data: {"type": "text", "content": " 이는 서울 평균(9만 2천명) 대비 **64배**,"}
+
+data: {"type": "text", "content": " 발달상권 중에서도 **상위 25%**에 해당하는 초"}
+
+data: {"type": "text", "content": "대형 규모입니다.\n\n**시간대별 특징**:\n- **오후"}
+
+data: {"type": "text", "content": " 5시(17시)** 피크: 132만 4천명으"}
+
+data: {"type": "text", "content": "로 최고점\n- 오후 2시(14시): 123"}
+
+data: {"type": "text", "content": "만 6천명으로 2차 피크\n- 새벽 0시에도 59"}
+
+data: {"type": "text", "content": "만명 유지하는 24시간 활성 상권\n\n**"}
+
+data: {"type": "text", "content": "고객층**: 남성 비중이 54.0%로 여성보"}
+
+data: {"type": "text", "content": "다 8.0%p 높으며, 30대가 20.3%로 가장 많은"}
+
+data: {"type": "text", "content": " 비중을 차지합니다.\n\n## 💰 매출 현황\n월 추정 매출 **1,104억원** `(get_district_summary)`으"}
+
+data: {"type": "text", "content": "로 발달상권 중 **상위 25%** 수준입니다. 서울 평균(550억원) 대비 2"}
+
+data: {"type": "text", "content": "배 규모의 대형 상권이지만, **점포당 월"}
+
+data: {"type": "text", "content": " 매출은 2,679만원**으로 발달상권 평균(4,600만원)의 58% 수준에 그쳐"}
+
+data: {"type": "text", "content": " 매출 효율은 **하위 25%**입니다.\n\n이는 총 4,123"}
+
+data: {"type": "text", "content": "개의 많은 점포 수 때문으로, 유동인구 대비 점"}
+
+data: {"type": "text", "content": "포 밀도가 높아 개별 점포 매출이 분산되는"}
+
+data: {"type": "text", "content": " 구조입니다.\n\n## 🏪 점포 현황 및 업종 특성\n**업"}
+
+data: {"type": "text", "content": "종별 점포 수**:\n1. **시계및귀금속**: 1,925개 (46.7"}
+
+data: {"type": "text", "content": "%) - 압도적 1위\n2. **조명용품**: 438개 (10.6%)\n3. **한식음식"}
+
+data: {"type": "text", "content": "점**: 400개 (9.7%)\n4. **호프-간이주점**: 172개 (4.2%)\n5. **커피-음료**: 119개 ("}
+
+data: {"type": "text", "content": "2.9%)\n\n**특화 상권의 특징**:\n- 프랜차이즈 비"}
+
+data: {"type": "text", "content": "율 **3.0%**로 매우 낮음 (개"}
+
+data: {"type": "text", "content": "인 사업자 중심)\n- 폐업률 **1.6%** `(get_district"}
+
+data: {"type": "text", "content": "_summary)`로 서울 평균(6.5%) 대비 매우 안정적\n- 발달상권 중 폐업률 "}
+
+data: {"type": "text", "content": "**상위 25%** (우수) 수준\n\n## 📊 기회와 리스크\n\n**🟢 기회 "}
+
+data: {"type": "text", "content": "요소**:\n- **초대형 유동인구**: 서울 최고 수준의 고"}
+
+data: {"type": "text", "content": "객 접점\n- **안정적 운영환경**: 1.6%의 "}
+
+data: {"type": "text", "content": "낮은 폐업률\n- **전문 상권**: 시계·귀금속 특화로"}
+
+data: {"type": "text", "content": " 목적성 있는 고객층\n- **24시간 활성**:"}
+
+data: {"type": "text", "content": " 심야에도 상당한 유동인구 유지\n\n**🔴 리스크 요소**:\n- **매"}
+
+data: {"type": "text", "content": "출 효율 부진**: 점포당 매출이 발달상권 평균의 58% 수준\n- **높"}
+
+data: {"type": "text", "content": "은 점포 밀도**: 4,123개 점포로 인한 과도한 경쟁\n- **업종 편"}
+
+data: {"type": "text", "content": "중**: 시계·귀금속이 전체의 47%를 차지하는 불균형"}
+
+data: {"type": "text", "content": "\n- **주말 매출 저조**: 주말 매출이 평일 대비 72% 낮음 (비즈니스 중심 "}
+
+data: {"type": "text", "content": "상권)\n\n## 💡 창업 시사점\n\n종로3가역은 **전"}
+
+data: {"type": "text", "content": "문 상품군 중심의 B2B/도매"}
+
+data: {"type": "text", "content": " 성격**이 강한 상권입니다. 일반적인 외식업이나"}
+
+data: {"type": "text", "content": " 소매업보다는:\n\n1. **전문성이 요구되는 업종**이"}
+
+data: {"type": "text", "content": " 유리\n2. **높은 유동인구를 활용한 브"}
+
+data: {"type": "text", "content": "랜딩** 효과 기대 가능\n3. **임"}
+
+: ping - 2026-04-24 07:20:00.452348+00:00
+
+data: {"type": "text", "content": "대료 대비 매출 효율** 면밀한 검토 필요\n4. **평"}
+
+data: {"type": "text", "content": "일 중심 운영 전략** 수립 필요\n\n구체적인 업"}
+
+data: {"type": "text", "content": "종 추천이나 다른 상권과의 비교 분석이 필요하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["종로3가역에서 뭐하면 좋을까?", "종로3가역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done", "quality_match_rate": 0.361}
+

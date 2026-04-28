@@ -1,0 +1,180 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54467215910094, "lng": 127.05667376479036, "zoom": 4}, "district_code": "3120052", "district_name": "성수역", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120052"}, "progress_label": "상권 요약 분석 중..."}
+
+
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "성수역", "districtType": "발달상권", "summary": "하루 평균 유동인구 141만 2천명, 월 추정 매출 221억 3천만원의 안정적인 발달상권입니다.", "monthlySales": 22132857556, "floatingPopulation": {"dailyAvg": 1412369, "peakHour": 14, "byHour": [{"hour": 0, "pop": 136547}, {"hour": 6, "pop": 264790}, {"hour": 11, "pop": 281809}, {"hour": 14, "pop": 312134}, {"hour": 17, "pop": 307268}, {"hour": 21, "pop": 109821}]}, "topCategories": [{"name": "한식음식점", "count": 144}, {"name": "일반의류", "count": 121}, {"name": "부동산중개업", "count": 99}, {"name": "화장품", "count": 72}, {"name": "컴퓨터및주변장치판매", "count": 56}], "status": "stable", "closeRate": {"current": 2.4, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 53.7%, 차이 7.4%p)", "ageInsight": "20대 (27.3%)", "perStoreSales": 14503839, "franchiseRatio": 7.3, "weekendUplift": -70.7}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "하위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "성수역은 높은 유동인구와 낮은 폐업률을 자랑하는 안정적인 발달상권이"}
+
+
+
+data: {"type": "text", "content": "지만, 점포당 매출 효율성에서는 아쉬움"}
+
+
+
+data: {"type": "text", "content": "이 있는 상권입니다.**\n\n## 📊 주요 지표 분석\n\n**유동인구**: 하루 평균 141"}
+
+
+
+data: {"type": "text", "content": "만 2천명 `(get_district_summary)`으로, 서울 평균(9만 2"}
+
+
+
+data: {"type": "text", "content": "천명) 대비 **15.4배**나 많은"}
+
+
+
+data: {"type": "text", "content": " 초대형 상권입니다. 발달상권 중에서도 **상위 25%**"}
+
+
+
+data: {"type": "text", "content": "에 해당하는 압도적인 유동인구를 보유하고 있으며, 오후 2시(31"}
+
+
+
+data: {"type": "text", "content": "만 2천명)에 피크를 기록하는 **오후형 상권** 특성을"}
+
+
+
+data: {"type": "text", "content": " 보입니다.\n\n**매출 현황**: 월 추정 매출 221억 3천만원 `(get_district_summary)`으로 "}
+
+
+
+data: {"type": "text", "content": "상당한 규모이지만, 점포당 월 매출은"}
+
+
+
+data: {"type": "text", "content": " 1,450만원으로 서울 평균(4,600만원) 대비 **31% 수"}
+
+
+
+data: {"type": "text", "content": "준**에 그쳐 발달상권 중 **하위 25%**에 위치합니다. 이는 높"}
+
+
+
+data: {"type": "text", "content": "은 유동인구 대비 매출 전환율이 상대적으로 낮음을 의미합니다."}
+
+
+
+data: {"type": "text", "content": "\n\n**점포 현황**: 총 1,526개 점포가 운영 중이며, 프랜차이즈 비율은 7"}
+
+
+
+data: {"type": "text", "content": ".3%로 매우 낮아 **개인 창업자 친화적**인 환"}
+
+
+
+data: {"type": "text", "content": "경입니다. 폐업률 2.4%는 서울 평균(6.5%) 대비 **절"}
+
+
+
+data: {"type": "text", "content": "반 이하**로 발달상권 중 **상위 25%**의 우수한 안"}
+
+
+
+data: {"type": "text", "content": "정성을 보여줍니다.\n\n## 🎯 업종 특성\n\n주요 업종은"}
+
+
+
+data: {"type": "text", "content": " **한식음식점**(144개), **일반의류**(121개), **부동산중개업**(99개), **화장품**(72개), **컴퓨터 관"}
+
+
+
+data: {"type": "text", "content": "련업**(56개) 순으로, 다양한 업종이 고르"}
+
+
+
+data: {"type": "text", "content": "게 분포되어 있습니다.\n\n## ⚖️ 기회와 리스크\n\n**🟢 기회 "}
+
+
+
+data: {"type": "text", "content": "요소**:\n- 서울 최상위권 유동인구로 높"}
+
+
+
+data: {"type": "text", "content": "은 노출 효과\n- 매우 낮은 폐업률(2.4%)로 안정"}
+
+
+
+data: {"type": "text", "content": "적 운영 환경\n- 낮은 프랜차이즈 비율로 개인 창업 진입 용"}
+
+
+
+data: {"type": "text", "content": "이\n- 여성 고객 비중 높음(53.7%)으로 타겟팅 명"}
+
+
+
+data: {"type": "text", "content": "확\n\n**🔴 주의 요소**:\n- 유동인구 대비 낮은 매출 전환율\n- 점포당 매출이"}
+
+
+
+data: {"type": "text", "content": " 서울 평균의 1/3 수준\n- 주말 매출 하락(-70.7%)으로 평일 의"}
+
+
+
+data: {"type": "text", "content": "존도 높음\n- 20대 중심(27.3%) 고객층"}
+
+
+
+data: {"type": "text", "content": "으로 타겟 제한적\n\n## 💡 시사점\n\n성수역은 **\"높"}
+
+
+
+data: {"type": "text", "content": "은 유동인구, 낮은 진입장벽\"**의 상권으로, 브랜드 인지도 구축이나"}
+
+
+
+data: {"type": "text", "content": " 고객 확보에는 유리하지만 **수익성 확"}
+
+
+
+data: {"type": "text", "content": "보**가 관건입니다. 특히 여성·20대 타"}
+
+
+
+data: {"type": "text", "content": "겟의 트렌디한 업종이나 합리적 가격대의 서"}
+
+
+
+data: {"type": "text", "content": "비스업이 적합할 것으로 보입니다.\n\n구체적인 업"}
+
+
+
+data: {"type": "text", "content": "종 추천이나 다른 상권과의 비교 분석이 궁금하시면 말씀해 주세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["성수역에서 뭐하면 좋을까?", "성수역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "7135fbdaa5d404d0589a1e23d8a2ef2b"}
+
+
+

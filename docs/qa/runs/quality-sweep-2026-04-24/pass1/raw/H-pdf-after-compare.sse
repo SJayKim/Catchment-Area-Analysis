@@ -1,0 +1,225 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120189", "3120103"]}, "progress_label": "상권 비교 분석 중..."}
+
+
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120103": {"district_code": "3120103", "district_name": "홍대입구역(홍대)", "floating_pop": 4106209, "main_age": "20대", "store_count": 2981, "close_rate": 4.0, "monthly_sales": 53200280285, "status": "stable", "quarter": "2025Q4", "sales_per_store": 17846454, "pop_per_store": 1377}, "3120189": {"district_code": "3120189", "district_name": "강남역", "floating_pop": 7453202, "main_age": "20대", "store_count": 5111, "close_rate": 2.3, "monthly_sales": 139568168199, "status": "stable", "quarter": "2025Q4", "sales_per_store": 27307409, "pop_per_store": 1458}}, "district_codes": ["3120103", "3120189"], "winners": {"highest_pop": "강남역", "highest_sales": "강남역", "lowest_close_rate": "강남역", "best_efficiency": "강남역"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "강남역이 홍대입구역 대비 매출·효율·안"}
+
+
+
+data: {"type": "text", "content": "정성 모든 면에서 우세한 압도적 상"}
+
+
+
+data: {"type": "text", "content": "권입니다.**\n\n## 핵심 지표 비교\n\n**유동인구**\n- 강남역: 월 745만명"}
+
+
+
+data: {"type": "text", "content": " `(compare_districts)`\n- 홍대입구역: 월 411만명 `(compare_districts)`"}
+
+
+
+data: {"type": "text", "content": "\n- **강남역이 81% 더 많음** - 접"}
+
+
+
+data: {"type": "text", "content": "근성과 직장인 유입에서 압도적 우위\n\n**매"}
+
+
+
+data: {"type": "text", "content": "출 규모**\n- 강남역: 월 1,396억원 `(compare_districts)`\n- 홍대입구역: 월 532억원 `(compare_districts"}
+
+
+
+data: {"type": "text", "content": ")`  \n- **강남역이 2.6배 더 큰 시장**"}
+
+
+
+data: {"type": "text", "content": " - 소비력에서 확연한 차이\n\n**점"}
+
+
+
+data: {"type": "text", "content": "포당 효율성**\n- 강남역: 점포당 월 2,731만원 `(compare"}
+
+
+
+data: {"type": "text", "content": "_districts)`\n- 홍대입구역: 점포당 월 1,785만원 `(compare_districts)`\n- **강남역이 53% 더 효율적** - 같"}
+
+
+
+data: {"type": "text", "content": "은 투자로 더 높은 수익 기대\n\n**안정성**\n- 강남"}
+
+
+
+data: {"type": "text", "content": "역: 폐업률 2.3% `(compare_districts)`\n- 홍대입구역: 폐업률 4.0% `(compare_districts)`\n- **강남역이 "}
+
+
+
+data: {"type": "text", "content": "훨씬 안정적** - 사업 지속성 면에서 유리\n\n## 각 상권 특"}
+
+
+
+data: {"type": "text", "content": "성\n\n**강남역**: 직장인·고소득층 중심의"}
+
+
+
+data: {"type": "text", "content": " **프리미엄 상권**\n- 높은 객단가, 평일 중"}
+
+
+
+data: {"type": "text", "content": "심 소비\n- 임대료는 높지만 매출로 상쇄 가능\n- 고"}
+
+
+
+data: {"type": "text", "content": "급 업종, B2B 서비스업에 적"}
+
+
+
+data: {"type": "text", "content": "합\n\n**홍대입구역**: 20대 대학생·문화 중심의 **트렌디 상권**  \n- 상"}
+
+
+
+data: {"type": "text", "content": "대적으로 저렴한 진입비용\n- 젊은 층 타겟 "}
+
+
+
+data: {"type": "text", "content": "업종, 문화·엔터 콘텐츠에 적합\n- 트렌드"}
+
+
+
+data: {"type": "text", "content": " 민감도 높음\n\n## 종합 판단\n\n**안"}
+
+
+
+data: {"type": "text", "content": "정적 고수익을 원한다면 "}
+
+
+
+data: {"type": "text", "content": "→ 강남역**\n**창의적이고 트렌디한 사업을"}
+
+
+
+data: {"type": "text", "content": " 원한다면 → 홍대입구역**\n\n어떤 상권이 더 좋을까요? 추천 업종은 각각 어떨"}
+
+
+
+data: {"type": "text", "content": "지, 리스크도 비교해보고 싶으시다면 말씀해 주세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "75a6c8b29dc180f9bb5f8dd85b178d70"}
+
+
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "죄송합니다. 현재 리포트 저장 기능은 제공되지 않습니다"}
+
+
+
+data: {"type": "text", "content": ". \n\n**대안 방법을 제안드립"}
+
+
+
+data: {"type": "text", "content": "니다:**\n\n1. **브라우저 저장**: 현재 대화 "}
+
+
+
+data: {"type": "text", "content": "내용을 브라우저에서 직접 저장하세요 (Ctrl+S 또는 우클릭 → 다"}
+
+
+
+data: {"type": "text", "content": "른 이름으로 저장)\n\n2. **복사 후 문서 작성**: 분"}
+
+
+
+data: {"type": "text", "content": "석 내용을 복사하여 워드/한글/노"}
+
+
+
+data: {"type": "text", "content": "션 등에 붙여넣기\n\n3. **스크린샷**: 중요한 분"}
+
+
+
+data: {"type": "text", "content": "석 부분을 캡처하여 이미지로 보관\n\n4. **추가 분석 요"}
+
+
+
+data: {"type": "text", "content": "청**: 더 자세한 분석이나 특정 관점의 심화 분석을"}
+
+
+
+data: {"type": "text", "content": " 요청하시면 더 완성도 높은 내용을 제공해드릴 수 있습"}
+
+
+
+data: {"type": "text", "content": "니다.\n\n**강남역 vs 홍대입구역 비교 분석을 더 보"}
+
+
+
+data: {"type": "text", "content": "완하고 싶으시다면:**\n- 업종별 세부 비"}
+
+
+
+data: {"type": "text", "content": "교\n- 시간대별 매출 패턴 차이  \n- 창업 추"}
+
+
+
+data: {"type": "text", "content": "천 업종 분석\n- 리스크 요인 상세 분석\n\n어떤 추가 분석이 필요하신지 말"}
+
+
+
+data: {"type": "text", "content": "씀해 주세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["강남역에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+
+
+data: {"type": "done", "trace_id": "e7074f0dfe11fc048ccbc17fff3a5325"}
+
+
+

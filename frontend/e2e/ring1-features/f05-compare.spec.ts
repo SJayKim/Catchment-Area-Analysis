@@ -2,7 +2,14 @@
  * Ring 1 — F05 상권 비교
  */
 
-import { test, expect, waitForMapReady, sendChatMessage, waitForResponseComplete } from '../helpers/setup';
+import {
+  test,
+  expect,
+  waitForMapReady,
+  sendChatMessage,
+  waitForResponseComplete,
+  waitForCompareList,
+} from '../helpers/setup';
 import { EvalPacket, ensureRunDir } from '../helpers/evalPacket';
 import { waitForCardText } from '../helpers/waitSSE';
 
@@ -84,30 +91,20 @@ test.describe('Ring 1 — F05 Compare', () => {
     });
     packet.attach(page);
 
+    test.setTimeout(120_000); // Real-mode 3-way compare can take 30~60s
     await sendChatMessage(page, '강남역, 홍대입구, 건대입구 비교해줘');
-    await page.waitForTimeout(3000);
+    const state = await waitForCompareList(page, 3, 90_000);
 
-    const state = await page.evaluate(() => {
-      const w = window as unknown as { __districtStore?: { getState: () => unknown } };
-      const st = w.__districtStore?.getState?.() as
-        | { compareList?: { code: string }[]; isCompareMode?: boolean }
-        | undefined;
-      return {
-        compareCodes: st?.compareList?.map((d) => d.code) ?? [],
-        isCompareMode: !!st?.isCompareMode,
-      };
-    });
-
-    const distinct = new Set(state.compareCodes);
-    const lenOk = state.compareCodes.length === 3 && distinct.size === 3;
-    const modeOk = state.isCompareMode === true;
+    const distinct = new Set(state.codes);
+    const lenOk = state.codes.length === 3 && distinct.size === 3;
+    const modeOk = state.mode === true;
 
     packet.writeAutoVerdict({
       result: lenOk && modeOk ? 'PASS' : 'FAIL',
-      reason: `codes=${JSON.stringify(state.compareCodes)} mode=${state.isCompareMode}`,
+      reason: `codes=${JSON.stringify(state.codes)} mode=${state.mode}`,
       checks: [
-        { criterion: 'compareList 3 distinct', met: lenOk, evidence: state.compareCodes.join(',') },
-        { criterion: 'isCompareMode true', met: modeOk, evidence: `${state.isCompareMode}` },
+        { criterion: 'compareList 3 distinct', met: lenOk, evidence: state.codes.join(',') },
+        { criterion: 'isCompareMode true', met: modeOk, evidence: `${state.mode}` },
       ],
     });
     expect(lenOk).toBe(true);
@@ -128,18 +125,9 @@ test.describe('Ring 1 — F05 Compare', () => {
       criteria: ['compareList 2 distinct', 'isCompareMode true'],
     });
     packet.attach(page);
+    test.setTimeout(120_000); // Real-mode 2-way compare can take 30~60s
     await sendChatMessage(page, '강남역과 홍대입구를 비교해줘');
-    await page.waitForTimeout(3000);
-    const state = await page.evaluate(() => {
-      const w = window as unknown as { __districtStore?: { getState: () => unknown } };
-      const st = w.__districtStore?.getState?.() as
-        | { compareList?: { code: string }[]; isCompareMode?: boolean }
-        | undefined;
-      return {
-        codes: st?.compareList?.map((d) => d.code) ?? [],
-        mode: !!st?.isCompareMode,
-      };
-    });
+    const state = await waitForCompareList(page, 2, 90_000);
     const ok = state.codes.length === 2 && state.mode === true;
     packet.writeAutoVerdict({
       result: ok ? 'PASS' : 'FAIL',

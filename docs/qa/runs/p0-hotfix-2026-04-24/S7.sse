@@ -1,0 +1,40 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "홍대입구역이 성수역 대비 유동인구도 압도적으로 많습"}
+
+data: {"type": "text", "content": "니다.**\n\n## 유동인구 비교\n\n**홍대입구역**: 하루 평균 12만 4천명 `(compare_districts)` vs **성수역**: 하루 평균 "}
+
+data: {"type": "text", "content": "4만 8천명 `(compare_districts)`\n\n- 홍대가 성수 대비 **2"}
+
+data: {"type": "text", "content": ".6배** 많은 유동인구\n- 홍대는 서울 최상위권 유동인구 "}
+
+data: {"type": "text", "content": "밀도를 자랑하는 대형 상권\n\n## 유동인구 패턴 특"}
+
+data: {"type": "text", "content": "징\n\n**홍대**: 20대(35.2%) 중심의 젊은 층"}
+
+data: {"type": "text", "content": "이 주류이며, 오후 6시 피크(5"}
+
+data: {"type": "text", "content": "만 2천명)로 퇴근 후 유흥·문화 소비가 활발한"}
+
+data: {"type": "text", "content": " **엔터테인먼트형 상권**\n\n**성수**: 30대(28.7%) 비중이 높고"}
+
+data: {"type": "text", "content": " 상대적으로 차분한 유동 패턴을 보이"}
+
+data: {"type": "text", "content": "는 **로컬 상권** 성격\n\n매출과 유"}
+
+data: {"type": "text", "content": "동인구 모두 홍대가 성수를 크게 앞서고 있어, 홍대는 전"}
+
+data: {"type": "text", "content": "국구 집객력을 가진 메가"}
+
+data: {"type": "text", "content": " 상권임을 확인할 수 있습니다."}
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대)에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done", "trace_id": "63ea14bf34cf82cb655d20c691b0ee5d"}
+

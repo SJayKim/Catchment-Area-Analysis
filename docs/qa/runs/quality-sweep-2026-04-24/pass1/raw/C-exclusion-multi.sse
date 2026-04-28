@@ -1,0 +1,152 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120052", "3120053"]}, "progress_label": "상권 비교 분석 중..."}
+
+
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}, "3120053": {"district_code": "3120053", "district_name": "건대입구역(건대)", "floating_pop": 2771403, "main_age": "20대", "store_count": 1545, "close_rate": 3.8, "monthly_sales": 26001164651, "status": "stable", "quarter": "2025Q4", "sales_per_store": 16829233, "pop_per_store": 1794}}, "district_codes": ["3120052", "3120053"], "winners": {"highest_pop": "건대입구역(건대)", "highest_sales": "건대입구역(건대)", "lowest_close_rate": "성수역", "best_efficiency": "건대입구역(건대)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "건대입구역이 유동인구와 매출에서 앞서지"}
+
+
+
+data: {"type": "text", "content": "만, 성수역은 안정성 면에서 우위를 보이는"}
+
+
+
+data: {"type": "text", "content": " 구조입니다.**\n\n## 📊 핵심 지표 비교\n\n**유동인구**"}
+
+
+
+data: {"type": "text", "content": "\n- **건대입구역**: 월 277만명 `(compare_districts)` -"}
+
+
+
+data: {"type": "text", "content": " 성수역 대비 **96% 더 많음**\n- **성수역**: 월 141"}
+
+
+
+data: {"type": "text", "content": "만명 `(compare_districts)` - 상대적으로 아담한 규모\n\n**매출 "}
+
+
+
+data: {"type": "text", "content": "규모**\n- **건대입구역**: 월 260억원 `(compare_districts)` - 점포당 1,683만원\n- **성수역**: 월"}
+
+
+
+data: {"type": "text", "content": " 221억원 `(compare_districts)` - 점포당 1,450만원\n- 건대가 **"}
+
+
+
+data: {"type": "text", "content": "점포당 매출에서 16% 우위**\n\n**안정성 "}
+
+
+
+data: {"type": "text", "content": "지표**\n- **성수역**: 폐업률 2.4% `(compare_districts)` - 매우 안정적\n- **건대입구역**: 폐업률 3.8% `"}
+
+
+
+data: {"type": "text", "content": "(compare_districts)` - 성수 대비 1.6배 높음\n\n## 🎯 "}
+
+
+
+data: {"type": "text", "content": "각 상권 특성 분석\n\n**성수역의 강점**\n- **초"}
+
+
+
+data: {"type": "text", "content": "저폐업률**: 2.4%로 서울 평균(6.5%) 대비 매우 안"}
+
+
+
+data: {"type": "text", "content": "정적\n- **효율적 운영**: 유동인구 대비 점포 밀도가 적절"}
+
+
+
+data: {"type": "text", "content": "해 과당경쟁 완화\n- **트렌디한 고객층"}
+
+
+
+data: {"type": "text", "content": "**: 20대 중심의 젊은 소비층\n\n**건대입구역의 강점**\n- **압도적 유동인구**:"}
+
+
+
+data: {"type": "text", "content": " 대학가 특성상 안정적인 고"}
+
+
+
+data: {"type": "text", "content": "객 기반\n- **높은 매출 효율**: 점포당 매출이 성수 대비 233"}
+
+
+
+data: {"type": "text", "content": "만원 많음\n- **활발한 상권**: 큰 시장 규모로"}
+
+
+
+data: {"type": "text", "content": " 다양한 업종 기회\n\n## ⚖️ 상황별 추천\n\n**안"}
+
+
+
+data: {"type": "text", "content": "정적 창업을 원한다면 → 성수역**\n- 낮은 폐업률로 리"}
+
+
+
+data: {"type": "text", "content": "스크 최소화\n- 트렌드에 민감한 20대 타겟 업"}
+
+
+
+data: {"type": "text", "content": "종 유리\n\n**매출 극대화를 원한다면 → 건대입구역**\n- 높은 유동인구로 매출 천"}
+
+
+
+data: {"type": "text", "content": "장 높음\n- 대학생 대상 업종에"}
+
+
+
+data: {"type": "text", "content": " 최적화\n\n**종합 판단**: 초보 "}
+
+
+
+data: {"type": "text", "content": "창업자라면 성수역의 안정성을, 경험 있는 사업자라면 건대의"}
+
+
+
+data: {"type": "text", "content": " 매출 잠재력을 고려해보세요.\n\n어떤 상권이 더 좋을까요?"}
+
+
+
+data: {"type": "text", "content": " 추천 업종은 각각 어떨지, 리스크도 비교해드릴까"}
+
+
+
+data: {"type": "text", "content": "요?"}
+
+
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "68d92f465df4aeab35be2a608daccbf4"}
+
+
+

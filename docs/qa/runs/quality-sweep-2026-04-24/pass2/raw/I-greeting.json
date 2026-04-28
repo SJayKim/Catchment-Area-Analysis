@@ -1,0 +1,60 @@
+{
+  "id": "I-greeting",
+  "category": "I",
+  "turn_count": 1,
+  "session_id": "qs-I-greeting-218ee407",
+  "turns": [
+    {
+      "events_count": 3,
+      "text": "안녕하세요! 서울 상권 분석 AI 마켓스코프입니다.\n지도에서 상권을 선택하시거나, 분석할 상권명을 알려주세요!",
+      "tools": [],
+      "tool_inputs": [],
+      "cards": [],
+      "suggestions": [
+        "강남역 상권 분석해줘",
+        "홍대 어때?",
+        "업종 추천해줘",
+        "상권 비교하고 싶어"
+      ],
+      "map_cmds_count": 0,
+      "plan_steps": [],
+      "intent": null,
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 0.05,
+      "user_message": "안녕"
+    }
+  ],
+  "rubric": {
+    "score": 4,
+    "max": 5,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=61 need=30"
+      ],
+      [
+        "graceful",
+        true,
+        ""
+      ]
+    ]
+  },
+  "total_elapsed_s": 0.05
+}

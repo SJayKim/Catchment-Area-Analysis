@@ -1,0 +1,90 @@
+{
+  "id": "C-unknown-category",
+  "category": "C",
+  "turn_count": 1,
+  "session_id": "qs-C-unknown-category-36ce7c3b",
+  "turns": [
+    {
+      "events_count": 30,
+      "text": "안녕하세요! 마켓스코프입니다.\n\n**'우주식당'이라는 특정 업체의 매출 정보는 제공할 수 없습니다.**\n\n제가 분석할 수 있는 데이터는 다음과 같습니다:\n\n## 🔍 **제공 가능한 분석**\n- **업종별 평균 매출 추정**: \"강남역 한식당 매출 얼마?\" \n- **상권 전체 현황**: \"강남역 상권 분석해줘\"\n- **업종 추천**: \"강남역에서 창업하기 좋은 업종은?\"\n- **경쟁 분석**: \"강남역 vs 홍대 상권 비교\"\n\n## 💡 **추천 질문**\n특정 업종의 매출이 궁금하시다면:\n- \"강남역 한식당 매출 분석해줘\"\n- \"강남역 카페 창업 어때?\"\n- \"강남역 치킨집 경쟁 상황은?\"\n\n어떤 업종이나 상권 분석이 궁금하신지 말씀해 주세요!",
+      "tools": [
+        "simulate_revenue",
+        "simulate_revenue",
+        "simulate_revenue"
+      ],
+      "tool_inputs": [
+        {
+          "name": "simulate_revenue",
+          "input": {
+            "district_code": "3120189",
+            "category_code": null
+          }
+        },
+        {
+          "name": "simulate_revenue",
+          "input": {
+            "district_code": "3120189",
+            "category_code": null
+          }
+        },
+        {
+          "name": "simulate_revenue",
+          "input": {
+            "district_code": "3120189",
+            "category_code": null
+          }
+        }
+      ],
+      "cards": [],
+      "suggestions": [
+        "강남역에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "매출 시뮬레이션",
+        "매출 시뮬레이션",
+        "매출 시뮬레이션"
+      ],
+      "intent": "simulation",
+      "trace_id": "a2f7ffd1fb2a7042faf8ed67c277b64c",
+      "done": true,
+      "elapsed_s": 18.4,
+      "user_message": "강남역 우주식당 매출 얼마?"
+    }
+  ],
+  "rubric": {
+    "score": 5,
+    "max": 5,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "abstention_or_graceful",
+        true,
+        ""
+      ],
+      [
+        "no_hallucinated_numbers",
+        true,
+        "unattr=0 threshold=8 cards=0"
+      ]
+    ]
+  },
+  "total_elapsed_s": 18.4
+}

@@ -1,0 +1,160 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54052101713452, "lng": 127.06941385153138, "zoom": 4}, "district_code": "3120053", "district_name": "건대입구역(건대)", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120053"}, "progress_label": "상권 요약 분석 중..."}
+
+
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "건대입구역(건대)", "districtType": "발달상권", "summary": "하루 평균 유동인구 277만 1천명, 월 추정 매출 260억원의 안정적인 발달상권입니다.", "monthlySales": 26001164651, "floatingPopulation": {"dailyAvg": 2771403, "peakHour": 17, "byHour": [{"hour": 0, "pop": 465878}, {"hour": 6, "pop": 440712}, {"hour": 11, "pop": 363841}, {"hour": 14, "pop": 420721}, {"hour": 17, "pop": 687304}, {"hour": 21, "pop": 392947}]}, "topCategories": [{"name": "일반의류", "count": 270}, {"name": "한식음식점", "count": 156}, {"name": "호프-간이주점", "count": 126}, {"name": "커피-음료", "count": 88}, {"name": "일반의원", "count": 52}], "status": "stable", "closeRate": {"current": 3.8, "average": 6.5}, "insights": {"genderInsight": "여성 비중 높음 (여성 54.7%, 차이 9.4%p)", "ageInsight": "20대 (41.5%)", "perStoreSales": 16829233, "franchiseRatio": 17.1, "weekendUplift": -57.0}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 75%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "건대입구역은 20대 여성 중심의 대학가"}
+
+
+
+data: {"type": "text", "content": " 발달상권으로, 압도적인 유동인구와 안정적인 운영 환경을 자랑합니다.**\n\n##"}
+
+
+
+data: {"type": "text", "content": " 핵심 지표 분석\n\n**유동인구**: 하루 평균 277만 1천명 `(get_district"}
+
+
+
+data: {"type": "text", "content": "_summary)`으로 서울 평균(9만 2천명) 대비 **"}
+
+
+
+data: {"type": "text", "content": "30배** 수준의 초대형 상권입니다. 오"}
+
+
+
+data: {"type": "text", "content": "후 5시(68만 7천명)에 피크를 찍는 전형적인 **대"}
+
+
+
+data: {"type": "text", "content": "학가+직장인 복합형** 상권이며, 여성 비중이 54"}
+
+
+
+data: {"type": "text", "content": ".7%로 남성보다 9.4%p 높고, 20대가 41.5%를 차지합니다 `"}
+
+
+
+data: {"type": "text", "content": "(get_district_summary)`.\n\n**매출 현황**: 월 추정 매출 260억원 `(get_district_summary)`으로 서울 평균("}
+
+
+
+data: {"type": "text", "content": "550억원) 대비 47% 수준입니다. 점포당 월 매출은 1"}
+
+
+
+data: {"type": "text", "content": ",683만원으로 서울 평균(4,600만원) 대비 **37% 수준**에"}
+
+
+
+data: {"type": "text", "content": " 그쳐 매출 효율이 아쉬운 편입니다. 주말 매출이"}
+
+
+
+data: {"type": "text", "content": " 평일 대비 57% 낮아 **평일 중심** 소비 패"}
+
+
+
+data: {"type": "text", "content": "턴을 보입니다 `(get_district_summary)`.\n\n**점포 현황**: 총 1,545개 점포 중 일반의류(270개), 한식음식"}
+
+
+
+data: {"type": "text", "content": "점(156개), 호프·간이주점(126개) 순으로 구성되어 있습니다. 프"}
+
+
+
+data: {"type": "text", "content": "랜차이즈 비율 17.1%로 개인 창업 친화적이며, 폐업률 3"}
+
+
+
+data: {"type": "text", "content": ".8%는 서울 평균(6.5%) 대비 **41% 낮아** 매우"}
+
+
+
+data: {"type": "text", "content": " 안정적입니다 `(get_district_summary)`.\n\n## 기회와 리스크\n\n**기회**:\n- 서울 최"}
+
+
+
+data: {"type": "text", "content": "상위권 유동인구 (발달상권 중 상위 25%)\n- 매우"}
+
+
+
+data: {"type": "text", "content": " 낮은 폐업률 (발달상권 중 상위 25% 우수)\n- 20"}
+
+
+
+data: {"type": "text", "content": "대 여성 타겟 업종에 최적화된 고객층\n\n**주"}
+
+
+
+data: {"type": "text", "content": "의사항**:\n- 점포당 매출 효율 부진 (발달상권 중 하위 25%)\n- 의"}
+
+
+
+data: {"type": "text", "content": "류업 과포화 (270개 점포)\n- 주"}
+
+
+
+data: {"type": "text", "content": "말 매출 의존도 낮음\n\n## 시사점\n\n건대는 **안정적 운영**"}
+
+
+
+data: {"type": "text", "content": "을 원하는 창업자에게 적합한 상권입니다. 압도적인 유동인구"}
+
+
+
+data: {"type": "text", "content": "와 낮은 폐업률로 리스크는 낮지만, 치열한 경"}
+
+
+
+data: {"type": "text", "content": "쟁으로 인한 매출 효율 저하를 고려해야 합니다."}
+
+
+
+data: {"type": "text", "content": " 특히 20대 여성을 타겟으로 한 차별화된 아이템이 필요합니다.\n\n구"}
+
+
+
+data: {"type": "text", "content": "체적인 업종 추천이나 다른 상권과의 비교 분석이 궁금하시면 말씀해 주세요"}
+
+
+
+data: {"type": "text", "content": "!"}
+
+
+
+data: {"type": "suggestion", "questions": ["건대입구역(건대)에서 뭐하면 좋을까?", "건대입구역(건대) 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "68bf5feb44a70bfd56ab5e0ed14b38a5"}
+
+
+

@@ -1,0 +1,78 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.57196361000734, "lng": 126.97459713449952, "zoom": 4}, "district_code": "3120003", "district_name": "광화문역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120003", "3120009"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120003": {"district_code": "3120003", "district_name": "광화문역", "floating_pop": 1262097, "main_age": "40대", "store_count": 1840, "close_rate": 2.0, "monthly_sales": 24586005235, "status": "stable", "quarter": "2025Q4", "sales_per_store": 13361959, "pop_per_store": 686}, "3120009": {"district_code": "3120009", "district_name": "종로3가역", "floating_pop": 5906861, "main_age": "30대", "store_count": 4123, "close_rate": 1.6, "monthly_sales": 110439921327, "status": "stable", "quarter": "2025Q4", "sales_per_store": 26786302, "pop_per_store": 1433}}, "district_codes": ["3120003", "3120009"], "winners": {"highest_pop": "종로3가역", "highest_sales": "종로3가역", "lowest_close_rate": "종로3가역", "best_efficiency": "종로3가역"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "종로3가역이 광화문역 대비 모든 핵심 지표에서 압"}
+
+data: {"type": "text", "content": "도적 우위를 보이는 대형 상권입니다.**\n\n## 지표별 우위 분"}
+
+data: {"type": "text", "content": "석\n\n**유동인구**: 종로3가역 590만명 vs 광화문역 126만명 `(compare_districts"}
+
+data: {"type": "text", "content": ")` - **4.7배 차이**로 종"}
+
+data: {"type": "text", "content": "로3가역이 압승입니다. 종로3가역은 서울 최대 유동인구 "}
+
+data: {"type": "text", "content": "상권 중 하나로, 지하철 1·3·5"}
+
+data: {"type": "text", "content": "호선 환승역의 위력을 보여줍니다.\n\n**매출 규모**: 종로3가역"}
+
+data: {"type": "text", "content": " 월 1,104억원 vs 광화문역 246억원 `(compare_districts)` - **4.5"}
+
+data: {"type": "text", "content": "배 차이**입니다. 종로3가역의 압도적인 유동인구가"}
+
+data: {"type": "text", "content": " 매출로 직결되고 있습니다.\n\n**점포당 매출 효율**: 종로3가역 2"}
+
+data: {"type": "text", "content": ",679만원 vs 광화문역 1,336만원 `(compare_districts)` - 종로3가역이 **2배 높은 효"}
+
+data: {"type": "text", "content": "율**을 보입니다. 단순히 규모만 큰 게 아니라 개별 점포 수"}
+
+data: {"type": "text", "content": "익성도 우수합니다.\n\n**안정성**: 폐업률에서도 종로3가역 1"}
+
+data: {"type": "text", "content": ".6% vs 광화문역 2.0% `(compare_districts)`로 종로3가역이 더 안정적입니다.\n\n## 각 상권 적합 시나리오\n\n**"}
+
+data: {"type": "text", "content": "종로3가역 추천 대상**:\n- 높은 매출을 추"}
+
+data: {"type": "text", "content": "구하는 창업자\n- 유동인구 기반 비즈니스 (카페, 패"}
+
+data: {"type": "text", "content": "스트푸드, 소매)\n- 30대 타겟 업종 (주 "}
+
+data: {"type": "text", "content": "고객층)\n- 경쟁이 치열해도 규모의 경제를 노릴 수 있는 업"}
+
+data: {"type": "text", "content": "종\n\n**광화문역 추천 대상**:\n- 안정적이고 차분한 환경 선"}
+
+data: {"type": "text", "content": "호\n- 40대 직장인 타겟 업종\n- 높은 임대료 부담을 피"}
+
+data: {"type": "text", "content": "하고 싶은 소상공인\n- 틈새 시장 공략 전략\n\n## 종"}
+
+data: {"type": "text", "content": "합 판단\n\n**창업 관점에서는 종로3가역이 압도적으로 유"}
+
+data: {"type": "text", "content": "리**합니다. 유동인구, 매출, 점포당 효율, 안정성 모든"}
+
+data: {"type": "text", "content": " 면에서 우위를 보이며, 특히 점포당 매출이 2배 높다"}
+
+data: {"type": "text", "content": "는 것은 임대료를 감안해도 수"}
+
+data: {"type": "text", "content": "익성이 더 좋을 가능성이 높습니다.\n\n다만 종로3가역은"}
+
+data: {"type": "text", "content": " 경쟁도 치열하고 임대료도 높을 것으로 예상되니"}
+
+data: {"type": "text", "content": ", **구체적인 업종별 경쟁 현황이나 리"}
+
+data: {"type": "text", "content": "스크 분석**도 함께 검토해보시는 것을 추천드립니다!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done"}
+

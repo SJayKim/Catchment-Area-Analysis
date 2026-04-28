@@ -1,0 +1,60 @@
+{
+  "id": "D-typo-2",
+  "category": "D",
+  "turn_count": 1,
+  "session_id": "qs-D-typo-2-2a9f525c",
+  "turns": [
+    {
+      "events_count": 13,
+      "text": "요청하신 분석에 필요한 공공데이터를 조회하지 못했습니다. 다른 상권을 선택하시거나, 비교/추천 대상을 명확히 알려주시면 다시 분석해드리겠습니다.\n\n\"홍댸\"로 검색된 상권이 없는 것 같습니다. 혹시 **홍대** 상권을 말씀하신 건가요? \n\n서울시 주요 상권 예시:\n- 홍대입구역, 홍익대학교 주변\n- 강남역, 명동, 이태원\n- 성수동, 건대입구역\n- 신촌, 압구정로데오\n\n정확한 상권명을 알려주시면 상세한 분석을 도와드리겠습니다!",
+      "tools": [],
+      "tool_inputs": [],
+      "cards": [],
+      "suggestions": [
+        "여기에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 0,
+      "plan_steps": [],
+      "intent": null,
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 6.36,
+      "user_message": "홍댸 상권 어뗘?"
+    }
+  ],
+  "rubric": {
+    "score": 4,
+    "max": 5,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "must_contain_any_in_text",
+        true,
+        "need-any=['홍대', '상권']"
+      ],
+      [
+        "graceful",
+        true,
+        ""
+      ]
+    ]
+  },
+  "total_elapsed_s": 6.36
+}

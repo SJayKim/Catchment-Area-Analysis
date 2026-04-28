@@ -1,0 +1,164 @@
+{
+  "id": "A-compare-홍대입구-건대입구",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-compare-홍대입구-건대입구-96ae4d02",
+  "turns": [
+    {
+      "events_count": 37,
+      "text": "**홍대입구역이 건대입구역 대비 규모와 매출 효율 모든 면에서 우세한 대형 상권입니다.**\n\n## 핵심 지표 비교\n\n**유동인구**: 홍대 410만명 vs 건대 277만명 `(compare_districts)`\n- 홍대가 **48% 더 많은** 유동인구를 보유하며, 두 상권 모두 20대가 주 고객층입니다.\n\n**월 매출**: 홍대 532억원 vs 건대 260억원 `(compare_districts)`\n- 홍대가 건대 대비 **2배 이상** 높은 매출을 기록하고 있습니다.\n\n**점포당 매출 효율**: 홍대 1,785만원 vs 건대 1,683만원 `(compare_districts)`\n- 홍대가 점포당 월 102만원(6%) 더 높은 매출을 올리고 있어, 단순히 규모만 큰 게 아니라 **효율성도 우수**합니다.\n\n**폐업률**: 홍대 4.0% vs 건대 3.8% `(compare_districts)`\n- 건대가 소폭 낮아 **안정성 면에서는 건대가 우세**하지만, 차이는 미미합니다.\n\n## 상권별 특성 분석\n\n**홍대입구역(홍대)**\n- **장점**: 압도적 유동인구, 높은 매출 효율, 대학가+클럽가 복합 상권\n- **주의**: 높은 임대료, 치열한 경쟁, 트렌드 변화에 민감\n\n**건대입구역(건대)**\n- **장점**: 상대적으로 안정적 폐업률, 대학가 기반 충성 고객층\n- **주의**: 홍대 대비 작은 시장 규모, 제한적 매출 잠재력\n\n## 창업 시나리오별 추천\n\n- **대형 투자, 높은 수익 추구**: 홍대 추천 (높은 유동인구와 매출 효율)\n- **안정적 소규모 창업**: 건대 추천 (낮은 폐업률, 상대적으로 진입 장벽 낮음)\n- **트렌디한 업종**: 홍대 추천 (젊은 고객층, 유행 선도 지역)\n- **기본 생활 서비스**: 건대 추천 (대학가 기반 안정적 수요)\n\n각 상권의 추천 업종이나 구체적인 리스크 분석이 궁금하시면 말씀해 주세요!",
+      "tools": [
+        "compare_districts"
+      ],
+      "tool_inputs": [
+        {
+          "name": "compare_districts",
+          "input": {
+            "district_codes": [
+              "3120103",
+              "3120053"
+            ]
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "compare",
+          "data": {
+            "districts": {
+              "3120103": {
+                "district_code": "3120103",
+                "district_name": "홍대입구역(홍대)",
+                "floating_pop": 4106209,
+                "main_age": "20대",
+                "store_count": 2981,
+                "close_rate": 4.0,
+                "monthly_sales": 53200280285,
+                "status": "stable",
+                "quarter": "2025Q4",
+                "sales_per_store": 17846454,
+                "pop_per_store": 1377
+              },
+              "3120053": {
+                "district_code": "3120053",
+                "district_name": "건대입구역(건대)",
+                "floating_pop": 2771403,
+                "main_age": "20대",
+                "store_count": 1545,
+                "close_rate": 3.8,
+                "monthly_sales": 26001164651,
+                "status": "stable",
+                "quarter": "2025Q4",
+                "sales_per_store": 16829233,
+                "pop_per_store": 1794
+              }
+            },
+            "district_codes": [
+              "3120103",
+              "3120053"
+            ],
+            "winners": {
+              "highest_pop": "홍대입구역(홍대)",
+              "highest_sales": "홍대입구역(홍대)",
+              "lowest_close_rate": "건대입구역(건대)",
+              "best_efficiency": "홍대입구역(홍대)"
+            },
+            "dataSources": [
+              {
+                "id": "seoul_floating_pop",
+                "name": "상권-유동인구",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarFlpopQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ]
+          }
+        }
+      ],
+      "suggestions": [
+        "어떤 상권이 더 좋을까?",
+        "추천 업종은 각각 어때?",
+        "리스크도 비교해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "상권 비교 분석"
+      ],
+      "intent": "comparison",
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 14.07,
+      "user_message": "홍대랑 건대 비교"
+    }
+  ],
+  "rubric": {
+    "score": 7,
+    "max": 8,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=932 need=300"
+      ],
+      [
+        "intent",
+        true,
+        "got=comparison need=comparison"
+      ],
+      [
+        "tool_names_include",
+        true,
+        "missing=[] got=['compare_districts']"
+      ],
+      [
+        "card_types_include",
+        true,
+        "missing=[] got=['compare']"
+      ],
+      [
+        "compare_district_count_min",
+        true,
+        "got=2 need≥2"
+      ]
+    ]
+  },
+  "total_elapsed_s": 14.07
+}

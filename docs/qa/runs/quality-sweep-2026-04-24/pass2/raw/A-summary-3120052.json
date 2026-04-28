@@ -1,0 +1,221 @@
+{
+  "id": "A-summary-3120052",
+  "category": "A",
+  "turn_count": 1,
+  "session_id": "qs-A-summary-3120052-d6130e8a",
+  "turns": [
+    {
+      "events_count": 43,
+      "text": "**성수역은 하루 141만명이 몰리는 대형 발달상권이지만, 점포당 매출 효율은 아쉬운 편입니다.**\n\n## 📊 주요 지표 분석\n\n**유동인구**: 하루 평균 141만 2천명 `(get_district_summary)`으로 서울 평균(9만 2천명) 대비 **15.4배**나 많습니다. 발달상권 중에서도 **상위 25%**에 해당하는 초대형 상권이며, 오후 2시(31만 2천명)에 피크를 기록하는 **오후형 상권** 특성을 보입니다.\n\n**매출 현황**: 월 추정 매출 221억 3천만원 `(get_district_summary)`이지만, 점포당 월 매출은 1,450만원으로 서울 평균(4,600만원) 대비 **31% 수준**입니다. 발달상권 중 **하위 25%**에 머물러 매출 효율이 아쉽습니다.\n\n**점포 구성**: 총 1,526개 점포 중 한식음식점(144개), 일반의류(121개), 부동산중개업(99개) 순으로 분포되어 있습니다. 프랜차이즈 비율은 7.3%로 낮아 개인 창업자에게 유리한 환경입니다.\n\n## 🎯 성수역의 특징\n\n**강점**:\n- **초대형 유동인구**: 발달상권 중 상위 25% 수준의 풍부한 고객층\n- **안정적 운영환경**: 폐업률 2.4%로 서울 평균(6.5%) 대비 매우 낮음\n- **개인창업 친화적**: 프랜차이즈 비율 7.3%로 경쟁 부담 적음\n- **여성 고객 우세**: 여성 53.7%로 7.4%p 높아 여성 타겟 업종에 유리\n\n**주의사항**:\n- **매출 효율 부진**: 엄청난 유동인구 대비 점포당 매출이 현저히 낮음\n- **주말 매출 급감**: 주말 매출이 평일 대비 70.7% 감소하는 평일 의존형 상권\n- **업종 집중도**: 한식·의류·부동산 업종 집중으로 차별화 필요\n\n## 💡 시사점\n\n성수역은 **\"높은 유동인구, 낮은 매출 효율\"**의 특이한 구조를 가진 상권입니다. 많은 사람이 지나가지만 실제 구매로 이어지지 않는 **통과형 상권** 성격이 강해 보입니다. 창업 시 단순 유동인구보다는 **실제 구매 고객을 끌어들일 차별화 전략**이 핵심입니다.\n\n궁금한 점이 더 있으시면 **성수역에서 뭐하면 좋을까?** 또는 **다른 상권이랑 비교해줘** 같은 추가 분석을 요청해 주세요!",
+      "tools": [
+        "get_district_summary"
+      ],
+      "tool_inputs": [
+        {
+          "name": "get_district_summary",
+          "input": {
+            "district_code": "3120052"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "summary",
+          "data": {
+            "districtName": "성수역",
+            "districtType": "발달상권",
+            "summary": "하루 평균 유동인구 141만 2천명, 월 추정 매출 221억 3천만원의 안정적인 발달상권입니다.",
+            "monthlySales": 22132857556,
+            "floatingPopulation": {
+              "dailyAvg": 1412369,
+              "peakHour": 14,
+              "byHour": [
+                {
+                  "hour": 0,
+                  "pop": 136547
+                },
+                {
+                  "hour": 6,
+                  "pop": 264790
+                },
+                {
+                  "hour": 11,
+                  "pop": 281809
+                },
+                {
+                  "hour": 14,
+                  "pop": 312134
+                },
+                {
+                  "hour": 17,
+                  "pop": 307268
+                },
+                {
+                  "hour": 21,
+                  "pop": 109821
+                }
+              ]
+            },
+            "topCategories": [
+              {
+                "name": "한식음식점",
+                "count": 144
+              },
+              {
+                "name": "일반의류",
+                "count": 121
+              },
+              {
+                "name": "부동산중개업",
+                "count": 99
+              },
+              {
+                "name": "화장품",
+                "count": 72
+              },
+              {
+                "name": "컴퓨터및주변장치판매",
+                "count": 56
+              }
+            ],
+            "status": "stable",
+            "closeRate": {
+              "current": 2.4,
+              "average": 6.5
+            },
+            "insights": {
+              "genderInsight": "여성 비중 높음 (여성 53.7%, 차이 7.4%p)",
+              "ageInsight": "20대 (27.3%)",
+              "perStoreSales": 14503839,
+              "franchiseRatio": 7.3,
+              "weekendUplift": -70.7
+            },
+            "dataQuarter": "2025Q4",
+            "dataSources": [
+              {
+                "id": "seoul_floating_pop",
+                "name": "상권-유동인구",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarFlpopQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ],
+            "benchmarks": {
+              "districtType": "발달상권",
+              "sampleCount": 120,
+              "rankings": {
+                "floatingPop": "상위 25%",
+                "monthlySales": "하위 25%",
+                "closeRate": "상위 25% (우수)",
+                "storeCount": "상위 25%",
+                "perStoreSales": "하위 25%"
+              },
+              "seoulAvg": {
+                "floating_pop": 92000,
+                "monthly_sales": 55000000000,
+                "close_rate": 5.9,
+                "store_count": 950,
+                "per_store_sales": 46000000
+              }
+            }
+          }
+        }
+      ],
+      "suggestions": [
+        "성수역에서 뭐하면 좋을까?",
+        "성수역 리스크 분석해줘",
+        "유동인구 시간대별로 보여줘",
+        "다른 상권이랑 비교해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "상권 종합 요약 조회"
+      ],
+      "intent": "summary",
+      "trace_id": null,
+      "done": true,
+      "elapsed_s": 17.23,
+      "user_message": "성수역 분석 해줘"
+    }
+  ],
+  "rubric": {
+    "score": 9,
+    "max": 10,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        false,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "min_text_chars",
+        true,
+        "got=1083 need=300"
+      ],
+      [
+        "intent",
+        true,
+        "got=summary need=summary"
+      ],
+      [
+        "tool_names_include",
+        true,
+        "missing=[] got=['get_district_summary']"
+      ],
+      [
+        "card_types_include",
+        true,
+        "missing=[] got=['summary']"
+      ],
+      [
+        "card_district_name",
+        true,
+        "got=['성수역'] need=성수역"
+      ],
+      [
+        "card_district_type",
+        true,
+        "got=['발달상권'] need=발달상권"
+      ],
+      [
+        "suggestion_count_min",
+        true,
+        "got=4"
+      ]
+    ]
+  },
+  "total_elapsed_s": 17.23
+}

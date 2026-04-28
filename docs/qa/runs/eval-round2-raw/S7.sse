@@ -1,0 +1,44 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.59418823907683, "lng": 127.00137940343157, "zoom": 4}, "district_code": "3110285", "district_name": "홍대부중", "district_type": "골목상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "홍대가 성수보다 유동인구가 훨씬 많습니다.**\n\n**유"}
+
+data: {"type": "text", "content": "동인구 비교**:\n- **홍대**: 하루 평균 **15만 1"}
+
+data: {"type": "text", "content": "천명** (발달상권 중 상위 10% 수준)\n- **성수**: 하루 평균 **6만 8"}
+
+data: {"type": "text", "content": "천명** (일반상권 평균 수준)\n\n홍대가 성수보다 **2."}
+
+data: {"type": "text", "content": "2배 더 많은** 유동인구를 기록하고 있습니다.\n\n**시간"}
+
+data: {"type": "text", "content": "대별 특징**:\n- **홍대**: 오후 9시에 1만 8"}
+
+data: {"type": "text", "content": "천명으로 피크 → 전형적인 **유흥·엔터테인먼트 "}
+
+data: {"type": "text", "content": "상권**\n- **성수**: 오후 6시에 8천명으로 피크 → **퇴근형 상권** "}
+
+data: {"type": "text", "content": "패턴\n\n**연령대별**:\n- **홍대**: 20대 35.2%, 30대 28"}
+
+data: {"type": "text", "content": ".1% → 젊은층 집중\n- **성수**: 30대 32.8"}
+
+data: {"type": "text", "content": "%, 40대 25.1% → 상대적으로 연령대 높음\n\n홍대의 압"}
+
+data: {"type": "text", "content": "도적인 유동인구는 대학가 + 클럽가"}
+
+data: {"type": "text", "content": " + 관광지의 시너지 효과로, 성수는 카"}
+
+data: {"type": "text", "content": "페·문화 공간 중심의 로컬 상"}
+
+data: {"type": "text", "content": "권 성격이 강합니다.\n\n특정 업종이나 다"}
+
+data: {"type": "text", "content": "른 지표 비교가 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["홍대부중에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done", "trace_id": "16bbe07ea5d37d005a0bfe003afd1e8c"}
+

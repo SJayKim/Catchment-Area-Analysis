@@ -1,0 +1,55 @@
+{
+  "id": "C-private-info",
+  "category": "C",
+  "turn_count": 1,
+  "session_id": "qs-C-private-info-f5a123e2",
+  "turns": [
+    {
+      "events_count": 18,
+      "text": "죄송하지만 **임대료 데이터는 서울시 상권분석 공공데이터에 포함되어 있지 않습니다.** \n\n제가 분석할 수 있는 강남역 상권 데이터는 다음과 같습니다:\n- 유동인구 및 시간대별 분포\n- 업종별 매출 현황 및 성장률\n- 점포 수, 개폐업 현황\n- 연령대별 고객 분포\n- 프랜차이즈 vs 개인사업자 비율\n\n**임대료 정보**는 다음 방법으로 확인하실 수 있습니다:\n- 부동산 중개업소 직접 문의\n- 네이버 부동산, 직방 등 부동산 앱\n- 상가정보시스템(sg.go.kr) - 국토교통부 운영\n- 현장 답사를 통한 직접 확인\n\n강남역 상권의 **매출 규모나 점포당 수익성** 등 다른 창업 관련 분석이 필요하시면 도움드릴 수 있습니다!",
+      "tools": [],
+      "tool_inputs": [],
+      "cards": [],
+      "suggestions": [
+        "강남역에서 뭐하면 좋을까?",
+        "이 자리 위험하지 않아?",
+        "카페 하면 어때?",
+        "유동인구 자세히 알려줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [],
+      "intent": null,
+      "trace_id": "fe2bb14038a0a7164e93a796fb624f30",
+      "done": true,
+      "elapsed_s": 9.44,
+      "user_message": "강남역에서 임대료 얼마야?"
+    }
+  ],
+  "rubric": {
+    "score": 4,
+    "max": 4,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "must_contain_any_in_text",
+        true,
+        "need-any=['매출', '유동인구', '데이터', '임대료', '제공']"
+      ]
+    ]
+  },
+  "total_elapsed_s": 9.44
+}

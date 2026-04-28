@@ -1,0 +1,191 @@
+{
+  "id": "B-alias-명동역",
+  "category": "B",
+  "turn_count": 1,
+  "session_id": "qs-B-alias-명동역-bd084a49",
+  "turns": [
+    {
+      "events_count": 47,
+      "text": "**명동역(명동재미로)은 서울 최대 관광·쇼핑 상권으로, 압도적인 유동인구와 의류 중심의 특화된 상업구조를 가진 발달상권입니다.**\n\n## 📊 주요 지표 분석\n\n**유동인구**: 하루 평균 78만 6천명 `(get_district_summary)`으로 서울 평균(9만 2천명) 대비 **8.5배**에 달하는 압도적인 규모입니다. 발달상권 중에서도 **상위 25%**에 위치하며, 오후 2시(17만 4천명)에 피크를 기록하는 전형적인 **관광·쇼핑형 상권**입니다.\n\n**매출**: 월 추정 매출 120억 1천만원 `(get_district_summary)`이지만, 점포당 월 매출은 1,454만원으로 서울 평균(4,600만원) 대비 **31% 수준**입니다. 발달상권 중 **하위 25%**로, 높은 유동인구 대비 매출 효율이 아쉬운 상황입니다.\n\n**고객 특성**: 여성 고객 비중이 54.2%로 남성보다 8.4%p 높으며 `(get_district_summary)`, 20대가 19.2%로 주요 고객층을 형성합니다. 주말 매출 비중이 평일 대비 **60.8% 낮아** 평일 관광객 중심 구조를 보입니다.\n\n## 🏪 점포 현황 및 업종 특성\n\n**총 826개 점포** 중 **일반의류(254개, 30.8%)**가 압도적으로 많아 명동의 패션 쇼핑 특성을 보여줍니다 `(get_district_summary)`. 한식음식점(46개), 가방(39개), 신발(36개), 시계·귀금속(34개) 순으로 이어지며, 프랜차이즈 비율은 6.1%로 매우 낮아 개인 상점 중심입니다.\n\n**폐업률**: 1.2%로 서울 평균(6.5%) 대비 **5분의 1 수준**으로 매우 안정적입니다 `(get_district_summary)`. 발달상권 중 **상위 25%** 수준의 우수한 안정성을 보입니다.\n\n## ⚖️ 기회와 리스크\n\n**🟢 기회 요소**:\n- 서울 최고 수준의 유동인구와 관광객 접근성\n- 매우 낮은 폐업률로 안정적인 사업 환경\n- 여성·20대 중심의 명확한 타겟층\n- 낮은 프랜차이즈 비율로 개인 창업 기회\n\n**🔴 주의 요소**:\n- 높은 유동인구 대비 낮은 점포당 매출 효율\n- 의류업종 집중으로 인한 치열한 경쟁\n- 관광객 의존도 높아 외부 변수에 민감\n- 높은 임대료 부담 예상\n\n## 💡 시사점\n\n명동역은 **브랜드 인지도 구축**에는 최적이지만, **수익성 확보**에는 신중한 접근이 필요한 상권입니다. 의류·패션 관련 업종이라면 높은 유동인구를 활용할 수 있지만, 차별화된 상품력과 효율적인 운영이 필수입니다.\n\n구체적인 업종 추천이나 다른 상권과의 비교 분석이 궁금하시면 말씀해 주세요!",
+      "tools": [
+        "get_district_summary"
+      ],
+      "tool_inputs": [
+        {
+          "name": "get_district_summary",
+          "input": {
+            "district_code": "3120027"
+          }
+        }
+      ],
+      "cards": [
+        {
+          "card_type": "summary",
+          "data": {
+            "districtName": "명동역(명동재미로)",
+            "districtType": "발달상권",
+            "summary": "하루 평균 유동인구 78만 6천명, 월 추정 매출 120억 1천만원의 안정적인 발달상권입니다.",
+            "monthlySales": 12013237556,
+            "floatingPopulation": {
+              "dailyAvg": 786542,
+              "peakHour": 14,
+              "byHour": [
+                {
+                  "hour": 0,
+                  "pop": 72220
+                },
+                {
+                  "hour": 6,
+                  "pop": 156415
+                },
+                {
+                  "hour": 11,
+                  "pop": 174141
+                },
+                {
+                  "hour": 14,
+                  "pop": 174407
+                },
+                {
+                  "hour": 17,
+                  "pop": 154470
+                },
+                {
+                  "hour": 21,
+                  "pop": 54889
+                }
+              ]
+            },
+            "topCategories": [
+              {
+                "name": "일반의류",
+                "count": 254
+              },
+              {
+                "name": "한식음식점",
+                "count": 46
+              },
+              {
+                "name": "가방",
+                "count": 39
+              },
+              {
+                "name": "신발",
+                "count": 36
+              },
+              {
+                "name": "시계및귀금속",
+                "count": 34
+              }
+            ],
+            "status": "stable",
+            "closeRate": {
+              "current": 1.2,
+              "average": 6.5
+            },
+            "insights": {
+              "genderInsight": "여성 비중 높음 (여성 54.2%, 차이 8.4%p)",
+              "ageInsight": "20대 (19.2%)",
+              "perStoreSales": 14543871,
+              "franchiseRatio": 6.1,
+              "weekendUplift": -60.8
+            },
+            "dataQuarter": "2025Q4",
+            "dataSources": [
+              {
+                "id": "seoul_floating_pop",
+                "name": "상권-유동인구",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarFlpopQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_estimated_sales",
+                "name": "상권-추정매출",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarSelngQq",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              },
+              {
+                "id": "seoul_store_info",
+                "name": "상권-점포",
+                "organization": "서울특별시",
+                "platform": "서울 열린데이터광장",
+                "api_endpoint": "VwsmTrdarStorW",
+                "url": "https://data.seoul.go.kr",
+                "license": "공공누리 제1유형",
+                "collection_method": "API"
+              }
+            ],
+            "benchmarks": {
+              "districtType": "발달상권",
+              "sampleCount": 120,
+              "rankings": {
+                "floatingPop": "상위 25%",
+                "monthlySales": "하위 25%",
+                "closeRate": "상위 25% (우수)",
+                "storeCount": "상위 75%",
+                "perStoreSales": "하위 25%"
+              },
+              "seoulAvg": {
+                "floating_pop": 92000,
+                "monthly_sales": 55000000000,
+                "close_rate": 5.9,
+                "store_count": 950,
+                "per_store_sales": 46000000
+              }
+            }
+          }
+        }
+      ],
+      "suggestions": [
+        "명동역(명동재미로)에서 뭐하면 좋을까?",
+        "명동역(명동재미로) 리스크 분석해줘",
+        "유동인구 시간대별로 보여줘",
+        "다른 상권이랑 비교해줘"
+      ],
+      "map_cmds_count": 1,
+      "plan_steps": [
+        "상권 종합 요약 조회"
+      ],
+      "intent": "summary",
+      "trace_id": "0126a649b783ac1a08a05c9e582c7e70",
+      "done": true,
+      "elapsed_s": 19.12,
+      "user_message": "명동역 분석"
+    }
+  ],
+  "rubric": {
+    "score": 4,
+    "max": 4,
+    "results": [
+      [
+        "done_event",
+        true,
+        ""
+      ],
+      [
+        "trace_id",
+        true,
+        ""
+      ],
+      [
+        "no_xml_leak",
+        true,
+        ""
+      ],
+      [
+        "card_district_name_any",
+        true,
+        "got=['명동역(명동재미로)'] need-any=['명동(명동거리)', '명동역(명동재미로)']"
+      ]
+    ]
+  },
+  "total_elapsed_s": 19.12
+}

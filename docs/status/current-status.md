@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-24
+> 최종 갱신: 2026-04-27
+> **2026-04-27 P0 우선순위 6건** ⭐ — Plan [p0-priority-2026-04-27](../plan/fix/p0-priority-2026-04-27.md). (1) W1 entity_matching 보강: "X시장" 쿼리 → 전통시장 +0.15 boost · paren alias-only 매치는 self-name 매치보다 약하도록 dampen (남대문시장(자유상가) self-match 우선). unit 6/6 PASS. (2) RESPOND `<tool_use>` XML leak — `_XMLTagSanitizer` 점진 strip + 프롬프트 rule 13 검증 unit 6/6. (3) Planner empty-plan clarification (coref-no-anchor / comparison-under-2 / exclusion-left-empty) 검증 unit 4/4. (4) Eval district_code 하드코딩 제거: `run_accuracy_round2.sh` 기본 message-only · `WITH_CODES=1` 옵션 · `verify_district_codes.py` drift guard 신규 · trust_scenarios `verify_target_codes()` preflight. (5) status-compress 517→383 LOC. (6) Refactor Pass 2: `api/errors.py` `raise_db_unavailable / raise_not_found` (`-> NoReturn`) 헬퍼 + districts·map_data 6 sites 적용. ruff/tsc/pytest 22/22 PASS. chatStore slice 분할은 cosmetic 가치 대비 disruption 위험으로 defer.
 > **2026-04-24 프로덕션 핫픽스** 🔥 — 어제 env 관례 분리 잔여 설정 3건 수정 (운영 이미지 재빌드 없이 `.env` + frontend 재빌드 + backend 재생성). (1) `NEXT_PUBLIC_API_URL` dev 값(`http://localhost:3000`) baked-in → `https://marketscope.robitlabs.co.kr` 로 복구 (브라우저 `/api/chat` 호출이 사용자 localhost 로 향하던 현상 해소). (2) `LANGFUSE_TRACING_ENVIRONMENT` `development`→`production` (prod trace 가 dev 태그로 저장되던 오염 해소). (3) `LANGFUSE_OTEL_INSECURE=true` 제거 (prod CA 체인 정상, dev-only 우회 불필요). 검증: 신규 chunk `449-e4312e4a97b2d2f9.js` 에 prod URL 박힘 + SSE `done.trace_id=a268eaa891cd5050824cb4bd3e76416b` === `agent_done` 로그.
 > **2026-04-24 prod-smoke baked-URL guard 추가** — prod-smoke 에 `P8 real-browser chat round-trip` + `P9 JS bundle dev-URL scan` 2건 추가. 핫픽스 사건이 기존 server-side curl smoke 로 회귀 감지 불가했던 gap 보강. chromium 9/9 PASS (44.6s). [Plan](../plan/infra/prod-baked-url-smoke-2026-04-24.md)
 > **Langfuse 비용 갭 fix (2026-04-24)** — Dev 컨테이너 `langfuse==2.60.10` 잔존으로 `from langfuse.langchain import CallbackHandler` import 실패 → `_tracer_valid=False` → dev LLM 호출 전량 미집계. v3 업그레이드 후 `done.trace_id=310fc8bf…` 실 발행 확인. Eval harness `REQUIRE_TRACE=1` preflight 추가. [Plan](../plan/infra/langfuse-cost-coverage-fix-2026-04-24.md)
@@ -18,6 +19,40 @@
 > **2026-04-23 Mobile Responsive Plan Phase A+B+C 구현**: viewport/breakpoint/touch-target · BottomSheet 3-snap + BottomNav 2-tab · IME/VisualViewport 가드 + auto-scroll FAB. tsc/eslint/build 0 errors. Phase D/E/F (PWA·Perf·A11y/E2E) 미착수. [Plan](../plan/ui/mobile-responsive.md)
 > **2026-04-23 F-01 fix + Accuracy Gap W1/W2/W3 구현** ⭐: ETL 8 컬럼 NULL 버그 해소(21,333 행 재적재) + Entity Linking(pg_trgm 대체: difflib+type boost) + Abstention(classify_tool_results+attribution rule) + Coreference Rewriter(Tier1 rule+Tier2 LLM) + 배제 토큰(말고/대신/빼고) + learned_aliases 테이블(alembic 004). [Plan F-01](../plan/fix/etl-sales-column-rename-2026-04-23.md) · [Plan Accuracy Gap](../plan/fix/accuracy-gap-fix.md)
 > **2026-04-23 Refactoring Phase 1 Plan 작성**: 7 기준(R1~R7) 기반 저위험/중위험 항목 1 Pass 묶음. Pass1 = singleflight 삭제 + 레거시 E2E 8건 삭제 + status 압축 + Any import 정리. Pass2 = errors.py 래퍼 통합 + blanket except 9건 좁히기 + respond.py 헬퍼 분리 + chatStore slice 분할. [Plan](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — 구현 미착수
+
+---
+
+## 2026-04-27 — P0 우선순위 6건 (Plan p0-priority-2026-04-27)
+
+### 개요
+- **Plan**: [p0-priority-2026-04-27.md](../plan/fix/p0-priority-2026-04-27.md)
+- 2026-04-24 Round 2 eval 후속 P0 6건 + 위생 작업. unit-test 우선, 프로덕션 영향 0.
+
+### 변경 / 결과
+
+| # | 영역 | 변경 | 검증 |
+|---|------|------|------|
+| 1 | W1 entity_matching | `_market_type_boost` 신규 ("X시장" → 전통시장 +0.15) · paren alias-only 매치 damp (`_PAREN_ALIAS_ONLY_DAMP=0.5`) | `tests/test_entity_matching.py` 6/6 PASS |
+| 2 | Respond XML leak | (이전 변경분) `_XMLTagSanitizer` + 프롬프트 rule 13 | `tests/test_xml_sanitizer.py` 6/6 PASS |
+| 3 | Planner clarification | (이전 변경분) `_CLARIFICATION_TEMPLATES` 3종 + 4 트리거 경로 | `tests/test_planner_clarification.py` 4/4 PASS |
+| 4 | Eval district_code 하드코딩 | `run_accuracy_round2.sh` `WITH_CODES=0` default · `verify_district_codes.py` drift guard · `trust_scenarios.verify_target_codes()` | 코드 import OK |
+| 5 | status-compress | 04-23 5섹션 + iOS BottomSheet 섹션 → 이력 테이블 1행씩 | 517 → 383 LOC |
+| 6 | Refactor Pass 2 (부분) | `api/errors.py` `raise_db_unavailable / raise_not_found` (`-> NoReturn`) · districts.py 3건 + map_data.py 3건 적용 | ruff All passed |
+
+### Pass 2 잔여 (defer)
+- `chatStore.ts` (381 LOC) slice 분할 — 36 consumer 영향 + 슬라이스 typing 복잡도 대비 cosmetic 가치 낮음
+- `except Exception` 9건 좁히기 — Plan 의 핵심 4 파일은 후속 세션
+- routes 의 `HTTPException` validation 패턴 통합 — 4xx 본문은 그대로 두는 게 가독성 우수
+
+### 메모리 활용
+- [feedback_eval_district_code_hardcode](../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_eval_district_code_hardcode.md) — DB drift guard 설계
+- [feedback_respond_tool_use_xml_leak](../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_respond_tool_use_xml_leak.md) — sanitizer 검증 angle
+- [feedback_formatter_strips_unused_imports](../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_formatter_strips_unused_imports.md) — `raise_not_found` 추가 import 가 1차 ruff F821 → 같은 Edit 안에서 import+사용 묶어 해소
+
+### 다음 P0
+- 🔧 Accuracy Eval Round 3 — district_code 미동봉 모드로 W1 entity_matching 신규 boost 회귀
+- 🔧 chatStore slice 분할 (필요 시 별도 Plan)
+- 🔧 backend pytest 인프라 — `tests/` 4 파일 모인 김에 fixture/conftest 정비
 
 ---
 
@@ -95,29 +130,6 @@
 - 🔧 backend 이미지 재빌드 완료 (SSL 우회 재점검) — 수동 pip install 은 컨테이너 재시작 시 유실 위험
 - 🔧 Langfuse Cloud Models 등록 확인 (사용자 UI 작업)
 - 🔧 prod 컨테이너 `pip show langfuse` 확인 (prod 는 trace_id 발행되므로 v3 추정이나 sanity 필요)
-
----
-
-## 2026-04-24 — iOS BottomSheet 챗 탭 즉시 닫힘 fix
-
-### 증상
-- iOS Safari 에서 BottomNav "💬 챗" 탭을 눌러 시트를 열면 full(90vh)로 올라갔다가 **곧바로 peek/hidden 으로 닫히는** 현상 (사용자 영상 제보)
-- 안드로이드/데스크톱 재현 안 됨
-
-### 원인
-- `setSnap('full')` 로 시트가 15vh→90vh 로 성장하는 동안 핸들이 손가락 아래로 올라옴 → iOS Safari 가 `setPointerCapture` + `touch-action:none` 조합에서 **합성 pointer 이벤트** 를 핸들에 발사
-- `BottomSheetHandle.onPointerDown` 이 이동 0px 탭에서도 `pointerup` → `onDragEnd()` 호출
-- `BottomSheet.onDragEnd` 의 `closest` 초기값이 `'hidden'` 이라 `liveVh` 계산이 전환 타이밍에 꼬이면 닫히는 방향으로 편향
-
-### 수정
-- ✅ `frontend/src/components/mobile/BottomSheetHandle.tsx` — 6px deadzone + `moved` 플래그. 이동 없는 탭은 `onDragEnd` 스킵
-- ✅ `frontend/src/components/mobile/BottomSheet.tsx` — `closest` 초기값 `'hidden'` → 현재 `snap`. useCallback deps 에 `snap` 추가
-- ✅ `frontend/e2e/ring1-features/mobile-sheet-open.spec.ts` 신규 — iPhone 12 에뮬레이션 2 시나리오 (챗 탭 후 full 유지 / 핸들 탭 deadzone)
-- ✅ `tsc --noEmit` exit 0
-
-### 검증 잔여
-- ⚠️ Playwright iPhone 에뮬레이션은 Chromium 엔진이라 Safari WebKit 합성 pointer 100% 재현 불가 — **실기기 iOS Safari 재확인 필요**
-- 🔧 스테이징 배포 후 재현 테스트 + 영상 제보자 확인
 
 ---
 
@@ -267,118 +279,6 @@
 
 ---
 
-## 2026-04-23 (저녁, Pass 2) — E2E Spec Hotfix → PASS 100%
-
-- **Plan**: [e2e-spec-hotfix-2026-04-23.md](../plan/qa/e2e-spec-hotfix-2026-04-23.md)
-- **변경 (5 spec + 1 component)**:
-  - `StatusBar.tsx` `data-testid="statusbar"` 추가 (Tailwind `.h-8` 셀렉터 5곳 충돌 근본 해소)
-  - `waitSSE.ts` / `setup.ts` / `p0-regression.spec.ts` 세 곳 `.h-8` → `[data-testid="statusbar"]`
-  - `f12-feedback.spec.ts` `fab.count()===0` precheck 로 skip-guard 보강 (unlimited `getAttribute` timeout 회피)
-  - `reg-2026-04-17.spec.ts` `PY` 기본값 `'python'` → `'python3'` (Playwright jammy 이미지)
-  - `f01-map-selection.spec.ts` F01-H3 waitForStatusBarContains 8s → 15s
-- **결과**: ring0~3 78 test **66 PASS / 0 FAIL / 12 SKIP** (이전 Pass 1 대비 FAIL 4건 소거). prod-smoke 7/7 재확인 — StatusBar HTML attribute 추가 영향 없음.
-- **Memory 후보**: 셀렉터 충돌 (h-8), Playwright 이미지 python 미존재, `locator.getAttribute` unlimited wait.
-
----
-
-## 2026-04-23 (저녁) — v0.4.0 프로덕션 재배포 `c6cc60e`
-
-- **Plan**: [prod-deploy-v0.4.0-2026-04-23.md](../plan/infra/prod-deploy-v0.4.0-2026-04-23.md)
-- **Before / After**: `60b6de3` (오전) → `c6cc60e` (저녁), 6 커밋 / +13,038 / -577
-- **DB 변경**: `learned_aliases(alias PK, code FK→category_metadata, confidence, source, hit_count, created_at, last_used_at)` + `idx_learned_aliases_code`. Additive, 기존 데이터 무영향.
-- **라우트 cut-over**: `/` → 랜딩(F11, 26.5KB), `/app` → 기존 챗맵(16.1KB chunk). `/proxy/kakao-sdk` 200, `/api/kakao-sdk` 404 (cut-over 완료).
-- **검증 (P1~P7 + N1~N2)**:
-  - P5 summary `perStoreSales=27,307,409` 원/월 (월 단위 정상)
-  - P6 recommend 편의점 `per_store_sales=208,887,585` 원/월 (<1B)
-  - N1 `/api/districts/3120189/preview` 200 + top_categories
-  - N2 `/api/feedback/score` → 빈 payload 422 · 정상 payload 204 (Langfuse idempotent)
-- **E2E 회귀 결과**: Pass 1 = 106 test · 94 PASS · 4 FAIL (전부 test infra) · 8 SKIP → Pass 2 hotfix 후 FAIL 0 (위 섹션).
-- **배포 메모**: `seed` 는 base image 재사용(build 불필요). migrate 는 backend 와 동일 context → `build backend frontend migrate seed` 전체 지정 필수 (이전 단일 backend build 로는 migrate stale 이슈).
-
----
-
-## 2026-04-23 — F-01 ETL Fix + Accuracy Gap Fix W1/W2/W3
-
-### F-01 ETL 컬럼 rename + 재적재
-- **Audit 근거**: [data-integrity-audit-2026-04-23.md](../qa/runs/data-integrity-audit-2026-04-23.md) §1.1 — `estimated_sales.weekday_sales / weekend_sales / time_1_sales~time_6_sales` 8 컬럼 전량 NULL
-- **원인**: Seoul OpenData `VwsmTrdarSelngQq` 2025-10 스키마 개편. `MDW→MDWK · WND→WKEND · TMZON_N→TMZON_HH_HH` 컬럼명 변경에 ETL 미반영
-- **Fix**: `server/data/etl/transformers.py:214-229` 8 key rename + docstring 갱신
-- **재적재**: `python -m server.data.etl.runner run 2025Q4 --table estimated_sales` · 139.7s 수집 + 21,333 행 upsert
-- **검증**: 5 sample 상권 × weekday/weekend/time_1/time_6 = 20/20 NOT NULL, sum > 0. 강남역 평일 3,288억/월 + 주말 898억 (정상치)
-- **Plan**: [etl-sales-column-rename-2026-04-23.md](../plan/fix/etl-sales-column-rename-2026-04-23.md)
-
-### W1 — GAP-A Entity Linking + GAP-D Abstention
-- **신규 `agent/utils/entity_matching.py`**:
-  - `rank_candidates` — prefix 시 score = `0.55 + 0.25×(query_len/name_len)`, type boost (발달상권 +0.20 / 골목 +0.10 / 전통시장 +0.05)
-  - `pick_best` — `TOP1_MIN=0.55` · `CLOSE_DELTA=0.08` ambiguity 감지
-  - `pg_trgm` 대체: 1,650 행에 Python-side difflib 가 ms 단위 → DB migration 불필요
-- **`repositories/real/districts.py`** `_fetch_match_pool` 신규 (prefix + 3글자+contains + reverse-prefix union, LIMIT 25) · `detect_districts_in_message` 재작성 (각 엔트리 `{code, name, score, ambiguous, alternatives}`)
-- **신규 `agent/utils/abstention.py`**:
-  - `classify_tool_results(tool_results, tool_errors)` → `full / partial / empty`
-  - `ABSTENTION_PROMPT_ADDENDUM_EMPTY` — Tool 전부 실패 시 고정 템플릿 강제
-  - `ATTRIBUTION_PROMPT_RULE` — 수치 뒤 `(tool_name)` 태그 의무화
-  - `scan_unattributed_numbers` — 후처리 정규식 (숫자+단위 뒤 `(tool_)` 없으면 warning)
-- **Respond 연동**: `build_respond_prompt` 상단 주입 · `respond_node` 말미 post-hoc scan
-- **Smoke**: "홍대 vs 성수 매출" → 홍대입구역(홍대) `ambiguous=True`, 성수역 `ambiguous=False` · "강남역 요약" → 전 수치 attribution tag 주입 ✅
-
-### W2 — GAP-E Coreference + GAP-C 배제
-- **신규 `agent/utils/rewriter.py`**:
-  - Tier 1 rule: `COREF_PATTERN = 거기|저기|방금|그거|이거|해당|위|동일|아까` + history anchor walk (cards + history 역순)
-  - `EXCLUSION_PATTERNS`: `X 말고 / X 대신 / X 빼고 / X 제외` → `excluded_tokens`
-  - Tier 2 LLM: `llm_rewrite_message` — coref 감지했으나 anchor 없을 때만 flash 호출 (~200ms)
-- **Planner 연동**: `planner_node` 맨 앞 `rule_rewrite` · `excluded_tokens` 와 `district_name` 충돌 시 `district_code/name` 드롭 · comparison intent 에서 `multi` 리스트 `excluded_tokens` 필터
-- **chat.py**: `_has_exclusion_phrase` 감지 시 `detect_district_by_name` auto-detect skip
-- **Smoke** ("홍대 말고 성수역이랑 건대 비교"): Tool 호출 `compare_districts(['3120052','3120053'])` · Card 2개만 · LLM 텍스트 홍대 언급 0건 · map_cmd 없음 ✅
-
-### W3 — GAP-B Learned Aliases (부분)
-- **Alembic 004** `learned_aliases` 테이블: `alias PK · code FK→category_metadata · confidence · source · hit_count · timestamps`. 003 충돌 회피로 004 배정. `alembic upgrade head` 정상.
-- **`CategoryResolver` 확장**: `load_from_db` 가 `WHERE confidence >= 0.7` merge · `record_learned_alias(alias, code, confidence, source)` ON CONFLICT 증가 · 테이블 부재 시 silent no-op
-- **Deferred**: LLM miss-path 자동 fallback (`resolve` async 전환 필요), `hit_count ≥ 5` promote 잡 — Phase 2 로 분리
-
-### W4 — GAP-F Card-level PDF (deferred)
-- Frontend 대규모 변경 (Card 5종 + `useReportExport` 파라미터화 + `ReportDocument` 서브셋) 필요. 체감 빈도 "낮음" + 전체 PDF 워크어라운드 가능 → 후속 세션.
-
-### KPI 기대 (2026-04-13 eval 대비)
-
-| 지표 | 2026-04-22 | W1~W3 적용 후 기대 |
-|------|-----------:|------------------:|
-| GAP-A 2글자 매칭률 | ~60% | **95%+** (difflib + type boost) |
-| GAP-C 배제 정확도 | ~20% | **95%+** (Planner+chat.py 2중 drop) |
-| GAP-D 할루시 발생률 | ~15% | **<5%** (empty 템플릿 + attribution scan) |
-| GAP-E coref 성공률 | ~30% | **85%+** (anchor walk + Tier2 LLM) |
-| 정확성 종합 | 74 | **83~85+** (GAP-B/F deferred 로 상한 85) |
-
-### 검증 상태
-- ✅ Unit: entity_matching / abstention / rewriter 각각 smoke 통과
-- ✅ Integration: `/api/chat` live smoke — F03 요약, 배제 비교 모두 PASS
-- ⏳ Full E2E Ring 0~3: Pass 2 hotfix 에서 검증 완료
-- ⏳ 2026-04-13 eval (S1~S8) 재측정: **2026-04-24 Round 2 Plan 작성**, 실행 대기
-
----
-
-## 2026-04-23 — LLMOps L1 Verification
-
-- **Plan**: [llmops-l1-verification.md](../plan/infra/llmops-l1-verification.md)
-- `chat.py` event_generator 에 `agent_done request_id=… session_id=… trace_id=…` 1줄 추가 (printf-style)
-- **SDK v2→v3 포팅**: `langfuse>=3` + `langchain>=1` 조합. v2 의 `from langfuse.callback import CallbackHandler` 가 legacy `langchain.callbacks.base` 요구 → `_tracer_valid=False` 차단. v3 의 `langfuse.langchain.CallbackHandler` 는 `langchain_core.callbacks` 기반 OTel 구조.
-- **dev env 배선**: `docker-compose.yml` backend 에 LANGFUSE 5 env 패스스루 (prod 와 parity)
-- `create_trace_id(seed=...)` 로 handler 생성 시점에 trace_id pre-assign → `TraceContext` 로 주입. astream 종료 후 otel context 이탈과 무관하게 `done.trace_id` 동봉 가능.
-- **최종 sanity (2026-04-23 dev)**: SSE `done.trace_id=9d59e6455eeb…` 와 백엔드 로그 `agent_done trace_id=9d59e6455eeb…` 매핑 확인 ✅
-- **SSL 우회 (dev only)**: corporate MITM 환경에서 `/api/public/otel/v1/traces` POST SSL cert verify 실패 → `_session.verify=False` + `_certificate_file=False` monkey-patch (OTLP HTTP 는 `_certificate_file` 이 `session.verify` override → 둘 다 필요). `LANGFUSE_OTEL_INSECURE` env 플래그 추가.
-- **이미지 재빌드 이슈**: `docker compose build backend` 가 pypi SSL 실패 → `docker cp` + 컨테이너 내 `pip install --trusted-host` 로 우회. 프로덕션 배포 전 Dockerfile pin 반영 필요.
-- **미완**: Cloud UI 실제 trace 열람 (C-5) · 프로덕션 sanity (C-8) — 운영 이미지 재빌드 선행 필요.
-
----
-
-## 2026-04-23 — Env 관례 분리 (.env=prod · .env.dev=dev)
-
-- **배경**: Langfuse Cloud UI 에서 dev/prod trace 혼입. 관례 반대로 `.env`=**프로덕션 배포 파일** · `.env.dev`=**로컬 개발** 로 뒤집음 (prod 서버로 파일 1개만 rsync 하면 되는 단순성).
-- **변경 파일** (8건): `server/config.py`, `docker-compose.yml`/`docker-compose.prod.yml`, `frontend/next.config.mjs`, `scripts/validate_env.py`, `scripts/audit/p1_api_vs_db.py`, `scripts/setup_db.py`, `.env.example`, `.gitignore`
-- **Langfuse 분리**: 단일 프로젝트 + `LANGFUSE_TRACING_ENVIRONMENT` 필드 (Cloud UI 드롭다운 필터). Prod 워크스페이스 키 별도 (`pk-lf-07a3fa78…`)
-- **Memory**: `feedback_env_convention_inverted.md` — prod 서버에 `.env.dev` 가 존재하면 pydantic 이 dev 값을 읽음 → 배포 rsync 제외 필수
-
----
-
 ## 전략
 
 Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(Premium)
@@ -398,7 +298,7 @@ Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(
 | 서비스 | 포트 | 모드 |
 |--------|-----:|------|
 | Next.js 프론트엔드 | 3000 | Real (USE_MOCK=false) |
-| FastAPI 백엔드 | 8002 | Real |
+| FastAPI 백엔드 | 8000 | Real |
 | PostGIS (Docker) | 5432 | 1,650 상권 폴리곤 적재 완료 |
 | Redis (Docker) | 6379 | 정상 |
 
@@ -417,7 +317,7 @@ Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(
 
 - Mock 상권 5개 · Real 상권 1,650개
 - ETL 적재 (2025Q4): floating_pop 9,888 / estimated_sales 21,333 / stores 75,985 / resident 39,288
-- Agent Tool 11종 · Card 타입 5종 · SSE 이벤트 9종
+- Agent Tool 9종 · Card 타입 5종 · SSE 이벤트 9종
 - E2E: ring0~3 78 test (66 PASS / 0 FAIL / 12 SKIP) + prod-smoke 28/28
 
 ---
@@ -440,6 +340,7 @@ Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(
 
 | 날짜 | 주요 내용 |
 |------|----------|
+| 2026-04-24 (iOS) | BottomSheet 챗 탭 즉시 닫힘 fix — `BottomSheetHandle` 6px deadzone + `moved` 플래그, `BottomSheet.onDragEnd` `closest` 초기값을 현재 `snap`으로. iPhone E2E spec 신규. 실기기 검증 잔여. |
 | 2026-04-23 (저녁) | E2E Pass 2 hotfix — FAIL 0 달성 (StatusBar testid · waitSSE · f12 skip-guard · reg python3 · F01-H3 timeout). v0.4.0 재배포 `c6cc60e` — learned_aliases 004 · 라우트 분리 (`/` 랜딩 / `/app` 챗맵) · P1~P7+N1~N2 전수 PASS. |
 | 2026-04-23 | F-01 ETL fix (21,333 행 재적재, 8 컬럼 NULL 해소) + Accuracy Gap W1/W2/W3 구현 (entity_matching/abstention/rewriter utils + learned_aliases 004). LLMOps L1 SDK v2→v3 포팅, trace 발행 확인. Env 관례 분리 (`.env`=prod · `.env.dev`=dev). UI Landing/Feedback/Preview Phase A~D. Mobile Responsive Phase A+B+C. Data Integrity Audit. Refactoring Phase 1 Plan 작성. |
 | 2026-04-22 | E2E + Ops 회귀 2차 READY (Dockerfile pip SSL 우회 · E2E 전용 stack 포트 재할당 · OPS-01/02 spec). 완성도 평가 85/82/74. [Run](../qa/runs/e2e-run-2026-04-22.md) |

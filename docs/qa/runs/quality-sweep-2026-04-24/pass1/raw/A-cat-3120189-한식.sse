@@ -1,0 +1,148 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "category_analysis", "steps": ["업종별 매출 조회", "업종별 점포 현황 조회"]}
+
+
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120189", "category_code": "CS200001"}, "progress_label": "매출 데이터 조회 중..."}
+
+
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120189", "category_code": "CS200001"}, "progress_label": "점포 현황 조회 중..."}
+
+
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "강남역 한식음식점은 410개로 전체 업종 중 3위를"}
+
+
+
+data: {"type": "text", "content": " 차지하며, 활발한 창업과 폐업이 동시에 일어나는 역"}
+
+
+
+data: {"type": "text", "content": "동적인 시장입니다.**\n\n## 📊 한식음식점 현황 분석\n\n**점포 규모**:"}
+
+
+
+data: {"type": "text", "content": " 총 410개 점포로 강남역 전체 164개 점포 대비 약 2"}
+
+
+
+data: {"type": "text", "content": ".5배에 달하는 대규모 업종입니다 "}
+
+
+
+data: {"type": "text", "content": "`(get_store_info)`. 일반의원(476개), 부동산중개업(447개)에"}
+
+
+
+data: {"type": "text", "content": " 이어 3위를 기록하고 있습니다.\n\n**창업·폐업 동"}
+
+
+
+data: {"type": "text", "content": "향**: \n- 신규 개업: 12개 `(get_store_info)`"}
+
+
+
+data: {"type": "text", "content": "\n- 폐업: 14개 `(get_store_info)`\n- **순감소**: -2개 (시"}
+
+
+
+data: {"type": "text", "content": "장이 소폭 위축)\n\n이는 한식 시장의 **높"}
+
+
+
+data: {"type": "text", "content": "은 진입장벽과 경쟁 강도**를 보여줍니다. 많은 창"}
+
+
+
+data: {"type": "text", "content": "업자들이 도전하지만, 동시에 경쟁에서 밀려나는 점"}
+
+
+
+data: {"type": "text", "content": "포도 많다는 의미입니다.\n\n## 💡 한식 창업 시사점\n\n**기"}
+
+
+
+data: {"type": "text", "content": "회 요소**:\n- 강남역 고객층의 50"}
+
+
+
+data: {"type": "text", "content": "대 비중이 50.8%로 높아 `(get_estimated_sales)` 한식에"}
+
+
+
+data: {"type": "text", "content": " 대한 수요 기반이 탄탄합니다\n- 점심"}
+
+
+
+data: {"type": "text", "content": "시간(11~14시) 매출이 19.2%, 저녁시간(17~21"}
+
+
+
+data: {"type": "text", "content": "시) 매출이 28.9%로 `(get_estimated_sales)` 식사 시간대 "}
+
+
+
+data: {"type": "text", "content": "집중 매출 구조가 한식과 "}
+
+
+
+data: {"type": "text", "content": "잘 맞습니다\n\n**주의 요소**:\n- 410개라는 **높은 점포 "}
+
+
+
+data: {"type": "text", "content": "밀도**로 인한 치열한 경쟁\n- 신규 개업(12개) 대"}
+
+
+
+data: {"type": "text", "content": "비 폐업(14개)이 많아 시장 포화 신호\n- 건당 평균 결제액 50"}
+
+
+
+data: {"type": "text", "content": "만원대 `(get_estimated_sales)`의 고객층에"}
+
+
+
+data: {"type": "text", "content": " 맞는 차별화된 컨셉 필요\n\n**한"}
+
+
+
+data: {"type": "text", "content": "식 세부 업종별 리스크 분석**이나"}
+
+
+
+data: {"type": "text", "content": " **다른 음식 업종과의 비교 분석**이 궁금하시면 말씀해 주세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["CS200001 리스크 분석해줘", "다른 업종은 어때?", "강남역 전체 요약해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "546b8536b97f5a355ba056c2554348cf"}
+
+
+

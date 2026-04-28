@@ -125,9 +125,9 @@ Greeting intent 는 그래프를 건너뛰고 즉시 END (`<1s` 응답).
 | `get_population_info` | district_code | 상주/직장 인구 | `population` | F03, F07 |
 | `compare_districts` | district_codes[2..3], category? | 지표 비교 + AI 의견 | `comparison` | F05 |
 | `recommend_business` | district_code, budget? | Top 5 + 점수 + 면책 | `recommend` | F07 |
-| `estimate_revenue` | district_code, category, unit_price? | p25/avg/p75 + 서울 비교 | `revenue` | F09 |
-| `get_district_benchmarks` | district_type | 유형별 통계 (평균/분위수) | `benchmark` | 벤치마킹 |
-| `detect_floating_pop_anomaly` | district_code | 통계적 이상 감지 | `anomaly` | 리스크 감지 |
+| `simulate_revenue` | district_code, category, unit_price? | p25/avg/p75 + 서울 비교 | `simulation` | F09 |
+
+> **내부 헬퍼 (등록 X)**: `get_district_benchmarks(district_type)` — `district_summary` / `store_history` / `numeric_sanity` 가 직접 import 해 사용. `@register_tool` 으로 등록되지 않으므로 Planner plan 에 단독으로 등장하지 않는다.
 
 > ⚠ 매출 단위 주의: `estimated_sales.monthly_sales` DB 컬럼은 서울 열린데이터 `THSMON_SELNG_AMT` = **분기 누적(원)**. Repository 에서 `// MONTHS_PER_QUARTER` 로 **월 환산** 후 응답. `_enrich_sales` 키 불일치 버그는 2026-04-17 fix 완료.
 

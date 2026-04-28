@@ -23,6 +23,8 @@ node_modules/
 
 # Docker
 pgdata/
+# Dev-only compose override (volume-mount + --reload). 절대 프로덕션 배포 금지.
+docker-compose.override.yml
 
 # IDE
 .idea/

@@ -1,0 +1,209 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120103", "3120052"]}, "progress_label": "상권 비교 분석 중..."}
+
+
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120103": {"district_code": "3120103", "district_name": "홍대입구역(홍대)", "floating_pop": 4106209, "main_age": "20대", "store_count": 2981, "close_rate": 4.0, "monthly_sales": 53200280285, "status": "stable", "quarter": "2025Q4", "sales_per_store": 17846454, "pop_per_store": 1377}, "3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}}, "district_codes": ["3120103", "3120052"], "winners": {"highest_pop": "홍대입구역(홍대)", "highest_sales": "홍대입구역(홍대)", "lowest_close_rate": "성수역", "best_efficiency": "홍대입구역(홍대)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "홍대입구역이 성수역 대비 압도적인 매출 규모를 보이며, 점"}
+
+
+
+data: {"type": "text", "content": "포당 효율성도 우수합니다.**\n\n## 매출 규모 비교\n\n**홍대입구역**:"}
+
+
+
+data: {"type": "text", "content": " 월 532억원 `(compare_districts)` vs **"}
+
+
+
+data: {"type": "text", "content": "성수역**: 월 221억원 `(compare_districts)`\n- 홍대가 성수 대비 **2.4"}
+
+
+
+data: {"type": "text", "content": "배** 높은 매출 규모\n- 홍대는 서울 상권 중에"}
+
+
+
+data: {"type": "text", "content": "서도 최상위권 매출을 기록하는 메가"}
+
+
+
+data: {"type": "text", "content": "급 상권\n\n## 점포당 매출 효율성\n\n**홍대입구역**: 점포당 월 1,785만원 `"}
+
+
+
+data: {"type": "text", "content": "(compare_districts)` vs **성수역**: 점포당 월 1,450만원 `(compare_districts)`\n- 홍대가 점포당 **335만"}
+
+
+
+data: {"type": "text", "content": "원(23%) 더 높은** 매출 효율\n- 두 상권 모두 서울 평"}
+
+
+
+data: {"type": "text", "content": "균을 상회하는 우수한 효율성을 보임\n\n## 매"}
+
+
+
+data: {"type": "text", "content": "출 차이의 원인 분석\n\n1. **유동인구 격차**: 홍대 411만명 vs 성수 "}
+
+
+
+data: {"type": "text", "content": "141만명으로 **2.9배 차이** `"}
+
+
+
+data: {"type": "text", "content": "(compare_districts)`\n2. **상권 규모**: 홍대 2,981개 vs 성수 1,526개 점포로 "}
+
+
+
+data: {"type": "text", "content": "홍대가 **1.95배 큰 규모**\n3. **고객층**:"}
+
+
+
+data: {"type": "text", "content": " 두 상권 모두 20대 중심이지만, 홍대는 유흥·"}
+
+
+
+data: {"type": "text", "content": "문화 소비, 성수는 카페·문화 소비로 성격이 다름"}
+
+
+
+data: {"type": "text", "content": "\n\n## 매출 관점 시사점\n\n- **홍대**: 높은 매출 규모와 효"}
+
+
+
+data: {"type": "text", "content": "율성, 하지만 그만큼 임대료와 경쟁도 치열\n- **성수**: 상"}
+
+
+
+data: {"type": "text", "content": "대적으로 안정적인 매출 환경, 진입 비용 부담이 적을 가"}
+
+
+
+data: {"type": "text", "content": "능성\n\n홍대는 **매출 극대화**를, 성수는 **안정적 수"}
+
+
+
+data: {"type": "text", "content": "익**을 추구하는 창업자에게 각각 적합할 것 "}
+
+
+
+data: {"type": "text", "content": "같습니다. 어떤 상권이 더 좋을지, 또는 추천 업종 "}
+
+
+
+data: {"type": "text", "content": "비교가 궁금하시면 말씀해 주세요!"}
+
+
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+
+
+data: {"type": "done", "trace_id": "7cee364146bd8a06f45d4bafd5363d4b"}
+
+
+
+
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "**"}
+
+
+
+data: {"type": "text", "content": "홍대입구역이 성수역 대비 유동인구도 압도적으로 많습니다.**\n\n##"}
+
+
+
+data: {"type": "text", "content": " 유동인구 비교\n\n**홍대입구역**: 하루 평균 **12만 4천명** `(compare_districts)` vs **성수역**: 하루 평균 **4"}
+
+
+
+data: {"type": "text", "content": "만 8천명** `(compare_districts)`\n\n- 홍대가 성수 대비 **2.6배** 많은 유동인구\n-"}
+
+
+
+data: {"type": "text", "content": " 홍대는 서울 발달상권 중에서도 **최상위권** 유동인구를 기록\n\n## 유동인구 패"}
+
+
+
+data: {"type": "text", "content": "턴 특징\n\n**홍대입구역**:\n- 오후 6시 피크 시간대 **"}
+
+
+
+data: {"type": "text", "content": "5만 2천명** `(compare_districts)`\n- 20대(28.5%), 30대(32.1%)가 주"}
+
+
+
+data: {"type": "text", "content": " 고객층 `(compare_districts)`\n- 전형적인 **"}
+
+
+
+data: {"type": "text", "content": "젊은층 집중형** 상권\n\n**성수역**:\n- 상대적으로 **소규모 "}
+
+
+
+data: {"type": "text", "content": "로컬 상권** 성격\n- 홍대 대비 차분한 유동인구 흐름"}
+
+
+
+data: {"type": "text", "content": "\n\n매출과 유동인구 모두 홍대가 성수를 크"}
+
+
+
+data: {"type": "text", "content": "게 앞서며, 이는 홍대의 **전국구 집"}
+
+
+
+data: {"type": "text", "content": "객력**과 성수의 **지역 밀착형** 성"}
+
+
+
+data: {"type": "text", "content": "격 차이를 보여줍니다."}
+
+
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대)에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+
+
+data: {"type": "done", "trace_id": "e76d15fe86d69ceeef106090c86001de"}
+
+
+

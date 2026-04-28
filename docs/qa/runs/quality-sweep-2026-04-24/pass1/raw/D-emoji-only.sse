@@ -1,0 +1,68 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+
+
+data: {"type": "text", "content": "안"}
+
+
+
+data: {"type": "text", "content": "녕하세요! 서울 상권 분석 AI 컨설턴트 '마켓스코프'입니다! 🏢"}
+
+
+
+data: {"type": "text", "content": "📊\n\n궁금한 표정이시네요! 😊 서"}
+
+
+
+data: {"type": "text", "content": "울의 어떤 상권이 궁금하신가요?\n\n**이런 분"}
+
+
+
+data: {"type": "text", "content": "석을 도와드릴 수 있어요:**\n- 📍 **특"}
+
+
+
+data: {"type": "text", "content": "정 상권 분석**: \"강남역 상권 어때?\", \"홍대 분"}
+
+
+
+data: {"type": "text", "content": "석해줘\"\n- ⚖️ **상권 비교**: \"강남역 vs 홍대 어디"}
+
+
+
+data: {"type": "text", "content": "가 좋을까?\"\n- 🏪 **업종별 추천**: \"카페 창업하"}
+
+
+
+data: {"type": "text", "content": "려는데 어느 상권이 좋을까?\"\n- 📈 **트렌드 분석**: \""}
+
+
+
+data: {"type": "text", "content": "요즘 뜨는 상권은 어디야?\"\n\n어떤 상권이나"}
+
+
+
+data: {"type": "text", "content": " 업종에 관심이 있으신지 말씀해 주세요! 실"}
+
+
+
+data: {"type": "text", "content": "제 데이터를 바탕으로 창업이나 사업에 도움되는 인사이트를 "}
+
+
+
+data: {"type": "text", "content": "제공해드리겠습니다. ✨"}
+
+
+
+data: {"type": "suggestion", "questions": ["여기에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+
+
+data: {"type": "done", "trace_id": "5b98cd0516e94b8a62ae921e44f4c53b"}
+
+
+
