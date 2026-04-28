@@ -149,6 +149,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const seq = ++_previewSeq;
 
     set({ previewLoading: true, previewError: null });
+
+    // Watchdog — if the preview fetch hangs (network stall, backend deadlock,
+    // proxy buffering), force an abort + visible error after 10s instead of
+    // leaving the user stuck at "프리뷰 불러오는 중...".
+    const watchdog = setTimeout(() => {
+      if (seq === _previewSeq && get().previewLoading) {
+        ac.abort();
+        set({
+          previewLoading: false,
+          previewError: '프리뷰 응답이 지연되어 중단했습니다. 다시 시도해 주세요.',
+        });
+      }
+    }, 10_000);
+
     try {
       const role = get().role ?? undefined;
       const preview = await fetchDistrictPreview(code, role, ac.signal);
@@ -156,11 +170,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
       if (seq !== _previewSeq) return;
       set({ preview, previewLoading: false, lastDistrictCode: code });
     } catch (err) {
-      // Intentional cancellation by a newer click — silent drop.
+      // Intentional cancellation by a newer click OR by our own watchdog.
       if (ac.signal.aborted) return;
       if (seq !== _previewSeq) return;
       const msg = err instanceof Error ? err.message : 'preview failed';
       set({ preview: null, previewError: msg, previewLoading: false });
+    } finally {
+      clearTimeout(watchdog);
+      // Defensive — if for any reason we exit without a set, make sure the
+      // user is never stuck on previewLoading=true. We only release if we
+      // are still the latest call (seq guard).
+      if (seq === _previewSeq && get().previewLoading) {
+        set({ previewLoading: false });
+      }
     }
   },
 

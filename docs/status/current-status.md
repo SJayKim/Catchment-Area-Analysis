@@ -21,11 +21,13 @@
 
 ---
 
-## 2026-04-28 — District click race / "먹통" fix
+## 2026-04-28 — District click race / "먹통" fix (Round 2 hotfix 포함)
 
 ### 개요
 - **Plan**: [district-click-race-2026-04-28.md](../plan/fix/district-click-race-2026-04-28.md)
-- 사용자 보고: "상권 A 클릭 → AI 리포트까지 본 뒤 다른 상권 누르면 먹통" — Auto mode 로 진단 → Plan → 구현 → 검증 일괄 진행.
+- 사용자 1차 보고: "상권 A 클릭 → AI 리포트까지 본 뒤 다른 상권 누르면 먹통" — Auto mode 로 진단 → Plan → 구현 → 검증 일괄 진행 (Round 1).
+- 사용자 2차 보고: "다른 지역 상권 프리뷰 불러오기 작동안한다" → Round 2 hotfix 3종 추가: (a) `useMapSync` 가드를 `lastHandledRef` + 실제 렌더된 `preview.district_code` 비교로 완화 — sendMessage 가 `preview: null` 로 wipe 한 뒤 같은 상권 다시 클릭해도 `setPreview` 재호출 보장. (b) `setPreview` 에 10s **watchdog timeout** + finally 의 defensive `previewLoading=false` reset — fetch hang 시 사용자 stuck 방지. (c) `ChatPanel` 의 `previewError` UI 명시 (에러 메시지 + "다시 시도" 버튼, `data-testid=district-preview-error|retry`).
+- ⚠ **운영 안내**: 본 fix 는 git main `7941726` (Round 1) + 후속 commit 에 반영. 프로덕션 (`marketscope.robitlabs.co.kr`) 은 미배포 상태이므로 **prod 재배포 전까지는 사용자 측 동일 증상 지속**. dev 환경은 `docker compose up -d --build frontend backend` 로 재빌드 후 확인.
 
 ### 진단 — 6 근본 원인
 | # | 위치 | 메커니즘 | 심각도 |

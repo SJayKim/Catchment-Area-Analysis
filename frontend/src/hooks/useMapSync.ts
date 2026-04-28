@@ -18,33 +18,60 @@ import { useChatStore } from '@/stores/chatStore';
  *   render it in the chat panel with suggested-question chips. The user then
  *   decides whether to trigger the full pipeline by clicking chips or "AI
  *   분석 보기".
+ *
+ * 2026-04-28 hotfix (district-click-race-2026-04-28): the previous prevRef
+ * guard skipped setPreview whenever the new click had the same code as the
+ * last `selected` — including the case where sendMessage had wiped
+ * `chatStore.preview` to null. Result: clicking the *same* district again
+ * after running an analysis left the preview slot empty. The new guard
+ * keys on the actual rendered preview's district_code, not on a stale ref.
  */
 export function useMapSync() {
   const selected = useDistrictStore((s) => s.selected);
   const selectSource = useDistrictStore((s) => s.selectSource);
   const setView = useMapStore((s) => s.setView);
-  const prevSelectedRef = useRef<string | null>(null);
+  // Tracks the (code, source) pair of the most recent click we acted on.
+  // Used purely to deduplicate identical re-renders triggered by Zustand
+  // returning a new selected reference on every set call.
+  const lastHandledRef = useRef<{ code: string; source: string | null } | null>(null);
 
   useEffect(() => {
     if (!selected) {
-      prevSelectedRef.current = null;
+      lastHandledRef.current = null;
       return;
     }
 
-    if (prevSelectedRef.current === selected.code) return;
-    prevSelectedRef.current = selected.code;
-
-    // Center map when selection originates from a map click
+    // Center map when selection originates from a map click. Center is
+    // independent of preview — always run for map-origin selections.
     if (selectSource === 'map' && selected.center) {
       setView(selected.center, 5);
     }
 
-    // Auto-preview only for map-origin clicks (chat-origin already handled)
-    if (selectSource !== 'map') return;
+    // Auto-preview only for map-origin clicks (chat-origin already handled
+    // via the SSE map_cmd path that drives selectDistrict(_, 'chat')).
+    if (selectSource !== 'map') {
+      lastHandledRef.current = { code: selected.code, source: selectSource };
+      return;
+    }
     if (!selected.center || (!selected.center.lat && !selected.center.lng)) return;
 
-    // Zero-LLM preview — no automatic chat message.
     const store = useChatStore.getState();
+    const currentPreviewCode = store.preview?.district_code;
+
+    // Skip setPreview only when:
+    //   (1) we already handled this exact (code, source) pair last time, AND
+    //   (2) the rendered preview still matches this code (i.e. it was not
+    //       wiped by sendMessage).
+    // Otherwise — re-fire setPreview so the slot recovers.
+    const sameAsLast =
+      lastHandledRef.current?.code === selected.code &&
+      lastHandledRef.current?.source === selectSource;
+    const previewStillFresh = currentPreviewCode === selected.code;
+    if (sameAsLast && previewStillFresh) return;
+
+    lastHandledRef.current = { code: selected.code, source: selectSource };
+
+    // Zero-LLM preview — no automatic chat message.
     store.setPreview(selected.code);
 
     // 모바일 레이아웃에서는 폴리곤 클릭 시 sheet 를 peek 로 올려 프리뷰 노출.

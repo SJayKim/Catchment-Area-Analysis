@@ -15,6 +15,8 @@ export default function ChatPanel() {
   const selected = useDistrictStore((s) => s.selected);
   const preview = useChatStore((s) => s.preview);
   const previewLoading = useChatStore((s) => s.previewLoading);
+  const previewError = useChatStore((s) => s.previewError);
+  const setPreview = useChatStore((s) => s.setPreview);
 
   const { generatePDF, isGenerating } = useReportExport({
     districtName: selected?.name || '',
@@ -102,6 +104,33 @@ export default function ChatPanel() {
               }}
             >
               프리뷰 불러오는 중...
+            </div>
+          ) : previewError && selected?.code ? (
+            <div
+              data-testid="district-preview-error"
+              className="rounded-2xl p-4 flex items-start justify-between gap-3"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--error, #ef4444)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <div className="text-sm flex-1">
+                <div className="font-semibold mb-1">프리뷰를 불러오지 못했습니다</div>
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{previewError}</div>
+              </div>
+              <button
+                type="button"
+                data-testid="district-preview-retry"
+                onClick={() => selected?.code && setPreview(selected.code)}
+                className="text-xs px-3 py-1.5 rounded-md font-medium"
+                style={{
+                  backgroundColor: 'var(--brand-deep-blue, #0b3d91)',
+                  color: '#ffffff',
+                }}
+              >
+                다시 시도
+              </button>
             </div>
           ) : null
         }
