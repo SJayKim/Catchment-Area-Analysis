@@ -308,9 +308,27 @@ async def run_agent(
     final_suggestions: list[str] = []
     final_quality_flags: list[dict] = []
     final_quality_match_rate: float | None = None
+    # Aggregate-stats dimensions captured during astream (Plan
+    # langfuse-aggregate-stats-2026-04-28 §Phase1). All derived from existing
+    # state — no new state fields required.
+    final_intent: str = ""
+    final_intent_confidence: float = 0.0
+    final_response_mode: str = "tool_assisted"
+    final_execution_round: int = 0
+    final_plan_size: int = 0
+    final_referenced_count: int = 0
+    final_referenced_category: str | None = None
+    final_ambiguous_count: int = 0
+    final_tool_results_count: int = 0
+    final_tool_errors_count: int = 0
+    final_card_count: int = 0
 
     async def _run_graph():
         nonlocal final_suggestions, final_quality_flags, final_quality_match_rate
+        nonlocal final_intent, final_intent_confidence, final_response_mode
+        nonlocal final_execution_round, final_plan_size, final_referenced_count
+        nonlocal final_referenced_category, final_ambiguous_count
+        nonlocal final_tool_results_count, final_tool_errors_count, final_card_count
         emitted_card_count = 0  # track to avoid re-emitting accumulated cards
 
         try:
@@ -332,6 +350,24 @@ async def run_agent(
                     if node_name == "planner":
                         plan = state_update.get("plan", [])
                         intent = state_update.get("user_intent", "")
+                        if intent:
+                            final_intent = intent
+                        conf = state_update.get("intent_confidence")
+                        if conf is not None:
+                            final_intent_confidence = float(conf)
+                        rm = state_update.get("response_mode")
+                        if rm:
+                            final_response_mode = rm
+                        if plan is not None:
+                            final_plan_size = len(plan)
+                        ref = state_update.get("referenced_districts") or []
+                        final_referenced_count = len(ref)
+                        cat = state_update.get("referenced_category")
+                        if cat is not None:
+                            final_referenced_category = cat
+                        amb = state_update.get("ambiguous_districts") or []
+                        if amb:
+                            final_ambiguous_count = len(amb)
                         if plan:
                             steps = [s["reason"] for s in plan]
                             await event_queue.put(
@@ -355,6 +391,14 @@ async def run_agent(
                                     "data": card["data"],
                                 }
                             )
+                        final_card_count = len(all_cards)
+                        tr = state_update.get("tool_results") or {}
+                        final_tool_results_count = len(tr)
+                        te = state_update.get("tool_errors") or {}
+                        final_tool_errors_count = len(te)
+                        rd = state_update.get("execution_round")
+                        if rd is not None:
+                            final_execution_round = int(rd)
 
                     elif node_name == "evaluator":
                         ev = state_update.get("evaluation") or {}
@@ -378,6 +422,9 @@ async def run_agent(
                         qmr = state_update.get("quality_match_rate")
                         if qmr is not None:
                             final_quality_match_rate = qmr
+
+                    elif node_name in ("greeting", "clarification"):
+                        final_response_mode = "greeting_direct" if node_name == "greeting" else "clarification_direct"
 
         except Exception:
             logger.exception("PAE agent execution failed")
@@ -405,6 +452,64 @@ async def run_agent(
     finally:
         if not task.done():
             task.cancel()
+
+        # Aggregate-stats: trace 차원 보강 + score emit (Plan
+        # langfuse-aggregate-stats-2026-04-28). flush 보다 먼저 호출해야
+        # 동봉 span/score 가 같은 배치에 묶여 단일 round-trip 으로 송신됨.
+        trace_id = get_trace_id(lf_handler)
+        if trace_id:
+            from server.services.langfuse_tracer import (
+                attach_summary_observation,
+                district_type_for,
+                emit_score,
+            )
+
+            try:
+                tools_attempted = final_tool_results_count + final_tool_errors_count
+                tool_error_rate = final_tool_errors_count / tools_attempted if tools_attempted > 0 else None
+                quality_severity_max = _max_quality_severity(final_quality_flags)
+                summary_metadata = {
+                    "user_intent": final_intent or "unknown",
+                    "intent_confidence": final_intent_confidence,
+                    "district_code": district_code or "anonymous",
+                    "district_type": district_type_for(district_code),
+                    "referenced_districts_count": final_referenced_count,
+                    "referenced_category": final_referenced_category or "none",
+                    "response_mode": final_response_mode,
+                    "execution_round": final_execution_round,
+                    "tool_count": tools_attempted,
+                    "tool_error_count": final_tool_errors_count,
+                    "card_count": final_card_count,
+                    "plan_size": final_plan_size,
+                    "quality_match_rate": final_quality_match_rate,
+                    "quality_flag_severity_max": quality_severity_max,
+                    "abstention_triggered": (final_response_mode == "clarification_direct"),
+                    "ambiguous_disambiguation_needed": final_ambiguous_count > 0,
+                }
+                attach_summary_observation(trace_id, metadata=summary_metadata)
+
+                # 6 score emits — None 분기는 helper 가 silent skip
+                if final_quality_match_rate is not None:
+                    emit_score(trace_id, "numeric_match", final_quality_match_rate)
+                if final_intent_confidence > 0:
+                    emit_score(trace_id, "intent_confidence", final_intent_confidence)
+                if tool_error_rate is not None:
+                    emit_score(trace_id, "tool_error_rate", tool_error_rate)
+                emit_score(
+                    trace_id,
+                    "abstention_triggered",
+                    1.0 if final_response_mode == "clarification_direct" else 0.0,
+                )
+                emit_score(
+                    trace_id,
+                    "ambiguous_disambiguation_needed",
+                    1.0 if final_ambiguous_count > 0 else 0.0,
+                )
+                if quality_severity_max is not None:
+                    emit_score(trace_id, "quality_severity", float(quality_severity_max))
+            except Exception:
+                logger.debug("langfuse aggregate stats emit failed", exc_info=True)
+
         # best-effort flush — 예외 삼킴
         _lf_flush(lf_handler)
 
@@ -419,7 +524,6 @@ async def run_agent(
     yield {"type": "suggestion", "questions": suggestions}
 
     done_payload: dict[str, Any] = {"type": "done"}
-    trace_id = get_trace_id(lf_handler)
     if trace_id:
         done_payload["trace_id"] = trace_id
     if final_quality_flags:
@@ -427,3 +531,14 @@ async def run_agent(
     if final_quality_match_rate is not None:
         done_payload["quality_match_rate"] = final_quality_match_rate
     yield done_payload
+
+
+_QUALITY_SEVERITY_MAP = {"info": 0, "warning": 1, "error": 2}
+
+
+def _max_quality_severity(flags: list[dict] | None) -> int | None:
+    """quality_flags 중 max severity (info=0, warning=1, error=2). 없으면 None."""
+    if not flags:
+        return None
+    levels = [_QUALITY_SEVERITY_MAP.get(str(f.get("severity", "info")).lower(), 0) for f in flags]
+    return max(levels) if levels else None

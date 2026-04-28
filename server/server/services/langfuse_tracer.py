@@ -297,3 +297,105 @@ def shutdown() -> None:
 def get_client_or_none():
     """외부 모듈용 — score API 등에서 싱글톤 Langfuse 클라이언트 재사용."""
     return _get_client()
+
+
+# ---------------------------------------------------------------------------
+# Aggregate-stats helpers (Plan: langfuse-aggregate-stats-2026-04-28)
+# ---------------------------------------------------------------------------
+
+# District code prefix → 4 분류. 서울 열린데이터 코드 체계.
+#   3110xxx 발달상권 / 3120xxx 골목상권 / 3130xxx 전통시장 / 3140xxx 관광특구
+_DISTRICT_TYPE_BY_PREFIX = {
+    "3110": "발달상권",
+    "3120": "골목상권",
+    "3130": "전통시장",
+    "3140": "관광특구",
+}
+
+
+def district_type_for(code: str | None) -> str:
+    """district_code → 한글 type 라벨. 매칭 실패 시 'unknown'."""
+    if not code:
+        return "unknown"
+    return _DISTRICT_TYPE_BY_PREFIX.get(code[:4], "unknown")
+
+
+def attach_summary_observation(
+    trace_id: str | None,
+    *,
+    metadata: dict,
+    output: dict | None = None,
+) -> None:
+    """그래프 종료 후 Planner/Actor/Evaluator 결정값을 trace 에 동봉.
+
+    v3 API 한계 — `update_trace` 가 없어 동일 trace_id 로 0-duration agent
+    span 을 추가 발행하는 우회 패턴. CallbackHandler 가 만든 langchain
+    spans 와 동일 trace_id 로 묶이며, summary span 의 metadata 가 Langfuse UI
+    의 trace 레벨 필터/groupby 에 그대로 반영됨.
+
+    None / 비활성 / 예외 모두 silent — SSE 응답 경로에 차단 발생 금지.
+    """
+    if not trace_id:
+        return
+    if not _tracer_valid:
+        return
+    client = _get_client()
+    if client is None:
+        return
+    try:
+        from langfuse.types import TraceContext
+    except ImportError:
+        return
+
+    clean_metadata = {k: v for k, v in metadata.items() if v is not None}
+    try:
+        span = client.start_observation(
+            trace_context=TraceContext(trace_id=trace_id),
+            name="marketscope.pae.summary",
+            as_type="agent",
+            metadata=clean_metadata,
+            output=output,
+        )
+    except Exception:
+        logger.debug("langfuse summary observation start failed", exc_info=True)
+        return
+    try:
+        end_fn = getattr(span, "end", None)
+        if callable(end_fn):
+            end_fn()
+    except Exception:
+        logger.debug("langfuse summary observation end failed", exc_info=True)
+
+
+def emit_score(
+    trace_id: str | None,
+    name: str,
+    value: float,
+    *,
+    comment: str | None = None,
+    data_type: str | None = None,
+) -> None:
+    """trace_id 에 numeric score 를 attach. 실패는 silent.
+
+    `feedback.py` 의 `client.score(...)` (user_feedback) 와 동일 시그니처를
+    재사용. v3 SDK 에서 `score` 는 `create_score` 의 alias.
+    """
+    if not trace_id:
+        return
+    if not _tracer_valid:
+        return
+    client = _get_client()
+    if client is None:
+        return
+    fn = getattr(client, "create_score", None) or getattr(client, "score", None)
+    if not callable(fn):
+        return
+    kwargs: dict = {"trace_id": trace_id, "name": name, "value": value}
+    if comment is not None:
+        kwargs["comment"] = comment
+    if data_type is not None:
+        kwargs["data_type"] = data_type
+    try:
+        fn(**kwargs)
+    except Exception:
+        logger.debug("langfuse score emit failed (name=%s)", name, exc_info=True)
