@@ -7,6 +7,7 @@ __pycache__/
 dist/
 build/
 .venv/
+.venv-test/
 
 # Environment secrets
 # .env 는 prod 배포용 (git 커밋 금지). .env.dev 는 로컬 개발용.

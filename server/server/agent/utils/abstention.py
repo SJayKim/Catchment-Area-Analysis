@@ -100,9 +100,9 @@ ABSTENTION_PROMPT_ADDENDUM_EMPTY = """\
 - 외부 지식/업계 평균/뉴스/추측을 끌어와 수치를 생성
 - "일반적으로 ~% 정도", "약 N억원" 같은 추정 표현
 - 타 상권 사례 대체 ("성수동은 보통 …")
-- `(recommend_business)`, `(get_estimated_sales)` 같은 attribution tag 를
-  **tool 호출이 없었음에도** 붙이는 행위 (현재 상황에서는 모든 tool 이
-  empty 이므로 attribution tag 를 써서는 안 됨)
+- 도구 함수명 (`recommend_business`, `get_estimated_sales`,
+  `get_district_summary` 등)을 답변 텍스트에 노출. 어떤 경우에도 raw
+  함수명은 사용자에게 보이지 않아야 함 — 출처는 자연어로만 표기.
 - 업종 Top N / 추천 리스트 / 비교 표 / 수치 리포트 출력
 """
 
@@ -114,20 +114,32 @@ ABSTENTION_PROMPT_ADDENDUM_PARTIAL = """\
 분석을 진행하세요. 비어 있는 항목에 대해 임의 수치 추정 금지.
 """
 
-# 각 수치성 주장 뒤에 ``(tool_name)`` 을 붙이도록 지시. 후처리 검증이 이
-# 패턴을 기대함.
+# LLM 이 raw 함수명 (`(get_district_summary)` 등) 을 사용자 응답에 노출하지
+# 않도록 강하게 가드. 사용자에게 보이는 텍스트는 자연어 출처만 허용한다.
+# 후처리 검증은 numeric_sanity (entity mismatch 까지 감지) 가 담당하므로
+# attribution tag 자체는 더 이상 필요하지 않다.
 ATTRIBUTION_PROMPT_RULE = """\
 
-## 수치 주장 출처 표기 (필수)
-구체적 수치(원/명/%/억/만/건/개)를 언급할 때마다 바로 뒤에 괄호로 해당
-수치가 나온 도구 이름을 붙이세요.
+## 수치 주장 출처 가드 (필수)
+구체적 수치(원/명/%/억/만/건/개)는 [수집된 데이터] 섹션에 있는 값만 사용하세요.
+도구 데이터에 없는 수치는 쓰지 않습니다. 없으면 "해당 데이터 없음" 으로 표기하거나
+정성적 설명으로 전환하세요.
 
-- 올바른 예: "월 추정 매출 5,320억원 `(get_estimated_sales)`"
-- 올바른 예: "하루 유동인구 12만 4천명 `(get_floating_population)`"
-- 잘못된 예: "업계 평균은 보통 25% 정도입니다" (출처 없음 → 금지)
+**중요 — 사용자에게 노출 금지**:
+- 절대로 raw 도구/함수 이름 (`get_district_summary`, `recommend_business`,
+  `get_floating_population`, `compare_districts`, `estimate_revenue`,
+  `get_store_info`, `get_store_history`, `get_population_info`,
+  `get_estimated_sales`, `get_district_benchmarks`,
+  `detect_floating_pop_anomaly`)을 답변 텍스트에 포함하지 마세요.
+- 수치 옆에 ``(get_xxx)`` 같은 괄호 함수명 표기를 붙이지 마세요. 사용자에게는
+  내부 구현 노출일 뿐입니다.
+- 출처가 필요하면 자연어로만 (예: "공공데이터 기준", "유동인구 자료"
+  "매출 추정 자료") 본문에 녹여서 표기하세요.
 
-도구 데이터에 없는 수치는 쓰지 않습니다. 없으면 "해당 데이터 없음" 으로
-표기하거나 정성적 설명으로 전환하세요.
+올바른 예: "월 추정 매출은 공공데이터 기준 5,320억원이며, 하루 평균 유동인구는 12만 4천명입니다."
+잘못된 예: "월 추정 매출 5,320억원 (get_estimated_sales)" ← 함수명 노출 금지
+잘못된 예: "유동인구 12만 4천명 `(get_floating_population)`" ← 함수명 노출 금지
+잘못된 예: "업계 평균은 보통 25% 정도입니다" ← 출처 없는 추정 금지
 """
 
 

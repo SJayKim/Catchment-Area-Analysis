@@ -126,6 +126,102 @@ class _XMLTagSanitizer:
 
 
 # ---------------------------------------------------------------------------
+# Tool-tag sanitizer — strips ``(tool_name)`` attribution leaks from stream.
+# ---------------------------------------------------------------------------
+#
+# Background:
+#   `ATTRIBUTION_PROMPT_RULE` historically asked the LLM to suffix every
+#   numeric claim with ``(get_district_summary)`` / ``(recommend_business)``
+#   etc. so a post-hoc regex (`scan_unattributed_numbers`) could verify
+#   tool-grounded claims. The unintended consequence: raw function names
+#   leaked verbatim into the user-facing text.
+#
+#   The new prompt forbids this — but LLMs occasionally relapse on long
+#   responses or partial-context retries. This sanitizer is a stream-level
+#   defense-in-depth: it watches for ``(<tool_name>)`` shaped tokens and
+#   removes them from the SSE text events before the user sees them.
+
+_TOOL_NAME_INNER = (
+    r"get_(?:district_summary|district_benchmarks|floating_population|"
+    r"estimated_sales|store_info|store_history|population_info)|"
+    r"compare_districts|recommend_business|estimate_revenue|"
+    r"simulate_revenue|detect_floating_pop_anomaly"
+)
+
+# Match ``(tool_name)`` with optional surrounding backticks/quotes and a
+# leading whitespace run. Stays conservative — only registered tool names
+# trigger removal so generic Korean/English parentheticals are preserved.
+_TOOL_TAG_RE = re.compile(
+    r"\s*[`'\"]?\(\s*(?:" + _TOOL_NAME_INNER + r")\s*\)[`'\"]?",
+)
+_TOOL_TAG_BUFFER_MAX = 96
+
+
+class _ToolTagSanitizer:
+    """Stream-level filter that strips ``(tool_name)`` leaks.
+
+    Usage mirrors :class:`_XMLTagSanitizer`:
+
+        s = _ToolTagSanitizer()
+        for chunk in stream:
+            safe = s.feed(chunk)
+            if safe:
+                emit(safe)
+        tail = s.flush()
+        if tail:
+            emit(tail)
+
+    The pending buffer holds the substring from the last ``(`` onwards while
+    we wait for either a closing ``)`` (then sanitise + emit) or for the
+    buffer to grow past ``_TOOL_TAG_BUFFER_MAX`` (then flush as literal —
+    the ``(`` likely didn't open a tool tag after all).
+    """
+
+    __slots__ = ("_pending", "_dropped_count")
+
+    def __init__(self) -> None:
+        self._pending: str = ""
+        self._dropped_count: int = 0
+
+    @property
+    def dropped_count(self) -> int:
+        return self._dropped_count
+
+    def feed(self, chunk: str) -> str:
+        if not chunk:
+            return ""
+        buf = self._pending + chunk
+        last_open = buf.rfind("(")
+        if last_open == -1:
+            self._pending = ""
+            return self._strip(buf)
+        last_close = buf.find(")", last_open)
+        if last_close == -1:
+            tail = buf[last_open:]
+            if len(tail) > _TOOL_TAG_BUFFER_MAX:
+                # Probably not a tool tag — flush whole buffer as literal.
+                self._pending = ""
+                return self._strip(buf)
+            self._pending = tail
+            return self._strip(buf[:last_open])
+        # Both `(` and `)` present in buffer — sanitise everything.
+        self._pending = ""
+        return self._strip(buf)
+
+    def flush(self) -> str:
+        tail = self._pending
+        self._pending = ""
+        return self._strip(tail)
+
+    def _strip(self, text: str) -> str:
+        if not text:
+            return text
+        result, n = _TOOL_TAG_RE.subn("", text)
+        self._dropped_count += n
+        return result
+
+
+# ---------------------------------------------------------------------------
 # Respond system prompt (replaces tool-selection rules from old system.py)
 # ---------------------------------------------------------------------------
 
@@ -154,7 +250,7 @@ RESPOND_SYSTEM_PROMPT = """\
     - XML/HTML 태그 (`<tool_use>`, `<tool_result>`, `<get_district_*>`, `<get_floating_*>`, `<parameter>`, `<invoke>`, `<function>`, `<*>` 등)
     - Tool 호출 JSON (`{"name": "...", "input": {...}}`, `<tool_calls>[...]</tool_calls>`)
     - 코드 블록으로 감싼 tool call 문법
-    수집된 데이터가 부족해서 "추가 조회가 필요하다"고 느껴지더라도, tool 호출 문법을 모방하지 마세요. 대신 "해당 데이터가 부족하여 답변할 수 없습니다" 라고 자연어로 안내하세요. (수치 출처 표기 `(tool_name)` 은 일반 괄호 표기이므로 허용됩니다.)
+    수집된 데이터가 부족해서 "추가 조회가 필요하다"고 느껴지더라도, tool 호출 문법을 모방하지 마세요. 대신 "해당 데이터가 부족하여 답변할 수 없습니다" 라고 자연어로 안내하세요. **도구 함수명 (`(get_district_summary)`, `(recommend_business)` 등)은 수치 출처 표기 목적이라도 절대 노출 금지** — 출처는 자연어로만 표기하세요.
 
 ## 수치 해석 원칙 — 3단 해석법
 모든 주요 수치는 3단계로 해석하세요:
@@ -362,16 +458,39 @@ async def respond_node(
     ]
 
     collected_text = ""
-    sanitizer = _XMLTagSanitizer()
+    xml_sanitizer = _XMLTagSanitizer()
+    tool_sanitizer = _ToolTagSanitizer()
 
     async def _emit(raw: str) -> None:
+        """SSE emit chain: XML sanitiser → Tool-tag sanitiser → user."""
         nonlocal collected_text
-        safe = sanitizer.feed(raw)
+        safe_xml = xml_sanitizer.feed(raw)
+        if not safe_xml:
+            return
+        safe = tool_sanitizer.feed(safe_xml)
         if not safe:
             return
         collected_text += safe
         if event_queue:
             await event_queue.put({"type": "text", "content": safe})
+
+    async def _flush_tails() -> None:
+        """Drain both sanitiser pendings at stream end / timeout."""
+        nonlocal collected_text
+        xml_tail = xml_sanitizer.flush()
+        # Pass any XML tail through the tool sanitiser before final flush so
+        # ``(tool_name)`` tags that landed in the very last token are stripped.
+        if xml_tail:
+            piped = tool_sanitizer.feed(xml_tail)
+            if piped:
+                collected_text += piped
+                if event_queue:
+                    await event_queue.put({"type": "text", "content": piped})
+        tool_tail = tool_sanitizer.flush()
+        if tool_tail:
+            collected_text += tool_tail
+            if event_queue:
+                await event_queue.put({"type": "text", "content": tool_tail})
 
     # Bound entire streaming loop — partial text is kept on timeout so the
     # user sees what was generated before the slow tier hung.
@@ -386,47 +505,29 @@ async def respond_node(
                         text = block.get("text", "") if isinstance(block, dict) else str(block)
                         if text:
                             await _emit(text)
-        # Flush any tail pending in the sanitizer (incomplete tag / trailing text).
-        tail = sanitizer.flush()
-        if tail:
-            collected_text += tail
-            if event_queue:
-                await event_queue.put({"type": "text", "content": tail})
+        await _flush_tails()
     except TimeoutError:
         logger.warning("Respond LLM stream timed out after %.1fs", settings.llm_timeout_slow)
-        tail = sanitizer.flush()
-        if tail:
-            collected_text += tail
-            if event_queue:
-                await event_queue.put({"type": "text", "content": tail})
+        await _flush_tails()
         notice = "\n\n(응답이 지연되어 일부만 표시합니다.)"
         collected_text += notice
         if event_queue:
             await event_queue.put({"type": "text", "content": notice})
 
     # P0-1 telemetry: count of banned-tag fragments we had to strip.
-    if sanitizer.dropped_count:
+    if xml_sanitizer.dropped_count:
         logger.warning(
             "respond_xml_leak_stripped session=%s count=%d",
             state.get("session_id"),
-            sanitizer.dropped_count,
+            xml_sanitizer.dropped_count,
         )
-
-    # GAP-D post-hoc: log unattributed numeric claims. We don't mutate the
-    # streamed text (the user already saw it) but we emit a structlog warning
-    # with violation count so Langfuse / observability can pick it up and
-    # Pass 3 tuning can tighten the attribution prompt rule.
-    from server.agent.utils.abstention import scan_unattributed_numbers
-
-    violations = scan_unattributed_numbers(collected_text)
-    if violations:
+    # 2026-04-28 telemetry: tool-name attribution leak (LLM relapse despite
+    # prompt rule). Should normally be 0; non-zero indicates prompt drift.
+    if tool_sanitizer.dropped_count:
         logger.warning(
-            "respond_hallucination_risk session=%s district=%s intent=%s count=%d samples=%s",
+            "respond_tool_tag_stripped session=%s count=%d",
             state.get("session_id"),
-            state.get("district_code"),
-            state.get("user_intent"),
-            len(violations),
-            violations[:5],
+            tool_sanitizer.dropped_count,
         )
 
     # data-trust-reliability-2026-04-24 L3: numeric sanity against tool results.

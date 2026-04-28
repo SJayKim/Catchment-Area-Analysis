@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
 > 최종 갱신: 2026-04-28
+> **2026-04-28 프로덕션 재배포 (`52ae7db → 04376a4`, 4 커밋) + Tool 함수명 노출 fix** ⭐ — Plan [prod-deploy-2026-04-28](../plan/infra/prod-deploy-2026-04-28.md). 4 days old prod 컨테이너 (alembic 004) 에서 alembic 005 (estimated_sales COMMENT) + Langfuse 11차원/6스코어 + W1 entity_matching X시장 boost + planner clarification 3종 + numeric_sanity evaluator + respond.py 502→280 LOC + lucide-react 신규 의존성 반영. **추가 핫픽스**: LLM 응답에 raw 함수명 (`(get_district_summary)`) 노출 사용자 보고 → `ATTRIBUTION_PROMPT_RULE` 자연어 출처 표기 강제 + `_ToolTagSanitizer` 11종 tool 이름 stream-level 가드 + RESPOND rule 13 정정 + 잉여 `scan_unattributed_numbers` 호출 제거. 라이브 검증: prod-smoke 30/30 PASS (4 viewport) · ring0 stack-up 7/9 (R0-2/LANDING 은 prodGuard 의도 차단) · stats-aggregate 4/4 PASS · live SSE raw tool name leak **0건**.
 > **2026-04-28 Langfuse 전체 통계 집계 Plan + Phase 1+2 구현** ⭐ — Plan [langfuse-aggregate-stats-2026-04-28](../plan/infra/langfuse-aggregate-stats-2026-04-28.md). v3 tracer 에 `district_type_for` / `attach_summary_observation` (start_observation 우회) / `emit_score` 헬퍼 + graph finally 에서 11 차원 metadata + 6 score emit. 신규 unit 10/10 + Playwright stats-aggregate 16/16 PASS. SSE `done.trace_id` 동봉 + `agent_done` 로그 매핑 정상. dev MITM SSL 갭은 graceful degrade 로 swallow (prod 영향 0). Phase 3+4 (REST ETL + 월간 KPI 마크다운) 은 별도 세션.
 > **2026-04-27 P0 우선순위 6건** — Plan [p0-priority-2026-04-27](../plan/fix/p0-priority-2026-04-27.md). (1) W1 entity_matching 보강: "X시장" 쿼리 → 전통시장 +0.15 boost · paren alias-only 매치 dampen. unit 6/6. (2) RESPOND XML leak `_XMLTagSanitizer` + 프롬프트 rule 13 unit 6/6. (3) Planner empty-plan clarification 3종 unit 4/4. (4) Eval district_code 하드코딩 제거 + drift guard. (5) status-compress 517→383 LOC. (6) Refactor Pass 2: `api/errors.py` `raise_db_unavailable / raise_not_found` 헬퍼 적용. ruff/tsc/pytest 22/22 PASS.
 > **프로덕션 v0.4.0 동기화 완료 ✅ — `c6cc60e` 기반 재배포 (저녁), 오전 `60b6de3` 대비 6 커밋 / +13,038 / -577 반영**
@@ -16,6 +17,62 @@
 > **2026-04-23 Mobile Responsive Plan Phase A+B+C 구현**: viewport/breakpoint/touch-target · BottomSheet 3-snap + BottomNav 2-tab · IME/VisualViewport 가드 + auto-scroll FAB. tsc/eslint/build 0 errors. Phase D/E/F (PWA·Perf·A11y/E2E) 미착수. [Plan](../plan/ui/mobile-responsive.md)
 > **2026-04-23 F-01 fix + Accuracy Gap W1/W2/W3 구현** ⭐: ETL 8 컬럼 NULL 버그 해소(21,333 행 재적재) + Entity Linking(pg_trgm 대체: difflib+type boost) + Abstention(classify_tool_results+attribution rule) + Coreference Rewriter(Tier1 rule+Tier2 LLM) + 배제 토큰(말고/대신/빼고) + learned_aliases 테이블(alembic 004). [Plan F-01](../plan/fix/etl-sales-column-rename-2026-04-23.md) · [Plan Accuracy Gap](../plan/fix/accuracy-gap-fix.md)
 > **2026-04-23 Refactoring Phase 1 Plan 작성**: 7 기준(R1~R7) 기반 저위험/중위험 항목 1 Pass 묶음. Pass1 = singleflight 삭제 + 레거시 E2E 8건 삭제 + status 압축 + Any import 정리. Pass2 = errors.py 래퍼 통합 + blanket except 9건 좁히기 + respond.py 헬퍼 분리 + chatStore slice 분할. [Plan](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — 구현 미착수
+
+---
+
+## 2026-04-28 — 프로덕션 재배포 + Tool 함수명 노출 fix
+
+### 개요
+- **Plan**: [prod-deploy-2026-04-28.md](../plan/infra/prod-deploy-2026-04-28.md)
+- 운영 컨테이너 4 days old (`2026-04-24T05:34Z`, alembic 004) → 04376a4 동기화. alembic 005 + Langfuse 11차원/6스코어 + W1 보강 + 신규 planner 4건 + 매출 단위 가드 + lucide-react 1건 적용.
+
+### Pass 1 — 사전 회귀 (host venv)
+- backend pytest **34/35 PASS** (1 fail = `test_settings_loads_with_mock_defaults` env-dep 사전 알려진 케이스 — host에 Langfuse 키 존재로 langfuse_enabled=True 평가)
+- ruff `server/` All checks passed
+- 이전 image snapshot tag — `prev-2026-04-24` 3종 (rollback safety)
+
+### Pass 2 — Build + Migrate
+- `.env.dev` 임시 이동(`predeploy-2026-04-28.bak`) → 4 image build → 즉시 복구
+- 신규 IMAGE IDs: backend `63a494302bef` · frontend `e8921f344424` · migrate `caf17802568b`
+- Frontend baked-URL 검증: `https://marketscope.robitlabs.co.kr` 정상 박힘 (P9 가드 통과)
+- alembic 004 → 005 (`estimated_sales.monthly_sales COMMENT`) — zero-downtime, idempotent. `cleanup_alembic + upgrade head` exit 0
+- 신규 헬퍼 import 검증: `attach_summary_observation`, `emit_score`, `district_type_for` 모두 `True`
+- Langfuse v3 (`langfuse.langchain.CallbackHandler`) import OK
+
+### Pass 3 — Cut-over + Live Smoke (curl 11종)
+- backend healthy ~20s + frontend started
+- P1 / 랜딩 200 (data-theme=light + MarketScope) · P2 /proxy/kakao-sdk 200 (4095 bytes)
+- P3 polygons (no-bounds 500 features / bounds 90 features) · P4 강남역 → `3120189`
+- P5 SSE 강남역 요약 — `perStoreSales=27,307,409 원/월` 정상 + done.trace_id 동봉 + attribution `(get_district_summary)` (1차 동작 — 후속 fix 대상)
+- P6 SSE 보문역 편의점 — recommend `per_store_sales` 5건 모두 < 1B/월 (32M~201M)
+- P7 /app 200 (data-testid=toolbar-logo + statusbar)
+- P8 /api/districts/3120189/preview top_categories 3종
+- P9 feedback/score: empty=422 / valid `value="up"` → 204 (schema 신규 변경 — int → up/down 문자열)
+- P10 clarification "이 지역 요약" → tool 0건 + suggestion 2건 + done.trace_id ✅
+- P11 done.trace_id Langfuse L1 정상
+
+### Pass 4 — Playwright 회귀
+- **prod-smoke 30/30 PASS** (chromium 9/9 + iphone/galaxy 14/14 + ipad 7/7, 6 skip는 P8/P9 chromium-only 의도)
+- ring0-preflight: 5 PASS (R0-1 backend health · R0-3 polygons · R0-4 mode · stats-aggregate AGG-01~04 신규 Langfuse 11차원/6스코어 회귀) · 2 expected fail (R0-2/R0-LANDING은 `helpers/prodGuard.ts`의 의도된 prod 도메인 fetch 차단)
+- ring1~3 mock-fixture spec은 prod 머신에 별도 e2e stack(`docker-compose.e2e.yml`) 부재로 라이브 prod 부적합 — dev/staging 머신에서 별도 실행 권장
+
+### 추가 핫픽스 — LLM 응답 raw 함수명 노출
+- **사용자 보고**: P5 SSE 응답 텍스트에 `유동인구: 하루 평균 81만 5천명 (get_district_summary)` 같이 raw 함수명 그대로 노출
+- **근본 원인**: `agent/utils/abstention.py::ATTRIBUTION_PROMPT_RULE` 가 LLM에게 수치 옆에 `(tool_name)` 표기를 의무화 (W1 hallucination 가드 의도). 그러나 `numeric_sanity` evaluator (data-trust-reliability-2026-04-24) 가 이미 attribution tag 없이도 entity mismatch 까지 잡는 더 정확한 검증을 수행 → attribution tag 는 잉여 + UX 손상
+- **수정 (4 파일)**:
+  - `abstention.py` — `ATTRIBUTION_PROMPT_RULE` 을 "raw 함수명 사용자 노출 금지 + 자연어 출처 표기" 로 재작성. 11 tool 이름 명시 금지 목록. `ABSTENTION_PROMPT_ADDENDUM_EMPTY` 의 attribution tag 예시도 정정
+  - `agent/nodes/respond.py` — `_ToolTagSanitizer` 신규 (97 LOC). chunk-aware stream filter, `_TOOL_NAME_INNER` 정규식이 `get_*` / `compare_*` / `recommend_*` / `estimate_*` / `simulate_*` / `detect_*` 11개 tool 매칭. `(자본금 부족)` 같은 일반 한국어 괄호는 보존. `_emit` chain = XML sanitiser → ToolTag sanitiser → SSE
+  - `respond.py::RESPOND_SYSTEM_PROMPT` rule 13 — `(수치 출처 표기 (tool_name) 은 일반 괄호 표기이므로 허용됩니다.)` → "**도구 함수명 노출 금지** — 출처는 자연어로만 표기"
+  - `respond.py` — `scan_unattributed_numbers` 호출 제거 (잉여 telemetry, numeric_sanity 가 더 정확)
+  - 신규 `tool_sanitizer.dropped_count > 0` 시 `respond_tool_tag_stripped` 로그 (LLM relapse 추적)
+- **단위 테스트** `server/tests/test_tool_tag_sanitizer.py` 신규 11/11 PASS — simple/backticked/quoted tool tag · chunk boundary split (open paren / inside name) · 한국어 괄호 보존 · 영어 일반 괄호 보존 · 다중 tag · 미완 paren overflow flush · empty input · compare/estimate 등
+- **회귀 검증**: backend cache rebuild 11s → up -d backend → live SSE `강남역 요약` 재실행. 응답 7,498 bytes · text 이벤트 30+개 · raw tool name pattern (`\(get_*\)|\(recommend_*\)|\(compare_*\)|\(estimate_*\)|\(simulate_*\)|\(detect_*\)`) **0건** ✅. 답변 자연도 향상 — 수치 옆 노이즈 사라짐
+- **prod-smoke chromium 9/9 재확인 PASS** — backend 재빌드 사이드이펙트 0
+
+### 참조 메모리 / 후속
+- 메모리 활용: `feedback_respond_tool_use_xml_leak` (sanitizer 패턴 재사용) · `feedback_env_convention_inverted` (.env.dev 임시 이동 자동화 후보)
+- 운영 권장: 일정 기간 `respond_tool_tag_stripped count` 모니터 → 0 유지 시 prompt rule 만으로 충분, > 0 지속 시 prompt 추가 강화 또는 fewshot 추가
+- 후속 P0: ring1~3 mock stack 을 prod 머신에 별도 셋업 (`docker-compose.e2e.yml` 작성 — 격리된 backend port + USE_MOCK=true) — 라이브 회귀 자동화 가능
 
 ---
 
