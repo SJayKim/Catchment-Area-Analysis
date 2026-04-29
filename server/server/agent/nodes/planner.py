@@ -58,6 +58,15 @@ _CLARIFICATION_TEMPLATES: dict[str, dict] = {
         ),
         "suggestions": ["성수역이랑 건대 비교", "강남역 vs 서울역", "홍대입구역 요약"],
     },
+    # 서울 외 지역(부산/제주/경기 등) 거부. tool 호출 0건, LLM 호출 0건으로 즉시 응답.
+    "out_of_scope": {
+        "text": (
+            "현재 마켓스코프는 **서울시 1,650개 상권**만 지원합니다. "
+            "서울 외 지역(부산·인천·경기 등)의 상권 데이터는 아직 제공하지 않습니다. "
+            "서울 상권에 대해 알려드릴까요?"
+        ),
+        "suggestions": ["강남역 상권 요약", "홍대 vs 성수 비교", "명동 창업 추천 업종"],
+    },
 }
 
 
@@ -86,6 +95,12 @@ _RECOMMEND_OVERRIDE = re.compile(r"(추천|어떤.*업종|가장.*좋은.*업종
 def _classify_by_rules(message: str) -> tuple[str | None, float]:
     """Fast rule-based intent classification. Returns (intent, confidence)."""
     config = load_intent_config()
+
+    # 서비스 범위 외(서울 외 지역) 토큰이 있으면 다른 어떤 intent 보다 우선.
+    # "부산 vs 강남 비교" / "제주 분석" / "분당 추천" 모두 거부 분기로 직행.
+    out_of_scope_pattern = config.patterns.get("out_of_scope")
+    if out_of_scope_pattern is not None and out_of_scope_pattern.search(message):
+        return "out_of_scope", 0.95
 
     # UJ4 long synthesis: single-turn "상세/종합 분석 보고서" + 3+ topic keywords
     # should produce the full fan-out summary plan, not fall through to whichever
@@ -336,6 +351,29 @@ async def planner_node(state: AgentState) -> dict:
 
     referenced_districts: list[str] = [district_code] if district_code else []
     referenced_category = _extract_category(message)
+
+    # 1.5. Out-of-scope short-circuit — 서울 외 지역(부산/제주/경기 등) 거부.
+    # LLM/Tool 호출 0건. greeting 처럼 그래프를 건너뛰고 즉시 종료.
+    if intent == "out_of_scope":
+        logger.info(
+            "planner.out_of_scope session=%s message=%r",
+            state.get("session_id"),
+            message[:80],
+        )
+        tmpl = _CLARIFICATION_TEMPLATES["out_of_scope"]
+        return {
+            "user_intent": "clarification",
+            "intent_confidence": confidence,
+            "referenced_districts": [],
+            "referenced_category": None,
+            "ambiguous_districts": [],
+            "plan": [],
+            "plan_reasoning": "clarification: out_of_scope (서울 외 지역)",
+            "response_mode": "clarification_direct",
+            "execution_round": (state.get("execution_round") or 0) + 1,
+            "clarification_text": tmpl["text"],
+            "clarification_suggestions": list(tmpl["suggestions"]),
+        }
 
     # 2. LLM classification for follow_up / ambiguous / low confidence
     if intent in ("follow_up", None) or confidence < 0.7:

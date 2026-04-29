@@ -69,6 +69,7 @@ async def _release_session_task(session_id: str, task: asyncio.Task) -> None:
         if _session_inflight.get(session_id) is task:
             del _session_inflight[session_id]
 
+
 # GAP-C helper — mirrors EXCLUSION_PATTERNS in agent.utils.rewriter so
 # chat-route auto-detection skips when the user is explicitly dropping an
 # entity ("X 말고 Y", "X 대신 Y", "X 빼고 Y", "X 제외").
@@ -227,7 +228,15 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
         if detected:
             det_name = detected.get("name", "")
             det_in_excluded = any(e in det_name or det_name in e for e in excluded)
-            if not det_in_excluded:
+            # No upstream anchor → require STRONG_TOP1_MIN. A fake non-Seoul name
+            # (e.g. 가상의 "부산물시장") may fuzzy-match a Seoul district in the
+            # 0.55~0.70 band; accepting it would cause silent wrong-district
+            # analysis. Out-of-scope keyword guard sits earlier (intents.yaml),
+            # this is the second layer.
+            from server.agent.utils.entity_matching import STRONG_TOP1_MIN
+
+            det_score = detected.get("score") or 0.0
+            if not det_in_excluded and det_score >= STRONG_TOP1_MIN:
                 body.district_code = detected["code"]
                 district_name = det_name
                 d = await da.districts.resolve_district(detected["code"])

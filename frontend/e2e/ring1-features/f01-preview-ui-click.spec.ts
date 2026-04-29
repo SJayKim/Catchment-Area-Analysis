@@ -185,8 +185,8 @@ test('ChatInput while in-flight — does not freeze, second message goes through
 
   // requestId should be at least 2.
   await page.waitForFunction(
-    () => (window as { __chatStore?: { getState: () => { currentRequestId: number } } })
-      .__chatStore?.getState().currentRequestId >= 2,
+    () => ((window as { __chatStore?: { getState: () => { currentRequestId: number } } })
+      .__chatStore?.getState().currentRequestId ?? 0) >= 2,
     { timeout: 5_000 }
   );
 

@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-28
+> 최종 갱신: 2026-04-29
+> **2026-04-29 Out-of-Scope (서울 외 지역) 거부 3중 가드 구현** ⭐ — Plan [out-of-scope-handling-2026-04-29](../plan/fix/out-of-scope-handling-2026-04-29.md). 사용자 보고 ("부산/제주 등 서울 외 질문 처리 안 됨") → 3중 가드 설계: (L1) `intents.yaml` `out_of_scope` intent 신규 (광역지명 + 비-서울 시단위 + 부산 동단위 + 제주 동단위 패턴, 한글 word-boundary `(?<![가-힣])...(?![가-힣ㄱ-ㅎㅏ-ㅣ])` 로 substring 오매치 차단). (L2) `planner.py` `_classify_by_rules` 진입 직후 `out_of_scope` 분기 + `_CLARIFICATION_TEMPLATES["out_of_scope"]` 추가, LLM/Tool 호출 0건으로 즉시 clarification_direct 반환. (L3) `entity_matching.py` `STRONG_TOP1_MIN=0.70` 상수 + `chat.py` message-detect 분기에서 score < STRONG_TOP1_MIN 시 거부 (silent wrong-district 가상 비-서울 fuzzy 매치 차단). (L4) `system.py::_BASE_PROMPT` rule 11 + `respond.py::RESPOND_SYSTEM_PROMPT` rule 13 거부 룰 명시. 변경 6 파일 + 신규 unit `test_out_of_scope.py` 21 testcase + Plan 1건. 검증: ruff PASS · **pytest 70/71** (신규 21 + 기존 49, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · 회귀 0.
 > **2026-04-28 (저녁) Prod 재배포 — district-click-race fix 라이브 적용** ⭐ — Plan [prod-redeploy-2026-04-28-evening](../plan/infra/prod-redeploy-2026-04-28-evening.md). 이전 세션의 dev/prod compose project-name 충돌로 prod frontend(`:3200`) 가 stop → `marketscope.robitlabs.co.kr` 502. A 방식 (destructive) 으로 Plan 4 Pass 진행. **frontend `sha256:46815639...` + backend `6be3098215b9` 정상 기동**. Live smoke P1~P9 ALL PASS — 외부 도메인 200 (5회 105~277ms), Playwright real-DB spec 3/3 PASS (A→B→A · A→AI→B · 3-rapid). fix baked 확인 (`currentRequestId` 2 hits / `_session_inflight` 11 hits). prev-2026-04-28b tag 부여 (rollback safety).
 > **2026-04-28 District click race / "먹통" fix** ⭐ — Plan [district-click-race-2026-04-28](../plan/fix/district-click-race-2026-04-28.md). 사용자 보고 ("상권 A → AI 리포트 → 상권 B 클릭하면 먹통") 6 근본 원인 진단 (C1 `chatStore.sendMessage:189 if (state.isLoading) return` / C2 `ChatPanel disabled={isLoading}` / C3 `setPreview lastDistrictCode` race / C4 SSE late-`done` overrides / C5 backend per-session lock 부재 / C6 1.5s setTimeout). 적용 패턴: **Stale-while-cancel + Monotonic requestId** (frontend `currentRequestId` + `EventHandlerContext.requestId` + `isStale(ctx)` 가드) · **AbortController + seq counter** (`setPreview` race 정상화, `lastDistrictCode` 의존성 제거) · **Per-session async cancellation** (`_session_inflight` 레지스트리 + `_claim_session_slot`/`_register_session_task`/`_release_session_task`, `_INFLIGHT_CANCEL_TIMEOUT=2s`). 변경 7 파일 (frontend 4 + backend 1 + e2e 신규 + pytest 신규) + memory 4건 신규 (`feedback_chat_inflight_guard` / `feedback_setpreview_lastcode_race` / `feedback_sse_done_staleness` / `feedback_session_concurrency_lock`). 검증: ruff PASS · tsc 0 error · **pytest 49/50** (신규 4 + 기존 45, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · Playwright `f01-rapid-switch.spec.ts` 작성 (도커 e2e stack 별도 회귀 권장).
 > **2026-04-28 프로덕션 재배포 (`52ae7db → 04376a4`, 4 커밋) + Tool 함수명 노출 fix** ⭐ — Plan [prod-deploy-2026-04-28](../plan/infra/prod-deploy-2026-04-28.md). 4 days old prod 컨테이너 (alembic 004) 에서 alembic 005 (estimated_sales COMMENT) + Langfuse 11차원/6스코어 + W1 entity_matching X시장 boost + planner clarification 3종 + numeric_sanity evaluator + respond.py 502→280 LOC + lucide-react 신규 의존성 반영. **추가 핫픽스**: LLM 응답에 raw 함수명 (`(get_district_summary)`) 노출 사용자 보고 → `ATTRIBUTION_PROMPT_RULE` 자연어 출처 표기 강제 + `_ToolTagSanitizer` 11종 tool 이름 stream-level 가드 + RESPOND rule 13 정정 + 잉여 `scan_unattributed_numbers` 호출 제거. 라이브 검증: prod-smoke 30/30 PASS (4 viewport) · ring0 stack-up 7/9 (R0-2/LANDING 은 prodGuard 의도 차단) · stats-aggregate 4/4 PASS · live SSE raw tool name leak **0건**.
@@ -19,6 +20,63 @@
 > **2026-04-23 Mobile Responsive Plan Phase A+B+C 구현**: viewport/breakpoint/touch-target · BottomSheet 3-snap + BottomNav 2-tab · IME/VisualViewport 가드 + auto-scroll FAB. tsc/eslint/build 0 errors. Phase D/E/F (PWA·Perf·A11y/E2E) 미착수. [Plan](../plan/ui/mobile-responsive.md)
 > **2026-04-23 F-01 fix + Accuracy Gap W1/W2/W3 구현** ⭐: ETL 8 컬럼 NULL 버그 해소(21,333 행 재적재) + Entity Linking(pg_trgm 대체: difflib+type boost) + Abstention(classify_tool_results+attribution rule) + Coreference Rewriter(Tier1 rule+Tier2 LLM) + 배제 토큰(말고/대신/빼고) + learned_aliases 테이블(alembic 004). [Plan F-01](../plan/fix/etl-sales-column-rename-2026-04-23.md) · [Plan Accuracy Gap](../plan/fix/accuracy-gap-fix.md)
 > **2026-04-23 Refactoring Phase 1 Plan 작성**: 7 기준(R1~R7) 기반 저위험/중위험 항목 1 Pass 묶음. Pass1 = singleflight 삭제 + 레거시 E2E 8건 삭제 + status 압축 + Any import 정리. Pass2 = errors.py 래퍼 통합 + blanket except 9건 좁히기 + respond.py 헬퍼 분리 + chatStore slice 분할. [Plan](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — 구현 미착수
+
+---
+
+## 2026-04-29 — Out-of-Scope (서울 외 지역) 거부 3중 가드
+
+### 개요
+- **Plan**: [out-of-scope-handling-2026-04-29.md](../plan/fix/out-of-scope-handling-2026-04-29.md)
+- 사용자 보고: "현재 서비스에서 서울 외의 상권 질문이 들어오면 어떻게 처리하지?" → audit 결과 명시적 거부 룰 부재. 4 가지 보강 여지 (intents.yaml / system prompt / numeric_sanity / W1 type boost) 중 1·2·3 구현. 4번 (W1 type boost 약화) 은 Round 3 eval 에서 별도 측정.
+
+### 변경 (6 파일 + 1 신규 + 1 Plan)
+| # | 파일 | 변경 |
+|---|------|------|
+| 1 | `agent/config/intents.yaml` | greeting 직후 `out_of_scope` intent 추가. 광역(부산/대구/인천/광주/대전/울산/세종/제주/경기/강원/충청/전라/경상) + 부산 동(해운대/광안리) + 경기 시(수원/성남/용인/안양/부천/일산/분당/판교/동탄) + 강원/충청/전라/경상 주요 시 + 제주(서귀포/애월). word-boundary `(?<![가-힣])...(?![가-힣ㄱ-ㅎㅏ-ㅣ])` |
+| 2 | `agent/nodes/planner.py` | `_classify_by_rules` 진입 직후 `out_of_scope` 우선 분기 (다른 모든 intent 보다 먼저, confidence 0.95). `_CLARIFICATION_TEMPLATES["out_of_scope"]` 4번째 키 추가. `planner_node` 에 short-circuit (LLM/Tool 0건, ~1ms 응답) |
+| 3 | `agent/utils/entity_matching.py` | `STRONG_TOP1_MIN = 0.70` 상수 신규 (TOP1_MIN 0.55 보다 strict) |
+| 4 | `api/routes/chat.py` | message-detect 분기에서 `det_score < STRONG_TOP1_MIN` 거부. body.district_code 미선택 + fuzzy 약한 매치 시 silent wrong-district 차단 |
+| 5 | `agent/nodes/respond.py` | `RESPOND_SYSTEM_PROMPT` rule 13 신규 (서비스 범위 명시 + 가상 수치 금지). 기존 rule 13(출력 포맷) → 14 |
+| 6 | `agent/prompts/system.py` | `_BASE_PROMPT` rule 11 추가 (서울 외 정중 거절) |
+| 7 | `tests/test_out_of_scope.py` | 신규 — 21 testcase (pattern coverage 16 + planner short-circuit 4 + 상수/템플릿 sanity 1 + control 1) |
+| 8 | `docs/plan/fix/out-of-scope-handling-2026-04-29.md` | 신규 — 5섹션 Plan |
+
+### 3중 가드 설계
+```
+User: "부산 해운대 알려줘"
+   ↓
+[L1] intents.yaml::out_of_scope (regex)
+   → intent="out_of_scope", confidence=0.95
+   ↓
+[L2] planner.py: short-circuit
+   → LLM/Tool 0건, clarification_direct 즉시 반환
+   ↓ (L1/L2 우회 — 가상 비-서울 시장명 등)
+[L3] entity_matching::STRONG_TOP1_MIN=0.70
+   → 약한 매치 거부 → ambiguous → clarification (district_missing)
+   ↓ (모든 가드 우회)
+[L4] respond.py::RESPOND_SYSTEM_PROMPT rule 13
+   → "서울시 1,650개 상권만 지원" 자연어 거절
+```
+
+### Clarification 응답
+> "현재 마켓스코프는 **서울시 1,650개 상권**만 지원합니다. 서울 외 지역(부산·인천·경기 등)의 상권 데이터는 아직 제공하지 않습니다. 서울 상권에 대해 알려드릴까요?"
+>
+> Suggestions: ["강남역 상권 요약", "홍대 vs 성수 비교", "명동 창업 추천 업종"]
+
+### 검증
+- ✅ ruff (server/) — All checks passed
+- ✅ pytest **70/71 PASS** (신규 21 + 기존 49). 1 fail = `test_smoke::langfuse_enabled` host env pre-existing (변경 무관)
+- ✅ Pattern coverage: 부산/제주/경기/대구/인천/광주광역시/서귀포/수원 8 케이스 → True. 강남역/홍대/명동 3 케이스 → False (제어군). substring trap 4 (부산물/광주리/경기침체/구로구) → False ✓
+- 🔧 Manual smoke + Playwright E2E spec 은 다음 sweep 에 포함 (backend pytest 우선)
+
+### Memory 신규 1건
+- `feedback_out_of_scope_handling.md` — 서울 외 거부 3중 가드 패턴 + STRONG_TOP1_MIN 임계 근거
+
+### 후속 P0
+- 🔧 W1 type boost 약화 케이스 — Round 3 eval 에서 별도 측정 (Plan p0-priority-2026-04-27 의 #1 보강)
+- 🔧 Playwright E2E spec — `r3-neg-out-of-scope.spec.ts` 작성
+- 🔧 Manual smoke (USE_MOCK=true backend) — curl 4 케이스 검증
+- 🔧 prod 배포 (다음 배포 사이클)
 
 ---
 

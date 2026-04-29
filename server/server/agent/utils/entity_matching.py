@@ -14,8 +14,13 @@ from difflib import SequenceMatcher
 
 # Abstention thresholds (tuned empirically for 1,650 Seoul districts).
 # - TOP1_MIN: absolute floor — below this we treat the candidate as unmatched.
+# - STRONG_TOP1_MIN: stricter floor used when there is **no upstream anchor**
+#   (no map selection, no session last district). Guards silent wrong-district
+#   cases where a non-Seoul query fuzzy-matches a Seoul name in the 0.55~0.70
+#   range (out-of-scope-handling-2026-04-29).
 # - CLOSE_DELTA: if Top1 - Top2 is within this band, we surface ambiguity.
 TOP1_MIN = 0.55
+STRONG_TOP1_MIN = 0.70
 CLOSE_DELTA = 0.08
 
 # district_type priority — used to break ties AND baked into the score so that
