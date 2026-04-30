@@ -4,6 +4,8 @@ export default function Footer() {
   const kakaoUrl = process.env.NEXT_PUBLIC_KAKAO_CHANNEL_URL;
   const tallyUrl = process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL;
   const feedbackHref = kakaoUrl || tallyUrl || null;
+  const repoUrl = process.env.NEXT_PUBLIC_REPO_URL || null;
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || null;
 
   return (
     <footer
@@ -13,7 +15,7 @@ export default function Footer() {
         borderTop: '1px solid var(--border-color)',
       }}
     >
-      <div className="max-w-6xl mx-auto grid gap-8 lg:grid-cols-[1.5fr,1fr,1fr]">
+      <div className="max-w-6xl mx-auto grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.5fr,1fr,1fr,1fr]">
         <div>
           <div
             className="text-lg font-bold mb-2"
@@ -40,12 +42,12 @@ export default function Footer() {
           </div>
           <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
             <li>
-              <a href="/app" className="hover:underline">
+              <a href="/app" className="hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
                 지도에서 시작하기
               </a>
             </li>
             <li>
-              <a href="#how-it-works" className="hover:underline">
+              <a href="#how-it-works" className="hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
                 사용 방법
               </a>
             </li>
@@ -66,23 +68,66 @@ export default function Footer() {
                   href={feedbackHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline"
+                  className="hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
                   data-testid="footer-feedback-link"
                 >
                   피드백 보내기
                 </a>
               </li>
             ) : null}
+            {repoUrl ? (
+              <li>
+                <a
+                  href={repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                  data-testid="footer-repo-link"
+                >
+                  GitHub
+                </a>
+              </li>
+            ) : null}
+          </ul>
+        </div>
+
+        <div>
+          <div
+            className="text-sm font-semibold mb-3"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            법적
+          </div>
+          <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
             <li>
               <a
-                href="https://github.com/anthropics/claude-code"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
+                href="/terms"
+                className="hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                data-testid="footer-terms-link"
               >
-                GitHub
+                이용약관
               </a>
             </li>
+            <li>
+              <a
+                href="/privacy"
+                className="hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                data-testid="footer-privacy-link"
+              >
+                개인정보처리방침
+              </a>
+            </li>
+            {contactEmail ? (
+              <li>
+                <a
+                  href={`mailto:${contactEmail}`}
+                  className="hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                  data-testid="footer-contact-link"
+                >
+                  문의
+                </a>
+              </li>
+            ) : null}
           </ul>
         </div>
       </div>

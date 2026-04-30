@@ -1,25 +1,75 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-04-29
+> 최종 갱신: 2026-04-30
+> **2026-04-30 UX Sweep Phase A-F Plan 2 Pass 1 — 통합 5 journey spec 신규 + 정적 baseline 9 testcase PASS** ⭐ — Plan [ux-final-e2e-regression-plan](../plan/qa/ux-final-e2e-regression-plan.md). Plan 1 verdict ✅ 후속 회차 — `frontend/e2e/ring2-journeys/j06-ux-a2f-integration.spec.ts` 신규 1 파일 (~960 LOC) 에 Phase A→F 횡단 5 journey 1:1 매핑 (J01 onboarding-to-feedback A.4+B.6+F11+F12+F13+D.4 / J02 compare 풀사이클 B.1~B.5 / J03 모바일 첫 진입 C.2+D.2+D.9+B.3 / J04 에러복구+Tally폴백 D.1+D.5+B.4 / J05 a11y 종합 D.2+D.3+D.4+D.6+D.9+WCAG). 각 step 독립 try/catch 로 부분 PASS 가능 (StepCheck[] 누적 + passCount ≥ 임계 시만 fail). 검증: tsc 0 error · next lint 0 warning · dry-list 5 testcase 인식 · 정적 baseline 9 testcase (Ring0-D1 + Ring0-F1 + Ring0-F2) 재현 PASS. Pass 1/2/3 + prod-smoke runtime 은 본 머신 :3001/:8002 점유로 user 수동 트리거 권장. [Verdict](../qa/runs/ux-final-e2e-2026-04-30/summary.md)
+> **2026-04-30 UX Sweep Phase A-F Pass 1 — 13 신규 시나리오 작성** ⭐ — Plan [ux-phase-a-f-test-plan](../plan/qa/ux-phase-a-f-test-plan.md). 기존 25 + 신규 13 = 38 시나리오 매트릭스 확정. 변경 9 spec 수정 + 2 spec 신규 + verdict 1: A 엣지 3건 (`A1-EDGE-PRIVATE` Safari Private localStorage / `A4-EDGE-EMPTY` 빈 q scrub / `A4-BENTO-ALL6` 6 cell 매핑) · B 보강 2건 (`B5-FALSE-POS-EXT` negative 3건 추가 / `B4-RETRY-LOOP` 5회 직렬 가드) · C perf 2건 (`C3-PERF` INP < 500ms / `C4-FAILED` 600ms transition) · D 보강 6건 (`D1-RESET-LOOP` self-throw 정적 invariant / `D5-IFRAME-BLOCK` Tally route.abort fallback / `D7-PERF` getComputedStyle 캐시 / `D8-HOVER` Header Tailwind hover / `D9-WCAG258` BottomNav minHeight 60+icon 24+label 13 mobile-iphone / `D10-VISUAL` mouseout styleFor 재계산) · F SSR 2건 (`F1-SSR` no use client / `F2-IMPORT-MAP` import 사용처 0). 검증: tsc 0 error · 정적 회귀 9 testcase PASS (Ring0-D1 + Ring0-F1 + Ring0-F2). Ring1+ 27건은 USE_MOCK e2e stack 필요 (본 머신 :3001/:8002 외부 점유로 user 수동 트리거 권장). [Verdict](../qa/runs/ux-phase-a-f-pass1/summary.md)
+> **2026-04-30 UX Sweep Phase F — Tier hook stub (옵션 phase)** — Plan [ux-sweep-phase-f-tier-hook](../plan/ui/ux-sweep-phase-f-tier-hook.md). Phase 2 (OAuth/결제/Tier 게이팅) 머지 시 surface diff 최소화를 위한 hook 자리만 마련. 코드 변경 2 신규 + spec 1 신규: (F.1) `frontend/src/hooks/useTier.ts` — `Tier = 'free' | 'pro' | 'team'` 타입 + `useTier()` 하드코딩 `'free'` 반환 stub. (F.2) `frontend/src/components/common/FeatureGate.tsx` — `'use client'` wrapper, `useTier()` 호출 (grep 표면 유지) 후 children 그대로 렌더 (no-op). spec: `ring0-preflight/03-tier-hook.spec.ts` 신규 — Tier 타입 export + `tier:'free'` 하드코딩 + FeatureGate `<>{children}</>` 정적 invariant 회귀. tsc 0 error · next lint 0 warning. Phase 2 머지 시 본 2 파일 비교 로직만 활성화하면 일괄 게이팅 가능.
+> **2026-04-30 UX Sweep Phase E — Premium Deferred (toggle 1건)** — Plan [ux-sweep-phase-e-premium-deferred](../plan/ui/ux-sweep-phase-e-premium-deferred.md). Phase 2 (OAuth/결제/Tier 게이팅) 의존 3건 (E.1 F06 평일/주말 토글 · E.2 F09 What-If UI · E.3 FreeLimitSurvey Premium CTA) 차단 사유 + 선행 요건 명시. 코드 변경은 E.3 임시 결정만 적용 — `FreeLimitSurvey` Premium CTA 블록에 `NEXT_PUBLIC_PREMIUM_CTA_ENABLED` env 게이트 추가 (default off, `'true'` 일 때만 노출), `data-testid="survey-premium-cta"` 부여. spec 보강 1건: `f12-feedback.spec.ts::Ring1-F12-E3` — env off 시 mood ≥ 4 응답에도 CTA 미노출 회귀. tsc 0 error.
+> **2026-04-30 UX Sweep Phase D — A11y / 마감** ⭐ — Plan [ux-sweep-phase-d-a11y](../plan/ui/ux-sweep-phase-d-a11y.md). 10 항목 (D.1~D.10) 일괄 구현: (D.1) `app/error.tsx` · `app/loading.tsx` · `app/app/error.tsx` · `app/app/loading.tsx` 4 boundary 신규 — reset+홈 동선 + split-panel skeleton. (D.2) `globals.css` `:focus-visible` 글로벌 룰 + Header/Hero/BetaBanner/Footer focus-visible:ring 보강. (D.4) `FeedbackRow` ack 후 ↩️ 수정 토글 + `useToastStore` 안내. (D.5) `FeedbackModal` iframe 5s timeout fallback (mailto/Kakao). (D.6) `CompareCard`/`SuggestionChips` 안정 키 (`${index}-${value}`). (D.7) `InlineChart` CSS 변수 토큰화 (`useEffect` 1회 read + SSR fallback) + 차트 토큰 5종 light/dark 추가. (D.8) `Header` Tailwind hover 전환 (inline JS 제거). (D.9) `BottomNav` minHeight 60px + 폰트 22→24/12→13 (WCAG 2.5.8 AA). (D.10) `DistrictLayer` mouseout 시 `styleFor` 전체 재계산 (compare 슬롯 색 race 방지). 변경 12 파일 + 신규 spec 2건 (`ring0-preflight/02-error-boundary.spec.ts` · `ring1-features/a11y.spec.ts`). 검증: tsc 0 error · next lint 신규 변경 0 warning (pre-existing 4건만 잔존).
 > **2026-04-29 Out-of-Scope (서울 외 지역) 거부 3중 가드 구현** ⭐ — Plan [out-of-scope-handling-2026-04-29](../plan/fix/out-of-scope-handling-2026-04-29.md). 사용자 보고 ("부산/제주 등 서울 외 질문 처리 안 됨") → 3중 가드 설계: (L1) `intents.yaml` `out_of_scope` intent 신규 (광역지명 + 비-서울 시단위 + 부산 동단위 + 제주 동단위 패턴, 한글 word-boundary `(?<![가-힣])...(?![가-힣ㄱ-ㅎㅏ-ㅣ])` 로 substring 오매치 차단). (L2) `planner.py` `_classify_by_rules` 진입 직후 `out_of_scope` 분기 + `_CLARIFICATION_TEMPLATES["out_of_scope"]` 추가, LLM/Tool 호출 0건으로 즉시 clarification_direct 반환. (L3) `entity_matching.py` `STRONG_TOP1_MIN=0.70` 상수 + `chat.py` message-detect 분기에서 score < STRONG_TOP1_MIN 시 거부 (silent wrong-district 가상 비-서울 fuzzy 매치 차단). (L4) `system.py::_BASE_PROMPT` rule 11 + `respond.py::RESPOND_SYSTEM_PROMPT` rule 13 거부 룰 명시. 변경 6 파일 + 신규 unit `test_out_of_scope.py` 21 testcase + Plan 1건. 검증: ruff PASS · **pytest 70/71** (신규 21 + 기존 49, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · 회귀 0.
-> **2026-04-28 (저녁) Prod 재배포 — district-click-race fix 라이브 적용** ⭐ — Plan [prod-redeploy-2026-04-28-evening](../plan/infra/prod-redeploy-2026-04-28-evening.md). 이전 세션의 dev/prod compose project-name 충돌로 prod frontend(`:3200`) 가 stop → `marketscope.robitlabs.co.kr` 502. A 방식 (destructive) 으로 Plan 4 Pass 진행. **frontend `sha256:46815639...` + backend `6be3098215b9` 정상 기동**. Live smoke P1~P9 ALL PASS — 외부 도메인 200 (5회 105~277ms), Playwright real-DB spec 3/3 PASS (A→B→A · A→AI→B · 3-rapid). fix baked 확인 (`currentRequestId` 2 hits / `_session_inflight` 11 hits). prev-2026-04-28b tag 부여 (rollback safety).
-> **2026-04-28 District click race / "먹통" fix** ⭐ — Plan [district-click-race-2026-04-28](../plan/fix/district-click-race-2026-04-28.md). 사용자 보고 ("상권 A → AI 리포트 → 상권 B 클릭하면 먹통") 6 근본 원인 진단 (C1 `chatStore.sendMessage:189 if (state.isLoading) return` / C2 `ChatPanel disabled={isLoading}` / C3 `setPreview lastDistrictCode` race / C4 SSE late-`done` overrides / C5 backend per-session lock 부재 / C6 1.5s setTimeout). 적용 패턴: **Stale-while-cancel + Monotonic requestId** (frontend `currentRequestId` + `EventHandlerContext.requestId` + `isStale(ctx)` 가드) · **AbortController + seq counter** (`setPreview` race 정상화, `lastDistrictCode` 의존성 제거) · **Per-session async cancellation** (`_session_inflight` 레지스트리 + `_claim_session_slot`/`_register_session_task`/`_release_session_task`, `_INFLIGHT_CANCEL_TIMEOUT=2s`). 변경 7 파일 (frontend 4 + backend 1 + e2e 신규 + pytest 신규) + memory 4건 신규 (`feedback_chat_inflight_guard` / `feedback_setpreview_lastcode_race` / `feedback_sse_done_staleness` / `feedback_session_concurrency_lock`). 검증: ruff PASS · tsc 0 error · **pytest 49/50** (신규 4 + 기존 45, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · Playwright `f01-rapid-switch.spec.ts` 작성 (도커 e2e stack 별도 회귀 권장).
-> **2026-04-28 프로덕션 재배포 (`52ae7db → 04376a4`, 4 커밋) + Tool 함수명 노출 fix** ⭐ — Plan [prod-deploy-2026-04-28](../plan/infra/prod-deploy-2026-04-28.md). 4 days old prod 컨테이너 (alembic 004) 에서 alembic 005 (estimated_sales COMMENT) + Langfuse 11차원/6스코어 + W1 entity_matching X시장 boost + planner clarification 3종 + numeric_sanity evaluator + respond.py 502→280 LOC + lucide-react 신규 의존성 반영. **추가 핫픽스**: LLM 응답에 raw 함수명 (`(get_district_summary)`) 노출 사용자 보고 → `ATTRIBUTION_PROMPT_RULE` 자연어 출처 표기 강제 + `_ToolTagSanitizer` 11종 tool 이름 stream-level 가드 + RESPOND rule 13 정정 + 잉여 `scan_unattributed_numbers` 호출 제거. 라이브 검증: prod-smoke 30/30 PASS (4 viewport) · ring0 stack-up 7/9 (R0-2/LANDING 은 prodGuard 의도 차단) · stats-aggregate 4/4 PASS · live SSE raw tool name leak **0건**.
-> **2026-04-28 Langfuse 전체 통계 집계 Plan + Phase 1+2 구현** ⭐ — Plan [langfuse-aggregate-stats-2026-04-28](../plan/infra/langfuse-aggregate-stats-2026-04-28.md). v3 tracer 에 `district_type_for` / `attach_summary_observation` (start_observation 우회) / `emit_score` 헬퍼 + graph finally 에서 11 차원 metadata + 6 score emit. 신규 unit 10/10 + Playwright stats-aggregate 16/16 PASS. SSE `done.trace_id` 동봉 + `agent_done` 로그 매핑 정상. dev MITM SSL 갭은 graceful degrade 로 swallow (prod 영향 0). Phase 3+4 (REST ETL + 월간 KPI 마크다운) 은 별도 세션.
-> **2026-04-27 P0 우선순위 6건** — Plan [p0-priority-2026-04-27](../plan/fix/p0-priority-2026-04-27.md). (1) W1 entity_matching 보강: "X시장" 쿼리 → 전통시장 +0.15 boost · paren alias-only 매치 dampen. unit 6/6. (2) RESPOND XML leak `_XMLTagSanitizer` + 프롬프트 rule 13 unit 6/6. (3) Planner empty-plan clarification 3종 unit 4/4. (4) Eval district_code 하드코딩 제거 + drift guard. (5) status-compress 517→383 LOC. (6) Refactor Pass 2: `api/errors.py` `raise_db_unavailable / raise_not_found` 헬퍼 적용. ruff/tsc/pytest 22/22 PASS.
-> **프로덕션 v0.4.0 동기화 완료 ✅ — `c6cc60e` 기반 재배포 (저녁), 오전 `60b6de3` 대비 6 커밋 / +13,038 / -577 반영**
-> 프로덕션: `marketscope.robitlabs.co.kr` 라이브 — prod-smoke 28/28 + 신규 2 endpoint 검증 PASS
-> 배포 변경: alembic 004 (`learned_aliases`) · `/`=랜딩/`/app`=챗맵 라우트 분리 · Planner Entity Linking + Abstention + Rewriter · `/api/districts/{code}/preview` · `/api/feedback/score`
-> **E2E 회귀 (2026-04-23 저녁)**: Pass 1 = 106 test · 94 PASS · 4 FAIL (전부 test infra) · 8 SKIP → **Pass 2 hotfix 후 4 spec + 1 component 수정으로 FAIL 0** (ring0~3 chromium 66/66 + prod-smoke 28/28). ops 5종 전수 PASS. [Run log](../qa/runs/e2e-run-2026-04-23-full.md) · [Hotfix plan](../plan/qa/e2e-spec-hotfix-2026-04-23.md)
-> E2E 회귀: Ring 0~3 전체 그린 (Mock 39/39 · Real 24/24) + Ops OPS-01/02 + L1 Langfuse 7/7 + prod-smoke 7/7
-> 관측성 L1: Langfuse **trace 실제 발행 확인 완료** (dev 로컬 sanity — `done.trace_id=9d59e6455eeb42f685b71f8057915377` + `agent_done` 로그 동일 값 매핑) · langfuse SDK **v2→v3 포팅** (v2 의 legacy langchain 의존 해소) · `agent_done` 운영 로그 조인 추가. 프로덕션 env 배선 완료. [Plan](../plan/infra/llmops-l1-verification.md)
-> **2026-04-23 env 관례 분리**: `.env`=프로덕션 · `.env.dev`=로컬 개발 (pydantic/Next.js/scripts 전부 `.env.dev` 우선 로드) · Langfuse prod 워크스페이스 키 분리(`pk-lf-07a3fa78…`) + `LANGFUSE_TRACING_ENVIRONMENT` 태깅으로 dev/prod trace 격리
-> 다음 권장: (1) W1 entity_matching 재점검 · (2) Accuracy Gap KPI 재측정 (S1~S8 eval Round 2) · (3) Refactoring Phase 1 Pass 2 · (4) status-compress 필요 (> 480 LOC) · Phase 2 착수 전 선행 권장
-> **2026-04-23 신규 Audit**: Data Integrity Audit 에서 **ETL 키 불일치 (F-01, HIGH)** + **Comparison intent 수치 hallucination (F-02, HIGH)** 발견. [Report](../qa/runs/data-integrity-audit-2026-04-23.md)
-> **2026-04-23 UI Phase A~D 구현**: 랜딩 분리(`/` + `/app`) · Zero-LLM 프리뷰(`GET /api/districts/{code}/preview`) · 피드백 3-layer(카드 👍👎 + microsurvey + FAB) · 2026 UI/UX 트렌드 8축 델타 반영. Build 성공, typecheck 0 errors. [Plan](../plan/ui/landing-onboarding-feedback.md)
-> **2026-04-23 Mobile Responsive Plan Phase A+B+C 구현**: viewport/breakpoint/touch-target · BottomSheet 3-snap + BottomNav 2-tab · IME/VisualViewport 가드 + auto-scroll FAB. tsc/eslint/build 0 errors. Phase D/E/F (PWA·Perf·A11y/E2E) 미착수. [Plan](../plan/ui/mobile-responsive.md)
-> **2026-04-23 F-01 fix + Accuracy Gap W1/W2/W3 구현** ⭐: ETL 8 컬럼 NULL 버그 해소(21,333 행 재적재) + Entity Linking(pg_trgm 대체: difflib+type boost) + Abstention(classify_tool_results+attribution rule) + Coreference Rewriter(Tier1 rule+Tier2 LLM) + 배제 토큰(말고/대신/빼고) + learned_aliases 테이블(alembic 004). [Plan F-01](../plan/fix/etl-sales-column-rename-2026-04-23.md) · [Plan Accuracy Gap](../plan/fix/accuracy-gap-fix.md)
-> **2026-04-23 Refactoring Phase 1 Plan 작성**: 7 기준(R1~R7) 기반 저위험/중위험 항목 1 Pass 묶음. Pass1 = singleflight 삭제 + 레거시 E2E 8건 삭제 + status 압축 + Any import 정리. Pass2 = errors.py 래퍼 통합 + blanket except 9건 좁히기 + respond.py 헬퍼 분리 + chatStore slice 분할. [Plan](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — 구현 미착수
+
+---
+
+## 2026-04-30 — UX Sweep Phase A-F Pass 1
+
+### 개요
+- **Plan**: [ux-phase-a-f-test-plan.md](../plan/qa/ux-phase-a-f-test-plan.md)
+- ✅ 13 신규 시나리오 작성 — Phase A·B·C·D·F 6 phase × 28 항목 단위 회귀 매트릭스 확정 (기존 25 + 신규 13 = 38 시나리오)
+- ✅ tsc 0 error · 정적 회귀 9 testcase PASS (Ring0-D1 + Ring0-F1 + Ring0-F2)
+- 🔧 Ring1+ 27 시나리오는 USE_MOCK e2e stack 필요 — 본 머신 `:3001` (Vite) + `:8002` (외부 FastAPI) 점유로 user 수동 트리거 권장
+- ✅ Verdict: [ux-phase-a-f-pass1/summary.md](../qa/runs/ux-phase-a-f-pass1/summary.md)
+
+### 변경 (11 파일)
+
+| # | 파일 | 신규 시나리오 |
+|---|------|------|
+| 1 | `e2e/ring0-preflight/02-error-boundary.spec.ts` | 🆕 `Ring0-D1-RESET-LOOP` |
+| 2 | `e2e/ring0-preflight/03-tier-hook.spec.ts` | 🆕 `Ring0-F1-SSR` + `Ring0-F2-IMPORT-MAP` |
+| 3 | `e2e/ring1-features/a11y.spec.ts` | 🆕 `Ring1-F11-D8-HOVER` |
+| 4 | `e2e/ring1-features/d-perf.spec.ts` (신규) | 🆕 `Ring1-F02-D7-PERF` |
+| 5 | `e2e/ring1-features/d9-bottomnav.spec.ts` (신규, mobile-iphone) | 🆕 `Ring1-Mobile-D9-WCAG258` |
+| 6 | `e2e/ring1-features/f01-map-selection.spec.ts` | 🆕 `Ring1-F01-D10-VISUAL` |
+| 7 | `e2e/ring1-features/f11-landing.spec.ts` | 🆕 `Ring1-F11-A1-EDGE-PRIVATE` + `Ring1-F11-A4-BENTO-ALL6` |
+| 8 | `e2e/ring1-features/f12-feedback.spec.ts` | 🆕 `Ring1-F12-D5-IFRAME-BLOCK` |
+| 9 | `e2e/ring1-features/phase-b-ux-sweep.spec.ts` | 🆕 `Ring3-Negative-B5-FALSE-POS-EXT` (배열 +3) + `Ring1-F10-B4-RETRY-LOOP` |
+| 10 | `e2e/ring1-features/phase-c-ux-sweep.spec.ts` | 🆕 `Ring1-F06-C3-PERF` + `Ring1-F02-C4-FAILED` |
+| 11 | `e2e/ring2-journeys/j01-first-time-user.spec.ts` | 🆕 `Ring2-J01-A4-EDGE-EMPTY` |
+
+### 정적 회귀 PASS (stack-free, 9 testcase)
+
+```
+✓ Ring0-D1 — 4 boundary 컴포넌트 / role=status / split-panel skeleton  (4 testcase)
+✓ Ring0-D1-RESET-LOOP — boundary self-throw 없음 (정적 invariant)         🆕
+✓ Ring0-F1 — useTier 하드코딩 free + Tier 타입 export
+✓ Ring0-F2 — FeatureGate no-op (children 통과)
+✓ Ring0-F1-SSR — useTier.ts no 'use client' (server-component-friendly)   🆕
+✓ Ring0-F2-IMPORT-MAP — FeatureGate import 사용처 0 (Phase 2 머지 전)     🆕
+
+9 passed (1.4s)
+```
+
+### 다음 P0
+- 🔧 user 수동 Pass 1 트리거 (e2e stack 격리 가능한 머신/세션)
+- 🔧 chromium 38 시나리오 PASS 확인 후 → Plan 2 ([ux-final-e2e-regression-plan](../plan/qa/ux-final-e2e-regression-plan.md)) 진입 게이트
+- 🔧 mobile-iphone D9 단독 실행 검증
+- 🔧 D.7 perf invariant — production CI 머신에서 INP < 200ms 재측정
+
+---
+
+### 추가 — Plan 2 Pass 1 (통합 5 journey 신규)
+
+- **Plan**: [ux-final-e2e-regression-plan.md](../plan/qa/ux-final-e2e-regression-plan.md)
+- ✅ 통합 5 journey spec 신규 — `frontend/e2e/ring2-journeys/j06-ux-a2f-integration.spec.ts` 1 파일 (~960 LOC, 5 testcase)
+  - `Ring2-UX-A2F-J01` — onboarding-to-feedback (A.4 + B.6 + F11 + F12 + F13 + D.4)
+  - `Ring2-UX-A2F-J02` — compare 풀사이클 (B.1 + B.2 + B.3 + B.4 + B.5)
+  - `Ring2-UX-A2F-J03` — 모바일 첫 진입 (C.2 + D.2 + D.9 + B.3, mobile-iphone)
+  - `Ring2-UX-A2F-J04` — 에러복구+Tally 폴백 (D.1 + D.5 + B.4)
+  - `Ring2-UX-A2F-J05` — a11y 종합 (D.2 + D.3 + D.4 + D.6 + D.9 + WCAG)
+- ✅ tsc 0 error · next lint 0 warning · dry-list 5 testcase 인식
+- ✅ 정적 baseline 재현 9 testcase PASS (Ring0-D1 + Ring0-F1 + Ring0-F2)
+- ⚠️ Pass 1/2/3 + prod-smoke runtime 보류 — 본 머신 :3001/:8002 점유 (PID 26264 다른 프로젝트)
+- ✅ Verdict: [ux-final-e2e-2026-04-30/summary.md](../qa/runs/ux-final-e2e-2026-04-30/summary.md)
+- 🔧 다음 액션 — user 수동 Pass 1 트리거 → 38(Plan 1) + 5(j06) = 43 시나리오 chromium 전수 PASS → Pass 2 mobile viewport → Pass 3 real-DB → prod-smoke
 
 ---
 
@@ -80,247 +130,6 @@ User: "부산 해운대 알려줘"
 
 ---
 
-## 2026-04-28 (저녁) — Prod 재배포 (district-click-race fix → 라이브 적용)
-
-### 개요
-- **Plan**: [prod-redeploy-2026-04-28-evening.md](../plan/infra/prod-redeploy-2026-04-28-evening.md)
-- 이전 세션의 dev/prod compose **project name 충돌** 로 prod frontend (`:3200`) 가 stop 된 상태였음 → `marketscope.robitlabs.co.kr` 502. 동시에 git main `441ef62` (Round 1+2 race fix) 라이브 미반영.
-- A 방식 (destructive) Plan 작성 후 4 Pass 진행. 외부 nginx 변경 없음, db/redis volume 보존.
-
-### Pass 1 — 사전 점검
-- `:3200` 비어있고 `:8000` 만 dev backend 점유 확인. `.env` (prod) 정상. git head `441ef62`.
-
-### Pass 2 — 빌드 + 기동
-- `fix-verify-fe` 임시 컨테이너 stop+rm
-- `.env.dev` → `.bak` 임시 이동 (prod URL bake 보호)
-- `docker compose -f docker-compose.prod.yml build frontend backend migrate` (frontend `sha256:46815639...`)
-- `docker compose -f docker-compose.prod.yml up -d` — db / redis healthy, migrate exit 0, backend healthy 22s, frontend started 8s
-- `.env.dev` 복구
-
-### Pass 3 — Live Smoke (P1~P9 ALL PASS)
-| # | 검증 | 결과 |
-|---|------|------|
-| P1 | `127.0.0.1:3200` | 200, MarketScope 페이지 |
-| P2 | `127.0.0.1:8000/health` | `{"status":"ok"}` |
-| P3 | `https://marketscope.robitlabs.co.kr` | **200** (502 → 회복) |
-| P4 | `/api/health/detail` | use_mock=false, llm_provider=anthropic |
-| P5 | `/api/districts?limit=2` | total=1650 |
-| P6 | `/api/districts/3120189/preview` | 강남역 + top 3 업종 |
-| P7 | Playwright `f01-preview-real-db.spec.ts` × prod URL | **3/3 PASS** (A→B→A · A→AI→B · 3-rapid) |
-| P8 | fix baked 검증 | frontend `currentRequestId` 2 hits · backend `_session_inflight` 11 hits |
-| P9 | SSE `/api/chat` curl | 강남역 요약 카드 (perStoreSales=27M+) + 인사 fast-path 정상 |
-
-### Pass 4 — Cleanup + Rollback Safety
-- `prev-2026-04-28b` tag 부여: frontend `46815639e4f6` / backend `6be3098215b9`
-- 외부 도메인 5회 roundtrip 모두 200 (105~277ms)
-- 컨테이너 4종 healthy: frontend `:3200` / backend `:8000` / db / redis
-
-### 사용자 시나리오 시점별 변화
-| 시점 | 상권 A 분석 → 다른 상권 B 클릭 | 사용자 체감 |
-|------|------|------|
-| ~Round 1 push 전 | sendMessage isLoading return + ChatPanel disabled | "먹통" |
-| Round 1+2 push 후 (`ba9553f`) | 코드 fix OK 그러나 prod 미배포 | 동일 증상 |
-| **본 재배포 후** (`46815639...`) | abort+restart + watchdog + useMapSync 가드 완화 | **PreviewCard B 즉시 표시 + AI 분석 정상 진행** ✅ |
-
-### 후속
-- 🔧 dev/prod compose project name 충돌 — `docker-compose.prod.yml` 에 `name: marketscope-prod` 추가 검토 (다음 세션)
-- 🔧 prod-smoke spec 자동화 (`f01-preview-real-db.spec.ts` 를 prod-smoke 묶음에 추가)
-
----
-
-## 2026-04-28 — District click race / "먹통" fix (Round 2 hotfix 포함)
-
-### 개요
-- **Plan**: [district-click-race-2026-04-28.md](../plan/fix/district-click-race-2026-04-28.md)
-- 사용자 1차 보고: "상권 A 클릭 → AI 리포트까지 본 뒤 다른 상권 누르면 먹통" — Auto mode 로 진단 → Plan → 구현 → 검증 일괄 진행 (Round 1).
-- 사용자 2차 보고: "다른 지역 상권 프리뷰 불러오기 작동안한다" → Round 2 hotfix 3종 추가: (a) `useMapSync` 가드를 `lastHandledRef` + 실제 렌더된 `preview.district_code` 비교로 완화 — sendMessage 가 `preview: null` 로 wipe 한 뒤 같은 상권 다시 클릭해도 `setPreview` 재호출 보장. (b) `setPreview` 에 10s **watchdog timeout** + finally 의 defensive `previewLoading=false` reset — fetch hang 시 사용자 stuck 방지. (c) `ChatPanel` 의 `previewError` UI 명시 (에러 메시지 + "다시 시도" 버튼, `data-testid=district-preview-error|retry`).
-- ⚠ **운영 안내**: 본 fix 는 git main `7941726` (Round 1) + `ba9553f` (Round 2). 프로덕션 (`marketscope.robitlabs.co.kr`) 및 사용자 docker container 는 모두 미배포 상태 (`server.js` 에 `currentRequestId` 0건 grep 으로 확인) 이므로 **재빌드 + 재기동 전까지 동일 증상 지속**.
-- ✅ **검증**: host dev stack (USE_MOCK=true backend :8001 + next dev :3001) 으로 9/9 PASS, **재빌드된 docker frontend 이미지 (`sha256:7853e2e5…`) 를 :3010 에 띄워 real DB + real backend 환경 3/3 PASS**. 자세한 시나리오 자산: `frontend/e2e/ring1-features/f01-preview-{rapid-switch,ui-click,stress,real-db}.spec.ts` (4 spec / 12 test).
-- 🔧 **Iteration log**: Iter1 backend probe (preview API 4-11ms, chat 진행 중 preview 동시 호출 정상) · Iter2 store-단위 시나리오 2/2 · Iter3 UI 클릭 4/4 (A→AI→B→AI / 3-rapid / same-district / chat-in-flight input) · Iter4 stress 3/3 (chat-origin → map-origin / watchdog timeout / 5-thrash) · Iter5 docker rebuilt :3010 real DB 3/3.
-- 🔧 **사용자 환경 가이드**: `:3000` 은 `robitlabs_home_container` (다른 프로젝트) 점유 중. 본 프로젝트 docker frontend 를 사용하려면 (a) 임시 verifier `fix-verify-fe` 컨테이너 :3010 사용, (b) `robitlabs_home_container` 잠시 stop 후 `docker compose up -d frontend`, 또는 (c) docker-compose.yml 의 frontend port mapping 을 :3010 등으로 영구 변경.
-
-### 진단 — 6 근본 원인
-| # | 위치 | 메커니즘 | 심각도 |
-|---|------|----------|--------|
-| C1 | `chatStore.ts:189` | `if (state.isLoading) return` 가 새 send 즉시 무시 | CRITICAL |
-| C2 | `ChatPanel.tsx:84,110,114` | PreviewCard CTA / Chips / Input 모두 `disabled={isLoading}` 잠금 | CRITICAL |
-| C3 | `chatStore.setPreview:128-129` | `lastDistrictCode` 기반 race 가드가 stale 응답 채택 | HIGH |
-| C4 | `eventHandlers.ts:206-215` | 이전 stream 의 늦은 `done` 이 새 stream `isLoading=true` 덮음 | HIGH |
-| C5 | `chat.py:227` | per-session lock 부재 — 같은 session_id 동시 진입 시 ConversationHistory race | MED |
-| C6 | `eventHandlers.ts:137` | 1.5s setTimeout 이 새 stream agentSteps 비움 | LOW |
-
-### 적용 패턴 (AI/시스템)
-- **Stale-while-cancel + Monotonic requestId** (frontend) — `chatStore.currentRequestId` 카운터 + `EventHandlerContext.requestId` capture + `isStale(ctx)` 가드로 모든 SSE event drop. `text` 의 1.5s setTimeout 콜백 안에서도 `myReq !== ctx.get().currentRequestId` 재확인.
-- **AbortController + Monotonic seq** (frontend) — `_previewSeq` / `_previewAbort` 모듈 private state. `setPreview` 진입 시 이전 fetch cancel + seq++. 응답 도착 시 `seq !== _previewSeq` 면 폐기. `lib/api.ts::fetchDistrictPreview` 에 `signal?: AbortSignal` 추가 (backwards-compatible).
-- **Per-session async cancellation** (backend) — `_session_inflight: dict[str, asyncio.Task]` 레지스트리 + `_claim_session_slot` (이전 task `cancel()` + `wait_for(timeout=2s)`) + `_register_session_task` / `_release_session_task`. `event_generator` 진입 시 claim → register, finally 에서 release.
-
-### 변경 (7 파일)
-| 파일 | 변경 |
-|------|------|
-| `frontend/src/stores/chatStore.ts` | `currentRequestId` 카운터 추가 · `sendMessage` 진입 가드 abort+restart · `setPreview` AbortController + monotonic seq · `clearMessages` 리셋 |
-| `frontend/src/lib/eventHandlers.ts` | `EventHandlerContext.requestId` 추가 · `isStale()` helper · 진입 가드 + 1.5s setTimeout 가드 |
-| `frontend/src/components/chat/ChatPanel.tsx` | PreviewCard / Chips / Input `disabled={false}` 분리 |
-| `frontend/src/lib/api.ts` | `fetchDistrictPreview(code, role, signal?)` 시그니처 확장 |
-| `server/server/api/routes/chat.py` | `_session_inflight` + 3 helper + `event_generator` 통합 |
-| `server/tests/test_chat_session_concurrency.py` | 신규 4 testcase (cancel previous · no-op unknown · register/release · newer task no-evict) |
-| `frontend/e2e/ring1-features/f01-rapid-switch.spec.ts` | 신규 2 spec (RAPID-SWITCH · RAPID-CHIP) — `__chatStore.currentRequestId` 단조 증가 + 두 user message 검증 |
-
-### 검증
-- ✅ ruff (server) — All checks passed
-- ✅ tsc (frontend) — 0 error
-- ✅ **pytest 49/50 PASS** — 신규 4건 + 기존 45건. 1 fail = `test_smoke::langfuse_enabled` host env pre-existing (변경 무관)
-- 🔧 Playwright f01-rapid-switch.spec.ts 작성 — docker e2e stack 별도 회귀 권장
-
-### Memory 신규 4건
-- `feedback_chat_inflight_guard.md` — sendMessage isLoading 시 abort+restart, return 무시 금지
-- `feedback_setpreview_lastcode_race.md` — fetch race 가드는 monotonic seq + AbortController
-- `feedback_sse_done_staleness.md` — `handleSSEEvent` 진입 시 ctx.requestId vs store.currentRequestId 비교
-- `feedback_session_concurrency_lock.md` — per-session in-flight task cancel + wait, 글로벌 semaphore 부족
-
-### 사용자 시나리오 변화
-- **이전**: 상권 A → AI 분석 진행 중 → 상권 B 클릭 → "AI 분석 보기" 버튼 클릭 시 `state.isLoading=true` 가드로 silent return → 사용자에게는 freeze 와 동일.
-- **현재**: 상권 A → AI 분석 진행 중 → 상권 B 클릭 → "AI 분석 보기" 클릭 → 프론트가 A 의 fetch abort + 새 send 시작. 백엔드는 A 의 LangGraph task `cancel()` + 2s 종료 대기 후 B 진행. SSE 이벤트 인터리브 0건 (staleness 가드).
-
-### 다음 P0
-- 🔧 docker e2e stack 에서 `f01-rapid-switch.spec.ts` 회귀 (RAPID-SWITCH + RAPID-CHIP)
-- 🔧 100ms debounce 검토 — 동일 chip 빠른 더블클릭 시 user message 2건 추가되는 동작 정제 (현재는 의도된 동작이지만 UX 보강 여지)
-- 🔧 `PreviewCard` / `ChatInput` 진행 중 hint 텍스트 ("진행 중인 분석을 중단하고 새로 시작합니다") — Phase 4 polish
-
----
-
-## 2026-04-28 — 프로덕션 재배포 + Tool 함수명 노출 fix
-
-### 개요
-- **Plan**: [prod-deploy-2026-04-28.md](../plan/infra/prod-deploy-2026-04-28.md)
-- 운영 컨테이너 4 days old (`2026-04-24T05:34Z`, alembic 004) → 04376a4 동기화. alembic 005 + Langfuse 11차원/6스코어 + W1 보강 + 신규 planner 4건 + 매출 단위 가드 + lucide-react 1건 적용.
-
-### Pass 1 — 사전 회귀 (host venv)
-- backend pytest **34/35 PASS** (1 fail = `test_settings_loads_with_mock_defaults` env-dep 사전 알려진 케이스 — host에 Langfuse 키 존재로 langfuse_enabled=True 평가)
-- ruff `server/` All checks passed
-- 이전 image snapshot tag — `prev-2026-04-24` 3종 (rollback safety)
-
-### Pass 2 — Build + Migrate
-- `.env.dev` 임시 이동(`predeploy-2026-04-28.bak`) → 4 image build → 즉시 복구
-- 신규 IMAGE IDs: backend `63a494302bef` · frontend `e8921f344424` · migrate `caf17802568b`
-- Frontend baked-URL 검증: `https://marketscope.robitlabs.co.kr` 정상 박힘 (P9 가드 통과)
-- alembic 004 → 005 (`estimated_sales.monthly_sales COMMENT`) — zero-downtime, idempotent. `cleanup_alembic + upgrade head` exit 0
-- 신규 헬퍼 import 검증: `attach_summary_observation`, `emit_score`, `district_type_for` 모두 `True`
-- Langfuse v3 (`langfuse.langchain.CallbackHandler`) import OK
-
-### Pass 3 — Cut-over + Live Smoke (curl 11종)
-- backend healthy ~20s + frontend started
-- P1 / 랜딩 200 (data-theme=light + MarketScope) · P2 /proxy/kakao-sdk 200 (4095 bytes)
-- P3 polygons (no-bounds 500 features / bounds 90 features) · P4 강남역 → `3120189`
-- P5 SSE 강남역 요약 — `perStoreSales=27,307,409 원/월` 정상 + done.trace_id 동봉 + attribution `(get_district_summary)` (1차 동작 — 후속 fix 대상)
-- P6 SSE 보문역 편의점 — recommend `per_store_sales` 5건 모두 < 1B/월 (32M~201M)
-- P7 /app 200 (data-testid=toolbar-logo + statusbar)
-- P8 /api/districts/3120189/preview top_categories 3종
-- P9 feedback/score: empty=422 / valid `value="up"` → 204 (schema 신규 변경 — int → up/down 문자열)
-- P10 clarification "이 지역 요약" → tool 0건 + suggestion 2건 + done.trace_id ✅
-- P11 done.trace_id Langfuse L1 정상
-
-### Pass 4 — Playwright 회귀
-- **prod-smoke 30/30 PASS** (chromium 9/9 + iphone/galaxy 14/14 + ipad 7/7, 6 skip는 P8/P9 chromium-only 의도)
-- ring0-preflight: 5 PASS (R0-1 backend health · R0-3 polygons · R0-4 mode · stats-aggregate AGG-01~04 신규 Langfuse 11차원/6스코어 회귀) · 2 expected fail (R0-2/R0-LANDING은 `helpers/prodGuard.ts`의 의도된 prod 도메인 fetch 차단)
-- ring1~3 mock-fixture spec은 prod 머신에 별도 e2e stack(`docker-compose.e2e.yml`) 부재로 라이브 prod 부적합 — dev/staging 머신에서 별도 실행 권장
-
-### 추가 핫픽스 — LLM 응답 raw 함수명 노출
-- **사용자 보고**: P5 SSE 응답 텍스트에 `유동인구: 하루 평균 81만 5천명 (get_district_summary)` 같이 raw 함수명 그대로 노출
-- **근본 원인**: `agent/utils/abstention.py::ATTRIBUTION_PROMPT_RULE` 가 LLM에게 수치 옆에 `(tool_name)` 표기를 의무화 (W1 hallucination 가드 의도). 그러나 `numeric_sanity` evaluator (data-trust-reliability-2026-04-24) 가 이미 attribution tag 없이도 entity mismatch 까지 잡는 더 정확한 검증을 수행 → attribution tag 는 잉여 + UX 손상
-- **수정 (4 파일)**:
-  - `abstention.py` — `ATTRIBUTION_PROMPT_RULE` 을 "raw 함수명 사용자 노출 금지 + 자연어 출처 표기" 로 재작성. 11 tool 이름 명시 금지 목록. `ABSTENTION_PROMPT_ADDENDUM_EMPTY` 의 attribution tag 예시도 정정
-  - `agent/nodes/respond.py` — `_ToolTagSanitizer` 신규 (97 LOC). chunk-aware stream filter, `_TOOL_NAME_INNER` 정규식이 `get_*` / `compare_*` / `recommend_*` / `estimate_*` / `simulate_*` / `detect_*` 11개 tool 매칭. `(자본금 부족)` 같은 일반 한국어 괄호는 보존. `_emit` chain = XML sanitiser → ToolTag sanitiser → SSE
-  - `respond.py::RESPOND_SYSTEM_PROMPT` rule 13 — `(수치 출처 표기 (tool_name) 은 일반 괄호 표기이므로 허용됩니다.)` → "**도구 함수명 노출 금지** — 출처는 자연어로만 표기"
-  - `respond.py` — `scan_unattributed_numbers` 호출 제거 (잉여 telemetry, numeric_sanity 가 더 정확)
-  - 신규 `tool_sanitizer.dropped_count > 0` 시 `respond_tool_tag_stripped` 로그 (LLM relapse 추적)
-- **단위 테스트** `server/tests/test_tool_tag_sanitizer.py` 신규 11/11 PASS — simple/backticked/quoted tool tag · chunk boundary split (open paren / inside name) · 한국어 괄호 보존 · 영어 일반 괄호 보존 · 다중 tag · 미완 paren overflow flush · empty input · compare/estimate 등
-- **회귀 검증**: backend cache rebuild 11s → up -d backend → live SSE `강남역 요약` 재실행. 응답 7,498 bytes · text 이벤트 30+개 · raw tool name pattern (`\(get_*\)|\(recommend_*\)|\(compare_*\)|\(estimate_*\)|\(simulate_*\)|\(detect_*\)`) **0건** ✅. 답변 자연도 향상 — 수치 옆 노이즈 사라짐
-- **prod-smoke chromium 9/9 재확인 PASS** — backend 재빌드 사이드이펙트 0
-
-### 참조 메모리 / 후속
-- 메모리 활용: `feedback_respond_tool_use_xml_leak` (sanitizer 패턴 재사용) · `feedback_env_convention_inverted` (.env.dev 임시 이동 자동화 후보)
-- 운영 권장: 일정 기간 `respond_tool_tag_stripped count` 모니터 → 0 유지 시 prompt rule 만으로 충분, > 0 지속 시 prompt 추가 강화 또는 fewshot 추가
-- 후속 P0: ring1~3 mock stack 을 prod 머신에 별도 셋업 (`docker-compose.e2e.yml` 작성 — 격리된 backend port + USE_MOCK=true) — 라이브 회귀 자동화 가능
-
----
-
-## 2026-04-27 — P0 우선순위 6건 (Plan p0-priority-2026-04-27)
-
-### 개요
-- **Plan**: [p0-priority-2026-04-27.md](../plan/fix/p0-priority-2026-04-27.md)
-- 2026-04-24 Round 2 eval 후속 P0 6건 + 위생 작업. unit-test 우선, 프로덕션 영향 0.
-
-### 변경 / 결과
-
-| # | 영역 | 변경 | 검증 |
-|---|------|------|------|
-| 1 | W1 entity_matching | `_market_type_boost` 신규 ("X시장" → 전통시장 +0.15) · paren alias-only 매치 damp (`_PAREN_ALIAS_ONLY_DAMP=0.5`) | `tests/test_entity_matching.py` 6/6 PASS |
-| 2 | Respond XML leak | (이전 변경분) `_XMLTagSanitizer` + 프롬프트 rule 13 | `tests/test_xml_sanitizer.py` 6/6 PASS |
-| 3 | Planner clarification | (이전 변경분) `_CLARIFICATION_TEMPLATES` 3종 + 4 트리거 경로 | `tests/test_planner_clarification.py` 4/4 PASS |
-| 4 | Eval district_code 하드코딩 | `run_accuracy_round2.sh` `WITH_CODES=0` default · `verify_district_codes.py` drift guard · `trust_scenarios.verify_target_codes()` | 코드 import OK |
-| 5 | status-compress | 04-23 5섹션 + iOS BottomSheet 섹션 → 이력 테이블 1행씩 | 517 → 383 LOC |
-| 6 | Refactor Pass 2 (부분) | `api/errors.py` `raise_db_unavailable / raise_not_found` (`-> NoReturn`) · districts.py 3건 + map_data.py 3건 적용 | ruff All passed |
-
-### Pass 2 잔여 (defer)
-- `chatStore.ts` (381 LOC) slice 분할 — 36 consumer 영향 + 슬라이스 typing 복잡도 대비 cosmetic 가치 낮음
-- `except Exception` 9건 좁히기 — Plan 의 핵심 4 파일은 후속 세션
-- routes 의 `HTTPException` validation 패턴 통합 — 4xx 본문은 그대로 두는 게 가독성 우수
-
-### 메모리 활용
-- [feedback_eval_district_code_hardcode](../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_eval_district_code_hardcode.md) — DB drift guard 설계
-- [feedback_respond_tool_use_xml_leak](../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_respond_tool_use_xml_leak.md) — sanitizer 검증 angle
-- [feedback_formatter_strips_unused_imports](../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_formatter_strips_unused_imports.md) — `raise_not_found` 추가 import 가 1차 ruff F821 → 같은 Edit 안에서 import+사용 묶어 해소
-
-### 다음 P0
-- 🔧 Accuracy Eval Round 3 — district_code 미동봉 모드로 W1 entity_matching 신규 boost 회귀
-- 🔧 chatStore slice 분할 (필요 시 별도 Plan)
-- 🔧 backend pytest 인프라 — `tests/` 4 파일 모인 김에 fixture/conftest 정비
-
----
-
-## 2026-04-28 — Langfuse 전체 통계 집계 Plan + Phase 1+2 구현
-
-### 개요
-- **Plan**: [langfuse-aggregate-stats-2026-04-28](../plan/infra/langfuse-aggregate-stats-2026-04-28.md)
-- 단일 trace drill-down 만 보이는 현 Langfuse 상태에서 cohort/추세 통계까지 자동화. 기존 v3 tracer 파이프라인 깨지 않고 누락 차원/Score 메우는 게 목표.
-
-### 변경 (3 파일 + 2 신규)
-| # | 파일 | 변경 |
-|---|------|------|
-| 1 | `server/services/langfuse_tracer.py` | `district_type_for` (4 prefix 매핑) · `attach_summary_observation` (v3 `start_observation` 우회) · `emit_score` 헬퍼. 모두 graceful degrade |
-| 2 | `server/agent/graph.py` | astream 루프에서 11 차원 capture (intent/confidence/response_mode/exec_round/plan_size/refs/category/ambiguous/tool_results/tool_errors/cards). finally 에서 attach + 6 score emit |
-| 3 | `server/tests/test_langfuse_aggregate.py` | 신규 — 10 testcase (district_type_for / attach / emit graceful degrade 전수) |
-| 4 | `frontend/e2e/ring0-preflight/stats-aggregate.spec.ts` | 신규 — 4 spec (AGG-01 trace_id 동봉 / AGG-02 quality_match_rate / AGG-03 greeting / AGG-04 SSE 포맷 불변) |
-| 5 | `docs/plan/infra/langfuse-aggregate-stats-2026-04-28.md` | 신규 — 4 Phase Plan (차원 보강 / Score / REST ETL / KPI 마크다운) |
-
-### Phase 1 — Trace 차원 보강 (`update_trace_post_hoc` 우회)
-v3 SDK 에 `update_trace` 가 없어 동일 `trace_id` 의 0-duration `start_observation(as_type="agent")` 으로 metadata 동봉. CallbackHandler 가 만든 langchain spans 와 같은 trace 에 묶여 UI 의 trace-level 필터/groupby 에 반영.
-
-### Phase 2 — Quality Score 6종 emit
-`numeric_match` / `intent_confidence` / `tool_error_rate` / `abstention_triggered` / `ambiguous_disambiguation_needed` / `quality_severity`. 기존 `user_feedback` (±1) 과 합쳐 trace 당 최대 7종 score.
-
-### 검증
-- ✅ ruff (graph + tracer) — All checks passed
-- ✅ pytest 신규 — **10/10 PASS**
-- ✅ pytest 전체 — 34/35 (test_smoke 1건 env-dep pre-existing)
-- ✅ Playwright stats-aggregate — **16/16 PASS** (chromium + iphone + galaxy + ipad × 4 spec)
-- ✅ chat smoke — `done.trace_id=333172da75de77c7421a7db37c7dec64` SSE 동봉 + `agent_done` 로그 동일
-- ✅ F02-H3/H4 chat 회귀 (frontend 경유) PASS
-
-### 발견된 환경 이슈 (P1 follow-up)
-- ⚠️ `LANGFUSE_OTEL_INSECURE=true` 부분 패치 — OTEL exporter 만 verify 우회, `create_score`/`start_observation` 의 httpx client 는 SSL 그대로. dev MITM 환경에서 `Unexpected error occurred` SDK 노이즈. graceful degrade 가 swallow → SSE / agent_done 영향 0. prod 정상 SSL 이라 영향 없음.
-
-### Memory 신규 2건
-- `feedback_langfuse_v3_no_update_trace.md` — `update_trace` 없음, `start_observation` 우회 패턴
-- `feedback_langfuse_otel_insecure_partial.md` — `LANGFUSE_OTEL_INSECURE` 가 REST 호출엔 미적용
-
-### 다음 P0
-- 🔧 Phase 3 — REST API ETL 스크립트 (`scripts/observability/aggregate_langfuse.py`)
-- 🔧 Phase 4 — 월간 KPI 마크다운 자동 생성 (`docs/observability/kpi-{YYYY-MM}.md`)
-- 🔧 prod 배포 후 Langfuse UI 에서 신규 11 차원 + 6 score 가시성 확인
-- 🔧 dev SSL gap 해소 (REQUESTS_CA_BUNDLE 또는 SDK httpx transport 패치) — 선택적
-
----
 
 ## 전략
 
@@ -377,12 +186,17 @@ Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(
 
 ---
 
-## 이력 요약 (2026-03-30 ~ 2026-04-23)
+## 이력 요약 (2026-03-30 ~ 2026-04-28)
 
 > 상세는 git history (`git log --follow docs/status/current-status.md`) + `docs/qa/runs/` + `docs/plan/` 로 복원.
 
 | 날짜 | 주요 내용 |
 |------|----------|
+| 2026-04-28 (저녁) | Prod 재배포 — district-click-race fix 라이브 적용. dev/prod compose project name 충돌로 `:3200` stop → 502 → A 방식 destructive 4 Pass. frontend `46815639...` + backend `6be3098215b9` healthy. P1~P9 ALL PASS · Playwright real-DB 3/3 · prev-2026-04-28b tag. [Plan](../plan/infra/prod-redeploy-2026-04-28-evening.md) |
+| 2026-04-28 | District click race / "먹통" fix — 6 근본 원인 (sendMessage isLoading return / ChatPanel disabled / setPreview lastDistrictCode race / SSE late-done / per-session lock 부재 / 1.5s setTimeout). Stale-while-cancel + Monotonic requestId + AbortController + Per-session async cancellation. ruff/tsc/pytest 49/50 · memory 4건 신규. [Plan](../plan/fix/district-click-race-2026-04-28.md) |
+| 2026-04-28 | 프로덕션 재배포 (`52ae7db → 04376a4`) + Tool 함수명 노출 fix. alembic 005 + Langfuse 11차원/6스코어 + W1 X시장 boost + planner clarification + numeric_sanity + respond.py 502→280 LOC. ATTRIBUTION_PROMPT_RULE + `_ToolTagSanitizer` 11종 가드. prod-smoke 30/30 · live raw tool name leak 0건. [Plan](../plan/infra/prod-deploy-2026-04-28.md) |
+| 2026-04-28 | Langfuse 전체 통계 집계 Phase 1+2 — v3 tracer 에 `district_type_for` / `attach_summary_observation` (start_observation 우회) / `emit_score`. graph finally 에서 11 차원 metadata + 6 score emit. unit 10/10 + Playwright stats-aggregate 16/16 PASS. [Plan](../plan/infra/langfuse-aggregate-stats-2026-04-28.md) |
+| 2026-04-27 | P0 우선순위 6건 — W1 entity_matching X시장 boost + paren-alias dampen, RESPOND XML leak `_XMLTagSanitizer` (rule 13), Planner empty-plan clarification 3종, Eval district_code 하드코딩 제거 + drift guard, status-compress 517→383, Refactor Pass 2 `api/errors.py` 헬퍼. ruff/tsc/pytest 22/22 PASS. [Plan](../plan/fix/p0-priority-2026-04-27.md) |
 | 2026-04-24 | User-Journey Sweep 16 journey/45 turn — Pass1 71.3% → **Pass3 99.1% (16/0 PASS)**. Planner 4 fix (compare-coref history fallback · rule 다중매치 우선순위 · 장문 synthesis summary fan-out · risk→recommendation 교정). [Plan](../plan/qa/user-journey-quality-2026-04-24.md) |
 | 2026-04-24 | Langfuse 비용 커버리지 fix — dev 컨테이너 `langfuse==2.60.10` stale → v3 업그레이드 후 `done.trace_id=310fc8bf…` 실 발행. Eval harness `REQUIRE_TRACE=1` preflight + `validate_env.py` SDK drift 가드. [Plan](../plan/infra/langfuse-cost-coverage-fix-2026-04-24.md) |
 | 2026-04-24 | Data Trust Reliability Phase A+B — `numeric_sanity` evaluator (216 LOC, 6/6 unit) + alembic 005 컬럼 코멘트 + RESPOND SALES_PRESENTATION_RULES 프롬프트 + trust eval 25/30 (5 상권). L3 한계: Planner entity mismatch 는 W1 별도 Plan. [Plan](../plan/fix/data-trust-reliability-2026-04-24.md) |

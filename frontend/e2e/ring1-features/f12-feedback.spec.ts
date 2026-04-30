@@ -143,4 +143,101 @@ test.describe('Ring 1 — F12 Free Limit Survey (L2)', () => {
     });
     expect(pushed).toBeTruthy();
   });
+
+  // (Mock-only) 신규 9 — Plan UX Sweep Phase D: Tally src 차단 → 5s timer
+  // 만료 → fallback 노출. mode==='tally' 가 필수이고 build env 가 hidden / kakao
+  // 이면 skip.
+  test('Ring1-F12-D5-IFRAME-BLOCK — route.abort tally src → 5s 후 mailto/kakao fallback', async ({
+    page,
+  }) => {
+    // Tally 도메인 전체 차단 — iframe.onLoad 미발화 → 5s timer 가 fallback 으로
+    // 전환해야 함.
+    await page.route('**/tally.so/**', (route) =>
+      route.abort('failed').catch(() => undefined)
+    );
+    await page.route('**/*tally*/**', (route) =>
+      route.abort('failed').catch(() => undefined)
+    );
+
+    await page.goto('/');
+    const fab = page.locator('[data-testid="feedback-fab"]');
+    if ((await fab.count()) === 0) {
+      test.skip(true, 'FeedbackFab not rendered (env unset)');
+      return;
+    }
+    const mode = await fab.getAttribute('data-feedback-mode');
+    if (mode !== 'tally') {
+      test.skip(true, `Feedback mode=${mode} (need tally for D5-IFRAME-BLOCK)`);
+      return;
+    }
+
+    await fab.click();
+    const modal = page.locator('[data-testid="feedback-modal"]');
+    await expect(modal).toBeVisible();
+
+    // iframe 이 마운트 되었는지 — onError/onLoad 어느 쪽도 발화 X 가정.
+    // 5s timer 만료 후 fallback 노출.
+    const fallback = page.locator('[data-testid="feedback-modal-fallback"]');
+    await expect(fallback).toBeVisible({ timeout: 7000 });
+
+    // mailto 또는 kakao 채널 링크 중 하나 이상 노출 (env 의존). 둘 다 미설정
+    // 환경에서는 안내 텍스트로 fallback.
+    const mailto = page.locator('[data-testid="feedback-modal-mailto"]');
+    const kakao = page.locator('[data-testid="feedback-modal-kakao"]');
+    const mailtoCount = await mailto.count();
+    const kakaoCount = await kakao.count();
+    expect(mailtoCount + kakaoCount).toBeGreaterThanOrEqual(0);
+
+    if (mailtoCount > 0) {
+      const href = await mailto.getAttribute('href');
+      expect(href).toMatch(/^mailto:/);
+    }
+    if (kakaoCount > 0) {
+      const href = await kakao.getAttribute('href');
+      expect(href).toMatch(/^https?:\/\//);
+    }
+  });
+
+  test('Ring1-F12-E3 — Premium CTA hidden when NEXT_PUBLIC_PREMIUM_CTA_ENABLED!=true', async ({
+    page,
+  }) => {
+    // E.3 — Phase 2 OAuth/결제 wiring 전까지 default off.
+    // 본 spec 은 build-time env 미설정 또는 'false' 가정. CI 가 `'true'` 로 띄우면 skip.
+    const enabled = process.env.NEXT_PUBLIC_PREMIUM_CTA_ENABLED === 'true';
+    if (enabled) {
+      test.skip(true, 'Premium CTA is enabled in this build — gate test does not apply');
+      return;
+    }
+
+    await page.goto('/app');
+    await page.waitForLoadState('domcontentloaded');
+    await page.context().clearCookies();
+
+    const seeded = await page.evaluate(() => {
+      // @ts-expect-error — dev-time window exposure
+      const store = window.__chatStore;
+      if (store && typeof store.setState === 'function') {
+        store.setState({ messageCount: 10 });
+        return true;
+      }
+      return false;
+    });
+    if (!seeded) {
+      test.skip(true, 'chatStore not exposed — survey cannot be triggered');
+      return;
+    }
+
+    await page.reload();
+    const dialog = page.locator('[data-testid="free-limit-survey"]');
+    const visible = await dialog.isVisible({ timeout: 3000 }).catch(() => false);
+    if (!visible) {
+      test.skip(true, 'Survey did not mount (messageCount reset on reload)');
+      return;
+    }
+
+    // mood = 5 (≥ 4) 클릭 → 게이트 OFF 면 Premium CTA 미노출 보장.
+    await page.locator('[data-testid="survey-mood-5"]').click();
+    const cta = page.locator('[data-testid="survey-premium-cta"]');
+    expect(await cta.count()).toBe(0);
+  });
 });

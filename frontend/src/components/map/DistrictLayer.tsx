@@ -52,6 +52,8 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
   const select = useDistrictStore((s) => s.select);
   const setHovered = useDistrictStore((s) => s.setHovered);
   const addToCompare = useDistrictStore((s) => s.addToCompare);
+  const removeFromCompare = useDistrictStore((s) => s.removeFromCompare);
+  const deselect = useDistrictStore((s) => s.deselect);
   const selectedCode = useDistrictStore((s) => s.selected?.code);
   const isCompareMode = useDistrictStore((s) => s.isCompareMode);
   const compareList = useDistrictStore((s) => s.compareList);
@@ -122,17 +124,16 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
         });
 
         window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
-          if (!isActive(feature.code)) {
-            polygon.setOptions({
-              fillOpacity: DEFAULT_STYLE.fillOpacity,
-              strokeWeight: DEFAULT_STYLE.strokeWeight,
-            });
-          }
+          // D.10 — 항상 styleFor 로 재계산해서 compare 슬롯 색 race 방지.
+          // hover 중 compareList / selected 가 바뀌어도 stale DEFAULT 로 덮이지
+          // 않도록 selected/compare/default 분기를 일관 적용.
+          polygon.setOptions(styleFor(feature.code));
           setHovered(null);
         });
 
         // Click: in compare mode add to compareList (up to 3) and also sync
         // the "current" selection so chat context / StatusBar follow along.
+        // 같은 상권 재클릭 (B.1): 비교 모드 OFF → deselect, ON → 비교 슬롯 제거.
         window.kakao.maps.event.addListener(polygon, 'click', () => {
           const district = {
             code: feature.code,
@@ -141,7 +142,21 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
             center: feature.center,
           };
           if (isCompareModeRef.current) {
+            const inCompare = compareCodesRef.current.includes(feature.code);
+            if (inCompare) {
+              removeFromCompare(feature.code);
+              if (selectedCodeRef.current === feature.code) {
+                deselect();
+              }
+              return;
+            }
             addToCompare(district);
+            select(district, 'map');
+            return;
+          }
+          if (selectedCodeRef.current === feature.code) {
+            deselect();
+            return;
           }
           select(district, 'map');
         });
@@ -149,7 +164,7 @@ export default function DistrictLayer({ mapInstance }: DistrictLayerProps) {
         polygonsRef.current.set(feature.code, polygon);
       });
     },
-    [activeLayers, select, setHovered, addToCompare, styleFor]
+    [activeLayers, select, deselect, setHovered, addToCompare, removeFromCompare, styleFor]
   );
 
   // On selection / compare-mode / compareList change: update polygon styles

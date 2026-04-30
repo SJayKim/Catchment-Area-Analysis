@@ -1,7 +1,10 @@
 'use client';
 
 import { memo } from 'react';
+import { X } from 'lucide-react';
 import { CompareCardData } from '@/lib/types';
+import { useDistrictStore } from '@/stores/districtStore';
+import { useToastStore } from '@/stores/toastStore';
 import SourcesCitation from './SourcesCitation';
 
 interface CompareCardProps {
@@ -30,6 +33,8 @@ function Winner({ values, higherIsBetter = true }: { values: number[]; higherIsB
 
 function CompareCard({ data }: CompareCardProps) {
   const card = data as CompareCardData;
+  const removeFromCompare = useDistrictStore((s) => s.removeFromCompare);
+  const showToast = useToastStore((s) => s.show);
 
   if (!card.districts || !card.district_codes) {
     return (
@@ -108,20 +113,54 @@ function CompareCard({ data }: CompareCardProps) {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
               <th className="text-left px-4 py-2 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}></th>
-              {names.map((name, i) => (
-                <th key={i} className="text-center px-3 py-2 text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                  {name}
-                </th>
-              ))}
+              {names.map((name, i) => {
+                const code = codes[i];
+                return (
+                  <th
+                    key={code ?? i}
+                    className="text-center px-3 py-2 text-xs font-semibold"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    <div className="inline-flex items-center gap-1.5">
+                      <span>{name}</span>
+                      {code ? (
+                        <button
+                          type="button"
+                          data-testid={`compare-card-remove-${code}`}
+                          aria-label={`${name} 비교에서 제거`}
+                          onClick={() => {
+                            removeFromCompare(code);
+                            showToast(
+                              `${name} 이(가) 다음 비교에서 제외됩니다`,
+                              'info'
+                            );
+                          }}
+                          className="inline-flex items-center justify-center w-4 h-4 rounded-full transition-colors hover:bg-black/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          <X size={11} strokeWidth={2.5} aria-hidden />
+                        </button>
+                      ) : null}
+                    </div>
+                  </th>
+                );
+              })}
               <th className="text-center px-3 py-2 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>판정</th>
             </tr>
           </thead>
           <tbody>
             {metrics.map((metric, idx) => (
-              <tr key={idx} style={idx % 2 === 0 ? { backgroundColor: 'var(--bg-tertiary)' } : {}}>
+              <tr
+                key={metric.label}
+                style={idx % 2 === 0 ? { backgroundColor: 'var(--bg-tertiary)' } : {}}
+              >
                 <td className="px-4 py-2 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{metric.label}</td>
                 {metric.values.map((val, i) => (
-                  <td key={i} className="text-center px-3 py-2 text-sm" style={{ color: 'var(--text-primary)' }}>
+                  <td
+                    key={`${metric.label}-${codes[i] ?? i}`}
+                    className="text-center px-3 py-2 text-sm"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     {metric.format(val as never)}
                   </td>
                 ))}

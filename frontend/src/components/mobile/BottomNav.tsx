@@ -41,16 +41,16 @@ export default function BottomNav() {
             aria-label={tab.label}
             className="relative flex-1 flex flex-col items-center justify-center touch-target"
             style={{
-              minHeight: 56,
+              minHeight: 60,
               color: selected ? 'var(--brand-deep-blue)' : 'var(--text-muted)',
               fontWeight: selected ? 600 : 400,
             }}
             onClick={() => onSelect(tab.id)}
           >
-            <span aria-hidden="true" className="text-[22px] leading-none">
+            <span aria-hidden="true" className="text-[24px] leading-none">
               {tab.icon}
             </span>
-            <span className="mt-0.5 text-[12px] leading-none">{tab.label}</span>
+            <span className="mt-0.5 text-[13px] leading-none">{tab.label}</span>
             {tab.id === 'chat' && unread > 0 && (
               <span
                 aria-label={`새 메시지 ${unread}개`}

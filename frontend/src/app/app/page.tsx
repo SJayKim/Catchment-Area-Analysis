@@ -48,6 +48,17 @@ function DeepLinkHandler() {
     if (q && q.trim()) {
       const MAX_LEN = 500;
       const prompt = q.slice(0, MAX_LEN).trim();
+      // Scrub `?q=` from URL so refresh / back-nav doesn't auto-resend.
+      // Role param is intentionally preserved (idempotent + non-noisy).
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('q')) {
+          url.searchParams.delete('q');
+          window.history.replaceState({}, '', url.toString());
+        }
+      } catch {
+        // ignore — old browsers without URL/history APIs
+      }
       const timer = window.setTimeout(() => {
         useChatStore.getState().sendMessage(prompt);
       }, 300);

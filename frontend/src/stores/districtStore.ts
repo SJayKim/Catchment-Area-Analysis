@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { District } from '@/lib/types';
+import { useToastStore } from '@/stores/toastStore';
 
 export type SelectSource = 'map' | 'chat' | null;
 
@@ -40,7 +41,12 @@ export const useDistrictStore = create<DistrictState>((set) => ({
 
   addToCompare: (district) =>
     set((state) => {
-      if (state.compareList.length >= 3) return state;
+      if (state.compareList.length >= 3) {
+        useToastStore
+          .getState()
+          .show('비교는 최대 3개까지 가능합니다', 'warning');
+        return state;
+      }
       if (state.compareList.some((d) => d.code === district.code)) return state;
       return { compareList: [...state.compareList, district] };
     }),

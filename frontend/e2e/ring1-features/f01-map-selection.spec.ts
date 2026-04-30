@@ -156,6 +156,112 @@ test.describe('Ring 1 — F01 Map Selection', () => {
     await packet.finalize(page);
   });
 
+  // (Mock-only) 신규 13 — Plan UX Sweep Phase D D.10: compare 슬롯 1 hover →
+  // mouseout 후 polygon fillColor 가 슬롯 색을 유지해야 함. DistrictLayer 의
+  // mouseout listener 가 styleFor() 전체를 재계산하지 않으면 stale DEFAULT 색
+  // 으로 덮인다.
+  // Kakao 폴리곤 객체 자체에 직접 접근할 수 없으므로 정적 회귀 (소스 grep) +
+  // store 단위 시나리오 둘 다 검증.
+  test('Ring1-F01-D10-VISUAL — DistrictLayer mouseout 시 styleFor 재계산 (정적+스토어)', async ({
+    page,
+  }) => {
+    // (1) 정적 회귀: DistrictLayer.tsx 의 mouseout listener 가 styleFor(code) 를
+    // 호출하는지 — `setOptions(DEFAULT_STYLE)` 같은 stale 직대입이 남아있으면
+    // 안 됨.
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const target = path.resolve(
+      process.cwd(),
+      'src/components/map/DistrictLayer.tsx'
+    );
+    const src = fs.readFileSync(target, 'utf8');
+    // mouseout 핸들러 안에 styleFor(feature.code) 호출 명시.
+    expect(src).toMatch(/mouseout[\s\S]*?setOptions\(styleFor\(feature\.code\)\)/);
+    // 직대입 (`setOptions(DEFAULT_STYLE)`) 회귀 — 모든 DEFAULT_STYLE 직대입은
+    // styleFor 우회이므로 mouseout 안에서는 등장하지 않아야 함.
+    const mouseoutBlock =
+      src.match(/'mouseout'[\s\S]*?\}\)\;/)?.[0] ?? '';
+    expect.soft(mouseoutBlock).not.toMatch(/setOptions\(\s*DEFAULT_STYLE\s*\)/);
+    expect.soft(mouseoutBlock).not.toMatch(/setOptions\(\s*SELECTED_STYLE\s*\)/);
+
+    // (2) 스토어 단위 — compare 모드에서 슬롯 1 (D3001) 의 색상 슬롯이 mouseout
+    // 시뮬레이션 후에도 SELECTED_STYLE 매핑을 유지하는지 store-level 로 검증.
+    await page.evaluate(() => {
+      const ds = (
+        window as unknown as {
+          __districtStore: {
+            getState: () => {
+              toggleCompareMode: () => void;
+              addToCompare: (d: unknown) => void;
+              setHovered: (code: string | null) => void;
+            };
+          };
+        }
+      ).__districtStore.getState();
+      ds.toggleCompareMode();
+      ds.addToCompare({
+        code: 'D3001',
+        name: '강남역',
+        type: 'developed',
+        center: { lat: 37.49, lng: 127.02 },
+      });
+      ds.addToCompare({
+        code: 'D3002',
+        name: '홍대입구',
+        type: 'developed',
+        center: { lat: 37.55, lng: 126.92 },
+      });
+      // hover 진입 시뮬.
+      ds.setHovered('D3001');
+    });
+    await page.waitForTimeout(100);
+    const hoveredCode = await page.evaluate(() => {
+      const ds = (
+        window as unknown as {
+          __districtStore: { getState: () => { hoveredCode: string | null } };
+        }
+      ).__districtStore.getState();
+      return ds.hoveredCode;
+    });
+    expect(hoveredCode).toBe('D3001');
+
+    // mouseout 시뮬레이션 — setHovered(null).
+    await page.evaluate(() => {
+      const ds = (
+        window as unknown as {
+          __districtStore: {
+            getState: () => { setHovered: (code: string | null) => void };
+          };
+        }
+      ).__districtStore.getState();
+      ds.setHovered(null);
+    });
+    await page.waitForTimeout(100);
+    const compareState = await page.evaluate(() => {
+      const ds = (
+        window as unknown as {
+          __districtStore: {
+            getState: () => {
+              isCompareMode: boolean;
+              compareList: { code: string }[];
+              hoveredCode: string | null;
+            };
+          };
+        }
+      ).__districtStore.getState();
+      return {
+        mode: ds.isCompareMode,
+        codes: ds.compareList.map((d) => d.code),
+        hovered: ds.hoveredCode,
+      };
+    });
+    // mouseout 후에도 compare 슬롯은 그대로 — slot 1 D3001 이 SELECTED_STYLE
+    // (slot 0 색) 매핑을 유지해야 한다.
+    expect(compareState.mode).toBe(true);
+    expect(compareState.codes).toEqual(['D3001', 'D3002']);
+    expect(compareState.hovered).toBeNull();
+  });
+
   test('F01-H4 fast switch (P0-6 stale closure regression)', async ({ page }) => {
     const packet = new EvalPacket({
       id: 'F01-H4-fast-switch',

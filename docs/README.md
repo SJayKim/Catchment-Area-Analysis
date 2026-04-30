@@ -11,8 +11,11 @@ docs/
 ├── spec/           계층 2 — 기능 스펙 (F01~F10, D01, B01)
 ├── ops/            운영 (quickstart, runbook, DR, deployment, database setup, serving stability)
 ├── plan/           진행 중 / 미래 계획만 (완료된 plan 은 제거)
-│   ├── business/commercialization-plan.md
-│   └── infra/{e2e-regression, load-test}.md
+│   ├── business/   상용화 / 비즈니스 (commercialization-plan.md)
+│   ├── fix/        버그 / 정확도 hotfix (out-of-scope, district-click-race, accuracy-gap …)
+│   ├── infra/      서빙 안정성 / 배포 / Langfuse / refactoring
+│   ├── qa/         QA sweep (user-journey, e2e-quality, ux-phase-a-f-test-plan, ux-final-e2e-regression-plan)
+│   └── ui/         UX Sweep phase 묶음 (ux-sweep-phase-{a,b,c,d,e,f}-*)
 ├── qa/             E2E test plan + runs/
 ├── status/         현재 상태 단일 마스터 (current-status.md)
 ├── screenshots/    UI 스크린샷 (dev, e2e-qa, real-mode, ux)

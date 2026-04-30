@@ -101,7 +101,7 @@ export default function Hero() {
                 type="button"
                 data-testid={`starter-chip-${idx}`}
                 onClick={() => goToApp(chip)}
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all hover:-translate-y-0.5"
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 style={{
                   backgroundColor: 'var(--bg-secondary)',
                   color: 'var(--text-primary)',
@@ -118,7 +118,7 @@ export default function Hero() {
               type="button"
               data-testid="hero-primary-cta"
               onClick={() => goToApp()}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               style={{
                 backgroundColor: 'var(--brand-deep-blue)',
                 color: '#ffffff',
@@ -128,7 +128,7 @@ export default function Hero() {
             </button>
             <a
               href="#how-it-works"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-base transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               style={{
                 color: 'var(--text-primary)',
                 border: '1px solid var(--border-color)',

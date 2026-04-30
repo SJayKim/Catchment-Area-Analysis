@@ -67,6 +67,11 @@
 | `BACKEND_INTERNAL_URL` | 프론트 → 백엔드 rewrite 대상 | `http://backend:8000` |
 | `NEXT_PUBLIC_API_URL` | 브라우저용 (SSE 직접 호출) | `https://marketscope.robitlabs.co.kr` |
 | `NEXT_PUBLIC_KAKAO_MAP_KEY` | Kakao SDK (빌드 타임 bake) | 발급 키 |
+| `NEXT_PUBLIC_REPO_URL` | 랜딩 푸터 GitHub 링크 (선택, Phase A) | 비워두면 li 미렌더 |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | 푸터 mailto: 링크 (선택, Phase A) | 비워두면 "문의" 미노출 |
+| `NEXT_PUBLIC_KAKAO_CHANNEL_URL` | F12 FeedbackFab kakao 모드 우선 (선택) | 둘 중 하나만 있어도 FAB 노출 |
+| `NEXT_PUBLIC_FEEDBACK_FORM_URL` | F12 FeedbackFab tally 모드 폴백 (선택) | (위와 동일) |
+| `NEXT_PUBLIC_PREMIUM_CTA_ENABLED` | Phase E.3 — `'true'` 일 때만 FreeLimitSurvey Premium CTA 노출 | default off |
 | `ANTHROPIC_API_KEY` / `GOOGLE_API_KEY` | LLM | 필수 |
 | `SEOUL_OPENDATA_API_KEY` | ETL | Real 모드에서 필수 |
 | `LANGFUSE_*` | 관측 (선택) | 비워두면 비활성 |

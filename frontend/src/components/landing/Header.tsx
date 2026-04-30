@@ -27,17 +27,8 @@ export default function Header() {
         <Link
           href="/app"
           data-testid="header-cta"
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg transition-colors"
-          style={{
-            backgroundColor: 'var(--brand-deep-blue)',
-            color: '#ffffff',
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = 'var(--brand-deep-blue-hover)')
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = 'var(--brand-deep-blue)')
-          }
+          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg transition-colors bg-[var(--brand-deep-blue)] hover:bg-[var(--brand-deep-blue-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          style={{ color: '#ffffff' }}
         >
           시작하기
           <span aria-hidden>→</span>

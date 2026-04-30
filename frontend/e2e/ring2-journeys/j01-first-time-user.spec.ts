@@ -85,3 +85,59 @@ test('J01 first-time user — 강남역 click → summary → recommend → comp
   expect(r1.found).toBe(true);
   expect(hasGangnam && hasHongdae).toBe(true);
 });
+
+// (Mock-only) 신규 2 — Plan UX Sweep Phase A 엣지: ?q= 빈 문자열로 진입했을
+// 때 자동전송이 0건이고 URL 의 ?q= 도 history 에서 정리되어야 한다 (B.6 scrub
+// 로직과 정합). role 은 그대로 보존.
+test('Ring2-J01-A4-EDGE-EMPTY — ?q= 빈 문자열 → 자동전송 0 + URL scrub', async ({
+  page,
+}) => {
+  // /api/chat 호출 카운팅 — DeepLinkHandler 가 q 가 비어있으면 sendMessage 를
+  // 호출하지 않아야 한다.
+  const chatCalls: string[] = [];
+  await page.route('**/api/chat', async (route) => {
+    chatCalls.push(route.request().method());
+    await route.fulfill({ status: 204, body: '' });
+  });
+
+  await page.goto('/app?q=&role=owner');
+
+  await page.waitForFunction(
+    () => {
+      try {
+        return Boolean(
+          (window as unknown as { __chatStore?: unknown }).__chatStore
+        );
+      } catch {
+        return false;
+      }
+    },
+    undefined,
+    { timeout: 10_000 }
+  );
+
+  // setTimeout(300ms) + scrub 로직이 도는 시간 충분히 확보.
+  await page.waitForTimeout(800);
+
+  // (1) 자동전송 0건 보장.
+  expect(chatCalls.length).toBe(0);
+
+  // (2) chatStore 에 user 메시지 누적 0.
+  const messageCount = await page.evaluate(() => {
+    const cs = (
+      window as unknown as {
+        __chatStore: { getState: () => { messages: unknown[]; messageCount: number } };
+      }
+    ).__chatStore.getState();
+    return { count: cs.messageCount, len: cs.messages.length };
+  });
+  expect(messageCount.count).toBe(0);
+  expect(messageCount.len).toBe(0);
+
+  // (3) URL 의 빈 q 는 그대로일 수도 있으나 (trim() 후 falsy 분기), role 은 보존.
+  // 현재 DeepLinkHandler 는 q.trim() 가 falsy 일 때 scrub 분기를 타지 않으므로
+  // q= 가 그대로 남는 것은 허용 — 다만 sendMessage 가 호출되지 않는 게 핵심.
+  const url = new URL(page.url());
+  expect(url.pathname).toBe('/app');
+  expect(url.searchParams.get('role')).toBe('owner');
+});

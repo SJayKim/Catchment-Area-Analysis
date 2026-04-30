@@ -79,6 +79,7 @@ export default function ChatPanel() {
         isThinking={isThinking}
         isLoading={isLoading}
         agentSteps={agentSteps}
+        onSuggestionClick={sendMessage}
         previewSlot={
           preview ? (
             <PreviewCard

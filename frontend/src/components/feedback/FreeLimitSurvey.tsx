@@ -38,6 +38,11 @@ interface Props {
   onDismiss?: () => void;
 }
 
+// E.3 — Premium CTA 는 결제 wiring 전까지 default off.
+// env 미설정 시 'false' fallback. `'true'` 일 때만 mood ≥ 4 노출.
+const PREMIUM_CTA_ENABLED =
+  process.env.NEXT_PUBLIC_PREMIUM_CTA_ENABLED === 'true';
+
 /**
  * L2 — 무료 한도 소진 microsurvey.
  * `trigger=true` 일 때 (부모가 `messageCount >= DAILY_FREE_LIMIT` 로 판단) 노출.
@@ -164,9 +169,10 @@ export default function FreeLimitSurvey({ trigger, onDismiss }: Props) {
               })}
             </div>
 
-            {mood !== null && mood >= 4 ? (
+            {PREMIUM_CTA_ENABLED && mood !== null && mood >= 4 ? (
               <div
                 className="mb-4 p-3 rounded-xl"
+                data-testid="survey-premium-cta"
                 style={{ backgroundColor: 'var(--bg-tertiary)' }}
               >
                 <p

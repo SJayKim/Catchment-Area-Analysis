@@ -255,9 +255,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (state.mobileTab !== 'chat') set({ mobileTab: 'chat', unreadCount: 0 });
     if (state.sheetSnap !== 'full') set({ sheetSnap: 'full' });
 
-    // PDF export pattern detection — handle locally, don't send to server
-    const PDF_PATTERNS = /pdf|리포트.*저장|보고서.*내보|리포트.*만들|보고서.*만들|리포트.*내려|pdf.*저장/i;
-    if (PDF_PATTERNS.test(message.trim())) {
+    // PDF export pattern detection — handle locally, don't send to server.
+    // 통합 regex + false-positive 가드 (≤30자, 질문 키워드 차단) 로
+    // "PDF 가 뭐야" / "PDF 형식 알려줘" 등을 비-PDF 질의로 분류.
+    const PDF_PATTERNS = /pdf|리포트.*(저장|만들|내보|내려|다운|출력)|보고서.*(저장|만들|내보|내려|다운|출력)|pdf.*(저장|내보|만들|다운|출력)/i;
+    const PDF_NEGATIVE_GUARD = /(뭐|무엇|뭔가요|뭔지|알려|설명|어떻|어떤|왜)/;
+    const trimmed = message.trim();
+    const isPdfRequest =
+      trimmed.length <= 30 &&
+      PDF_PATTERNS.test(trimmed) &&
+      !PDF_NEGATIVE_GUARD.test(trimmed);
+    if (isPdfRequest) {
       const userMsg: ChatMessage = {
         id: generateId(),
         role: 'user',

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import type { ChatMessage } from '@/lib/types';
+import { useToastStore } from '@/stores/toastStore';
 
 interface UseReportExportOptions {
   districtName: string;
@@ -68,6 +69,19 @@ export function useReportExport({ districtName, dataQuarter, messages }: UseRepo
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('[PDF] Generation failed:', err);
+      // Surface a user-visible toast with manual retry. Auto-retry is
+      // intentionally off (user-trigger only) to prevent infinite loops on
+      // deterministic failures (e.g. Recharts CSS3 paint exception).
+      useToastStore.getState().show(
+        'PDF 생성에 실패했어요. 다시 시도해 주세요.',
+        'error',
+        {
+          actionLabel: '재시도',
+          onAction: () => {
+            void generatePDF();
+          },
+        }
+      );
     } finally {
       setIsGenerating(false);
     }

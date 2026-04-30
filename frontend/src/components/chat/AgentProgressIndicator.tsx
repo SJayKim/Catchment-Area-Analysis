@@ -44,7 +44,8 @@ export default function AgentProgressIndicator({ steps }: AgentProgressIndicator
             {steps.map((step, idx) => (
               <div
                 key={step.id}
-                className="flex items-center gap-2 text-sm transition-opacity duration-300 animate-step-in"
+                data-step-status={step.status}
+                className="flex items-center gap-2 text-sm animate-step-in"
                 style={{
                   color: step.status === 'completed'
                     ? 'var(--text-muted)'
@@ -52,6 +53,10 @@ export default function AgentProgressIndicator({ steps }: AgentProgressIndicator
                       ? 'var(--text-primary)'
                       : 'var(--text-muted)',
                   fontWeight: step.status === 'in_progress' ? 500 : 400,
+                  // C.4 — completed 는 0.5 로 페이드, 현재 진행/대기는 1.0 유지.
+                  // 600ms ease 로 in_progress→completed 전환이 부드럽게.
+                  opacity: step.status === 'completed' ? 0.5 : 1,
+                  transition: 'opacity 600ms ease',
                   animationDelay: `${idx * 50}ms`,
                 }}
               >

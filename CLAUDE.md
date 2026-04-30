@@ -53,7 +53,7 @@ docs/
 │   └── deployment.md               # Docker / Nginx / 환경변수
 ├── spec/                            # 계층 2: 기능 스펙
 │   ├── feature-list.md             # 인덱스
-│   ├── features/F01~F10-*.md       # 기능 상세
+│   ├── features/F01~F13-*.md       # 기능 상세
 │   ├── business/B01-business-model.md
 │   └── data/D01-data-pipeline.md
 ├── ops/                             # 운영
@@ -64,8 +64,11 @@ docs/
 │   ├── production-deployment.md
 │   └── serving-stability.md
 ├── plan/                            # 진행 중 / 미래 계획만
-│   ├── business/commercialization-plan.md
-│   └── infra/{e2e-regression, load-test}.md
+│   ├── business/                   # commercialization-plan.md
+│   ├── fix/                        # 버그 / 정확도 hotfix
+│   ├── infra/                      # 배포 / 안정성 / refactoring
+│   ├── qa/                         # QA sweep + UX 회귀 (ux-final-e2e 등)
+│   └── ui/                         # UX Sweep phase 묶음 (a/b/c/d/e/f)
 ├── qa/
 │   ├── test-plan.md                # E2E 4-ring 플랜
 │   └── runs/                       # 최근 실행 로그

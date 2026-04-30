@@ -60,6 +60,13 @@
   --compare-slot-2: #f59e0b;
   --compare-slot-3: #f43f5e;
 
+  /* D.7 — InlineChart Recharts 색상 토큰 (라이트) */
+  --chart-grid: #e2e8f0;
+  --chart-axis: #64748b;
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-text: #0f172a;
+  --chart-tooltip-border: #e2e8f0;
+
   color-scheme: light;
 }
 
@@ -91,6 +98,13 @@
   --compare-slot-2: #fbbf24;
   --compare-slot-3: #fb7185;
 
+  /* D.7 — InlineChart Recharts 색상 토큰 (다크) */
+  --chart-grid: #334155;
+  --chart-axis: #94a3b8;
+  --chart-tooltip-bg: #1e293b;
+  --chart-tooltip-text: #f8fafc;
+  --chart-tooltip-border: #334155;
+
   color-scheme: dark;
 }
 
@@ -120,6 +134,11 @@
     --compare-slot-1: #60a5fa;
     --compare-slot-2: #fbbf24;
     --compare-slot-3: #fb7185;
+    --chart-grid: #334155;
+    --chart-axis: #94a3b8;
+    --chart-tooltip-bg: #1e293b;
+    --chart-tooltip-text: #f8fafc;
+    --chart-tooltip-border: #334155;
     color-scheme: dark;
   }
 }
@@ -144,6 +163,12 @@
   --safe-right: env(safe-area-inset-right, 0px);
   /* 모바일 가상 키보드 높이. useKeyboardInset() 훅이 런타임에 업데이트. */
   --kb-inset: 0px;
+}
+
+/* D.2 — 글로벌 focus-visible 가시성 */
+:focus-visible {
+  outline: 2px solid var(--brand-deep-blue);
+  outline-offset: 2px;
 }
 
 @layer base {

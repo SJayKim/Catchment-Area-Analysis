@@ -24,6 +24,7 @@ export default function TimeSlider() {
   } = useMapStore();
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   // Play/pause animation
   useEffect(() => {
@@ -40,6 +41,30 @@ export default function TimeSlider() {
       }
     };
   }, [heatmapPlaying, setHeatmapTimeSlot]);
+
+  // C.3 — rAF throttle. 마우스 드래그/키보드 ArrowLeft·Right 가
+  // onChange 를 매 frame 발행해 HeatmapLayer useEffect([heatmapTimeSlot])
+  // 가 즉시 재실행되던 비용 제거.
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleSliderChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = Number(e.target.value);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        setHeatmapTimeSlot(v);
+      });
+    },
+    [setHeatmapTimeSlot]
+  );
 
   const togglePlay = useCallback(() => {
     setHeatmapPlaying(!heatmapPlaying);
@@ -89,7 +114,7 @@ export default function TimeSlider() {
           max={23}
           step={1}
           value={heatmapTimeSlot}
-          onChange={(e) => setHeatmapTimeSlot(Number(e.target.value))}
+          onChange={handleSliderChange}
           className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
           style={{
             background: `linear-gradient(to right, #3b82f6 ${(heatmapTimeSlot / 23) * 100}%, rgba(255,255,255,0.2) ${(heatmapTimeSlot / 23) * 100}%)`,

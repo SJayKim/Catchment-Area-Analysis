@@ -38,6 +38,13 @@ export function useMapSync() {
   useEffect(() => {
     if (!selected) {
       lastHandledRef.current = null;
+      // B.1 — deselect (재클릭) 시 PreviewCard 잔존 방지.
+      // SSE 진행 중에는 chatStore.sendMessage 가 이미 preview 를 null 로 wipe 한
+      // 상태이므로 no-op. map-origin deselect 시에만 의미 있음.
+      const store = useChatStore.getState();
+      if (store.preview || store.previewError) {
+        store.clearPreview();
+      }
       return;
     }
 

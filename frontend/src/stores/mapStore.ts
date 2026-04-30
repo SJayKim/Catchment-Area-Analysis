@@ -53,3 +53,11 @@ export const useMapStore = create<MapState>((set) => ({
   setHeatmapData: (data) => set({ heatmapData: data }),
   setHeatmapLoading: (loading) => set({ heatmapLoading: loading }),
 }));
+
+// Expose for E2E tests (Playwright) — same pattern as chatStore / districtStore.
+// Used to drive heatmap toggle and verify TimeSlider throttle without depending
+// on the kakao map runtime.
+if (typeof window !== 'undefined') {
+  (window as unknown as { __mapStore?: typeof useMapStore }).__mapStore =
+    useMapStore;
+}

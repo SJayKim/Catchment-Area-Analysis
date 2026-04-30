@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { DistrictPreview } from '@/lib/api';
 
 interface Props {
@@ -43,6 +44,22 @@ export default function PreviewCard({
       : delta.tone === 'down'
         ? 'var(--error)'
         : 'var(--text-muted)';
+
+  // C.5 — CTA 클릭 직후 200ms active class 표시. ChatPanel 의 isLoading
+  // 이 true 가 되며 자연스럽게 다음 카드로 전환되므로 짧게 둠.
+  const [ctaActive, setCtaActive] = useState(false);
+  const ctaTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (ctaTimerRef.current) clearTimeout(ctaTimerRef.current);
+    };
+  }, []);
+  const handleDeepAnalysis = () => {
+    setCtaActive(true);
+    if (ctaTimerRef.current) clearTimeout(ctaTimerRef.current);
+    ctaTimerRef.current = setTimeout(() => setCtaActive(false), 200);
+    onDeepAnalysis();
+  };
 
   return (
     <article
@@ -189,15 +206,18 @@ export default function PreviewCard({
       <button
         type="button"
         data-testid="preview-deep-analysis"
-        onClick={onDeepAnalysis}
-        disabled={disabled}
-        className="w-full py-2.5 rounded-xl font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-transform hover:-translate-y-0.5"
+        data-cta-active={ctaActive ? 'true' : 'false'}
+        onClick={handleDeepAnalysis}
+        disabled={disabled || ctaActive}
+        className="w-full py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed transition-all hover:-translate-y-0.5"
         style={{
           backgroundColor: 'var(--brand-deep-blue)',
           color: '#ffffff',
+          opacity: ctaActive ? 0.7 : disabled ? 0.5 : 1,
+          transform: ctaActive ? 'translateY(1px)' : undefined,
         }}
       >
-        AI 분석 보기 →
+        {ctaActive ? '분석 시작...' : 'AI 분석 보기 →'}
       </button>
 
       <p

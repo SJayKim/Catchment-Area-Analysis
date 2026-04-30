@@ -90,4 +90,4 @@
 - Real 상권: 1,650개 (서울 전체)
 - ETL 적재: floating_population 9,888 / estimated_sales 21,333 / stores 75,985 / resident_population 39,288 (2025Q4 기준)
 - Agent Tool: 9종 (등록 기준; `get_district_benchmarks` 는 내부 헬퍼) / Card 타입: 5종 / SSE 이벤트: 9종
-- E2E: Ring 0~3 총 45 시나리오 + 최신 회귀 15 시나리오
+- E2E: Ring 0~3 + prod-smoke. 2026-04-30 UX Sweep 회귀 매트릭스 = 기존 25 + Plan 1 신규 13 + Plan 2 통합 5 = **43 시나리오** ([`plan/qa/ux-final-e2e-regression-plan.md`](../plan/qa/ux-final-e2e-regression-plan.md))

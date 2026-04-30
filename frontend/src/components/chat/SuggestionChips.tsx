@@ -18,7 +18,7 @@ export default function SuggestionChips({
       <div className="flex flex-wrap gap-2">
         {suggestions.map((suggestion, index) => (
           <button
-            key={index}
+            key={`${index}-${suggestion}`}
             onClick={() => onSelect(suggestion)}
             disabled={disabled}
             className="text-xs px-3 py-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap hover:opacity-80"
