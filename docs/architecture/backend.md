@@ -161,7 +161,10 @@ server/server/
 
 ## 8. 테스트
 
-- **Backend pytest**: 미구축 (향후 `server/tests/` 생성 예정)
+- **Backend pytest**: `server/tests/` (단편 → conftest + core 5 모듈 확장, 2026-05-07).
+  현재 107 passed, 8 skipped (full dev deps 시 unblock). Plan: [backend-pytest-coverage-expansion.md](../plan/infra/backend-pytest-coverage-expansion.md).
+  주요 파일: `conftest.py` (fixture 5종) · `test_services_{cache,circuit_breaker,category_resolver}.py` · `test_repos_mock.py` (10 protocol) · `test_routes_health_and_map.py` (lifespan + httpx ASGITransport) · `test_singleflight.py` (9 testcase).
+  CI: `.github/workflows/ci.yml::backend-test` (USE_MOCK 강제, dummy env, `--cov-report=xml` artifact).
 - **E2E (Playwright)**: `frontend/e2e/ring{0,1,2,3}-*` → 백엔드 SSE 규약까지 커버
 - **수동 smoke**: `scripts/verify_sales_units.py`, `server/scripts/flush_cache.py` 등 운영 스크립트
 

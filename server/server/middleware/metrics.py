@@ -141,10 +141,13 @@ def _percentile(values: list[float], p: float) -> float:
 @metrics_router.get("/metrics")
 async def get_metrics() -> JSONResponse:
     """Return a JSON summary of application metrics."""
+    from server.services.singleflight import get_coalesced_count
+
     with _lock:
         counts_snapshot = dict(_request_counts)
         times_snapshot = {k: list(v) for k, v in _response_times.items()}
         sse_conns = _sse_active_connections
+    coalesced_total = get_coalesced_count()
 
     # Build request counts grouped by endpoint
     request_summary: list[dict] = []
@@ -178,6 +181,7 @@ async def get_metrics() -> JSONResponse:
     return JSONResponse(
         {
             "sse_active_connections": sse_conns,
+            "singleflight_coalesced_total": coalesced_total,
             "request_counts": request_summary,
             "latency": latency_summary,
         }

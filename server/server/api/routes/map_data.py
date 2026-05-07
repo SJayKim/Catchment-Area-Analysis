@@ -9,6 +9,7 @@ from sqlalchemy.exc import OperationalError
 from server.api.errors import raise_db_unavailable
 from server.repositories import get_data_access
 from server.services.cache import get_cache_service
+from server.services.singleflight import get_singleflight
 
 logger = logging.getLogger(__name__)
 
@@ -62,12 +63,15 @@ async def get_heatmap(
     if cached is not None:
         return cached
 
-    try:
+    async def _load() -> dict:
         da = get_data_access()
         result = await da.heatmap.get_heatmap_data(time_slot, quarter)
-
         if result.get("points"):
             await cache.set(cache_key, result, ttl=86400)
+        return result
+
+    try:
+        result = await get_singleflight().do(cache_key, _load)
         return JSONResponse(
             content=result,
             headers={"Cache-Control": "public, max-age=86400"},
@@ -91,12 +95,15 @@ async def get_heatmap_all(
             headers={"Cache-Control": "public, max-age=86400"},
         )
 
-    try:
+    async def _load() -> dict:
         da = get_data_access()
         result = await da.heatmap.get_heatmap_all(quarter)
-
         if result.get("slots"):
             await cache.set(cache_key, result, ttl=86400)
+        return result
+
+    try:
+        result = await get_singleflight().do(cache_key, _load)
         return JSONResponse(
             content=result,
             headers={"Cache-Control": "public, max-age=86400"},

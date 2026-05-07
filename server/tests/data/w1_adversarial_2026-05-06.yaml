@@ -1,0 +1,278 @@
+# W1 Entity Matching adversarial dataset.
+# Plan: docs/plan/fix/w1-type-boost-tuning-2026-05-06.md
+#
+# Each case is a self-contained ranking problem: a query against a small
+# set of candidate (code, name, district_type) rows. expected_top1_code
+# is what rank_candidates() must return as the highest-scored candidate.
+#
+# Class legend:
+#   TM   — Type Mismatch (e.g., "X역" must not be hijacked by X시장 boost)
+#   CDST — Cross-District Same Type (multiple plausible same-type rows)
+#   ST   — Substring Trap (Seoul name is substring of off-Seoul / vice versa)
+#   CTS  — Coref + Type Switch (alias-only paren match self-name guard)
+#   BR   — Boundary Robust (Korean word-boundary / paren alias normal cases)
+
+version: "2026-05-06"
+
+cases:
+  # ---- TM (Type Mismatch — 6 cases) ----
+  - id: TM-1
+    desc: "강남역 query — 발달상권이 강남시장(전통시장) 보다 우선"
+    query: "강남역"
+    candidates:
+      - ["G1", "강남역(강남)", "발달상권"]
+      - ["G2", "강남시장", "전통시장"]
+    expected_top1_code: "G1"
+
+  - id: TM-2
+    desc: "역삼동 query — 골목상권 prefix 가 시장 후보보다 우선"
+    query: "역삼동"
+    candidates:
+      - ["Y1", "역삼동", "골목상권"]
+      - ["Y2", "역삼시장", "전통시장"]
+    expected_top1_code: "Y1"
+
+  - id: TM-3
+    desc: "신촌역 — 발달상권이 동명 골목상권보다 우선"
+    query: "신촌역"
+    candidates:
+      - ["S1", "신촌역", "발달상권"]
+      - ["S2", "신촌상가", "골목상권"]
+    expected_top1_code: "S1"
+
+  - id: TM-4
+    desc: "X시장 명시적 — 전통시장 boost 활성화"
+    query: "광장시장"
+    candidates:
+      - ["A1", "광장시장", "전통시장"]
+      - ["A2", "광장시장 입구", "골목상권"]
+    expected_top1_code: "A1"
+
+  - id: TM-5
+    desc: "남대문시장 self-match (paren alias 의 trap)"
+    query: "남대문시장"
+    candidates:
+      - ["N1", "삼익패션타운(남대문시장)", "골목상권"]
+      - ["N2", "남대문시장(자유상가)", "전통시장"]
+    expected_top1_code: "N2"
+
+  - id: TM-6
+    desc: "역(station) suffix — 시장 boost 비적용"
+    query: "건대입구역"
+    candidates:
+      - ["K1", "건대입구역", "발달상권"]
+      - ["K2", "건대시장", "전통시장"]
+    expected_top1_code: "K1"
+
+  # ---- CDST (Cross-District Same Type — 5 cases) ----
+  - id: CDST-1
+    desc: "역삼1동 prefix 정확 매치"
+    query: "역삼1동"
+    candidates:
+      - ["E1", "역삼1동", "골목상권"]
+      - ["E2", "역삼동", "골목상권"]
+      - ["E3", "역삼2동", "골목상권"]
+    expected_top1_code: "E1"
+
+  - id: CDST-2
+    desc: "성수1가1동 prefix"
+    query: "성수1가1동"
+    candidates:
+      - ["P1", "성수1가1동", "골목상권"]
+      - ["P2", "성수1가2동", "골목상권"]
+      - ["P3", "성수동", "골목상권"]
+    expected_top1_code: "P1"
+
+  - id: CDST-3
+    desc: "이태원동 vs 이태원역(발달상권) — 발달이 우선"
+    query: "이태원"
+    candidates:
+      - ["T1", "이태원동", "골목상권"]
+      - ["T2", "이태원역", "발달상권"]
+    expected_top1_code: "T2"
+
+  - id: CDST-4
+    desc: "잠실동 vs 잠실역 — 발달상권 우선"
+    query: "잠실"
+    candidates:
+      - ["J1", "잠실동", "골목상권"]
+      - ["J2", "잠실역", "발달상권"]
+    expected_top1_code: "J2"
+
+  - id: CDST-5
+    desc: "압구정 — 발달상권 압구정역 우선"
+    query: "압구정"
+    candidates:
+      - ["AP1", "압구정동", "골목상권"]
+      - ["AP2", "압구정역", "발달상권"]
+    expected_top1_code: "AP2"
+
+  # ---- ST (Substring Trap — 5 cases) ----
+  - id: ST-1
+    desc: "광교 (서울 동) 단독 → 광교(서울 발달상권) 우선, 광주(전남) 부재"
+    query: "광교"
+    candidates:
+      - ["S1", "광교사거리", "골목상권"]
+      - ["S2", "광교(서울)", "발달상권"]
+    expected_top1_code: "S2"
+
+  - id: ST-2
+    desc: "구로 — 구로구청역(발달상권) 우선, 구로 단독 토큰 무관"
+    query: "구로"
+    candidates:
+      - ["GR1", "구로구청역", "발달상권"]
+      - ["GR2", "구로동", "골목상권"]
+    expected_top1_code: "GR1"
+
+  - id: ST-3
+    desc: "건대 prefix → 발달상권"
+    query: "건대"
+    candidates:
+      - ["GD1", "건대입구역(건대)", "발달상권"]
+      - ["GD2", "건대후문", "골목상권"]
+    expected_top1_code: "GD1"
+
+  - id: ST-4
+    desc: "수유 — 수유역 발달상권 우선"
+    query: "수유"
+    candidates:
+      - ["SU1", "수유동", "골목상권"]
+      - ["SU2", "수유역", "발달상권"]
+    expected_top1_code: "SU2"
+
+  - id: ST-5
+    desc: "여의도 prefix"
+    query: "여의도"
+    candidates:
+      - ["YD1", "여의도역", "발달상권"]
+      - ["YD2", "여의도공원", "관광특구"]
+    expected_top1_code: "YD1"
+
+  # ---- CTS (Coref + Type Switch — 5 cases, alias-only damp test) ----
+  - id: CTS-1
+    desc: "남대문시장 alias-only damp"
+    query: "남대문시장"
+    candidates:
+      - ["AN1", "삼익패션타운(남대문시장)", "골목상권"]
+      - ["AN2", "남대문시장(자유상가)", "전통시장"]
+    expected_top1_code: "AN2"
+
+  - id: CTS-2
+    desc: "동대문시장 self vs alias"
+    query: "동대문시장"
+    candidates:
+      - ["DD1", "동대문(평화)(동대문시장)", "골목상권"]
+      - ["DD2", "동대문시장", "전통시장"]
+    expected_top1_code: "DD2"
+
+  - id: CTS-3
+    desc: "노량진 self-match — 노량진역 vs 노량진수산시장 (X시장 boost 가 아닌 일반 query)"
+    query: "노량진"
+    candidates:
+      - ["NL1", "노량진역", "발달상권"]
+      - ["NL2", "노량진수산시장", "전통시장"]
+    expected_top1_code: "NL1"
+
+  - id: CTS-4
+    desc: "홍대 alias 매치 — 홍대입구역(홍대) 우선"
+    query: "홍대"
+    candidates:
+      - ["H1", "홍대부중", "골목상권"]
+      - ["H2", "홍대입구역(홍대)", "발달상권"]
+      - ["H3", "홍대거리", "골목상권"]
+    expected_top1_code: "H2"
+
+  - id: CTS-5
+    desc: "명동 self-name match"
+    query: "명동"
+    candidates:
+      - ["M1", "명동(명동역)", "발달상권"]
+      - ["M2", "명동성당주변", "관광특구"]
+    expected_top1_code: "M1"
+
+  # ---- BR (Boundary Robust — 6 cases, including normal alias) ----
+  - id: BR-1
+    desc: "강남(테헤란) — 정상 alias prefix"
+    query: "강남"
+    candidates:
+      - ["B1", "강남역(강남)", "발달상권"]
+      - ["B2", "강남구청역", "발달상권"]
+    expected_top1_code: "B1"
+
+  - id: BR-2
+    desc: "성수 2-char → 발달 우선"
+    query: "성수"
+    candidates:
+      - ["BR2_1", "성수1가1동", "골목상권"]
+      - ["BR2_2", "성수동카페거리", "골목상권"]
+      - ["BR2_3", "성수역", "발달상권"]
+    expected_top1_code: "BR2_3"
+
+  - id: BR-3
+    desc: "가로수길 — 발달상권 매치"
+    query: "가로수길"
+    candidates:
+      - ["G_1", "가로수길", "발달상권"]
+      - ["G_2", "신사동가로수길주변", "골목상권"]
+    expected_top1_code: "G_1"
+
+  - id: BR-4
+    desc: "exact 매치 우위 보장"
+    query: "삼성동"
+    candidates:
+      - ["X1", "삼성동", "골목상권"]
+      - ["X2", "삼성동상가", "골목상권"]
+      - ["X3", "삼성역", "발달상권"]
+    expected_top1_code: "X1"
+
+  - id: BR-5
+    desc: "exact 매치는 type rank 와 무관하게 우선"
+    query: "광화문"
+    candidates:
+      - ["BG1", "광화문", "관광특구"]
+      - ["BG2", "광화문역", "발달상권"]
+    expected_top1_code: "BG1"
+
+  - id: BR-6
+    desc: "긴 발달상권 이름 prefix 매칭"
+    query: "DDP"
+    candidates:
+      - ["DDP1", "DDP(동대문디자인플라자)", "관광특구"]
+      - ["DDP2", "DDP주변상가", "골목상권"]
+    expected_top1_code: "DDP1"
+
+  # ---- Abstention (5 cases — TOP1_MIN 0.55 floor 확인) ----
+  - id: ABST-1
+    desc: "전혀 무관 — 어떤 후보도 floor 통과 X (best is None)"
+    query: "강남역"
+    candidates:
+      - ["U1", "전혀다른이름", "골목상권"]
+    expected_top1_code: null
+
+  - id: ABST-2
+    desc: "유사도 매우 낮음 → abstain"
+    query: "건대"
+    candidates:
+      - ["U2", "전북대학교", "골목상권"]
+    expected_top1_code: null
+
+  - id: ABST-3
+    desc: "한 글자만 공유 → abstain"
+    query: "역삼"
+    candidates:
+      - ["U3", "역사박물관", "관광특구"]
+    expected_top1_code: null
+
+  - id: ABST-4
+    desc: "exact 매치 후보 1건만 있으면 floor 통과"
+    query: "이대"
+    candidates:
+      - ["EW1", "이대", "발달상권"]
+    expected_top1_code: "EW1"
+
+  - id: ABST-5
+    desc: "긴 query 의 substring 매치도 floor 통과"
+    query: "동대문역사문화공원역"
+    candidates:
+      - ["DH1", "동대문역사문화공원역", "발달상권"]
+    expected_top1_code: "DH1"

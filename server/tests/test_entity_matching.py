@@ -87,3 +87,50 @@ def test_pick_best_abstention_below_floor() -> None:
     best, alts, ambiguous = pick_best(ranked)
     assert best is None
     assert ambiguous is False
+
+
+# ---------------------------------------------------------------------------
+# Adversarial dataset regression — Plan: w1-type-boost-tuning-2026-05-06
+# ---------------------------------------------------------------------------
+
+
+def _load_adversarial_cases():
+    from pathlib import Path
+
+    import yaml
+
+    path = Path(__file__).parent / "data" / "w1_adversarial_2026-05-06.yaml"
+    return yaml.safe_load(path.read_text(encoding="utf-8"))["cases"]
+
+
+def test_adversarial_accuracy_meets_95pct() -> None:
+    """Top1 accuracy across 32 adversarial cases must stay ≥ 95%.
+
+    Sweep on 2026-05-07 (boost ∈ {0.05, 0.10, 0.15, 0.20} × damp ∈ {0.30,
+    0.50, 0.70}) all land at 96.9% (31/32). The single failure (BR-6) is
+    structural — very short query against a long alias-paren name — and
+    out of scope for this Plan.
+    """
+    cases = _load_adversarial_cases()
+    passed = 0
+    failures = []
+
+    for case in cases:
+        rows = [(c[0], c[1], c[2]) for c in case["candidates"]]
+        ranked = rank_candidates(case["query"], rows)
+        best, _alts, _amb = pick_best(ranked)
+        actual = best.code if best else None
+        if actual == case["expected_top1_code"]:
+            passed += 1
+        else:
+            failures.append(
+                {
+                    "id": case["id"],
+                    "query": case["query"],
+                    "expected": case["expected_top1_code"],
+                    "actual": actual,
+                }
+            )
+
+    accuracy = passed / len(cases)
+    assert accuracy >= 0.95, f"adversarial accuracy {accuracy * 100:.1f}% below 95% guard. failures: {failures}"

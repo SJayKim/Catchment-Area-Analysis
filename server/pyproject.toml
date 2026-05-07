@@ -46,6 +46,8 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
+    "pytest-cov>=5.0",
+    "httpx>=0.28",
     "ruff>=0.8",
     "mypy>=1.13",
 ]
@@ -91,3 +93,26 @@ strict = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+addopts = "-ra --strict-markers"
+markers = [
+    "real: integration tests requiring a real DB / Redis (opt-in via -m real)",
+]
+
+[tool.coverage.run]
+source = ["server"]
+omit = [
+    "server/data/etl/*",
+    "server/scripts/*",
+    "*/__pycache__/*",
+    "alembic/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+show_missing = true
+skip_covered = false

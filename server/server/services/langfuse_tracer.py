@@ -367,6 +367,148 @@ def attach_summary_observation(
         logger.debug("langfuse summary observation end failed", exc_info=True)
 
 
+# ---------------------------------------------------------------------------
+# L2-A: per-LLM-call token/cost attach
+# Plan: docs/plan/infra/langfuse-l2-token-cost-eval.md
+# ---------------------------------------------------------------------------
+
+
+def _normalize_usage(usage: object) -> tuple[int, int]:
+    """Extract (input_tokens, output_tokens) from heterogeneous LLM responses.
+
+    Handles:
+    - LangChain ``response.usage_metadata = {"input_tokens", "output_tokens", ...}``
+    - LangChain ``response.response_metadata.usage`` (older path)
+    - Anthropic native ``response.usage = Usage(input_tokens, output_tokens)``
+    - Gemini native ``response.usage_metadata = {"prompt_token_count",
+      "candidates_token_count"}``
+    - dict with any of the above key sets
+
+    Returns ``(0, 0)`` when nothing usable is found — the attach helper
+    treats that as "no usage to record" and silently skips.
+    """
+    if usage is None:
+        return 0, 0
+
+    # If it's a response wrapper, prefer usage_metadata first
+    candidate = getattr(usage, "usage_metadata", None) or getattr(usage, "usage", None) or usage
+    if candidate is None:
+        return 0, 0
+
+    # Allow attribute access OR dict access
+    def _read(obj, *keys: str) -> int:
+        for k in keys:
+            v = getattr(obj, k, None)
+            if v is None and isinstance(obj, dict):
+                v = obj.get(k)
+            if isinstance(v, int):
+                return v
+            if isinstance(v, float):
+                return int(v)
+        return 0
+
+    input_tokens = _read(candidate, "input_tokens", "prompt_token_count", "prompt_tokens")
+    output_tokens = _read(candidate, "output_tokens", "candidates_token_count", "completion_tokens")
+    return input_tokens, output_tokens
+
+
+def attach_generation_usage(
+    trace_id: str | None,
+    *,
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    prompt_name: str | None = None,
+    prompt_version: str | None = None,
+    name: str = "marketscope.llm.generation",
+) -> None:
+    """Attach a generation-typed observation carrying token counts + prompt id.
+
+    Langfuse Cloud maps ``model`` → unit price and computes cost server-side.
+    ``prompt_name`` / ``prompt_version`` land in observation metadata so that
+    Langfuse UI can group score deltas across prompt revisions.
+
+    Silent on every failure path (disabled, no client, exception). Never
+    raises into the request thread.
+    """
+    if not trace_id:
+        return
+    if input_tokens <= 0 and output_tokens <= 0:
+        return
+    if not _tracer_valid:
+        return
+    client = _get_client()
+    if client is None:
+        return
+    try:
+        from langfuse.types import TraceContext
+    except ImportError:
+        return
+
+    metadata: dict = {}
+    if prompt_name:
+        metadata["prompt_name"] = prompt_name
+    if prompt_version:
+        metadata["prompt_version"] = prompt_version
+
+    try:
+        span = client.start_observation(
+            trace_context=TraceContext(trace_id=trace_id),
+            name=name,
+            as_type="generation",
+            model=model,
+            usage_details={"input": int(input_tokens), "output": int(output_tokens)},
+            metadata=metadata or None,
+        )
+    except Exception:
+        logger.debug("langfuse generation observation start failed", exc_info=True)
+        return
+    try:
+        end_fn = getattr(span, "end", None)
+        if callable(end_fn):
+            end_fn()
+    except Exception:
+        logger.debug("langfuse generation observation end failed", exc_info=True)
+
+
+# ---------------------------------------------------------------------------
+# L2-B: prompt version helper (git sha bake-in at module import time)
+# ---------------------------------------------------------------------------
+
+
+def _git_sha() -> str:
+    """Short git SHA of current HEAD, or "unknown" outside a working tree.
+
+    Used as a build-time tag for prompt files. Cheap (one subprocess call
+    per Python process — module-import-time is the only call site).
+    """
+    import subprocess
+    from pathlib import Path
+
+    try:
+        return (
+            subprocess.check_output(
+                ["git", "rev-parse", "--short=7", "HEAD"],
+                cwd=Path(__file__).parent,
+                stderr=subprocess.DEVNULL,
+            )
+            .decode()
+            .strip()
+        )
+    except Exception:
+        return "unknown"
+
+
+def prompt_version(major_minor_patch: str = "v1.0.0") -> str:
+    """Return ``v<major>.<minor>.<patch>-<sha7>`` for a prompt file.
+
+    Caller passes a stable semver tag; the git short-SHA gives mid-revision
+    granularity. Bumping the semver is the human signal that the prompt's
+    intent changed (and Langfuse experiments should branch).
+    """
+    return f"{major_minor_patch}-{_git_sha()}"
+
+
 def emit_score(
     trace_id: str | None,
     name: str,
