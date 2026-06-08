@@ -514,14 +514,18 @@ async def run_agent(
         _lf_flush(lf_handler)
 
     # Suggestion + done (trace_id 는 Langfuse 활성 시에만 포함)
-    dn = district_name if district_name and district_name != "미선택" else "여기"
-    suggestions = final_suggestions or [
-        f"{dn}에서 뭐하면 좋을까?",
-        "이 자리 위험하지 않아?",
-        "카페 하면 어때?",
-        "유동인구 자세히 알려줘",
-    ]
-    yield {"type": "suggestion", "questions": suggestions}
+    # greeting/clarification 노드는 실행 중 자체 tailored suggestion 을 이미 방출한다.
+    # 이 경우 말미 fallback 방출을 건너뛴다 — 중복 이벤트로 generic suggestion 이
+    # tailored 를 덮어쓰는 문제(out_of_scope 등) 방지.
+    if final_response_mode not in ("greeting_direct", "clarification_direct"):
+        dn = district_name if district_name and district_name != "미선택" else "여기"
+        suggestions = final_suggestions or [
+            f"{dn}에서 뭐하면 좋을까?",
+            "이 자리 위험하지 않아?",
+            "카페 하면 어때?",
+            "유동인구 자세히 알려줘",
+        ]
+        yield {"type": "suggestion", "questions": suggestions}
 
     done_payload: dict[str, Any] = {"type": "done"}
     if trace_id:
