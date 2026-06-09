@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-06-08
+> 최종 갱신: 2026-06-09
+> **2026-06-09 P0 백로그 — ISSUE-003 recommend 저점포수 랭킹 fix + ISSUE-002 Hero H1 줄바꿈 fix** ⭐ — 2026-06-08 QA 디퍼 2건 + 워킹트리 처리. **ISSUE-003 (medium, data accuracy)**: `recommendation.py` 가 점포 1~2개 카테고리를 `per_store_sales`(=monthly/store_count) 아티팩트 + competition 하한(0.01) 증폭으로 score 100 1순위 고정(성수 편의점 월 2억 from 1점포). 댐핑 단독은 ~100x 우위라 수학적으로 불충분 → 스코어링 루프 직후 `_apply_store_floor`(`MIN_RELIABLE_STORES=3`) 파티션, 통과 카테고리 0이면 전체 fallback + `low_confidence` 안내 메시지("점포 표본이 적어(<3개) 참고용 추천"). 루프 내부 미수정(surgical, ~8줄). 회귀 `test_recommendation_scoring.py` 3건 + mock 회귀 10건 = **13 passed**, ruff PASS. **ISSUE-002 (low, cosmetic)**: Hero H1 한글 "데이터로" 단어중간 줄바꿈 → Tailwind `break-keep`(word-break: keep-all). tsc 0 error · lint pre-existing 3 warning만(변경 무관). **워킹트리 chore**: `.gitignore`(+`.gstack/`) + `CLAUDE.md`(+`## Health Stack`) 커밋. 커밋 4건(chore `7fbc118` / 003 fix `90937c6` / 002 fix `7ff871d`). **Item 4 Accuracy Eval Round 2**: 003 fix 가 recommend 품질을 바꾸므로 머지 후 별도 실행 패스로 게이트(미실행, 사용자 트리거). Plan [p0-backlog-2026-06-09](../plan/fix/p0-backlog-2026-06-09.md).
 > **2026-06-08 QA(/qa) Standard 풀앱 패스 — out_of_scope/greeting 중복 suggestion fix + 회귀 테스트** ⭐ — Docker 실데이터 스택(frontend :3000 / backend :8000 / PostGIS 1,650 상권 / Redis) 기동 후 브라우저+SSE 검증. 기존 이미지 6주 stale → current source 재빌드(backend+frontend, pip SSL 은 Dockerfile `PIP_TRUSTED_HOST` build-arg 우회). 건강도 **98→99**. **ISSUE-001(medium) fix**: `graph.py` 스트림 말미 fallback suggestion 방출을 `greeting_direct`/`clarification_direct` 모드에서 skip — greeting/clarification 노드가 실행 중 tailored suggestion 을 직접 방출하는데 말미 generic 셋이 한 번 더 방출돼 client replace 로 tailored 를 덮어쓰던 문제(서울 외 거부 응답에 "이 자리 위험하지 않아?" 노출). 회귀 `test_graph_suggestion_emission.py` 2 passed. main 머지 후 **origin push 완료** (`44b9438..eb3e10f`, 4커밋). 검증(SSE): 부산/제주 out_of_scope=suggestion 1회(tailored)·greeting 1회·normal summary 1회(card+evaluator 유지)·회귀 0. 정상 플로우 전수 PASS(F03 요약/F05 비교 멀티상권추출/F07 추천/F13 프리뷰/F06 히트맵/검색 자동완성/privacy·terms/모바일), 콘솔 에러 0·XML leak 0·실수치 월환산 정상. **디퍼 2건**: ISSUE-003(recommend 가 점포 1~2개 카테고리를 점포당매출 아티팩트로 1순위 — 성수 편의점 score100/월2억 from 1점포, accuracy-eval 트랙 권장) · ISSUE-002(랜딩 H1 단어중간 줄바꿈 cosmetic). **환경 플래그(미수정)**: `.env`/`.env.dev` 의 `NEXT_PUBLIC_API_URL=:3000`(프론트포트) → 재빌드 시 chat SSE 버퍼링, `:8000` 권장(QA 중 임시 override). 리포트 `.gstack/qa-reports/qa-report-localhost-2026-06-08.md`.
 > **2026-05-07 4 Plan 일괄 Pass 1 — Heatmap Singleflight + Backend pytest 확장 + W1 Type Boost 측정/튜닝 + Langfuse L2 Foundation** ⭐ — 4 P1 Plan ([heatmap-singleflight-reintroduce](../plan/infra/heatmap-singleflight-reintroduce.md) · [backend-pytest-coverage-expansion](../plan/infra/backend-pytest-coverage-expansion.md) · [w1-type-boost-tuning-2026-05-06](../plan/fix/w1-type-boost-tuning-2026-05-06.md) · [langfuse-l2-token-cost-eval](../plan/infra/langfuse-l2-token-cost-eval.md)) 의 Pass 1 일괄 구현. (1) **Heatmap Singleflight** — `services/singleflight.py` 재작성 (per-key Future + asyncio.Lock + leader cancel-shield), `map_data.py::get_heatmap[/all]` 통합, `/metrics` 에 `singleflight_coalesced_total` 노출. 9 testcase PASS (concurrent 50 → fn() 1회, exception propagation, follower-cancel-no-leak). (2) **Backend pytest 확장** — `conftest.py` fixture 5종 (`mock_da` / `memory_cache` / `category_resolver_default` / `app_client` / `mock_district_code`), `test_services_{cache,circuit_breaker,category_resolver}.py` + `test_repos_mock.py` (10 protocol smoke) + `test_routes_health_and_map.py` (lifespan + httpx ASGITransport) — 35 신규 testcase. `pyproject.toml` coverage 설정 + `scripts/run_tests.sh` + `.github/workflows/ci.yml::backend-test` dummy env + coverage XML artifact 통합. (3) **W1 Type Boost 측정** — `tests/data/w1_adversarial_2026-05-06.yaml` 32 case (TM=6/CDST=5/ST=5/CTS=5/BR=6/ABST=5), `scripts/w1_eval.py` (baseline + 4×3 sweep grid), 회귀 가드 `test_adversarial_accuracy_meets_95pct`. **Baseline 96.9% (31/32)**, sweep 12 셀 모두 동일 96.9% — boost/damp 와 무관한 단일 구조적 fail (BR-6, 3-char query × 22-char alias-paren). 현재 (boost=0.15, damp=0.5) 유지 채택. (4) **Langfuse L2 Foundation** — `langfuse_tracer.py::_normalize_usage` (LangChain/Anthropic/Gemini/OpenAI 4 shape 흡수) + `attach_generation_usage` (v3 `start_observation(as_type="generation", usage_details, prompt_name+version metadata)`) + `prompt_version("v1.0.0")` + `_git_sha()` 헬퍼. 12 testcase PASS. 노드 wiring (planner/evaluator/respond) + L2-C eval harness 는 Pass 2/3 으로 분리. **검증**: 전체 backend pytest **120 passed / 8 skipped** (신규 65 + 기존 55, 8 skip = `app_client` fixture host structlog 미설치). ruff PASS. 기존 `test_smoke::langfuse_enabled` host env fail 도 conftest 의 `LANGFUSE_PUBLIC_KEY=""` 로 자동 해결. CI workflow 에 dummy env 주입 + coverage XML artifact.
 > **2026-04-30 UX Sweep Phase A-F Plan 2 Pass 1 — 통합 5 journey spec 신규 + 정적 baseline 9 testcase PASS** ⭐ — Plan [ux-final-e2e-regression-plan](../plan/qa/ux-final-e2e-regression-plan.md). Plan 1 verdict ✅ 후속 회차 — `frontend/e2e/ring2-journeys/j06-ux-a2f-integration.spec.ts` 신규 1 파일 (~960 LOC) 에 Phase A→F 횡단 5 journey 1:1 매핑 (J01 onboarding-to-feedback A.4+B.6+F11+F12+F13+D.4 / J02 compare 풀사이클 B.1~B.5 / J03 모바일 첫 진입 C.2+D.2+D.9+B.3 / J04 에러복구+Tally폴백 D.1+D.5+B.4 / J05 a11y 종합 D.2+D.3+D.4+D.6+D.9+WCAG). 각 step 독립 try/catch 로 부분 PASS 가능 (StepCheck[] 누적 + passCount ≥ 임계 시만 fail). 검증: tsc 0 error · next lint 0 warning · dry-list 5 testcase 인식 · 정적 baseline 9 testcase (Ring0-D1 + Ring0-F1 + Ring0-F2) 재현 PASS. Pass 1/2/3 + prod-smoke runtime 은 본 머신 :3001/:8002 점유로 user 수동 트리거 권장. [Verdict](../qa/runs/ux-final-e2e-2026-04-30/summary.md)
@@ -9,6 +10,43 @@
 > **2026-04-30 UX Sweep Phase E — Premium Deferred (toggle 1건)** — Plan [ux-sweep-phase-e-premium-deferred](../plan/ui/ux-sweep-phase-e-premium-deferred.md). Phase 2 (OAuth/결제/Tier 게이팅) 의존 3건 (E.1 F06 평일/주말 토글 · E.2 F09 What-If UI · E.3 FreeLimitSurvey Premium CTA) 차단 사유 + 선행 요건 명시. 코드 변경은 E.3 임시 결정만 적용 — `FreeLimitSurvey` Premium CTA 블록에 `NEXT_PUBLIC_PREMIUM_CTA_ENABLED` env 게이트 추가 (default off, `'true'` 일 때만 노출), `data-testid="survey-premium-cta"` 부여. spec 보강 1건: `f12-feedback.spec.ts::Ring1-F12-E3` — env off 시 mood ≥ 4 응답에도 CTA 미노출 회귀. tsc 0 error.
 > **2026-04-30 UX Sweep Phase D — A11y / 마감** ⭐ — Plan [ux-sweep-phase-d-a11y](../plan/ui/ux-sweep-phase-d-a11y.md). 10 항목 (D.1~D.10) 일괄 구현: (D.1) `app/error.tsx` · `app/loading.tsx` · `app/app/error.tsx` · `app/app/loading.tsx` 4 boundary 신규 — reset+홈 동선 + split-panel skeleton. (D.2) `globals.css` `:focus-visible` 글로벌 룰 + Header/Hero/BetaBanner/Footer focus-visible:ring 보강. (D.4) `FeedbackRow` ack 후 ↩️ 수정 토글 + `useToastStore` 안내. (D.5) `FeedbackModal` iframe 5s timeout fallback (mailto/Kakao). (D.6) `CompareCard`/`SuggestionChips` 안정 키 (`${index}-${value}`). (D.7) `InlineChart` CSS 변수 토큰화 (`useEffect` 1회 read + SSR fallback) + 차트 토큰 5종 light/dark 추가. (D.8) `Header` Tailwind hover 전환 (inline JS 제거). (D.9) `BottomNav` minHeight 60px + 폰트 22→24/12→13 (WCAG 2.5.8 AA). (D.10) `DistrictLayer` mouseout 시 `styleFor` 전체 재계산 (compare 슬롯 색 race 방지). 변경 12 파일 + 신규 spec 2건 (`ring0-preflight/02-error-boundary.spec.ts` · `ring1-features/a11y.spec.ts`). 검증: tsc 0 error · next lint 신규 변경 0 warning (pre-existing 4건만 잔존).
 > **2026-04-29 Out-of-Scope (서울 외 지역) 거부 3중 가드 구현** ⭐ — Plan [out-of-scope-handling-2026-04-29](../plan/fix/out-of-scope-handling-2026-04-29.md). 사용자 보고 ("부산/제주 등 서울 외 질문 처리 안 됨") → 3중 가드 설계: (L1) `intents.yaml` `out_of_scope` intent 신규 (광역지명 + 비-서울 시단위 + 부산 동단위 + 제주 동단위 패턴, 한글 word-boundary `(?<![가-힣])...(?![가-힣ㄱ-ㅎㅏ-ㅣ])` 로 substring 오매치 차단). (L2) `planner.py` `_classify_by_rules` 진입 직후 `out_of_scope` 분기 + `_CLARIFICATION_TEMPLATES["out_of_scope"]` 추가, LLM/Tool 호출 0건으로 즉시 clarification_direct 반환. (L3) `entity_matching.py` `STRONG_TOP1_MIN=0.70` 상수 + `chat.py` message-detect 분기에서 score < STRONG_TOP1_MIN 시 거부 (silent wrong-district 가상 비-서울 fuzzy 매치 차단). (L4) `system.py::_BASE_PROMPT` rule 11 + `respond.py::RESPOND_SYSTEM_PROMPT` rule 13 거부 룰 명시. 변경 6 파일 + 신규 unit `test_out_of_scope.py` 21 testcase + Plan 1건. 검증: ruff PASS · **pytest 70/71** (신규 21 + 기존 49, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · 회귀 0.
+
+---
+
+## 2026-06-09 — P0 백로그 (ISSUE-003 / ISSUE-002 / 워킹트리)
+
+### 개요
+- **Plan**: [p0-backlog-2026-06-09.md](../plan/fix/p0-backlog-2026-06-09.md)
+- 2026-06-08 QA 디퍼 2건(ISSUE-003 / ISSUE-002) fix + 워킹트리 chore 정리. 커밋 4건 main 직접(프로젝트 관례).
+- ✅ ISSUE-003 (medium, data accuracy) fix + 회귀 테스트 / ✅ ISSUE-002 (low, cosmetic) fix / ✅ 워킹트리 chore 커밋
+- 🔧 Item 4 Accuracy Eval Round 2 — 003 fix 머지 후 별도 실행 패스로 게이트(미실행, 사용자 트리거)
+
+### ISSUE-003 — recommend_business 저점포수 랭킹 아티팩트 (✅ fixed)
+
+| 항목 | 내용 |
+|---|---|
+| 원인 | `repositories/real/recommendation.py:153` `raw_score = (per_store_sales * age_match * (1-close_rate)) / max(competition, 0.01)`. 점포 1개면 `per_store_sales`(=monthly/store_count)가 카테고리 전체매출(월 2억)로 잡히고, `competition`(=store_count/total) 하한 0.01 로 희소 카테고리 ×100 증폭 → 정규화 후 score 100 1순위 고정 |
+| 수정 | 모듈 상수 `MIN_RELIABLE_STORES=3` + 순수함수 `_apply_store_floor` 추가. 스코어링 루프 직후(L181) `filtered, low_confidence = _apply_store_floor(raw_scores)` 로 `store_count < 3` 카테고리 제외. 통과 카테고리 0이면(작은 골목상권) 전체 fallback + `low_confidence=True`. 결과 dict 에 안내 메시지("점포 표본이 적어(<3개) 참고용 추천입니다") |
+| 범위 | 루프 내부(per-category 계산) 미수정 — 플로어는 루프 직후 파티션. ~8줄. Mock 레포는 fixture 기반이라 공식 미사용 → 변경 불필요 |
+| 검증 | `tests/test_recommendation_scoring.py` 신규 3건(단일점포 제외 + 전부미달 fallback + 상수 sanity) + `test_repos_mock.py` 회귀 10건 = **13 passed**. ruff/format PASS. `_apply_store_floor` 는 신규 함수라 fix 없으면 import 자체 실패(회귀 가드 성립) |
+| 커밋 | `90937c6` |
+
+### ISSUE-002 — Hero H1 줄바꿈 (✅ fixed)
+
+| 항목 | 내용 |
+|---|---|
+| 원인 | `components/landing/Hero.tsx:75` `<h1>` 에 word-break 없음 → 한글 "데이터로" 단어중간 줄바꿈. codebase 전체 break-keep 사용처 0 |
+| 수정 | className 에 Tailwind `break-keep`(word-break: keep-all) 추가. 기본/investor 카피 양쪽 커버 |
+| 검증 | tsc 0 error · next lint pre-existing 3 warning(DistrictLayer/MapContainer, 변경 무관)만 |
+| 커밋 | `7ff871d` |
+
+### 워킹트리 chore (✅)
+- `.gitignore` +`.gstack/` · `CLAUDE.md` +`## Health Stack` (이전 세션 산출물) → chore 커밋 `7fbc118` 로 먼저 클린 후 fix 진행.
+
+### 다음 P0
+- 🔧 Item 4 Accuracy Eval Round 2 — `scripts/eval/run_accuracy_round2.sh`(BASE=:8000) → S1~S8 SSE 수집, S4(건대 추천)는 003 fix 후 1순위가 점포 ≥3 인지 확인. current source 재빌드 필수(`feedback_stale_container_vs_source`). 사용자 트리거.
+- 🔧 origin/main push (커밋 4건 미push)
+- 🔧 `.env`/`.env.dev` `NEXT_PUBLIC_API_URL` → `:8000` 교정(직전 세션 임시 override만)
 
 ---
 
