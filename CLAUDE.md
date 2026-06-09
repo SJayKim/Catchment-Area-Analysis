@@ -180,3 +180,9 @@ Global `~/.claude/settings.json` 의 `PostToolUseFailure` + `Stop` 훅이 도구
 - Agent 상세: @docs/architecture/agent.md
 - 기능 목록: @docs/spec/feature-list.md
 - 현재 상태: @docs/status/current-status.md
+
+## Health Stack
+
+- typecheck: cd frontend && npx tsc --noEmit
+- lint: cd frontend && npm run lint ; cd server && ruff check .
+- test: cd server && pytest
