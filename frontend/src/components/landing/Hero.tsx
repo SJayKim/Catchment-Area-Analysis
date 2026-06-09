@@ -72,7 +72,7 @@ export default function Hero() {
 
           <h1
             data-testid="hero-headline"
-            className="text-4xl lg:text-6xl font-black tracking-tight leading-tight mb-4"
+            className="text-4xl lg:text-6xl font-black tracking-tight leading-tight mb-4 break-keep"
             style={{
               color: 'var(--text-primary)',
               fontFeatureSettings: '"ss06"',
