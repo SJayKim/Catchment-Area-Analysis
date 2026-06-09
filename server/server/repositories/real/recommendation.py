@@ -11,6 +11,19 @@ from server.repositories.real._units import MONTHS_PER_QUARTER
 
 logger = logging.getLogger(__name__)
 
+MIN_RELIABLE_STORES = 3  # n<3 카테고리는 per-store 지표가 통계적으로 무의미
+
+
+def _apply_store_floor(scored: list[dict]) -> tuple[list[dict], bool]:
+    """표본 부족(store_count < floor) 카테고리를 랭킹에서 제외.
+
+    플로어 통과 카테고리가 0이면(작은 골목상권) 전체로 fallback 하고 low_confidence=True.
+    """
+    reliable = [s for s in scored if s.get("store_count", 0) >= MIN_RELIABLE_STORES]
+    if reliable:
+        return reliable, False
+    return scored, True
+
 
 class RealRecommendationRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
@@ -178,7 +191,7 @@ class RealRecommendationRepository:
                         }
                     )
 
-                filtered = raw_scores
+                filtered, low_confidence = _apply_store_floor(raw_scores)
                 budget_filtered = False
                 if preference:
                     pref_f = [s for s in filtered if s.get("category_group") and preference in s["category_group"]]
@@ -221,7 +234,9 @@ class RealRecommendationRepository:
                     recommendations.append(rec)
 
                 message = None
-                if budget and not budget_filtered:
+                if low_confidence:
+                    message = "점포 표본이 적어(<3개) 참고용 추천입니다"
+                elif budget and not budget_filtered:
                     message = "예산 조건에 맞는 업종이 없어 전체 기준으로 추천합니다"
 
                 result = {
