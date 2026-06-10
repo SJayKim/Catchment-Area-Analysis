@@ -1,0 +1,68 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120052", "3120053"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}, "3120053": {"district_code": "3120053", "district_name": "건대입구역(건대)", "floating_pop": 2771403, "main_age": "20대", "store_count": 1545, "close_rate": 3.8, "monthly_sales": 26001164651, "status": "stable", "quarter": "2025Q4", "sales_per_store": 16829233, "pop_per_store": 1794}}, "district_codes": ["3120052", "3120053"], "winners": {"highest_pop": "건대입구역(건대)", "highest_sales": "건대입구역(건대)", "lowest_close_rate": "성수역", "best_efficiency": "건대입구역(건대)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "건대입구역이 성수역 대비 유동인구·"}
+
+data: {"type": "text", "content": "매출 모두 우세하지만, 성수역이 안"}
+
+data: {"type": "text", "content": "정성 면에서 앞섭니다.**\n\n## 핵심 지표 비교\n\n**"}
+
+data: {"type": "text", "content": "유동인구**\n- **건대입구역**: 월 277만명 vs **"}
+
+data: {"type": "text", "content": "성수역**: 월 141만명 (1.96배 차이)\n- 건대입구역이 압"}
+
+data: {"type": "text", "content": "도적으로 많은 고객 유입을 보여"}
+
+data: {"type": "text", "content": "줍니다\n- 두 상권 모두 **20대 중심** 상"}
+
+data: {"type": "text", "content": "권으로 젊은 고객층이 주력\n\n**매출 규모**\n- **건대입"}
+
+data: {"type": "text", "content": "구역**: 월 260억원 vs **성수역**: 월 221억원 (17% 차이)\n- 점"}
+
+data: {"type": "text", "content": "포당 월 매출: **건대입구역** 1,683만원 vs **성수역"}
+
+data: {"type": "text", "content": "** 1,450만원\n- 건대입구역이 매출 효율에서도 16% 우세"}
+
+data: {"type": "text", "content": "\n\n**안정성 지표**\n- **폐업률**: **성수역** 2.4% vs 건대입구역 3.8% "}
+
+data: {"type": "text", "content": "\n- 성수역이 1.4%p 낮아 **사"}
+
+data: {"type": "text", "content": "업 안정성**에서 우위\n- 두 상권 모두 서울 평균"}
+
+data: {"type": "text", "content": "(6.5%) 대비 양호한 수준\n\n## 상권별"}
+
+data: {"type": "text", "content": " 특성 분석\n\n**건대입구역 장점**\n- 대학가"}
+
+data: {"type": "text", "content": " 특성상 안정적인 20대 고객층 확보\n- 높은 유동인구로"}
+
+data: {"type": "text", "content": " 인한 매출 잠재력\n- 점포당 효율성도 상대"}
+
+data: {"type": "text", "content": "적으로 우수\n\n**성수역 장점**  \n- 낮은 폐업률로 사업 리스크 최소화\n- 최근 "}
+
+data: {"type": "text", "content": "핫플레이스로 부상하며 트렌디한 이미지\n- 상"}
+
+data: {"type": "text", "content": "대적으로 경쟁 강도가 낮을 가능성\n\n## 창업 시나리오별 추"}
+
+data: {"type": "text", "content": "천\n\n- **매출 중심 사업**: 건대입구역 "}
+
+data: {"type": "text", "content": "(높은 유동인구·매출)\n- **안정성 중시**: 성수역 (낮은 폐업률)\n- **20대 타겟 "}
+
+data: {"type": "text", "content": "사업**: 두 상권 모두 적합\n\n각 상권의 추천 업종이나 구체적인 리"}
+
+data: {"type": "text", "content": "스크 분석이 궁금하시다면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done", "trace_id": "f8a70ce985adf0fe804d91b606d57143", "quality_match_rate": 0.5}
+

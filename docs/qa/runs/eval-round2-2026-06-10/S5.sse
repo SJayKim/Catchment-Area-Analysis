@@ -1,0 +1,76 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.56278678812079, "lng": 126.98370073835953, "zoom": 4}, "district_code": "3120028", "district_name": "명동(명동거리)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "risk", "steps": ["점포 이력/리스크 분석"]}
+
+data: {"type": "tool", "name": "get_store_history", "input": {"district_code": "3120028"}, "progress_label": "리스크 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_store_history", "done_label": "리스크 분석 완료"}
+
+data: {"type": "card", "card_type": "risk", "data": {"district_code": "3120028", "stability": {"score": null, "grade": "데이터 부족", "message": "2분기 이상 데이터가 쌓이면 리스크 분석이 가능합니다", "quarters_analyzed": 1}, "survival_by_category": [], "risk_categories": [{"category": "편의점", "close_rate": 25.0, "warning": "폐업률 매우 높음"}, {"category": "패스트푸드점", "close_rate": 20.0, "warning": "폐업률 매우 높음"}, {"category": "시계및귀금속", "close_rate": 10.0, "warning": "폐업률 높음"}, {"category": "커피-음료", "close_rate": 10.0, "warning": "폐업률 높음"}, {"category": "미용실", "close_rate": 6.5, "warning": "폐업률 높음"}, {"category": "가방", "close_rate": 6.4, "warning": "폐업률 높음"}, {"category": "분식전문점", "close_rate": 6.0, "warning": "폐업률 높음"}, {"category": "피부관리실", "close_rate": 5.3, "warning": "폐업률 높음"}], "quarterly_trend": [{"quarter": "2025Q4", "store_count": 1712, "open": 64, "close": 44}], "benchmarks": {"districtType": "발달상권", "seoulAvgCloseRate": 5.9}, "dataSources": [{"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "명동은 높은 폐업률과 치열한 경쟁으로 창업 리스크가 상당한"}
+
+data: {"type": "text", "content": " 상권입니다.**\n\n## 주요 리스크 요소\n\n### **고위험 업종 집중**"}
+
+data: {"type": "text", "content": "\n현재 명동에서 **폐업률이 매우 높은 업종**들이 다"}
+
+data: {"type": "text", "content": "수 확인됩니다:\n\n- **편의점**: 폐업률 25% "}
+
+data: {"type": "text", "content": "(4곳 중 1곳 폐업)\n- **패스트푸드점**: 폐업률 20% "}
+
+data: {"type": "text", "content": "(5곳 중 1곳 폐업)\n- **시계및귀금속**: 폐업률 10%\n- **커피-음료**: 폐업률 10%\n\n이는"}
+
+data: {"type": "text", "content": " 서울 평균 폐업률 5.9%를 크게 상회하는 수치로"}
+
+data: {"type": "text", "content": ", 특히 편의점과 패스트푸드점은 **극도로 위험한 수준**입니다.\n\n###"}
+
+data: {"type": "text", "content": " **발달상권 특성상 높은 진입장벽**\n명동은 발"}
+
+data: {"type": "text", "content": "달상권으로 분류되어 다음과 같은 구조적 리스크가 있습니다:\n- **높"}
+
+data: {"type": "text", "content": "은 임대료**: 프리미엄 입지로 인한 부담\n- **치열한 경쟁**:"}
+
+data: {"type": "text", "content": " 유사 업종 밀집도 높음\n- **관광"}
+
+data: {"type": "text", "content": "객 의존**: 외부 변수"}
+
+data: {"type": "text", "content": "(코로나, 환율 등)에 취약\n\n### **데이터 한계**\n현재 1"}
+
+data: {"type": "text", "content": "분기 데이터만 축적되어 **장기 트렌드 분석이 불"}
+
+data: {"type": "text", "content": "가능**한 상황입니다. 계절성이나 중장"}
+
+data: {"type": "text", "content": "기 안정성을 판단하기 어려워 추가적인 불"}
+
+data: {"type": "text", "content": "확실성이 존재합니다.\n\n## 창업 시 주의사항\n\n1. **업"}
+
+data: {"type": "text", "content": "종 선택 신중**: 위 고위험 업종은 피하거"}
+
+data: {"type": "text", "content": "나 차별화 전략 필수\n2. **충분한 자본금**:"}
+
+data: {"type": "text", "content": " 높은 초기 비용과 운영비 대비 필"}
+
+data: {"type": "text", "content": "요\n3. **관광객 변동성 대비**: 내"}
+
+data: {"type": "text", "content": "국인 고객층 확보 방안 마련\n4. **임대 조"}
+
+data: {"type": "text", "content": "건 면밀 검토**: 권리금, 월세, 계약 조"}
+
+data: {"type": "text", "content": "건 등\n\n**※ 이는 공공데이터 기"}
+
+data: {"type": "text", "content": "반 추정치이며, 실제 창업 시에는 현장"}
+
+data: {"type": "text", "content": " 실사와 전문가 상담이 필요합니다.**\n\n명동 추"}
+
+data: {"type": "text", "content": "천 업종이나 매출 분석이 궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["명동 추천 업종 알려줘", "매출 분석해줘", "다른 상권 비교해줘"]}
+
+data: {"type": "done", "trace_id": "7419cdb74b80eb5a22d850fd94002fc7", "quality_match_rate": 0.0}
+

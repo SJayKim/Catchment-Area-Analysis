@@ -1,0 +1,44 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "홍대입구역이 성수역 대비 유동인구도 압도적으로 많습니다.**\n\n## 유동인구 비"}
+
+data: {"type": "text", "content": "교\n\n**홍대입구역(홍대)**\n- 하루 평균 유동인구: **124,386명**\n- 시"}
+
+data: {"type": "text", "content": "간대별 최고: 오후 6시 **"}
+
+data: {"type": "text", "content": "52,179명**\n\n**성수역**\n- 하루 평균 유동인구: **67,741명**\n- 시간대"}
+
+data: {"type": "text", "content": "별 최고: 오후 6시 **21,893명**\n\n홍대입구역이 성수역 대비 **1"}
+
+data: {"type": "text", "content": ".84배** 많은 유동인구를 기록합니다. 특히 저"}
+
+data: {"type": "text", "content": "녁 시간대(오후 6시) 피크 유동인구는 홍대가 5"}
+
+data: {"type": "text", "content": "만 2천명으로 성수"}
+
+data: {"type": "text", "content": "(2만 2천명)의 **2.38배**에 달해 더욱 큰 격"}
+
+data: {"type": "text", "content": "차를 보입니다.\n\n## 유동인구 패턴 특징\n\n- **홍대**: 오후 6시 이후에"}
+
+data: {"type": "text", "content": "도 높은 유동인구 유지 "}
+
+data: {"type": "text", "content": "(젊은층 유흥·문화 중심)\n- **성수**: 상대적으로 평일"}
+
+data: {"type": "text", "content": " 직장인 중심의 안정적 패턴\n\n매"}
+
+data: {"type": "text", "content": "출 격차(2.4배)와 유동인구 격차(1.84배)가 비슷한"}
+
+data: {"type": "text", "content": " 수준으로, 홍대의 높은 매출이 풍부한 유동인구에"}
+
+data: {"type": "text", "content": "서 비롯됨을 확인할 수 있습니다."}
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대)에서 뭐하면 좋을까?", "이 자리 위험하지 않아?", "카페 하면 어때?", "유동인구 자세히 알려줘"]}
+
+data: {"type": "done", "trace_id": "1c35068cfb72847b94ad1174fc3a0e98", "quality_match_rate": 0.0}
+

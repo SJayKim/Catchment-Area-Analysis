@@ -1,0 +1,108 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.55635499365675, "lng": 126.97293579091794, "zoom": 4}, "district_code": "3120043", "district_name": "서울역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "summary", "steps": ["상권 종합 요약 조회"]}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120043"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "서울역", "districtType": "발달상권", "summary": "하루 평균 유동인구 102만 2천명, 월 추정 매출 200억 6천만원의 안정적인 발달상권입니다.", "monthlySales": 20061174578, "floatingPopulation": {"dailyAvg": 1022060, "peakHour": 6, "byHour": [{"hour": 0, "pop": 59150}, {"hour": 6, "pop": 255755}, {"hour": 11, "pop": 250275}, {"hour": 14, "pop": 246256}, {"hour": 17, "pop": 162562}, {"hour": 21, "pop": 48062}]}, "topCategories": [{"name": "일반의류", "count": 209}, {"name": "한식음식점", "count": 93}, {"name": "신발", "count": 47}, {"name": "커피-음료", "count": 35}, {"name": "가방", "count": 29}], "status": "stable", "closeRate": {"current": 2.4, "average": 6.5}, "insights": {"ageInsight": "40대 (25.8%)", "perStoreSales": 22874771, "franchiseRatio": 19.2, "weekendUplift": -89.6}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "하위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 50%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "서울역은 하루 102만명이 몰리는 초"}
+
+data: {"type": "text", "content": "대형 발달상권이지만, 점포당 매출 효율은"}
+
+data: {"type": "text", "content": " 아쉬운 편입니다.**\n\n## 유동인구 분석"}
+
+data: {"type": "text", "content": "\n하루 평균 **102만 2천명**의 유동인구가 몰리며"}
+
+data: {"type": "text", "content": ", 이는 서울 평균(9만 2천명) 대비 **11"}
+
+data: {"type": "text", "content": "배**에 달하는 압도적인 규모입니다. 발"}
+
+data: {"type": "text", "content": "달상권 중에서도 **상위 25%**에 속하는 초대형 상권입"}
+
+data: {"type": "text", "content": "니다.\n\n시간대별로는 **오전 6시**"}
+
+data: {"type": "text", "content": "(25만 6천명)에 피크를 찍는"}
+
+data: {"type": "text", "content": " 전형적인 **출근형 상권**이며, 오전"}
+
+data: {"type": "text", "content": " 11시(25만명), 오후 2시"}
+
+data: {"type": "text", "content": "(24만 6천명)에도 높은 유동량을 유지합니다. 40"}
+
+data: {"type": "text", "content": "대가 25.8%로 가장 많은 비중을 차지하는 직장인 중"}
+
+data: {"type": "text", "content": "심 상권입니다.\n\n## 매출 현황\n월 추정 매출은 **200억 6천만"}
+
+data: {"type": "text", "content": "원**으로 절대 규모는 상당하지만, 발달상권 "}
+
+data: {"type": "text", "content": "중 **하위 25%** 수준입니다. 더 중"}
+
+data: {"type": "text", "content": "요한 것은 **점포당 월 매출이 2,287만원**으로 발달상권 평"}
+
+data: {"type": "text", "content": "균(4,600만원)의 **50%"}
+
+data: {"type": "text", "content": " 수준**에 그친다는 점입니다.\n\n주말 매"}
+
+data: {"type": "text", "content": "출 비중이 평일 대비 **89.6% 낮아** 평"}
+
+data: {"type": "text", "content": "일 직장인 소비에 크게 의존하는 구조입"}
+
+data: {"type": "text", "content": "니다.\n\n## 점포 현황 및 경쟁도\n총"}
+
+data: {"type": "text", "content": " **877개 점포** 중 일반의류(209개), 한식음식점(93개), 신발(47개)"}
+
+data: {"type": "text", "content": " 순으로 많습니다. 프랜차이즈 비율은 19.2%로 개인 창"}
+
+data: {"type": "text", "content": "업 여지가 있는 편입니다.\n\n**폐업률 2"}
+
+data: {"type": "text", "content": ".4%**는 서울 평균(6.5%) 대비 매우 낮아 발달상권 중 **"}
+
+data: {"type": "text", "content": "상위 25%** 수준의 안정성을 보입니다.\n\n## 기회와"}
+
+data: {"type": "text", "content": " 리스크\n\n**기회 요소:**\n- 서울 최고 수"}
+
+data: {"type": "text", "content": "준의 유동인구 (일 102만명)\n- 매우 "}
+
+data: {"type": "text", "content": "낮은 폐업률 (2.4%)로 안정적 운영 환경\n- 상대"}
+
+data: {"type": "text", "content": "적으로 낮은 프랜차이즈 비율 (19.2%)\n\n**주의 요"}
+
+data: {"type": "text", "content": "소:**\n- 유동인구 대비 낮은 매출 효율 "}
+
+data: {"type": "text", "content": "(점포당 2,287만원)\n- 평일 의존도 높음 "}
+
+data: {"type": "text", "content": "(주말 매출 급감)\n- 의류업종 포화 상태 "}
+
+data: {"type": "text", "content": "(209개 점포)\n\n**창업 시사점:** 서울역은 유동인구는"}
+
+data: {"type": "text", "content": " 많지만 대부분이 **통행 목적**이"}
+
+data: {"type": "text", "content": "어서 실제 소비 전환율이 낮은 것으로 보입니다."}
+
+data: {"type": "text", "content": " 빠른 이동 중에도 구매할 수 있는 테"}
+
+data: {"type": "text", "content": "이크아웃 중심 업종이나 직장인 타"}
+
+data: {"type": "text", "content": "겟 서비스업이 적합할 것 같습니다.\n\n서"}
+
+data: {"type": "text", "content": "울역에서 어떤 업종을 고려 중이신지,"}
+
+data: {"type": "text", "content": " 아니면 다른 상권과 비교 분석이 필요하신지 알려주세"}
+
+data: {"type": "text", "content": "요!"}
+
+: ping - 2026-06-10 00:55:06.063662+00:00
+
+data: {"type": "suggestion", "questions": ["서울역에서 뭐하면 좋을까?", "서울역 리스크 분석해줘", "유동인구 시간대별로 보여줘", "다른 상권이랑 비교해줘"]}
+
+data: {"type": "done", "trace_id": "b20a14fadad2bcb145d5a78100567587", "quality_match_rate": 0.519}
+

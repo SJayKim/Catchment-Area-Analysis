@@ -1,0 +1,68 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "plan", "intent": "comparison", "steps": ["상권 비교 분석"]}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120103", "3120052"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120103": {"district_code": "3120103", "district_name": "홍대입구역(홍대)", "floating_pop": 4106209, "main_age": "20대", "store_count": 2981, "close_rate": 4.0, "monthly_sales": 53200280285, "status": "stable", "quarter": "2025Q4", "sales_per_store": 17846454, "pop_per_store": 1377}, "3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}}, "district_codes": ["3120103", "3120052"], "winners": {"highest_pop": "홍대입구역(홍대)", "highest_sales": "홍대입구역(홍대)", "lowest_close_rate": "성수역", "best_efficiency": "홍대입구역(홍대)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "thinking", "step": "분석 결과를 정리하는 중...", "icon": "✍️"}
+
+data: {"type": "text", "content": "**"}
+
+data: {"type": "text", "content": "홍대입구역이 성수역 대비 2.4배 높은 매출"}
+
+data: {"type": "text", "content": "을 기록하며 압도적 우위를 보입니다.**\n\n## 매출 규"}
+
+data: {"type": "text", "content": "모 비교\n\n**홍대입구역(홍대)**\n- 월 추정 매출: **532억원**"}
+
+data: {"type": "text", "content": "\n- 점포당 월 매출: **1,785만원**\n- 총 점포 수: "}
+
+data: {"type": "text", "content": "2,981개\n\n**성수역**\n- 월 추정 매출: **221억원** \n- 점포당 월 매출: **1,450만원**\n- 총"}
+
+data: {"type": "text", "content": " 점포 수: 1,526개\n\n## 매출 효율성 분석\n\n홍대입구역이 **점포당 매출에"}
+
+data: {"type": "text", "content": "서도 23% 우위**를 보입니다. 이는 단순히 점포 수가"}
+
+data: {"type": "text", "content": " 많아서가 아니라, 개별 점포의 매출 효율 자체가 더 높다는 의미입"}
+
+data: {"type": "text", "content": "니다.\n\n**효율성 요인**:\n- **유동인구 밀도**: 홍대 "}
+
+data: {"type": "text", "content": "점포당 1,377명 vs 성수 점포당 926명 (49% 차이)\n- **"}
+
+data: {"type": "text", "content": "상권 성숙도**: 홍대는 오랜 기간 검증된 상권으로 고"}
+
+data: {"type": "text", "content": "객 유입 시스템이 안정적\n- **소비"}
+
+data: {"type": "text", "content": " 패턴**: 20대 중심 상권이지만 홍대가 더 다"}
+
+data: {"type": "text", "content": "양한 소비층 확보\n\n## 성장성과 안정성\n\n**홍대입구역**:"}
+
+data: {"type": "text", "content": " 높은 매출이지만 경쟁도 치열"}
+
+data: {"type": "text", "content": "\n**성수역**: 상대적으로 낮은 매출이지만 **폐업률 2.4%"}
+
+data: {"type": "text", "content": "**로 홍대(4.0%) 대비 안정적\n\n## 창"}
+
+data: {"type": "text", "content": "업 관점 시사점\n\n- **매출 우선"}
+
+data: {"type": "text", "content": "**: 홍대입구역 선택 "}
+
+data: {"type": "text", "content": "(높은 유동인구, 검증된 소비력)\n- **안정성 우선**: 성수역 선택 "}
+
+data: {"type": "text", "content": "(낮은 폐업률, 상대적 저경쟁)\n- **초기 자본**: 홍대는 높은 임"}
+
+data: {"type": "text", "content": "대료 예상, 성수는 상대적 진입 장벽 낮음\n\n각 상권의 추"}
+
+data: {"type": "text", "content": "천 업종이나 구체적인 리스크 분석이 "}
+
+data: {"type": "text", "content": "궁금하시면 말씀해 주세요!"}
+
+data: {"type": "suggestion", "questions": ["어떤 상권이 더 좋을까?", "추천 업종은 각각 어때?", "리스크도 비교해줘"]}
+
+data: {"type": "done", "trace_id": "193785e24ba84bb659c582599af17c23", "quality_match_rate": 0.5}
+
