@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-06-21
+> 최종 갱신: 2026-06-25
+> **2026-06-25 데이터 신뢰성 확보 — 적재 결손 3건 근본수정 + 컬럼내용 검증 게이트 + 적대검증 워크플로우** ⭐ — Plan [data-reliability-2026-06-25](../plan/fix/data-reliability-2026-06-25.md). 2026-06-25 정합성 감사가 surfaced 한 **3개월 잠복 적재결손 3건**(행은 존재하나 컬럼 전량 0/NULL → 기존 행수·FK·boundary 검증을 조용히 통과) 근본수정 + 재발차단. **RC1 worker 19,692행 전량0**: `transformers.py` worker 분기가 resident 접미사(`MAG_POPLTN_CO`) 재사용 → 실 API 키 `MAG_{n}_WRC_POPLTN_CO`/`FAG_{n}` 빌더 분리(live API 1행 dump 로 검증). 재적재 후 worker total_pop **472만**(was 0). **RC2 default_unit_price 100% NULL**: alembic 002 백필이 category 시드 전 실행돼 0행 no-op → `seed_category_metadata.py` INSERT 에 major 기준 객단가(외식12000/서비스25000/소매15000, 기본15000) + `simulation.py` 2차 폴백. NULL **0건**. **RC3 aliases 100% NULL**: source 부재 → `category_aliases.json` 핵심 **32종** 신규 + seed 결합. 32 set/68 NULL(의도). **RC0 게이트**: `runner.py::_validate_data` per-column NULL/all-zero(`bool_and`)/음수 sanity + **비-0 exit**, 행수 quarter-scope(빈 분기 FAIL). 주입 worker=0 → FAIL 재현. **검증**: pytest **132 passed/8 skip** + data-integrity 13(7 unit + 6 `@real`, gate FAIL-injection 포함). ruff PASS. 시드 덤프 재생성(5.6MB). **적대검증 워크플로우**(5 lens→finding별 회의적 검증·16 agent): 11 finding 전건 confirmed → **P1 3건**(alias '학원' 학원 subtype 오라우팅·빈분기 false-pass·게이트 무테스트) + **P2 3건** 즉시 수정, GATE-3(all-constant)·SEED-2(price/major decouple) 는 단일분기 설계·도달불가로 의도적 defer. 코드: `transformers.py`·`seed_category_metadata.py`·`category_aliases.json`(신규)·`simulation.py`·`runner.py`·`p1_api_vs_db.py`·`test_data_integrity.py`(신규)·`ci.yml`.
 > **2026-06-21 학습용 ARCHITECTURE-MAP.md 신규 — Mermaid 도식 3종 + 코드 매핑** 🆕 — `docs/learning/ARCHITECTURE-MAP.md` 신규. `crypto_deep_research/docs/ARCHITECTURE-MAP.md` 포맷 차용(Mermaid 도식 + 폴더 책임표 + 설계↔코드 file:line 매핑). **도식 3종**: (1) 시스템 토폴로지 — 프론트(Next.js) ─REST+SSE─ 백엔드(FastAPI) ─Repository─ 데이터(PostGIS/Redis) 색상 경계, (2) 단일 요청 시퀀스 "강남역 알려줘" Plan→Act→Eval→Respond + SSE 9이벤트, (3) PAE 에이전트 내부 그래프(greeting/clarification 단락 포함). **매핑표**: 폴더별 책임(백/프론트 분리) · 4대 학습포인트(SSE/PAE/Repository/지도↔챗 동기화)↔코드 · 흐름노드↔file:line(actor.py:156·chatStore.ts:240·sseParser.ts:10 등 실 grep) · 도구 9종 · 주요 설계결정(월환산/서울밖 3중가드/저점포 floor) · F01~F13 기능↔코드 인덱스. 기존 서술형 코스(00~06) + `architecture/` 스펙과 양끝 링크 연결. 코드 변경 0(문서 only).
 > **2026-06-10 Accuracy Eval Round 2 (Item 4) — ISSUE-003 fix 라이브 검증 + S7 coref 수치 날조 신규 P1** ⭐ — P0 백로그 Item 4 실행(003 fix `90937c6` 머지 후 게이트 해제). 스택: 기존 backend 컨테이너(`--reload` + `server` bind-mount)에 003 fix 이미 반영 확인 후 **clean re-import용 `docker compose restart backend`**(Windows/OneDrive bind-mount 파일워치 누락 방지), `USE_MOCK=false`·1,650 상권·`:8000` health 200. 수집: `OUT=docs/qa/runs/eval-round2-2026-06-10 BASE=:8000 run_accuracy_round2.sh`(message-only=entity-linking 검증, 04-24 baseline 보존). **결과 평균 8.0→9.4**(7/8 만점, 전 tool-backed 수치 DB일치). **ISSUE-003 라이브 재현 검증**: 성수동카페거리(편의점 1점포 @₩202M)·성수초등학교(1점포 @₩835M) 추천 #1에서 단일점포 편의점 **제외**(top-5 전부 store_count≥4), S4 건대 #1=편의점 store_count=8 — `_apply_store_floor` 의도대로. DB교차검증 강남1,396억/서울201억/홍대532억/성수221억/건대260억 전부 자릿수 일치. **신규 P1**: S7 coref 후속질문("거기 중 유동인구 더 많은 곳?")이 **tool 0건으로 유동인구 수치 날조**(124,386/67,741 — 카드 실값 411만/141만 무시, "일평균>시간대최고" 물리 모순). W1 abstention 가드가 tool-less 후속질문 수치주장 미포착(003 fix 무관, recommend 외 경로). S7 8.9→5.0 회귀. 권고: 수치 coref 후속질문은 tool 강제호출 or 카드값 인용 강제 + S7 재현율 측정. Verdict [eval-round2-2026-06-10/_verdict.md](../qa/runs/eval-round2-2026-06-10/_verdict.md).
 > **2026-06-09 P0 백로그 — ISSUE-003 recommend 저점포수 랭킹 fix + ISSUE-002 Hero H1 줄바꿈 fix** ⭐ — 2026-06-08 QA 디퍼 2건 + 워킹트리 처리. **ISSUE-003 (medium, data accuracy)**: `recommendation.py` 가 점포 1~2개 카테고리를 `per_store_sales`(=monthly/store_count) 아티팩트 + competition 하한(0.01) 증폭으로 score 100 1순위 고정(성수 편의점 월 2억 from 1점포). 댐핑 단독은 ~100x 우위라 수학적으로 불충분 → 스코어링 루프 직후 `_apply_store_floor`(`MIN_RELIABLE_STORES=3`) 파티션, 통과 카테고리 0이면 전체 fallback + `low_confidence` 안내 메시지("점포 표본이 적어(<3개) 참고용 추천"). 루프 내부 미수정(surgical, ~8줄). 회귀 `test_recommendation_scoring.py` 3건 + mock 회귀 10건 = **13 passed**, ruff PASS. **ISSUE-002 (low, cosmetic)**: Hero H1 한글 "데이터로" 단어중간 줄바꿈 → Tailwind `break-keep`(word-break: keep-all). tsc 0 error · lint pre-existing 3 warning만(변경 무관). **워킹트리 chore**: `.gitignore`(+`.gstack/`) + `CLAUDE.md`(+`## Health Stack`) 커밋. 커밋 4건(chore `7fbc118` / 003 fix `90937c6` / 002 fix `7ff871d`). **Item 4 Accuracy Eval Round 2**: 003 fix 가 recommend 품질을 바꾸므로 머지 후 별도 실행 패스로 게이트(미실행, 사용자 트리거). Plan [p0-backlog-2026-06-09](../plan/fix/p0-backlog-2026-06-09.md).
@@ -12,6 +13,59 @@
 > **2026-04-30 UX Sweep Phase E — Premium Deferred (toggle 1건)** — Plan [ux-sweep-phase-e-premium-deferred](../plan/ui/ux-sweep-phase-e-premium-deferred.md). Phase 2 (OAuth/결제/Tier 게이팅) 의존 3건 (E.1 F06 평일/주말 토글 · E.2 F09 What-If UI · E.3 FreeLimitSurvey Premium CTA) 차단 사유 + 선행 요건 명시. 코드 변경은 E.3 임시 결정만 적용 — `FreeLimitSurvey` Premium CTA 블록에 `NEXT_PUBLIC_PREMIUM_CTA_ENABLED` env 게이트 추가 (default off, `'true'` 일 때만 노출), `data-testid="survey-premium-cta"` 부여. spec 보강 1건: `f12-feedback.spec.ts::Ring1-F12-E3` — env off 시 mood ≥ 4 응답에도 CTA 미노출 회귀. tsc 0 error.
 > **2026-04-30 UX Sweep Phase D — A11y / 마감** ⭐ — Plan [ux-sweep-phase-d-a11y](../plan/ui/ux-sweep-phase-d-a11y.md). 10 항목 (D.1~D.10) 일괄 구현: (D.1) `app/error.tsx` · `app/loading.tsx` · `app/app/error.tsx` · `app/app/loading.tsx` 4 boundary 신규 — reset+홈 동선 + split-panel skeleton. (D.2) `globals.css` `:focus-visible` 글로벌 룰 + Header/Hero/BetaBanner/Footer focus-visible:ring 보강. (D.4) `FeedbackRow` ack 후 ↩️ 수정 토글 + `useToastStore` 안내. (D.5) `FeedbackModal` iframe 5s timeout fallback (mailto/Kakao). (D.6) `CompareCard`/`SuggestionChips` 안정 키 (`${index}-${value}`). (D.7) `InlineChart` CSS 변수 토큰화 (`useEffect` 1회 read + SSR fallback) + 차트 토큰 5종 light/dark 추가. (D.8) `Header` Tailwind hover 전환 (inline JS 제거). (D.9) `BottomNav` minHeight 60px + 폰트 22→24/12→13 (WCAG 2.5.8 AA). (D.10) `DistrictLayer` mouseout 시 `styleFor` 전체 재계산 (compare 슬롯 색 race 방지). 변경 12 파일 + 신규 spec 2건 (`ring0-preflight/02-error-boundary.spec.ts` · `ring1-features/a11y.spec.ts`). 검증: tsc 0 error · next lint 신규 변경 0 warning (pre-existing 4건만 잔존).
 > **2026-04-29 Out-of-Scope (서울 외 지역) 거부 3중 가드 구현** ⭐ — Plan [out-of-scope-handling-2026-04-29](../plan/fix/out-of-scope-handling-2026-04-29.md). 사용자 보고 ("부산/제주 등 서울 외 질문 처리 안 됨") → 3중 가드 설계: (L1) `intents.yaml` `out_of_scope` intent 신규 (광역지명 + 비-서울 시단위 + 부산 동단위 + 제주 동단위 패턴, 한글 word-boundary `(?<![가-힣])...(?![가-힣ㄱ-ㅎㅏ-ㅣ])` 로 substring 오매치 차단). (L2) `planner.py` `_classify_by_rules` 진입 직후 `out_of_scope` 분기 + `_CLARIFICATION_TEMPLATES["out_of_scope"]` 추가, LLM/Tool 호출 0건으로 즉시 clarification_direct 반환. (L3) `entity_matching.py` `STRONG_TOP1_MIN=0.70` 상수 + `chat.py` message-detect 분기에서 score < STRONG_TOP1_MIN 시 거부 (silent wrong-district 가상 비-서울 fuzzy 매치 차단). (L4) `system.py::_BASE_PROMPT` rule 11 + `respond.py::RESPOND_SYSTEM_PROMPT` rule 13 거부 룰 명시. 변경 6 파일 + 신규 unit `test_out_of_scope.py` 21 testcase + Plan 1건. 검증: ruff PASS · **pytest 70/71** (신규 21 + 기존 49, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · 회귀 0.
+
+---
+
+## 2026-06-25 — 데이터 신뢰성 확보 (적재 결손 3건 + 검증 게이트)
+
+### 개요
+- **Plan**: [data-reliability-2026-06-25.md](../plan/fix/data-reliability-2026-06-25.md)
+- 2026-06-25 정합성 감사가 발견한 **3개월 잠복 적재결손 3건** 근본수정(Part A) + **컬럼내용 검증 게이트**로 재발차단(Part B). 세 결손 모두 "행은 존재하나 컬럼 전량 0/NULL" 이라 기존 행수·FK·boundary 검증을 조용히 통과했다.
+- ✅ Pass 1(C1~C5 수정·재적재) / ✅ Pass 2(C6~C9 게이트·회귀·CI) / ✅ Pass 3(C10 시드재생성·C11 문서) / ✅ 적대검증 워크플로우(11 finding→P1·P2 수정)
+
+### RC1 — 직장인구(worker) 19,692행 전량 0 (✅ fixed)
+| 항목 | 내용 |
+|---|---|
+| 원인 | `data/etl/transformers.py::transform_resident_pop` worker 분기가 resident 접미사(`MAG_POPLTN_CO`/`FAG_POPLTN_CO`) 재사용 → `AGRDE_10_MAG_POPLTN_CO` 등 worker API 에 없는 키 조회 → 전부 None→0 |
+| 수정 | worker 분기에서 `MAG_{n}_WRC_POPLTN_CO`/`FAG_{n}_WRC_POPLTN_CO`(n=age_prefix−`AGRDE_`) 빌더 분리. resident 분기 무변경 + "API path dormant(CSV)" 주석. **live API 1행 dump 로 키 사전검증**([[feedback_etl_api_column_rename]]) |
+| 검증 | 단위: 12행, Σ=`TOT_WRC_POPLTN_CO`. 재적재(`runner run 2025Q4 --table resident_pop`, 19,692행) 후 worker `bool_and(population=0)=f`, total_pop **4,724,265** |
+
+### RC2 — `default_unit_price` 100% NULL (✅ fixed)
+| 항목 | 내용 |
+|---|---|
+| 원인 | alembic 002 백필 `UPDATE ... WHERE major_category=...` 이 category_metadata 시드(stores 적재 후) **전에** 실행돼 0행 no-op. 이후 `seed_category_metadata.py` INSERT 가 컬럼 누락 → 영구 NULL |
+| 수정 | `_UNIT_PRICES`(외식12000/서비스25000/소매15000)+`_DEFAULT_UNIT_PRICE=15000` 공유, INSERT/ON CONFLICT 에 `default_unit_price` 포함. 2차 방어선 `repositories/real/simulation.py::get_default_unit_price` NULL→major 기본값 폴백 |
+| 검증 | 재시드 후 NULL **0건**. 분포 12000×10/25000×10/15000×80. `@real` 테스트가 major↔price 일치 검증 |
+
+### RC3 — `aliases` 100% NULL (✅ fixed)
+| 항목 | 내용 |
+|---|---|
+| 원인 | source of truth 부재 + seed INSERT 누락 |
+| 수정 | `data/etl/category_aliases.json` 핵심 **32종**(콜로키얼: 스벅·편의점·약국·부동산·피시방 등) 신규 + seed 에 콤마조인 결합. 나머지 NULL 은 의도(카테고리명+learned_aliases+LLM 위임) |
+| 검증 | 재시드 후 32 set/68 NULL. resolver 가 카페→CS100010·편의점→CS300002·부동산→CS200033 정확 매칭 |
+
+### RC0 — 컬럼내용 검증 게이트 (✅)
+- `runner.py::_validate_data` → 테스트 가능한 `_collect_validation_checks(conn, quarter)` 로 분리. per-column NULL 비율, all-zero(`bool_and`, NULL-safe `COALESCE`), 음수 sanity, **비-0 exit**. 행수 체크는 **quarter-scope**(빈 분기 false-pass 차단).
+- `scripts/audit/p1_api_vs_db.py` `--strict` exit code(API↔DB 불일치 게이팅).
+
+### 적대검증 워크플로우 (11 finding 전건 confirmed)
+5 lens(rc1-worker/gate-logic/seed-idempotency/test-coverage/plan-conformance) × finding별 회의적 검증, 16 agent. **rc1-worker lens 0 finding**(핵심 수정 무결).
+- **P1 수정**: SEED-1(alias `학원` 이 외국어/예술/컴퓨터학원 name 의 substring → resolver naive 매칭이 모든 학원 subtype 을 CS200001 로 오라우팅) — `학원` 제거, subtype 정상 복구 검증 / GATE-1(행수 미-scope → `validate <빈분기>` false-pass) — 4 시계열 테이블 quarter-scope, `validate 2026Q1` FAIL(exit1) / TC-1(게이트 무테스트) — `@real` gate FAIL-injection 테스트(롤백 트랜잭션)로 R3-VALIDATE-GATE 코드화.
+- **P2 수정**: GATE-2(floating_pop all-zero NULL-unsafe → `COALESCE`) / TC-2(RC2 단위테스트 동어반복 → seed 결과 `@real` 검증) / PC-1(잉여 noqa 제거).
+- **의도적 defer**: GATE-3(all-constant `count(distinct)=1` 은 단일분기 설계와 충돌 → false-FAIL) / SEED-2(price↔major decouple 은 category_name 안정성상 도달불가) / PC-3(`settings.local.json` 은 본 작업 무관 기존 drift).
+
+### 검증 종합
+- `ruff check` PASS · pytest **132 passed / 8 skipped**(기존 structlog skip) · data-integrity 13 테스트(7 unit CI-safe + 6 `@pytest.mark.real`, gate FAIL-injection 포함) · CI `backend-test` 는 `-m "not real"` 로 DB 테스트 deselect.
+- `runner validate 2025Q4` ALL PASS / `2026Q1`(빈 분기) FAIL / worker=0 주입시 FAIL 재현.
+- 시드 덤프 `data/seed/marketscope_seed.dump` 재생성(5.26→5.6MB, 정정 데이터 반영, TOC 검증). **fresh compose 복원 재검증은 live DB 파괴적이라 미실행 — 클린 세션 권장**.
+
+### Memory 신규
+- `feedback_rich_table_bracket_markup` — rich.Table 셀의 `[worker]` 동적 라벨이 스타일 markup 으로 파싱돼 증발(게이트 행 식별 불가) → `(..)`/`:` 사용.
+
+### 다음 (선택)
+- 🔧 커밋(미수행 — 사용자 확인 대기): 코드 8파일 + 신규 2 + 시드 덤프(LFS). `settings.local.json`(기존 drift) 은 스테이징 제외 권장.
+- 🔧 fresh `docker compose up` 로 시드 복원 end-to-end 재검증(클린 세션).
+- 🔧 2026Q1 분기 갱신 시 전 테이블 동시 적재(별도 사이클) — 게이트가 누락 분기를 FAIL 로 잡음.
 
 ---
 

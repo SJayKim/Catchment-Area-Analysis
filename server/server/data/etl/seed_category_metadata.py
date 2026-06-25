@@ -1,11 +1,31 @@
 """Seed category_metadata from existing stores data."""
 
+import json
 import logging
+from pathlib import Path
 
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 logger = logging.getLogger(__name__)
+
+# Major-category → 기본 객단가 (원). alembic 002 백필과 동일 값. major 미매핑 카테고리는
+# _DEFAULT_UNIT_PRICE 로 채워 default_unit_price 가 NULL 로 남지 않도록 한다 (F09 시뮬레이션).
+_UNIT_PRICES: dict[str, int] = {"외식": 12000, "서비스": 25000, "소매": 15000}
+_DEFAULT_UNIT_PRICE = 15000
+
+# code → [별칭, ...]. 핵심 ~30종만 정적 큐레이션. 나머지는 카테고리명 + learned_aliases + LLM 위임.
+_ALIASES_PATH = Path(__file__).parent / "category_aliases.json"
+
+
+def _load_aliases() -> dict[str, list[str]]:
+    """Load curated category_code → aliases map. Missing/invalid file → no aliases (non-fatal)."""
+    try:
+        return json.loads(_ALIASES_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        logger.warning("category_aliases.json missing/invalid at %s — seeding without aliases", _ALIASES_PATH)
+        return {}
+
 
 # 업종명 키워드 → 대분류 매핑
 _MAJOR_MAP = {
@@ -41,6 +61,8 @@ async def seed_category_metadata(session_factory: async_sessionmaker[AsyncSessio
     """Seed category_metadata table from distinct categories in stores table."""
     from server.models.store import Store
 
+    aliases_map = _load_aliases()
+
     async with session_factory() as session:
         rows = (await session.execute(select(Store.category_code, Store.category_name).distinct())).all()
 
@@ -51,15 +73,27 @@ async def seed_category_metadata(session_factory: async_sessionmaker[AsyncSessio
                 if kw in row.category_name:
                     major = cat
                     break
+            unit_price = _UNIT_PRICES.get(major, _DEFAULT_UNIT_PRICE)
+            alias_list = aliases_map.get(row.category_code)
+            aliases = ",".join(alias_list) if alias_list else None
             await session.execute(
                 text("""
-                INSERT INTO category_metadata (category_code, category_name, major_category)
-                VALUES (:code, :name, :major)
+                INSERT INTO category_metadata
+                    (category_code, category_name, major_category, default_unit_price, aliases)
+                VALUES (:code, :name, :major, :unit_price, :aliases)
                 ON CONFLICT (category_code) DO UPDATE SET
                     category_name = EXCLUDED.category_name,
-                    major_category = COALESCE(EXCLUDED.major_category, category_metadata.major_category)
+                    major_category = COALESCE(EXCLUDED.major_category, category_metadata.major_category),
+                    default_unit_price = EXCLUDED.default_unit_price,
+                    aliases = COALESCE(EXCLUDED.aliases, category_metadata.aliases)
             """),
-                {"code": row.category_code, "name": row.category_name, "major": major},
+                {
+                    "code": row.category_code,
+                    "name": row.category_name,
+                    "major": major,
+                    "unit_price": unit_price,
+                    "aliases": aliases,
+                },
             )
             count += 1
         await session.commit()

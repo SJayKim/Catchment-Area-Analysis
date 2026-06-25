@@ -7,6 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from server.repositories.real._units import MONTHS_PER_QUARTER
 
+# 2차 방어선: seed 가 default_unit_price 를 채우지 못한 경우에도 시뮬레이션이 NULL 로
+# 깨지지 않도록 major_category 기준 기본 객단가를 적용한다 (seed _UNIT_PRICES 와 동일 값).
+_DEFAULT_UNIT_PRICE_BY_MAJOR: dict[str, int] = {"외식": 12000, "서비스": 25000, "소매": 15000}
+_FALLBACK_UNIT_PRICE = 15000
+
 
 class RealSimulationRepository:
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
@@ -87,6 +92,15 @@ class RealSimulationRepository:
 
         async with self._sf() as session:
             result = await session.execute(
-                select(CategoryMetadata.default_unit_price).where(CategoryMetadata.category_code == category_code)
+                select(CategoryMetadata.default_unit_price, CategoryMetadata.major_category).where(
+                    CategoryMetadata.category_code == category_code
+                )
             )
-            return result.scalar_one_or_none()
+            row = result.first()
+        if row is None:
+            return None  # 카테고리 자체가 없음 — 호출부가 None 처리
+        price, major = row
+        if price is not None:
+            return price
+        # default_unit_price NULL (seed 미반영 등) → major 기준 기본값으로 폴백
+        return _DEFAULT_UNIT_PRICE_BY_MAJOR.get(major, _FALLBACK_UNIT_PRICE)

@@ -209,57 +209,122 @@ async def _run_pipeline(
     console.print(table)
 
 
-async def _validate_data(quarter: str) -> None:
-    from sqlalchemy import text as sql_text
-    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+async def _collect_validation_checks(conn, quarter: str) -> list[dict]:
+    """Run all data-quality checks against ``conn`` for ``quarter``.
 
-    engine = create_async_engine(settings.database_url, echo=False)
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    Returns ``[{check, result, ok}]``. Pure collection (no rendering / no exit)
+    so tests can drive it directly — e.g. inside a rolled-back transaction with
+    an injected deficiency to prove the gate FAILs (R3-VALIDATE-GATE).
+    """
+    from sqlalchemy import text as sql_text
 
     checks: list[dict] = []
 
-    async with session_factory() as session:
-        # Row counts
-        for table_name in ["districts", "floating_population", "estimated_sales", "stores", "resident_population"]:
-            result = await session.execute(
-                sql_text(f"SELECT COUNT(*) FROM {table_name}")  # noqa: S608
-            )
-            count = result.scalar() or 0
-            checks.append({"check": f"{table_name} row count", "result": str(count), "ok": count > 0})
+    async def scalar(sql: str, **params: object) -> object:
+        r = await conn.execute(sql_text(sql), params)
+        return r.scalar()
 
-        # Referential integrity: floating_population district_codes exist in districts
-        result = await session.execute(
-            sql_text("""
-            SELECT COUNT(*) FROM floating_population fp
-            WHERE NOT EXISTS (SELECT 1 FROM districts d WHERE d.district_code = fp.district_code)
-        """)
+    # Row counts. districts is the static master (global); the four time-series
+    # tables are scoped to `quarter` so an EMPTY quarter FAILs here instead of
+    # vacuously passing every quarter-scoped content check below.
+    districts = int(await scalar("SELECT COUNT(*) FROM districts") or 0)
+    checks.append({"check": "districts row count", "result": str(districts), "ok": districts > 0})
+    for table_name in ("floating_population", "estimated_sales", "stores", "resident_population"):
+        n = int(await scalar(f"SELECT COUNT(*) FROM {table_name} WHERE quarter = :q", q=quarter) or 0)  # noqa: S608
+        checks.append({"check": f"{table_name} row count ({quarter})", "result": str(n), "ok": n > 0})
+
+    # Referential integrity: floating_population district_codes exist in districts
+    orphans = int(
+        await scalar(
+            "SELECT COUNT(*) FROM floating_population fp "
+            "WHERE NOT EXISTS (SELECT 1 FROM districts d WHERE d.district_code = fp.district_code)"
         )
-        orphans = result.scalar() or 0
+        or 0
+    )
+    checks.append({"check": "floating_pop FK integrity", "result": f"{orphans} orphans", "ok": orphans == 0})
+
+    # NULL ratio for districts.boundary
+    null_pct = float(
+        await scalar("SELECT COUNT(*) FILTER (WHERE boundary IS NULL) * 100.0 / NULLIF(COUNT(*), 0) FROM districts")
+        or 0
+    )
+    checks.append({"check": "districts.boundary NULL %", "result": f"{null_pct:.1f}%", "ok": null_pct < 5})
+
+    # --- Content checks (RC0 가드: 행 존재 ≠ 내용 유효) ---
+    # 행수/FK 만으로는 "행은 있으나 컬럼이 전부 0/NULL" 결손을 못 잡는다.
+    # all-zero 는 bool_and 로 "전량 0" 일 때만 FAIL (개별 0/소규모 상권은 허용).
+    for pop_type in ("worker", "resident"):
+        all_zero = await scalar(
+            "SELECT bool_and(population = 0) FROM resident_population WHERE pop_type = :pt AND quarter = :q",
+            pt=pop_type,
+            q=quarter,
+        )
         checks.append(
             {
-                "check": "floating_pop FK integrity",
-                "result": f"{orphans} orphans",
-                "ok": orphans == 0,
+                # NB: avoid '[..]' — rich.Table parses it as style markup and drops it.
+                "check": f"resident_pop {pop_type} not all-zero",
+                "result": "all-zero" if all_zero else "ok",
+                "ok": all_zero is not True,  # None(=무행) → row-count 체크가 별도로 잡음
             }
         )
 
-        # NULL ratio for districts.boundary
-        result = await session.execute(
-            sql_text("""
-            SELECT
-                COUNT(*) FILTER (WHERE boundary IS NULL) * 100.0 / NULLIF(COUNT(*), 0)
-            FROM districts
-        """)
-        )
-        null_pct = result.scalar() or 0
-        checks.append(
-            {
-                "check": "districts.boundary NULL %",
-                "result": f"{null_pct:.1f}%",
-                "ok": null_pct < 5,
-            }
-        )
+    # category_metadata.default_unit_price: NULL 0건 (RC2 — F09 시뮬레이션)
+    dup_null = int(
+        await scalar("SELECT count(*) FILTER (WHERE default_unit_price IS NULL) FROM category_metadata") or 0
+    )
+    checks.append({"check": "category_metadata.default_unit_price NULL", "result": str(dup_null), "ok": dup_null == 0})
 
+    # category_metadata.aliases: 전량 NULL 만 FAIL (RC3 — 핵심 ~30종 외 NULL 은 의도)
+    aliases_all_null = await scalar("SELECT bool_and(aliases IS NULL) FROM category_metadata")
+    checks.append(
+        {
+            "check": "category_metadata.aliases not all-NULL",
+            "result": "all-NULL" if aliases_all_null else "ok",
+            "ok": aliases_all_null is not True,
+        }
+    )
+
+    # 음수 sanity (매출/인구는 음수가 될 수 없음)
+    for label, sql in (
+        (
+            "estimated_sales.monthly_sales >= 0",
+            "SELECT count(*) FROM estimated_sales WHERE quarter=:q AND monthly_sales < 0",
+        ),
+        (
+            "floating_population.total_pop >= 0",
+            "SELECT count(*) FROM floating_population WHERE quarter=:q AND total_pop < 0",
+        ),
+        (
+            "resident_population.population >= 0",
+            "SELECT count(*) FROM resident_population WHERE quarter=:q AND population < 0",
+        ),
+    ):
+        neg = int(await scalar(sql, q=quarter) or 0)
+        checks.append({"check": label, "result": f"{neg} negatives", "ok": neg == 0})
+
+    # 핵심 numeric all-zero 차단 — COALESCE 로 all-NULL 도 dead 로 간주 (NULL-safe).
+    for label, sql in (
+        (
+            "estimated_sales.monthly_sales not all-zero",
+            "SELECT bool_and(COALESCE(monthly_sales,0)=0) FROM estimated_sales WHERE quarter=:q",
+        ),
+        (
+            "floating_population.total_pop not all-zero",
+            "SELECT bool_and(COALESCE(total_pop,0)=0) FROM floating_population WHERE quarter=:q",
+        ),
+    ):
+        all_zero = await scalar(sql, q=quarter)
+        checks.append({"check": label, "result": "all-zero" if all_zero else "ok", "ok": all_zero is not True})
+
+    return checks
+
+
+async def _validate_data(quarter: str) -> None:
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    engine = create_async_engine(settings.database_url, echo=False)
+    async with engine.connect() as conn:
+        checks = await _collect_validation_checks(conn, quarter)
     await engine.dispose()
 
     table = Table(title=f"Validation — {quarter}")
@@ -270,6 +335,12 @@ async def _validate_data(quarter: str) -> None:
         status = "[green]PASS[/]" if c["ok"] else "[red]FAIL[/]"
         table.add_row(c["check"], c["result"], status)
     console.print(table)
+
+    failed = [c for c in checks if not c["ok"]]
+    if failed:
+        console.print(f"[bold red]Validation FAILED — {len(failed)} check(s) below threshold[/]")
+        raise typer.Exit(code=1)
+    console.print("[bold green]Validation PASSED[/]")
 
 
 @app.command()

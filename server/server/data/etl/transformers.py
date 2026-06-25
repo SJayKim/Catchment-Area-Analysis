@@ -273,18 +273,21 @@ def transform_resident_pop(raw: dict, pop_type: str = "resident") -> list[dict]:
         "60s+": ("AGRDE_60_ABOVE", "AGRDE_60_ABOVE"),
     }
 
-    # Column suffix depends on pop_type
-    if pop_type == "resident":
-        male_suffix = "MAG_POPLTN_CO"  # 남성 상주인구
-        female_suffix = "FAG_POPLTN_CO"  # 여성 상주인구
-    else:  # worker
-        male_suffix = "MAG_POPLTN_CO"
-        female_suffix = "FAG_POPLTN_CO"
-
     rows = []
     for age_label, (age_prefix, _) in age_groups.items():
+        # API field name pattern differs by pop_type.
+        if pop_type == "worker":
+            # VwsmTrdarWrcPopltnQq: MAG_{NN}_WRC_POPLTN_CO / FAG_{NN}_WRC_POPLTN_CO
+            # (NN ∈ 10/20/30/40/50/60_ABOVE). Verified against live 2025Q4 row.
+            n = age_prefix.removeprefix("AGRDE_")  # "AGRDE_60_ABOVE" -> "60_ABOVE"
+            male_key = f"MAG_{n}_WRC_POPLTN_CO"
+            female_key = f"FAG_{n}_WRC_POPLTN_CO"
+        else:
+            # resident: {AGRDE_NN}_MAG_POPLTN_CO. API path dormant — the live
+            # source is the OA-15584 CSV (csv_collector.load_resident_pop_csv).
+            male_key = f"{age_prefix}_MAG_POPLTN_CO"
+            female_key = f"{age_prefix}_FAG_POPLTN_CO"
         # Male
-        male_key = f"{age_prefix}_{male_suffix}"
         male_val = _safe_int(raw.get(male_key))
         rows.append(
             {
@@ -297,7 +300,6 @@ def transform_resident_pop(raw: dict, pop_type: str = "resident") -> list[dict]:
             }
         )
         # Female
-        female_key = f"{age_prefix}_{female_suffix}"
         female_val = _safe_int(raw.get(female_key))
         rows.append(
             {

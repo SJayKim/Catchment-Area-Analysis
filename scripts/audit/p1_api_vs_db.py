@@ -311,7 +311,20 @@ def main() -> None:
     out["stores_service_used"] = stores_service
     out["stores_compare"] = compare_stores(stores_filtered)
 
+    # Overall API↔DB parity verdict (used by --strict gate).
+    all_ok = (
+        all(r.get("all_match", False) for r in out["sales_compare"])
+        and all(r.get("all_slots_match", False) for r in out["flpop_compare"] if "error" not in r)
+        and all(r.get("all_match", False) for r in out["stores_compare"])
+    )
+    out["meta"]["all_match"] = all_ok
+
     print(json.dumps(out, ensure_ascii=False, indent=2))
+
+    # --strict: non-zero exit on any API↔DB mismatch so this can gate validate/CI flows.
+    if "--strict" in sys.argv and not all_ok:
+        print("[p1_api_vs_db] STRICT FAIL — API↔DB mismatch detected", file=sys.stderr)
+        sys.exit(2)
 
 
 if __name__ == "__main__":
