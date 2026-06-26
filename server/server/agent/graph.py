@@ -71,7 +71,7 @@ def _create_llm(role: str = "default"):
         from langchain_anthropic import ChatAnthropic
 
         return ChatAnthropic(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-6",
             api_key=settings.anthropic_api_key,  # type: ignore[arg-type]
             max_tokens=4096,
             temperature=0.3,
@@ -93,7 +93,7 @@ def _create_llm(role: str = "default"):
         from langchain_anthropic import ChatAnthropic
 
         return ChatAnthropic(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-6",
             api_key=settings.anthropic_api_key,  # type: ignore[arg-type]
             max_tokens=4096,
             temperature=0.3,
