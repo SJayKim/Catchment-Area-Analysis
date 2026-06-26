@@ -92,6 +92,32 @@ _LONG_REPORT_TOPICS: tuple[re.Pattern[str], ...] = tuple(
 _RECOMMEND_OVERRIDE = re.compile(r"(추천|어떤.*업종|가장.*좋은.*업종|업종.*뭐|업종\s*추천)")
 
 
+# S7 fix (2026-06-10 Accuracy Eval Round 2 regression): numeric coref follow-ups
+# like "거기 중 유동인구가 더 많은 곳?" used to fall through to Respond with an
+# empty plan, where the LLM fabricated numbers from trimmed history text. Map
+# each numeric-data keyword to the tool that re-fetches it so the Planner can
+# force a DB re-call instead. Keywords are specific enough to avoid the
+# "유동인구"/"인구" substring overlap — we match "유동"/"상주"/"직장", never bare "인구".
+_NUMERIC_FOLLOWUP_TOOLS: tuple[tuple[str, str], ...] = (
+    ("유동", "get_floating_population"),
+    ("매출", "get_estimated_sales"),
+    ("점포", "get_store_info"),
+    ("창업", "get_store_info"),
+    ("상주", "get_population_info"),
+    ("직장", "get_population_info"),
+)
+
+
+def _numeric_tools_for(message: str) -> list[str]:
+    """Return de-duplicated tool names for every numeric keyword present in
+    *message*, preserving declaration order. Empty when none match."""
+    tools: list[str] = []
+    for keyword, tool_name in _NUMERIC_FOLLOWUP_TOOLS:
+        if keyword in message and tool_name not in tools:
+            tools.append(tool_name)
+    return tools
+
+
 def _classify_by_rules(message: str) -> tuple[str | None, float]:
     """Fast rule-based intent classification. Returns (intent, confidence)."""
     config = load_intent_config()
@@ -262,6 +288,33 @@ def _build_plan(
         )
 
     return plan
+
+
+async def _scan_history_districts(history: list[dict], seed: list[str]) -> list[str]:
+    """Scan recent user turns for district mentions, appending novel codes to
+    *seed*. Returns up to 3 codes (CompareCard cap). Shared by the comparison
+    coref fallback and the numeric coref force-plan branch — both need to
+    recover districts the current turn elides ("거기", "이 두 곳", "위 비교")."""
+    from server.repositories import get_data_access
+
+    codes: list[str] = list(seed)
+    try:
+        for turn in reversed(history[-6:]):
+            if turn.get("role") != "user":
+                continue
+            content = turn.get("content") or ""
+            if not content:
+                continue
+            matches = await get_data_access().districts.detect_districts_in_message(content)
+            for m in matches or []:
+                code = m.get("code")
+                if code and code not in codes:
+                    codes.append(code)
+            if len(codes) >= 3:
+                break
+    except Exception:
+        logger.warning("history district scan failed", exc_info=True)
+    return codes[:3]
 
 
 # ---------------------------------------------------------------------------
@@ -458,32 +511,14 @@ async def planner_node(state: AgentState) -> dict:
         # single-district intents. Explicit message-level mentions always win
         # because we only enter here after those were exhausted.
         if len(referenced_districts) < 2:
-            try:
-                from server.repositories import get_data_access
-
-                history_codes: list[str] = list(referenced_districts)
-                for turn in reversed(history[-6:]):
-                    if turn.get("role") != "user":
-                        continue
-                    content = turn.get("content") or ""
-                    if not content:
-                        continue
-                    matches = await get_data_access().districts.detect_districts_in_message(content)
-                    for m in matches or []:
-                        code = m.get("code")
-                        if code and code not in history_codes:
-                            history_codes.append(code)
-                    if len(history_codes) >= 3:
-                        break
-                if len(history_codes) >= 2:
-                    logger.info(
-                        "planner.compare-coref session=%s injected_from_history=%s",
-                        state.get("session_id"),
-                        history_codes[:3],
-                    )
-                    referenced_districts = history_codes[:3]
-            except Exception:
-                logger.warning("compare-coref history fallback failed", exc_info=True)
+            history_codes = await _scan_history_districts(history, referenced_districts)
+            if len(history_codes) >= 2:
+                logger.info(
+                    "planner.compare-coref session=%s injected_from_history=%s",
+                    state.get("session_id"),
+                    history_codes,
+                )
+                referenced_districts = history_codes
 
     # 3. Greeting → skip entire agent pipeline (no LLM call needed)
     if intent == "greeting":
@@ -550,6 +585,36 @@ async def planner_node(state: AgentState) -> dict:
             intent = "ambiguous"
             plan = []
             response_mode = "direct"
+
+    # S7 fix: numeric coref follow-up rescue. When the turn is heading to a
+    # plan-less Respond (the demote above, or an empty _build_plan) but the user
+    # asked for a concrete metric ("거기 중 유동인구 더 많은 곳?") about districts we
+    # can recover from recent history, force a DB re-fetch instead of letting
+    # Respond fabricate numbers from the trimmed history text.
+    numeric_tools = _numeric_tools_for(message)
+    if numeric_tools and not plan:
+        targets = await _scan_history_districts(history, referenced_districts)
+        if targets:
+            plan = [
+                ToolPlanStep(
+                    tool_name=tool_name,
+                    args={"district_code": code},
+                    reason="수치 coref 후속질문 — DB 재조회로 응답 날조 방지",
+                    depends_on=[],
+                )
+                for tool_name in numeric_tools
+                for code in targets
+            ]
+            referenced_districts = targets
+            response_mode = "tool_assisted"
+            if intent in ("ambiguous", "general"):
+                intent = "summary"
+            logger.info(
+                "planner.numeric-coref session=%s tools=%s targets=%s",
+                state.get("session_id"),
+                numeric_tools,
+                targets,
+            )
 
     # P1: ambiguous with no district anchor → clarification instead of free-form
     # Respond. Prevents LLM hallucination with fake attribution tags when the
