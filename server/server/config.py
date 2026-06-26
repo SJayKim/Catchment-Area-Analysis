@@ -68,8 +68,16 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     # Agent architecture
-    agent_mode: str = "pae"  # Planner-Actor-Evaluator
+    agent_mode: str = "pae"  # "pae" (Planner-Actor-Evaluator) | "agentic" (native tool-use loop)
     agent_max_rounds: int = 3  # max Planner→Actor→Evaluator loops
+
+    # Agentic loop (agent_mode="agentic") — Tiered routing, flag-gated (P0 seam)
+    agentic_gate_model: str = "claude-haiku-4-5"  # TRIVIAL/SIMPLE routing + simple answers
+    agentic_deep_model: str = "claude-opus-4-8"  # DEEP multi-hop reasoning
+    agentic_simple_effort: str = "low"  # output_config effort for SIMPLE tier
+    agentic_deep_effort: str = "high"  # output_config effort for DEEP tier
+    agentic_tool_budget_simple: int = 2  # max tool-use rounds, SIMPLE
+    agentic_tool_budget_deep: int = 8  # max tool-use rounds, DEEP
 
     # SQLAlchemy connection pool
     db_pool_size: int = 10

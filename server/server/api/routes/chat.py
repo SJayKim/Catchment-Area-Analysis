@@ -11,7 +11,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-from server.agent.graph import run_agent
+from server.agent import get_runner
 from server.agent.history import ConversationHistory
 from server.config import settings
 from server.middleware.metrics import sse_connection_closed, sse_connection_opened
@@ -341,7 +341,7 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
 
             try:
                 async with asyncio.timeout(settings.sse_connection_max_duration):
-                    async for event in run_agent(
+                    async for event in get_runner(settings.agent_mode)(
                         message=body.message,
                         district_code=body.district_code or "",
                         district_name=district_name,
