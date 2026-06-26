@@ -1,6 +1,7 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-06-25
+> 최종 갱신: 2026-06-26
+> **2026-06-26 S7 coref 수치 날조 fix — Pass 3 라이브 검증 완료 + 죽은 모델 ID fix** ⭐ — 복원 세션에서 잔여 P0(S7 coref, eval Round 2 8.9→5.0 회귀) 마무리. Plan [s7-coref-toolless-fabrication](../plan/fix/s7-coref-toolless-fabrication.md). **Pass 3**(R3-COREF-NUMERIC-01, USE_MOCK=false·1,650상권): `backend-dev` 프로필(`./server:/app` bind-mount + `--reload`)로 미커밋 소스 라이브 반영(기존 backend 이미지 `--no-build` 태그로 SSL 빌드 우회). "홍대랑 성수 비교"→"거기 중 유동인구 더 많은 곳?" 2턴 ×5: **tool 호출률 5/5**(get_floating_population 강제 발화)·정답(홍대 4.11M>성수 1.41M) 5/5·원 날조값(124,386/67,741) 0/5·물리 모순 0/5. S7 회귀 구조적 해소(9.3+ 목표 충족). **근본원인 2건 추가 처리**: (1) `graph.py:74/96` 하드코딩 모델 `claude-sonnet-4-20250514`가 현 키에서 404 은퇴 → anthropic respond 전량 실패 → `claude-sonnet-4-6` 교체(/v1/models 확인, 별건 인프라). (2) 1차 패스에서 respond가 `daily_avg`(실제 분기 시간대 합계인데 필드명이 daily_avg)를 ÷30/÷3로 '일평균' 날조 → 시간대 peak 초과 물리모순 3/5 → `respond.py` `FLOATING_POP_PRESENTATION_RULES` 가드(집계값 그대로 인용·일수 분할 금지·peak는 by_hour 실값만) 추가 → 2차 0/5. **검증**: ruff PASS, 어떤 테스트도 프롬프트·모델문자열 assert 안 함. pytest 재실행은 본 환경(호스트 앱deps 부재+컨테이너 pytest 부재) 불가 — planner.py+test_coref(16)는 prior세션 148 passed, 이번 변경 미접촉. **커밋 2건 main 직접**: `c62bb17`(S7 fix) + `654029a`(모델 fix). Verdict [s7-coref-pass3-2026-06-26/_verdict.md](../qa/runs/s7-coref-pass3-2026-06-26/_verdict.md).
 > **2026-06-25 데이터 신뢰성 확보 — 적재 결손 3건 근본수정 + 컬럼내용 검증 게이트 + 적대검증 워크플로우** ⭐ — Plan [data-reliability-2026-06-25](../plan/fix/data-reliability-2026-06-25.md). 2026-06-25 정합성 감사가 surfaced 한 **3개월 잠복 적재결손 3건**(행은 존재하나 컬럼 전량 0/NULL → 기존 행수·FK·boundary 검증을 조용히 통과) 근본수정 + 재발차단. **RC1 worker 19,692행 전량0**: `transformers.py` worker 분기가 resident 접미사(`MAG_POPLTN_CO`) 재사용 → 실 API 키 `MAG_{n}_WRC_POPLTN_CO`/`FAG_{n}` 빌더 분리(live API 1행 dump 로 검증). 재적재 후 worker total_pop **472만**(was 0). **RC2 default_unit_price 100% NULL**: alembic 002 백필이 category 시드 전 실행돼 0행 no-op → `seed_category_metadata.py` INSERT 에 major 기준 객단가(외식12000/서비스25000/소매15000, 기본15000) + `simulation.py` 2차 폴백. NULL **0건**. **RC3 aliases 100% NULL**: source 부재 → `category_aliases.json` 핵심 **32종** 신규 + seed 결합. 32 set/68 NULL(의도). **RC0 게이트**: `runner.py::_validate_data` per-column NULL/all-zero(`bool_and`)/음수 sanity + **비-0 exit**, 행수 quarter-scope(빈 분기 FAIL). 주입 worker=0 → FAIL 재현. **검증**: pytest **132 passed/8 skip** + data-integrity 13(7 unit + 6 `@real`, gate FAIL-injection 포함). ruff PASS. 시드 덤프 재생성(5.6MB). **적대검증 워크플로우**(5 lens→finding별 회의적 검증·16 agent): 11 finding 전건 confirmed → **P1 3건**(alias '학원' 학원 subtype 오라우팅·빈분기 false-pass·게이트 무테스트) + **P2 3건** 즉시 수정, GATE-3(all-constant)·SEED-2(price/major decouple) 는 단일분기 설계·도달불가로 의도적 defer. 코드: `transformers.py`·`seed_category_metadata.py`·`category_aliases.json`(신규)·`simulation.py`·`runner.py`·`p1_api_vs_db.py`·`test_data_integrity.py`(신규)·`ci.yml`.
 > **2026-06-21 학습용 ARCHITECTURE-MAP.md 신규 — Mermaid 도식 3종 + 코드 매핑** 🆕 — `docs/learning/ARCHITECTURE-MAP.md` 신규. `crypto_deep_research/docs/ARCHITECTURE-MAP.md` 포맷 차용(Mermaid 도식 + 폴더 책임표 + 설계↔코드 file:line 매핑). **도식 3종**: (1) 시스템 토폴로지 — 프론트(Next.js) ─REST+SSE─ 백엔드(FastAPI) ─Repository─ 데이터(PostGIS/Redis) 색상 경계, (2) 단일 요청 시퀀스 "강남역 알려줘" Plan→Act→Eval→Respond + SSE 9이벤트, (3) PAE 에이전트 내부 그래프(greeting/clarification 단락 포함). **매핑표**: 폴더별 책임(백/프론트 분리) · 4대 학습포인트(SSE/PAE/Repository/지도↔챗 동기화)↔코드 · 흐름노드↔file:line(actor.py:156·chatStore.ts:240·sseParser.ts:10 등 실 grep) · 도구 9종 · 주요 설계결정(월환산/서울밖 3중가드/저점포 floor) · F01~F13 기능↔코드 인덱스. 기존 서술형 코스(00~06) + `architecture/` 스펙과 양끝 링크 연결. 코드 변경 0(문서 only).
 > **2026-06-10 Accuracy Eval Round 2 (Item 4) — ISSUE-003 fix 라이브 검증 + S7 coref 수치 날조 신규 P1** ⭐ — P0 백로그 Item 4 실행(003 fix `90937c6` 머지 후 게이트 해제). 스택: 기존 backend 컨테이너(`--reload` + `server` bind-mount)에 003 fix 이미 반영 확인 후 **clean re-import용 `docker compose restart backend`**(Windows/OneDrive bind-mount 파일워치 누락 방지), `USE_MOCK=false`·1,650 상권·`:8000` health 200. 수집: `OUT=docs/qa/runs/eval-round2-2026-06-10 BASE=:8000 run_accuracy_round2.sh`(message-only=entity-linking 검증, 04-24 baseline 보존). **결과 평균 8.0→9.4**(7/8 만점, 전 tool-backed 수치 DB일치). **ISSUE-003 라이브 재현 검증**: 성수동카페거리(편의점 1점포 @₩202M)·성수초등학교(1점포 @₩835M) 추천 #1에서 단일점포 편의점 **제외**(top-5 전부 store_count≥4), S4 건대 #1=편의점 store_count=8 — `_apply_store_floor` 의도대로. DB교차검증 강남1,396억/서울201억/홍대532억/성수221억/건대260억 전부 자릿수 일치. **신규 P1**: S7 coref 후속질문("거기 중 유동인구 더 많은 곳?")이 **tool 0건으로 유동인구 수치 날조**(124,386/67,741 — 카드 실값 411만/141만 무시, "일평균>시간대최고" 물리 모순). W1 abstention 가드가 tool-less 후속질문 수치주장 미포착(003 fix 무관, recommend 외 경로). S7 8.9→5.0 회귀. 권고: 수치 coref 후속질문은 tool 강제호출 or 카드값 인용 강제 + S7 재현율 측정. Verdict [eval-round2-2026-06-10/_verdict.md](../qa/runs/eval-round2-2026-06-10/_verdict.md).
@@ -13,6 +14,44 @@
 > **2026-04-30 UX Sweep Phase E — Premium Deferred (toggle 1건)** — Plan [ux-sweep-phase-e-premium-deferred](../plan/ui/ux-sweep-phase-e-premium-deferred.md). Phase 2 (OAuth/결제/Tier 게이팅) 의존 3건 (E.1 F06 평일/주말 토글 · E.2 F09 What-If UI · E.3 FreeLimitSurvey Premium CTA) 차단 사유 + 선행 요건 명시. 코드 변경은 E.3 임시 결정만 적용 — `FreeLimitSurvey` Premium CTA 블록에 `NEXT_PUBLIC_PREMIUM_CTA_ENABLED` env 게이트 추가 (default off, `'true'` 일 때만 노출), `data-testid="survey-premium-cta"` 부여. spec 보강 1건: `f12-feedback.spec.ts::Ring1-F12-E3` — env off 시 mood ≥ 4 응답에도 CTA 미노출 회귀. tsc 0 error.
 > **2026-04-30 UX Sweep Phase D — A11y / 마감** ⭐ — Plan [ux-sweep-phase-d-a11y](../plan/ui/ux-sweep-phase-d-a11y.md). 10 항목 (D.1~D.10) 일괄 구현: (D.1) `app/error.tsx` · `app/loading.tsx` · `app/app/error.tsx` · `app/app/loading.tsx` 4 boundary 신규 — reset+홈 동선 + split-panel skeleton. (D.2) `globals.css` `:focus-visible` 글로벌 룰 + Header/Hero/BetaBanner/Footer focus-visible:ring 보강. (D.4) `FeedbackRow` ack 후 ↩️ 수정 토글 + `useToastStore` 안내. (D.5) `FeedbackModal` iframe 5s timeout fallback (mailto/Kakao). (D.6) `CompareCard`/`SuggestionChips` 안정 키 (`${index}-${value}`). (D.7) `InlineChart` CSS 변수 토큰화 (`useEffect` 1회 read + SSR fallback) + 차트 토큰 5종 light/dark 추가. (D.8) `Header` Tailwind hover 전환 (inline JS 제거). (D.9) `BottomNav` minHeight 60px + 폰트 22→24/12→13 (WCAG 2.5.8 AA). (D.10) `DistrictLayer` mouseout 시 `styleFor` 전체 재계산 (compare 슬롯 색 race 방지). 변경 12 파일 + 신규 spec 2건 (`ring0-preflight/02-error-boundary.spec.ts` · `ring1-features/a11y.spec.ts`). 검증: tsc 0 error · next lint 신규 변경 0 warning (pre-existing 4건만 잔존).
 > **2026-04-29 Out-of-Scope (서울 외 지역) 거부 3중 가드 구현** ⭐ — Plan [out-of-scope-handling-2026-04-29](../plan/fix/out-of-scope-handling-2026-04-29.md). 사용자 보고 ("부산/제주 등 서울 외 질문 처리 안 됨") → 3중 가드 설계: (L1) `intents.yaml` `out_of_scope` intent 신규 (광역지명 + 비-서울 시단위 + 부산 동단위 + 제주 동단위 패턴, 한글 word-boundary `(?<![가-힣])...(?![가-힣ㄱ-ㅎㅏ-ㅣ])` 로 substring 오매치 차단). (L2) `planner.py` `_classify_by_rules` 진입 직후 `out_of_scope` 분기 + `_CLARIFICATION_TEMPLATES["out_of_scope"]` 추가, LLM/Tool 호출 0건으로 즉시 clarification_direct 반환. (L3) `entity_matching.py` `STRONG_TOP1_MIN=0.70` 상수 + `chat.py` message-detect 분기에서 score < STRONG_TOP1_MIN 시 거부 (silent wrong-district 가상 비-서울 fuzzy 매치 차단). (L4) `system.py::_BASE_PROMPT` rule 11 + `respond.py::RESPOND_SYSTEM_PROMPT` rule 13 거부 룰 명시. 변경 6 파일 + 신규 unit `test_out_of_scope.py` 21 testcase + Plan 1건. 검증: ruff PASS · **pytest 70/71** (신규 21 + 기존 49, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · 회귀 0.
+
+---
+
+## 2026-06-26 — S7 coref 수치 날조 fix Pass 3 라이브 검증 + 죽은 모델 ID fix
+
+### 개요
+- **Plan**: [s7-coref-toolless-fabrication.md](../plan/fix/s7-coref-toolless-fabrication.md) · **Verdict**: [s7-coref-pass3-2026-06-26/_verdict.md](../qa/runs/s7-coref-pass3-2026-06-26/_verdict.md)
+- 복원 세션에서 잔여 P0(S7 coref, eval Round 2 8.9→5.0 회귀)를 prior 세션 구현(planner force-plan)의 **라이브 Pass 3**로 마무리. 검증 중 근본원인 2건을 추가 처리.
+- ✅ Pass 3 5회 (tool 5/5·정답 5/5·날조 0/5·물리모순 0/5) / ✅ 모델 ID fix / ✅ respond 유동인구 가드 / ✅ 커밋 2건
+
+### Pass 3 라이브 검증 (R3-COREF-NUMERIC-01)
+| 항목 | 내용 |
+|---|---|
+| 환경 | USE_MOCK=false·1,650 상권. `backend-dev` 프로필(`./server:/app` bind-mount + `--reload`)로 미커밋 소스 라이브 반영. 기존 `catchment-area-analysis-backend` 이미지를 `backend-dev`로 태그 후 `--profile dev --no-build` 기동(빌드 SSL 우회) |
+| 시나리오 | 동일 session_id 2턴 ×5: ① "홍대랑 성수 비교해줘"(compare 카드) → ② "거기 중 유동인구가 더 많은 곳은 어디야?"(coref) |
+| DB GT | 홍대(3120103) 4,106,209 · 성수(3120052) 1,412,369 (floating_population 시간대 합계, 2025Q4). peak 988,851/312,134 |
+| 결과 | tool 호출률 **5/5**(get_floating_population 강제) · 정답(홍대) 5/5 · 원 날조값(124,386/67,741) 0/5 · 물리 모순(파생 일평균>peak) 0/5 |
+
+### RC-모델 — graph.py 죽은 모델 ID (✅ fixed, 별건 인프라)
+- `graph.py:74`(planner)/`96`(respond·default) 하드코딩 `claude-sonnet-4-20250514`가 현 ANTHROPIC_API_KEY 에서 404(not_found, 은퇴) → anthropic provider respond 전량 graceful-error. `/v1/models` 확인 결과 유효 Sonnet = `claude-sonnet-4-6` 교체. planner 는 rule path 라 우회됐으나 respond 는 항상 LLM → Pass 3 선결조건. 커밋 `654029a`.
+
+### RC-respond — 파생 '일평균' 오계산 (✅ fixed)
+- 1차 Pass 3에서 respond가 headline(410만/141만)은 맞게 인용하나 파생 "일 평균"을 ÷30/÷3 불일치로 날조 → 성수 47.1만·홍대 136만 등 시간대 peak 초과(물리 모순 3/5). 근원: repository `get_floating_population` 반환 `daily_avg` 필드가 실제로는 **분기 시간대 합계**인데 이름이 daily_avg → LLM이 "일평균"으로 라벨·분할. peak 값은 반환 안 됨(`peak_hour`=슬롯 인덱스).
+- **fix**: `respond.py` `RESPOND_SYSTEM_PROMPT`에 `FLOATING_POP_PRESENTATION_RULES`(집계값 그대로 인용·일수 분할 금지·peak는 by_hour 실값만·비교는 집계값 직접) 추가 → 2차 Pass 3 물리모순 0/5. 필드명 정정은 blast radius(카드/mock/테스트)로 follow-up.
+
+### 검증
+- ✅ ruff check/format PASS (planner.py/respond.py/graph.py). 어떤 테스트도 프롬프트 텍스트·모델 문자열 assert 안 함(test_langfuse_l2 `claude-sonnet-4` 는 self-contained 리터럴).
+- ⚠️ pytest 재실행은 본 환경(호스트 앱-deps 부재 + 컨테이너 pytest 부재)에서 불가 — planner.py + test_coref_numeric_followup.py(16)는 prior 세션 **148 passed**, 이번 변경(모델 문자열·프롬프트 텍스트)은 그 경로 미접촉.
+
+### 커밋 (main 직접, 프로젝트 관례)
+- `c62bb17` fix(agent): S7 coref 수치 날조 — planner force-plan + respond 유동인구 가드 (planner.py·respond.py·test_coref_numeric_followup.py·plan·verdict)
+- `654029a` fix(agent): 죽은 모델 ID claude-sonnet-4-20250514 → claude-sonnet-4-6 (graph.py)
+- 제외: `.claude/settings.local.json`(기존 drift) · `docs/architecture/tech-stack-rationale.md`(무관)
+
+### 다음 (선택)
+- 🔧 `daily_avg` 필드명 정정(`quarter_total` 등) — repository + 카드 + mock parity + 테스트 동반(별건 follow-up)
+- 🔧 검증용 `backend-dev`+redis 컨테이너 기동 상태 — 불필요 시 `docker compose --profile dev down`
+- 🔧 origin/main push (커밋 2건 미push)
 
 ---
 
@@ -140,127 +179,6 @@
 
 ---
 
-## 2026-04-30 — UX Sweep Phase A-F Pass 1
-
-### 개요
-- **Plan**: [ux-phase-a-f-test-plan.md](../plan/qa/ux-phase-a-f-test-plan.md)
-- ✅ 13 신규 시나리오 작성 — Phase A·B·C·D·F 6 phase × 28 항목 단위 회귀 매트릭스 확정 (기존 25 + 신규 13 = 38 시나리오)
-- ✅ tsc 0 error · 정적 회귀 9 testcase PASS (Ring0-D1 + Ring0-F1 + Ring0-F2)
-- 🔧 Ring1+ 27 시나리오는 USE_MOCK e2e stack 필요 — 본 머신 `:3001` (Vite) + `:8002` (외부 FastAPI) 점유로 user 수동 트리거 권장
-- ✅ Verdict: [ux-phase-a-f-pass1/summary.md](../qa/runs/ux-phase-a-f-pass1/summary.md)
-
-### 변경 (11 파일)
-
-| # | 파일 | 신규 시나리오 |
-|---|------|------|
-| 1 | `e2e/ring0-preflight/02-error-boundary.spec.ts` | 🆕 `Ring0-D1-RESET-LOOP` |
-| 2 | `e2e/ring0-preflight/03-tier-hook.spec.ts` | 🆕 `Ring0-F1-SSR` + `Ring0-F2-IMPORT-MAP` |
-| 3 | `e2e/ring1-features/a11y.spec.ts` | 🆕 `Ring1-F11-D8-HOVER` |
-| 4 | `e2e/ring1-features/d-perf.spec.ts` (신규) | 🆕 `Ring1-F02-D7-PERF` |
-| 5 | `e2e/ring1-features/d9-bottomnav.spec.ts` (신규, mobile-iphone) | 🆕 `Ring1-Mobile-D9-WCAG258` |
-| 6 | `e2e/ring1-features/f01-map-selection.spec.ts` | 🆕 `Ring1-F01-D10-VISUAL` |
-| 7 | `e2e/ring1-features/f11-landing.spec.ts` | 🆕 `Ring1-F11-A1-EDGE-PRIVATE` + `Ring1-F11-A4-BENTO-ALL6` |
-| 8 | `e2e/ring1-features/f12-feedback.spec.ts` | 🆕 `Ring1-F12-D5-IFRAME-BLOCK` |
-| 9 | `e2e/ring1-features/phase-b-ux-sweep.spec.ts` | 🆕 `Ring3-Negative-B5-FALSE-POS-EXT` (배열 +3) + `Ring1-F10-B4-RETRY-LOOP` |
-| 10 | `e2e/ring1-features/phase-c-ux-sweep.spec.ts` | 🆕 `Ring1-F06-C3-PERF` + `Ring1-F02-C4-FAILED` |
-| 11 | `e2e/ring2-journeys/j01-first-time-user.spec.ts` | 🆕 `Ring2-J01-A4-EDGE-EMPTY` |
-
-### 정적 회귀 PASS (stack-free, 9 testcase)
-
-```
-✓ Ring0-D1 — 4 boundary 컴포넌트 / role=status / split-panel skeleton  (4 testcase)
-✓ Ring0-D1-RESET-LOOP — boundary self-throw 없음 (정적 invariant)         🆕
-✓ Ring0-F1 — useTier 하드코딩 free + Tier 타입 export
-✓ Ring0-F2 — FeatureGate no-op (children 통과)
-✓ Ring0-F1-SSR — useTier.ts no 'use client' (server-component-friendly)   🆕
-✓ Ring0-F2-IMPORT-MAP — FeatureGate import 사용처 0 (Phase 2 머지 전)     🆕
-
-9 passed (1.4s)
-```
-
-### 다음 P0
-- 🔧 user 수동 Pass 1 트리거 (e2e stack 격리 가능한 머신/세션)
-- 🔧 chromium 38 시나리오 PASS 확인 후 → Plan 2 ([ux-final-e2e-regression-plan](../plan/qa/ux-final-e2e-regression-plan.md)) 진입 게이트
-- 🔧 mobile-iphone D9 단독 실행 검증
-- 🔧 D.7 perf invariant — production CI 머신에서 INP < 200ms 재측정
-
----
-
-### 추가 — Plan 2 Pass 1 (통합 5 journey 신규)
-
-- **Plan**: [ux-final-e2e-regression-plan.md](../plan/qa/ux-final-e2e-regression-plan.md)
-- ✅ 통합 5 journey spec 신규 — `frontend/e2e/ring2-journeys/j06-ux-a2f-integration.spec.ts` 1 파일 (~960 LOC, 5 testcase)
-  - `Ring2-UX-A2F-J01` — onboarding-to-feedback (A.4 + B.6 + F11 + F12 + F13 + D.4)
-  - `Ring2-UX-A2F-J02` — compare 풀사이클 (B.1 + B.2 + B.3 + B.4 + B.5)
-  - `Ring2-UX-A2F-J03` — 모바일 첫 진입 (C.2 + D.2 + D.9 + B.3, mobile-iphone)
-  - `Ring2-UX-A2F-J04` — 에러복구+Tally 폴백 (D.1 + D.5 + B.4)
-  - `Ring2-UX-A2F-J05` — a11y 종합 (D.2 + D.3 + D.4 + D.6 + D.9 + WCAG)
-- ✅ tsc 0 error · next lint 0 warning · dry-list 5 testcase 인식
-- ✅ 정적 baseline 재현 9 testcase PASS (Ring0-D1 + Ring0-F1 + Ring0-F2)
-- ⚠️ Pass 1/2/3 + prod-smoke runtime 보류 — 본 머신 :3001/:8002 점유 (PID 26264 다른 프로젝트)
-- ✅ Verdict: [ux-final-e2e-2026-04-30/summary.md](../qa/runs/ux-final-e2e-2026-04-30/summary.md)
-- 🔧 다음 액션 — user 수동 Pass 1 트리거 → 38(Plan 1) + 5(j06) = 43 시나리오 chromium 전수 PASS → Pass 2 mobile viewport → Pass 3 real-DB → prod-smoke
-
----
-
-## 2026-04-29 — Out-of-Scope (서울 외 지역) 거부 3중 가드
-
-### 개요
-- **Plan**: [out-of-scope-handling-2026-04-29.md](../plan/fix/out-of-scope-handling-2026-04-29.md)
-- 사용자 보고: "현재 서비스에서 서울 외의 상권 질문이 들어오면 어떻게 처리하지?" → audit 결과 명시적 거부 룰 부재. 4 가지 보강 여지 (intents.yaml / system prompt / numeric_sanity / W1 type boost) 중 1·2·3 구현. 4번 (W1 type boost 약화) 은 Round 3 eval 에서 별도 측정.
-
-### 변경 (6 파일 + 1 신규 + 1 Plan)
-| # | 파일 | 변경 |
-|---|------|------|
-| 1 | `agent/config/intents.yaml` | greeting 직후 `out_of_scope` intent 추가. 광역(부산/대구/인천/광주/대전/울산/세종/제주/경기/강원/충청/전라/경상) + 부산 동(해운대/광안리) + 경기 시(수원/성남/용인/안양/부천/일산/분당/판교/동탄) + 강원/충청/전라/경상 주요 시 + 제주(서귀포/애월). word-boundary `(?<![가-힣])...(?![가-힣ㄱ-ㅎㅏ-ㅣ])` |
-| 2 | `agent/nodes/planner.py` | `_classify_by_rules` 진입 직후 `out_of_scope` 우선 분기 (다른 모든 intent 보다 먼저, confidence 0.95). `_CLARIFICATION_TEMPLATES["out_of_scope"]` 4번째 키 추가. `planner_node` 에 short-circuit (LLM/Tool 0건, ~1ms 응답) |
-| 3 | `agent/utils/entity_matching.py` | `STRONG_TOP1_MIN = 0.70` 상수 신규 (TOP1_MIN 0.55 보다 strict) |
-| 4 | `api/routes/chat.py` | message-detect 분기에서 `det_score < STRONG_TOP1_MIN` 거부. body.district_code 미선택 + fuzzy 약한 매치 시 silent wrong-district 차단 |
-| 5 | `agent/nodes/respond.py` | `RESPOND_SYSTEM_PROMPT` rule 13 신규 (서비스 범위 명시 + 가상 수치 금지). 기존 rule 13(출력 포맷) → 14 |
-| 6 | `agent/prompts/system.py` | `_BASE_PROMPT` rule 11 추가 (서울 외 정중 거절) |
-| 7 | `tests/test_out_of_scope.py` | 신규 — 21 testcase (pattern coverage 16 + planner short-circuit 4 + 상수/템플릿 sanity 1 + control 1) |
-| 8 | `docs/plan/fix/out-of-scope-handling-2026-04-29.md` | 신규 — 5섹션 Plan |
-
-### 3중 가드 설계
-```
-User: "부산 해운대 알려줘"
-   ↓
-[L1] intents.yaml::out_of_scope (regex)
-   → intent="out_of_scope", confidence=0.95
-   ↓
-[L2] planner.py: short-circuit
-   → LLM/Tool 0건, clarification_direct 즉시 반환
-   ↓ (L1/L2 우회 — 가상 비-서울 시장명 등)
-[L3] entity_matching::STRONG_TOP1_MIN=0.70
-   → 약한 매치 거부 → ambiguous → clarification (district_missing)
-   ↓ (모든 가드 우회)
-[L4] respond.py::RESPOND_SYSTEM_PROMPT rule 13
-   → "서울시 1,650개 상권만 지원" 자연어 거절
-```
-
-### Clarification 응답
-> "현재 마켓스코프는 **서울시 1,650개 상권**만 지원합니다. 서울 외 지역(부산·인천·경기 등)의 상권 데이터는 아직 제공하지 않습니다. 서울 상권에 대해 알려드릴까요?"
->
-> Suggestions: ["강남역 상권 요약", "홍대 vs 성수 비교", "명동 창업 추천 업종"]
-
-### 검증
-- ✅ ruff (server/) — All checks passed
-- ✅ pytest **70/71 PASS** (신규 21 + 기존 49). 1 fail = `test_smoke::langfuse_enabled` host env pre-existing (변경 무관)
-- ✅ Pattern coverage: 부산/제주/경기/대구/인천/광주광역시/서귀포/수원 8 케이스 → True. 강남역/홍대/명동 3 케이스 → False (제어군). substring trap 4 (부산물/광주리/경기침체/구로구) → False ✓
-- 🔧 Manual smoke + Playwright E2E spec 은 다음 sweep 에 포함 (backend pytest 우선)
-
-### Memory 신규 1건
-- `feedback_out_of_scope_handling.md` — 서울 외 거부 3중 가드 패턴 + STRONG_TOP1_MIN 임계 근거
-
-### 후속 P0
-- 🔧 W1 type boost 약화 케이스 — Round 3 eval 에서 별도 측정 (Plan p0-priority-2026-04-27 의 #1 보강)
-- 🔧 Playwright E2E spec — `r3-neg-out-of-scope.spec.ts` 작성
-- 🔧 Manual smoke (USE_MOCK=true backend) — curl 4 케이스 검증
-- 🔧 prod 배포 (다음 배포 사이클)
-
----
-
-
 ## 전략
 
 Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(Premium)
@@ -316,12 +234,14 @@ Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(
 
 ---
 
-## 이력 요약 (2026-03-30 ~ 2026-04-28)
+## 이력 요약 (2026-03-30 ~ 2026-04-30)
 
 > 상세는 git history (`git log --follow docs/status/current-status.md`) + `docs/qa/runs/` + `docs/plan/` 로 복원.
 
 | 날짜 | 주요 내용 |
 |------|----------|
+| 2026-04-30 | UX Sweep Phase A-F Pass 1 — 13 신규 e2e 시나리오(기존 25+13=38) + 통합 5 journey(j06) 신규. 정적 회귀 9 testcase PASS · tsc 0. Ring1+ runtime 은 user 수동(:3001/:8002 점유). [Plan](../plan/qa/ux-phase-a-f-test-plan.md) · [Plan2](../plan/qa/ux-final-e2e-regression-plan.md) |
+| 2026-04-29 | Out-of-Scope(서울 외) 거부 3중 가드 — out_of_scope intent + STRONG_TOP1_MIN(0.70) + system/respond prompt rule. 한글 word-boundary 로 substring trap(부산물/광주리) 차단. ruff PASS · pytest 70/71. [Plan](../plan/fix/out-of-scope-handling-2026-04-29.md) |
 | 2026-04-28 (저녁) | Prod 재배포 — district-click-race fix 라이브 적용. dev/prod compose project name 충돌로 `:3200` stop → 502 → A 방식 destructive 4 Pass. frontend `46815639...` + backend `6be3098215b9` healthy. P1~P9 ALL PASS · Playwright real-DB 3/3 · prev-2026-04-28b tag. [Plan](../plan/infra/prod-redeploy-2026-04-28-evening.md) |
 | 2026-04-28 | District click race / "먹통" fix — 6 근본 원인 (sendMessage isLoading return / ChatPanel disabled / setPreview lastDistrictCode race / SSE late-done / per-session lock 부재 / 1.5s setTimeout). Stale-while-cancel + Monotonic requestId + AbortController + Per-session async cancellation. ruff/tsc/pytest 49/50 · memory 4건 신규. [Plan](../plan/fix/district-click-race-2026-04-28.md) |
 | 2026-04-28 | 프로덕션 재배포 (`52ae7db → 04376a4`) + Tool 함수명 노출 fix. alembic 005 + Langfuse 11차원/6스코어 + W1 X시장 boost + planner clarification + numeric_sanity + respond.py 502→280 LOC. ATTRIBUTION_PROMPT_RULE + `_ToolTagSanitizer` 11종 가드. prod-smoke 30/30 · live raw tool name leak 0건. [Plan](../plan/infra/prod-deploy-2026-04-28.md) |
