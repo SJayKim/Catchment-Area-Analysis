@@ -99,6 +99,17 @@ def _chunks(text: str, size: int = 90):
         yield text[i : i + size]
 
 
+def _is_answer_shaped(text: str) -> bool:
+    """교정 턴이 답변 대신 내놓는 메타 발화("...검토하겠습니다")를 걸러낸다.
+
+    실제 재작성이라면 숫자가 남아 있거나, 숫자를 뺐더라도 답변으로 설 만큼의
+    분량이 있다. 둘 다 아니면 채택하지 않는다(기존 draft가 still-unbound 검사로
+    grounded_fallback 에 떨어진다).
+    """
+    t = (text or "").strip()
+    return bool(t) and (any(c.isdigit() for c in t) or len(t) >= 120)
+
+
 async def run_agent(
     message: str,
     district_code: str,
@@ -215,13 +226,15 @@ async def run_agent(
             logger.info("trust: %d unbound numbers, corrective pass", len(unbound))
             messages.append(HumanMessage(content=corrective_instruction([n.raw for n in unbound])))
             try:
+                # 교정 턴은 prose 전용(도구 없음): 도구를 주면 모델이 도구 호출
+                # 서두("...확인하겠습니다")만 텍스트로 남기고, v1은 재루프하지
+                # 않으므로 그 메타 발화가 최종 답변으로 유출된다. 재작성은
+                # 컨텍스트에 이미 있는 도구 결과만으로 한다.
                 ai2 = await ainvoke_with_fallback(
-                    messages, schemas, callbacks=callbacks, timeout=settings.llm_timeout_slow
+                    messages, None, callbacks=callbacks, timeout=settings.llm_timeout_slow
                 )
-                # The corrective turn may call compute; if it returns tool calls
-                # we don't re-loop in v1 — we take its text if any, else keep.
                 corrected = _text_of(ai2)
-                if corrected.strip():
+                if _is_answer_shaped(corrected):
                     final_text = corrected
             except Exception:  # noqa: BLE001
                 logger.warning("trust corrective pass failed", exc_info=True)
