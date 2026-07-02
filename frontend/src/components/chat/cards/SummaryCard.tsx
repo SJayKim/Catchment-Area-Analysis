@@ -75,7 +75,7 @@ function SummaryCard({ data }: SummaryCardProps) {
             </h4>
             <div className="text-right">
               <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                일 평균 {card.floatingPopulation.dailyAvg.toLocaleString()}명
+                분기 합계 {card.floatingPopulation.dailyAvg.toLocaleString()}명
               </span>
               <span className="text-xs ml-1" style={{ color: 'var(--text-muted)' }}>
                 (피크: {card.floatingPopulation.peakHour}시)

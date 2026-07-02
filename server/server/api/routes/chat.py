@@ -11,8 +11,8 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-from server.agent.graph import run_agent
 from server.agent.history import ConversationHistory
+from server.agent.runtime import run_agent
 from server.config import settings
 from server.middleware.metrics import sse_connection_closed, sse_connection_opened
 from server.repositories import get_data_access
