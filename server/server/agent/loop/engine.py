@@ -26,6 +26,7 @@ from server.agent.loop.prompts import LOOP_SYSTEM_PROMPT, corrective_instruction
 from server.agent.loop.tools_fc import (
     ABSTAIN,
     COMPUTE,
+    RESOLVE_DISTRICT,
     card_for_tool,
     execute_fc_tool,
     labels_for_tool,
@@ -84,11 +85,15 @@ def _system_message(district_code: str, district_name: str, data_quarter: str) -
 
 
 def _proactive_suggestions(called: set[str], district_name: str) -> list[str]:
-    dn = district_name if district_name and district_name != "미선택" else "이 상권"
-    if "recommend_business" in called:
-        return [f"{dn} 매출 시뮬레이션 해줘", f"{dn} 리스크 분석해줘", "비슷한 상권과 비교해줘"]
     if "compare_districts" in called:
         return ["각 상권 추천 업종 알려줘", "유동인구 시간대별로 비교해줘", "리스크가 낮은 곳은?"]
+    dn = district_name if district_name and district_name != "미선택" else ""
+    if not dn:
+        # 선택된 상권이 없는 턴(서울 외 거부·인젝션 방어 등) — "이 상권 ..." 칩은
+        # 클릭해도 대상이 없다. 시작용 스타터로 대체.
+        return ["강남역 상권 분석해줘", "홍대 어때?", "상권 비교하고 싶어"]
+    if "recommend_business" in called:
+        return [f"{dn} 매출 시뮬레이션 해줘", f"{dn} 리스크 분석해줘", "비슷한 상권과 비교해줘"]
     if "get_store_history" in called:
         return [f"{dn} 추천 업종 알려줘", f"{dn} 매출 수준은?", "안정적인 업종은 뭐야?"]
     return [f"{dn} 추천 업종 알려줘", f"{dn} 리스크는 어때?", f"{dn} 유동인구 자세히"]
@@ -146,6 +151,7 @@ async def run_agent(
     tool_calls_made = 0
     started = time.monotonic()
     fact_idx = 0
+    resolved_name = ""  # resolve_district 가 찾은 상권명 — suggestion 개인화용
 
     yield {"type": "thinking", "step": "질문 분석 중..."}
 
@@ -188,6 +194,8 @@ async def run_agent(
 
                 if name == ABSTAIN:
                     abstain_reason = (result or {}).get("reason") or "데이터가 없습니다."
+                elif name == RESOLVE_DISTRICT and result and result.get("name"):
+                    resolved_name = str(result["name"])
                 elif name == COMPUTE and result and "result" in result:
                     try:
                         computed.append(float(result["result"]))
@@ -250,7 +258,10 @@ async def run_agent(
         for chunk in _chunks(final_text):
             yield {"type": "text", "content": chunk}
 
-        yield {"type": "suggestion", "questions": _proactive_suggestions(called_tools, district_name)}
+        yield {
+            "type": "suggestion",
+            "questions": _proactive_suggestions(called_tools, district_name or resolved_name),
+        }
 
     except Exception:
         logger.exception("v2 loop execution failed")
