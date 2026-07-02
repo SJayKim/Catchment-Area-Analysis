@@ -22,9 +22,6 @@ dependencies = [
     # AI / Agent
     "langgraph>=0.2",
     "langchain-anthropic>=0.3",
-    # Native Anthropic SDK — agent_mode="agentic" loop (AsyncAnthropic tool-use,
-    # output_config.effort + adaptive thinking). Distinct from the LangChain wrapper.
-    "anthropic>=0.40",
     "langchain-google-genai>=2.0",
     "langchain-core>=0.3",
     # langfuse v3 는 `langchain` 풀패키지 + modern `langchain_core` 에 의존.

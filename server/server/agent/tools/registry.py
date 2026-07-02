@@ -22,11 +22,6 @@ class ToolMeta:
     progress_label: str
     done_label: str
     description: str
-    # Agentic loop (agent_mode="agentic") — additive; ignored by the legacy actor.
-    # input_schema: JSON Schema for the Anthropic tools param.
-    # llm_description: curated LLM-facing description (vs `description` = fn.__doc__).
-    input_schema: dict[str, Any] | None = None
-    llm_description: str = ""
 
 
 _REGISTRY: dict[str, ToolMeta] = {}
@@ -39,8 +34,6 @@ def register_tool(
     card_type: str | None = None,
     progress_label: str = "",
     done_label: str = "",
-    input_schema: dict[str, Any] | None = None,
-    llm_description: str = "",
 ):
     """Decorator that registers a tool function with its metadata."""
 
@@ -52,8 +45,6 @@ def register_tool(
             progress_label=progress_label or f"{name} 실행 중...",
             done_label=done_label or f"{name} 완료",
             description=fn.__doc__ or "",
-            input_schema=input_schema,
-            llm_description=llm_description,
         )
         return fn
 
