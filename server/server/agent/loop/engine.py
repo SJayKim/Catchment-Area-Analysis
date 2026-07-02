@@ -165,6 +165,10 @@ async def run_agent(
             # with no tools so the loop always terminates with prose.
             allow_tools = not over_budget and iteration < settings.agent_loop_max_iterations - 1
 
+            if iteration > 0:
+                # 도구 라운드 이후 모델 턴은 수십 초 걸릴 수 있다 — 진행 표시 유지.
+                yield {"type": "thinking", "step": "결과 분석 중..."}
+
             ai = await ainvoke_with_fallback(
                 messages,
                 schemas if allow_tools else None,
@@ -232,6 +236,7 @@ async def run_agent(
         unbound = find_unbound_numbers(final_text, fact_pool, computed)
         if unbound and abstain_reason is None:
             logger.info("trust: %d unbound numbers, corrective pass", len(unbound))
+            yield {"type": "thinking", "step": "수치 검증 중..."}
             messages.append(HumanMessage(content=corrective_instruction([n.raw for n in unbound])))
             try:
                 # 교정 턴은 prose 전용(도구 없음): 도구를 주면 모델이 도구 호출
