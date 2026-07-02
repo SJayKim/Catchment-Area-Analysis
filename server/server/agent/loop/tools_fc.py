@@ -17,6 +17,7 @@ from __future__ import annotations
 import ast
 import logging
 import operator
+import re
 
 from server.agent.tools.data_sources import get_sources_for_tool
 from server.agent.tools.registry import get_tool_registry
@@ -212,10 +213,32 @@ def safe_compute(expression: str) -> dict:
 # Executor
 # --------------------------------------------------------------------------
 
+_CS_CODE = re.compile(r"^CS\d+$")
+
+
+def _normalize_category(value: str) -> str:
+    """업종명("카페")이 오면 category_code(CS100010)로 변환. 이미 코드면 그대로.
+
+    시스템 프롬프트가 category_code 에 업종명을 허용한다고 안내하므로, 실행부가
+    그 약속을 이행해야 한다. resolve 실패 시 원값 유지(레포지토리가 빈 결과 반환).
+    """
+    v = str(value).strip()
+    if not v or _CS_CODE.match(v):
+        return v
+    from server.services.category_resolver import get_category_resolver
+
+    code = get_category_resolver().resolve(v)
+    if code:
+        return code
+    logger.info("fc category resolve miss: %r", v)
+    return v
+
 
 async def execute_fc_tool(name: str, args: dict) -> tuple[dict | None, str | None]:
     """Execute one tool call. Returns (result_dict, error_str)."""
     clean = {k: v for k, v in (args or {}).items() if v is not None}
+    if "category_code" in clean:
+        clean["category_code"] = _normalize_category(clean["category_code"])
 
     if name == COMPUTE:
         result = safe_compute(str(clean.get("expression", "")))
