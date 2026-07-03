@@ -1,0 +1,48 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3120103", "quarter": "2025Q4"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "tool", "name": "resolve_district", "input": {"name": "성수"}, "progress_label": "상권 찾는 중..."}
+
+data: {"type": "tool_end", "name": "resolve_district", "done_label": "상권 확인"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3120052", "quarter": "2025Q4"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "4106209 / 1412369"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "text", "content": "---\n\n## 🚶 유동인구 비교 — 홍대 vs 성수 (2025Q4)\n\n### 📊 분기 유동인구 총량\n\n| 항목 | 홍대입구역 | 성수역 |\n|------|----"}
+
+data: {"type": "text", "content": "-------|--------|\n| **분기 유동인구** | **4,106,209명** | **1,412,369명** |\n| **피크 시간대** | 17시 (저녁"}
+
+data: {"type": "text", "content": ") | 14시 (오후) |\n| **20대 비중** | 43.5% | 27.3% |\n| **여성 비중** | 52.7% | 53.7% |\n\n---\n\n### 🔍 핵심"}
+
+data: {"type": "text", "content": " 해석\n\n**🏆 홍대가 약 2.9배 더 많습니다.**\n\n1. **홍대** — 저녁 17시에 피크가 몰리는 전형적인 **유흥·외식·엔터테인먼트 상권**. 20대 비"}
+
+data: {"type": "text", "content": "중이 43.5%로 압도적이며, 야간 유동인구(21시 564,539명)도 성수 대비 5배 이상.\n\n2. **성수** — 오후 14시가 피크인 **낮 중심 상권**."}
+
+data: {"type": "text", "content": " 30~40대 비중이 상대적으로 높아(40.6%) 카페·팝업·라이프스타일 소비 패턴. 야간(21시)엔 유동인구가 급감.\n\n---\n\n### 💡 실행 시사점\n- **"}
+
+data: {"type": "text", "content": "유동인구 규모 = 홍대** 압승. 노출·집객이 중요한 업종(편의점, 패스트푸드, 주점)은 홍대가 유리.\n- **성수**는 규모는 작지만 30대 이상 구매력 있는 "}
+
+data: {"type": "text", "content": "층이 낮 시간대에 집중 → 객단가 높은 카페·편집숍·팝업스토어에 적합.\n\n> 추정치이며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대) 추천 업종 알려줘", "홍대입구역(홍대) 리스크는 어때?", "홍대입구역(홍대) 유동인구 자세히"]}
+
+data: {"type": "done"}
+

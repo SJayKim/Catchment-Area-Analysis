@@ -1,0 +1,86 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.55635499365675, "lng": 126.97293579091794, "zoom": 4}, "district_code": "3120043", "district_name": "서울역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120043"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "서울역", "districtType": "발달상권", "summary": "분기 유동인구 102만 2천명, 월 추정 매출 200억 6천만원의 안정적인 발달상권입니다.", "monthlySales": 20061174578, "floatingPopulation": {"dailyAvg": 1022060, "peakHour": 6, "byHour": [{"hour": 0, "pop": 59150}, {"hour": 6, "pop": 255755}, {"hour": 11, "pop": 250275}, {"hour": 14, "pop": 246256}, {"hour": 17, "pop": 162562}, {"hour": 21, "pop": 48062}]}, "topCategories": [{"name": "일반의류", "count": 209}, {"name": "한식음식점", "count": 93}, {"name": "신발", "count": 47}, {"name": "커피-음료", "count": 35}, {"name": "가방", "count": 29}], "status": "stable", "closeRate": {"current": 2.4, "average": 6.5}, "insights": {"ageInsight": "40대 (25.8%)", "perStoreSales": 22874771, "franchiseRatio": 19.2, "weekendUplift": -89.6}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "하위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 50%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3120043", "quarter": "2025Q4"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120043"}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "tool", "name": "get_store_history", "input": {"district_code": "3120043"}, "progress_label": "리스크 분석 중..."}
+
+data: {"type": "card", "card_type": "risk", "data": {"district_code": "3120043", "stability": {"score": null, "grade": "데이터 부족", "message": "2분기 이상 데이터가 쌓이면 리스크 분석이 가능합니다", "quarters_analyzed": 1}, "survival_by_category": [], "risk_categories": [{"category": "피부관리실", "close_rate": 100.0, "warning": "폐업률 매우 높음"}, {"category": "시계및귀금속", "close_rate": 18.2, "warning": "폐업률 매우 높음"}, {"category": "커피-음료", "close_rate": 14.3, "warning": "폐업률 높음"}, {"category": "편의점", "close_rate": 10.5, "warning": "폐업률 높음"}, {"category": "화장품", "close_rate": 6.7, "warning": "폐업률 높음"}, {"category": "분식전문점", "close_rate": 5.3, "warning": "폐업률 높음"}, {"category": "양식음식점", "close_rate": 5.0, "warning": "폐업률 높음"}], "quarterly_trend": [{"quarter": "2025Q4", "store_count": 877, "open": 21, "close": 21}], "benchmarks": {"districtType": "발달상권", "seoulAvgCloseRate": 5.9}, "dataSources": [{"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "tool_end", "name": "get_store_history", "done_label": "리스크 분석 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "168 / 877 * 100"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "21 / 877 * 100"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+: ping - 2026-07-03 00:27:31.282150+00:00
+
+data: {"type": "text", "content": "---\n\n# 🏙️ 서울역 상권 종합 분석 (2025Q4)\n\n> **상권 유형:** 발달상권 | **상태:** 안정\n\n---\n\n## 1. 📊 핵심 지표 요약\n\n| "}
+
+data: {"type": "text", "content": "지표 | 서울역 | 서울 평균 | 평가 |\n|------|--------|-----------|------|\n| 분기 유동인구 | **102만 2천 명** | 9"}
+
+data: {"type": "text", "content": "만 2천 명 | 🟢 상위 25% |\n| 월 추정 매출 | **약 200억 6천만 원** | 550억 원 | 🔴 하위 25% |\n| 점포당 월매출 | **약 2,2"}
+
+data: {"type": "text", "content": "87만 원** | 4,600만 원 | 🔴 하위 25% |\n| 폐업률 | **2.4%** | 5.9% | 🟢 상위 25% (우수) |\n| 총 점포 수 | **877"}
+
+data: {"type": "text", "content": "개** | 950개 | 🟡 상위 50% |\n| 프랜차이즈 비율 | **약 19.2%** | — | 🟡 보통 |\n\n---\n\n## 2. 🚶 유동인구 분석\n\n### 시"}
+
+data: {"type": "text", "content": "간대별 분포\n| 시간대 | 유동인구 |\n|--------|---------|\n| 00시 | 59,150명 |\n| **06시 (피크)** | **255,755명**"}
+
+data: {"type": "text", "content": " |\n| 11시 | 250,275명 |\n| 14시 | 246,256명 |\n| 17시 | 162,562명 |\n| 21시 | 48,062명 |\n\n- **오전 6시가 "}
+
+data: {"type": "text", "content": "피크**: 출근·환승 수요가 집중되는 전형적인 **교통 허브형 상권**\n- 오전~오후 유동인구가 고르게 높고, 저녁 이후 급감 → **저녁·야간 업종은 불리**\n"}
+
+data: {"type": "text", "content": "- **주말 유동인구 -89.6%**: 평일 직장인·환승객 의존도가 매우 높음\n\n### 성별·연령 구성\n- 남성 **51.9%** / 여성 **48.1%** (균"}
+
+data: {"type": "text", "content": "형)\n- **40대 25.8%, 30대 24.9%** → 경제활동 인구 중심\n- 20대 14.6%, 50대 17.9%로 전 연령대 고루 분포\n\n---\n\n## 3."}
+
+data: {"type": "text", "content": " 🏪 점포 현황\n\n- **총 877개** 점포, 이번 분기 개업 21개 / 폐업 21개 (순증감 0)\n- **폐업률 2.4%** — 서울 평균(5.9%) 대비 절"}
+
+data: {"type": "text", "content": "반 이하로 **매우 안정적**\n\n### 업종별 점포 수 Top 5\n| 순위 | 업종 | 점포 수 |\n|------|------|---------|\n| 1 | 일반"}
+
+data: {"type": "text", "content": "의류 | 209개 |\n| 2 | 한식음식점 | 93개 |\n| 3 | 신발 | 47개 |\n| 4 | 커피·음료 | 35개 |\n| 5 | 가방 | 29개 |\n\n> 의"}
+
+data: {"type": "text", "content": "류·신발·가방 등 **패션 리테일 집중** 상권 (서울역 지하상가 영향)\n\n---\n\n## 4. ⚠️ 리스크 업종 (폐업률 주의)\n\n| 업종 | 폐업률 | 경고 |"}
+
+data: {"type": "text", "content": "\n|------|--------|------|\n| 피부관리실 | 100% | 🔴 매우 위험 |\n| 시계·귀금속 | 18.2% | 🔴 매우 높음 |\n| 커피·음료 "}
+
+data: {"type": "text", "content": "| 14.3% | 🟠 높음 |\n| 편의점 | 10.5% | 🟠 높음 |\n| 화장품 | 6.7% | 🟡 주의 |\n\n---\n\n## 5. 💡 종합 시사점\n\n### ✅ "}
+
+data: {"type": "text", "content": "강점\n- **유동인구 압도적**: 서울 평균 대비 10배 이상의 통행량\n- **폐업률 최저 수준**: 상권 자체의 안정성은 검증됨\n- 30~40대 경제활동 인구 "}
+
+data: {"type": "text", "content": "중심 → 구매력 있는 고객층\n\n### ⚠️ 약점 / 주의사항\n- **점포당 매출이 낮음**: 유동인구 대비 실제 소비 전환율이 낮은 편 (환승·통과 목적 방문자 "}
+
+data: {"type": "text", "content": "多)\n- **주말 유동인구 급감(-89.6%)**: 주말 매출 기대 어려움\n- 커피·음료 등 일부 업종 폐업률 높음 → 경쟁 포화 상태\n\n### 🎯 창업 추천 방"}
+
+data: {"type": "text", "content": "향\n- **평일 직장인 대상 점심·간편식** 업종 유리 (한식, 분식 등)\n- **패션·잡화** 는 이미 포화 상태이므로 차별화 필수\n- **아침 시간대(6~9시"}
+
+data: {"type": "text", "content": ")** 공략 가능한 테이크아웃·베이커리 업종 고려\n\n---\n\n> 📌 추정치이며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["서울역 추천 업종 알려줘", "서울역 매출 수준은?", "안정적인 업종은 뭐야?"]}
+
+data: {"type": "done"}
+

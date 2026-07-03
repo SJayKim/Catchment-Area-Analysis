@@ -1,0 +1,66 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.56278678812079, "lng": 126.98370073835953, "zoom": 4}, "district_code": "3120028", "district_name": "명동(명동거리)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "get_store_info", "input": {"district_code": "3120028"}, "progress_label": "점포 현황 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_store_info", "done_label": "점포 현황 조회 완료"}
+
+data: {"type": "tool", "name": "get_store_history", "input": {"district_code": "3120028"}, "progress_label": "리스크 분석 중..."}
+
+data: {"type": "card", "card_type": "risk", "data": {"district_code": "3120028", "stability": {"score": null, "grade": "데이터 부족", "message": "2분기 이상 데이터가 쌓이면 리스크 분석이 가능합니다", "quarters_analyzed": 1}, "survival_by_category": [], "risk_categories": [{"category": "편의점", "close_rate": 25.0, "warning": "폐업률 매우 높음"}, {"category": "패스트푸드점", "close_rate": 20.0, "warning": "폐업률 매우 높음"}, {"category": "시계및귀금속", "close_rate": 10.0, "warning": "폐업률 높음"}, {"category": "커피-음료", "close_rate": 10.0, "warning": "폐업률 높음"}, {"category": "미용실", "close_rate": 6.5, "warning": "폐업률 높음"}, {"category": "가방", "close_rate": 6.4, "warning": "폐업률 높음"}, {"category": "분식전문점", "close_rate": 6.0, "warning": "폐업률 높음"}, {"category": "피부관리실", "close_rate": 5.3, "warning": "폐업률 높음"}], "quarterly_trend": [{"quarter": "2025Q4", "store_count": 1712, "open": 64, "close": 44}], "benchmarks": {"districtType": "발달상권", "seoulAvgCloseRate": 5.9}, "dataSources": [{"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "tool_end", "name": "get_store_history", "done_label": "리스크 분석 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "64 / 44"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "237 / 1712 * 100"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+: ping - 2026-07-03 00:19:28.530183+00:00
+
+data: {"type": "text", "content": "명동(명동거리) 상권의 창업 리스크 분석 결과입니다.\n\n---\n\n## 🏪 명동 창업 리스크 분석 (2025Q4)\n\n### 1️⃣ 점포 현황 개요\n\n| 항목 | 수"}
+
+data: {"type": "text", "content": "치 |\n|------|------|\n| 총 점포 수 | **1,712개** |\n| 신규 개업 | 64개 |\n| 폐업 | 44개 |\n| 전체 폐업률 | **2.6%"}
+
+data: {"type": "text", "content": "** |\n| 프랜차이즈 비율 | **13.8%** (237개) |\n\n> 📌 서울 평균 폐업률(5.9%) 대비 **절반 이하** 수준으로, 전체 상권 안정성은 양호"}
+
+data: {"type": "text", "content": "합니다.\n> 개업/폐업 비율은 약 **1.45:1**로 신규 진입이 폐업보다 많아 성장세를 보입니다.\n\n---\n\n### 2️⃣ ⚠️ 업종별 고위험 경보\n\n폐업률이"}
+
+data: {"type": "text", "content": " 높은 업종은 반드시 주의하세요.\n\n| 위험도 | 업종 | 폐업률 |\n|--------|------|--------|\n| 🔴 매우 높음 | 편의점 | **25.0"}
+
+data: {"type": "text", "content": "%** |\n| 🔴 매우 높음 | 패스트푸드점 | **20.0%** |\n| 🟠 높음 | 시계·귀금속 | 10.0% |\n| 🟠 높음 | 커피·음료 | 10.0% |\n"}
+
+data: {"type": "text", "content": "| 🟡 주의 | 미용실 | 6.5% |\n| 🟡 주의 | 가방 | 6.4% |\n| 🟡 주의 | 분식전문점 | 6.0% |\n| 🟡 주의 | 피부관리실 | 5.3% |"}
+
+data: {"type": "text", "content": "\n\n---\n\n### 3️⃣ 주요 업종 포화도\n\n| 업종 | 점포 수 |\n|------|---------|\n| 일반의류 | 335개 (1위) |\n| 한식음식점 | "}
+
+data: {"type": "text", "content": "176개 |\n| 화장품 | 162개 |\n| 분식전문점 | 84개 |\n| 여행사 | 79개 |\n\n> 📌 일반의류·화장품은 점포 수가 많아 **경쟁 포화** 상태입니"}
+
+data: {"type": "text", "content": "다. 신규 진입 시 차별화 전략이 필수입니다.\n\n---\n\n### 4️⃣ 종합 리스크 판단\n\n| 구분 | 평가 |\n|------|------|\n| 상권 전체 안정성"}
+
+data: {"type": "text", "content": " | ✅ 양호 (서울 평균 이하 폐업률) |\n| 편의점·패스트푸드 | 🚫 고위험 — 진입 비권장 |\n| 커피·음료 | ⚠️ 주의 — 경쟁 심화 |\n| 의류·화장품"}
+
+data: {"type": "text", "content": " | ⚠️ 포화 — 차별화 필수 |\n| 프랜차이즈 비율 | 🔵 낮음(13.8%) — 독립 창업 여지 있음 |\n\n---\n\n### 💡 실행 시사점\n\n1. **편의점·"}
+
+data: {"type": "text", "content": "패스트푸드는 피하세요.** 폐업률이 서울 평균의 3~4배 수준으로 매우 위험합니다.\n2. **외국인 관광객 수요 연계 업종**이 유리합니다. 명동은 관광 상권 특"}
+
+data: {"type": "text", "content": "성상 화장품·의류 수요가 높지만, 이미 포화 상태이므로 틈새 카테고리를 노리세요.\n3. **프랜차이즈 비율(13.8%)이 낮아** 독립 창업 시 브랜드 차별화로 "}
+
+data: {"type": "text", "content": "경쟁 우위를 확보할 수 있습니다.\n4. 안정성 스코어는 데이터 누적 후 추가 분석이 가능하므로, **분기별 추이를 지속 모니터링**하는 것을 권장합니다.\n\n---"}
+
+data: {"type": "text", "content": "\n*추정치이며 실제와 다를 수 있습니다(참고용).*"}
+
+data: {"type": "suggestion", "questions": ["명동(명동거리) 추천 업종 알려줘", "명동(명동거리) 매출 수준은?", "안정적인 업종은 뭐야?"]}
+
+data: {"type": "done"}
+

@@ -1,0 +1,68 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "resolve_district", "input": {"name": "성수"}, "progress_label": "상권 찾는 중..."}
+
+data: {"type": "tool_end", "name": "resolve_district", "done_label": "상권 확인"}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120103"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120052"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "53200280285 / 22132857556"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "(53200280285 - 22132857556) / 22132857556 * 100"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "27641 - 21082"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+: ping - 2026-07-03 00:23:34.969960+00:00
+
+data: {"type": "text", "content": "---\n\n## 🏆 홍대 vs 성수 매출 비교 (2025Q4)\n\n### 📊 핵심 지표 한눈에\n\n| 지표 | 홍대입구역 | 성수역 | 차이 |\n|------|----"}
+
+data: {"type": "text", "content": "-------|--------|------|\n| **월 추정 매출** | **532억** | **221억** | 홍대 **+140%** |\n| **월 결제 건수*"}
+
+data: {"type": "text", "content": "* | 192만 건 | 105만 건 | 홍대 약 1.8배 |\n| **평균 객단가** | **27,641원** | **21,082원** | 홍대 +6,559원 |\n"}
+
+data: {"type": "text", "content": "| **주말 매출 비중** | 35.4% | 22.7% | 홍대 주말 강세 |\n| **피크 시간대** | 17~21시 (31.7%) | 11~14시 (29.3%)"}
+
+data: {"type": "text", "content": " | 성격 상이 |\n| **주요 소비층** | 20대 (41.5%) | 30대 (22.8%) | 연령대 차이 |\n\n---\n\n### 🔍 심층 분석\n\n#### 1️⃣"}
+
+data: {"type": "text", "content": " 규모: 홍대가 압도적\n홍대 월 매출은 성수의 **약 2.4배** 수준입니다. 상권 자체의 집객력·점포 수·인지도 차이가 그대로 매출 격차로 나타납니다.\n\n###"}
+
+data: {"type": "text", "content": "# 2️⃣ 소비 패턴: 완전히 다른 두 상권\n- **홍대** → 저녁~심야(17~21시) 피크, 20대 중심의 **유흥·문화 소비형** 상권. 주말 비중이 높아 "}
+
+data: {"type": "text", "content": "주말 장사가 핵심.\n- **성수** → 점심(11~14시) 피크, 30대 중심의 **직장인·브런치 소비형** 상권. 평일 매출 비중(77.3%)이 압도적으로 높아"}
+
+data: {"type": "text", "content": " 주중 안정성이 강점.\n\n#### 3️⃣ 객단가: 홍대가 높지만 성수도 선전\n홍대 객단가(27,641원)가 성수(21,082원)보다 높지만, 성수는 최근 프리미엄"}
+
+data: {"type": "text", "content": " 카페·팝업스토어 유입으로 객단가가 꾸준히 상승 중인 상권입니다.\n\n---\n\n### 💡 창업·투자 시사점\n\n| 상황 | 추천 상권 |\n|------|-------"}
+
+data: {"type": "text", "content": "---|\n| 20대 타깃, 저녁·주말 장사 | ✅ **홍대** |\n| 직장인 타깃, 평일 안정 매출 | ✅ **성수** |\n| 높은 객단가 프리미엄 업종 | ✅ "}
+
+data: {"type": "text", "content": "**홍대** |\n| 트렌디한 팝업·브랜드 실험 | ✅ **성수** |\n| 초기 임차료 부담 최소화 | ✅ **성수** (홍대 대비 권리금·임대료 낮음) |\n\n> "}
+
+data: {"type": "text", "content": "추정치이며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대) 추천 업종 알려줘", "홍대입구역(홍대) 리스크는 어때?", "홍대입구역(홍대) 유동인구 자세히"]}
+
+data: {"type": "done"}
+

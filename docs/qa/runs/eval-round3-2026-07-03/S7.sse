@@ -1,0 +1,44 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3120103", "quarter": "2025Q4"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "tool", "name": "resolve_district", "input": {"name": "성수동"}, "progress_label": "상권 찾는 중..."}
+
+data: {"type": "tool_end", "name": "resolve_district", "done_label": "상권 확인"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3110131", "quarter": "2025Q4"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "4106209 / 1092973"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "text", "content": "## 🚶 유동인구 비교 — 홍대 압승!\n\n| 항목 | 🟣 홍대 | 🟢 성수 |\n|---|---|---|\n| **분기 유동인구** | **4,106,209명** |"}
+
+data: {"type": "text", "content": " 1,092,973명 |\n| **피크 시간대** | 오후 5시 (저녁) | 오후 2시 (낮) |\n| **여성 비율** | 52.7% | 54.1% |\n| **20"}
+
+data: {"type": "text", "content": "대 비율** | 43.5% | 28.6% |\n\n---\n\n### 🔍 핵심 해석\n\n- **홍대가 성수보다 약 3.8배 유동인구가 많습니다.**\n- 홍대는 **오후 5"}
+
+data: {"type": "text", "content": "~9시 저녁 피크** → 퇴근 후 유흥·외식 수요 강함\n- 성수는 **오후 2시 낮 피크** → 주말 나들이·카페 방문 패턴 뚜렷\n- 홍대는 **20대 비중(43"}
+
+data: {"type": "text", "content": ".5%)** 이 압도적으로 높아 트렌디한 소비 집중\n- 성수는 **30~40대 비중**이 상대적으로 높아 객단가가 높게 형성되는 배경\n\n> 📌 **유동인구 = 홍"}
+
+data: {"type": "text", "content": "대**, **객단가 = 성수** — 업종 특성에 따라 입지 선택이 달라집니다.\n\n추정치이며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대) 추천 업종 알려줘", "홍대입구역(홍대) 리스크는 어때?", "홍대입구역(홍대) 유동인구 자세히"]}
+
+data: {"type": "done"}
+
