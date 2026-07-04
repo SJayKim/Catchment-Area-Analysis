@@ -59,3 +59,4 @@ test-results/
 .claude/scheduled_tasks.lock
 CLAUDE.local.md
 .gstack/
+data/backups/
