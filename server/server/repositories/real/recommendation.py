@@ -13,6 +13,23 @@ logger = logging.getLogger(__name__)
 
 MIN_RELIABLE_STORES = 3  # n<3 카테고리는 per-store 지표가 통계적으로 무의미
 
+# 상대 점수 밴드 — min-max 를 0~100 으로 그대로 펴면 1위가 항상 100.0(절대 확신으로 오독),
+# 꼴찌 0.0, 단일 카테고리는 0.0 이 된다. 순위는 유지하되 유계 밴드로 표기.
+SCORE_BAND_MIN = 55.0
+SCORE_BAND_MAX = 95.0
+SCORE_BAND_FLAT = 75.0  # 단일 카테고리 / 전원 동점
+
+
+def _band_scores(values: list[float]) -> list[float]:
+    """raw_score 리스트를 순위 보존한 채 SCORE_BAND_MIN~MAX 로 정규화."""
+    if not values:
+        return []
+    min_val, max_val = min(values), max(values)
+    if max_val == min_val:
+        return [SCORE_BAND_FLAT] * len(values)
+    span = SCORE_BAND_MAX - SCORE_BAND_MIN
+    return [round(SCORE_BAND_MIN + (v - min_val) / (max_val - min_val) * span, 1) for v in values]
+
 
 def _apply_store_floor(scored: list[dict]) -> tuple[list[dict], bool]:
     """표본 부족(store_count < floor) 카테고리를 랭킹에서 제외.
@@ -206,11 +223,9 @@ class RealRecommendationRepository:
                         budget_filtered = True
 
                 if filtered:
-                    values = [s["raw_score"] for s in filtered]
-                    min_val, max_val = min(values), max(values)
-                    spread = max_val - min_val if max_val != min_val else 1
-                    for s in filtered:
-                        s["score"] = round((s["raw_score"] - min_val) / spread * 100, 1)
+                    banded = _band_scores([s["raw_score"] for s in filtered])
+                    for s, score in zip(filtered, banded, strict=True):
+                        s["score"] = score
                 else:
                     filtered = raw_scores
 

@@ -12,7 +12,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from server.repositories.real.recommendation import (  # noqa: E402
     MIN_RELIABLE_STORES,
+    SCORE_BAND_FLAT,
+    SCORE_BAND_MAX,
+    SCORE_BAND_MIN,
     _apply_store_floor,
+    _band_scores,
 )
 
 
@@ -42,3 +46,24 @@ def test_store_floor_fallback_when_all_below_threshold():
 
 def test_min_reliable_stores_constant():
     assert MIN_RELIABLE_STORES == 3
+
+
+def test_band_scores_top_is_not_pinned_at_100():
+    # min-max 100 스케일은 1위를 항상 100.0 에 고정(절대 확신 오독) → 유계 밴드로 교체.
+    scores = _band_scores([3e8, 2e8, 1e8])
+    assert scores[0] == SCORE_BAND_MAX < 100.0
+    assert scores[-1] == SCORE_BAND_MIN > 0.0
+
+
+def test_band_scores_flat_when_single_or_tied():
+    # 기존 구현은 단일 카테고리 score 가 0.0 이 됐다 (spread=1 트릭의 버그성 엣지).
+    assert _band_scores([5e8]) == [SCORE_BAND_FLAT]
+    assert _band_scores([5e8, 5e8]) == [SCORE_BAND_FLAT, SCORE_BAND_FLAT]
+    assert _band_scores([]) == []
+
+
+def test_band_scores_preserve_ranking():
+    raw = [1e8, 9e8, 3e8, 7e8]
+    banded = _band_scores(raw)
+    assert [b for _, b in sorted(zip(raw, banded, strict=True), reverse=True)] == sorted(banded, reverse=True)
+    assert all(SCORE_BAND_MIN <= b <= SCORE_BAND_MAX for b in banded)
