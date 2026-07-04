@@ -1,0 +1,46 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54052101713452, "lng": 127.06941385153138, "zoom": 4}, "district_code": "3120053", "district_name": "건대입구역(건대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "recommend_business", "input": {"district_code": "3120053"}, "progress_label": "업종 추천 분석 중..."}
+
+data: {"type": "card", "card_type": "recommend", "data": {"district_code": "3120053", "quarter": "2025Q4", "recommendations": [{"rank": 1, "category_name": "편의점", "category_code": "CS300002", "score": 100.0, "per_store_sales": 184053847, "store_count": 8, "close_rate": 0.0, "age_match": 70.7, "monthly_sales": 1472430777, "reasons": ["점포당 월매출 18405만원", "타겟 고객 매칭률 71%", "경쟁 점포 8개 (밀집도 0.5%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 2, "category_name": "의약품", "category_code": "CS300018", "score": 30.6, "per_store_sales": 65310421, "store_count": 20, "close_rate": 0.0, "age_match": 79.4, "monthly_sales": 1306208429, "reasons": ["점포당 월매출 6531만원", "타겟 고객 매칭률 79%", "경쟁 점포 20개 (밀집도 1.3%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 3, "category_name": "안경", "category_code": "CS300016", "score": 23.9, "per_store_sales": 38959491, "store_count": 9, "close_rate": 0.0, "age_match": 80.1, "monthly_sales": 350635426, "reasons": ["점포당 월매출 3896만원", "타겟 고객 매칭률 80%", "경쟁 점포 9개 (밀집도 0.6%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 4, "category_name": "육류판매", "category_code": "CS300007", "score": 17.8, "per_store_sales": 33000000, "store_count": 5, "close_rate": 0.0, "age_match": 70.7, "monthly_sales": 165000000, "reasons": ["점포당 월매출 3300만원", "타겟 고객 매칭률 71%", "경쟁 점포 5개 (밀집도 0.3%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 5, "category_name": "치과의원", "category_code": "CS200007", "score": 15.6, "per_store_sales": 29223831, "store_count": 13, "close_rate": 0.0, "age_match": 70.0, "monthly_sales": 379909806, "reasons": ["점포당 월매출 2922만원", "타겟 고객 매칭률 70%", "경쟁 점포 13개 (밀집도 0.8%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}], "total_categories_analyzed": 35, "dataSources": [{"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "tool_end", "name": "recommend_business", "done_label": "업종 추천 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "text", "content": "건대입구역 상권의 창업 추천 업종 분석 결과입니다! 🏪\n\n---\n\n## 🏆 건대입구역 창업 추천 업종 TOP 5 (2025Q4)\n\n| 순위 | 업종 | 점포당 월"}
+
+data: {"type": "text", "content": "매출 | 경쟁 점포 수 | 폐업률 | 고객 매칭률 | 포화도 |\n|------|------|-------------|------------|--------|---"}
+
+data: {"type": "text", "content": "---------|--------|\n| 🥇 1 | **편의점** | 약 1억 8,405만 원 | 8개 | 0.0% | 70.7% | 여유 |\n| 🥈 2 | **의"}
+
+data: {"type": "text", "content": "약품(약국)** | 약 6,531만 원 | 20개 | 0.0% | 79.4% | 여유 |\n| 🥉 3 | **안경** | 약 3,896만 원 | 9개 | 0.0% "}
+
+data: {"type": "text", "content": "| 80.1% | 여유 |\n| 4 | **육류판매** | 약 3,300만 원 | 5개 | 0.0% | 70.7% | 여유 |\n| 5 | **치과의원** | 약 2"}
+
+data: {"type": "text", "content": ",922만 원 | 13개 | 0.0% | 70.0% | 여유 |\n\n---\n\n## 📊 핵심 인사이트\n\n### 🥇 1위 편의점 — 압도적 매출\n- 점포당 월매출 **"}
+
+data: {"type": "text", "content": "약 1억 8,405만 원**으로 2위와 3배 가까운 격차\n- 경쟁 점포 **단 8개**, 포화도 **여유** 상태\n- 건대 특유의 **대학가 + 유흥·심야 수요*"}
+
+data: {"type": "text", "content": "*가 편의점 매출을 극대화\n\n### 🥈 2위 의약품(약국) — 안정성 최강\n- 고객 매칭률 **79.4%**로 상위권 중 가장 높은 편\n- 폐업률 0.0%, 안정"}
+
+data: {"type": "text", "content": "적인 수익 구조\n- 20개 점포가 있지만 포화도 '여유'로 진입 여지 존재\n\n### 🥉 3위 안경 — 고객 매칭 1위\n- 고객 매칭률 **80.1%**로 전체 1"}
+
+data: {"type": "text", "content": "위\n- 경쟁 점포 9개로 적고, 폐업률 0.0%\n- 20~30대 유동인구가 많은 건대 특성과 잘 맞는 업종\n\n### 4위 육류판매\n- 경쟁 점포 **5개**로 가"}
+
+data: {"type": "text", "content": "장 적어 진입 장벽 낮음\n- 건대 먹자골목 수요와 연계 가능\n\n### 5위 치과의원\n- 의료 서비스 특성상 안정적 수요\n- 면허 필요 업종이나 폐업률 0.0%의 "}
+
+data: {"type": "text", "content": "안정성\n\n---\n\n## 💡 창업 전략 제언\n\n| 목표 | 추천 업종 |\n|------|---------|\n| **최대 매출** | 편의점 |\n| **안정성 우선*"}
+
+data: {"type": "text", "content": "* | 약국 or 안경 |\n| **소규모 진입** | 육류판매 |\n| **전문직 창업** | 치과의원 |\n\n> 건대입구역은 **대학가 + 유흥 상권**이 결합된 "}
+
+data: {"type": "text", "content": "복합 상권으로, 심야 수요와 20~30대 타겟 업종이 특히 유리합니다.\n\n---\n*추정치이며 실제와 다를 수 있습니다(참고용)*"}
+
+data: {"type": "suggestion", "questions": ["건대입구역(건대) 매출 시뮬레이션 해줘", "건대입구역(건대) 리스크 분석해줘", "비슷한 상권과 비교해줘"]}
+
+data: {"type": "done"}
+

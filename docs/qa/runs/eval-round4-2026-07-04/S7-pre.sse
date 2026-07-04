@@ -1,0 +1,68 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120103"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool", "name": "resolve_district", "input": {"name": "성수동"}, "progress_label": "상권 찾는 중..."}
+
+data: {"type": "tool_end", "name": "resolve_district", "done_label": "상권 확인"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3110131"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "53200280285 / 17737244308"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "53200280285 / 1924711"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "17737244308 / 327970"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+: ping - 2026-07-04 05:27:37.886964+00:00
+
+data: {"type": "text", "content": "2025Q4 기준 홍대 vs 성수동 카페거리 매출 비교 결과입니다.\n\n---\n\n## 📊 홍대 vs 성수동 카페거리 — 매출 비교 (2025Q4)\n\n### 1️⃣ "}
+
+data: {"type": "text", "content": "핵심 지표 한눈에\n\n| 항목 | 🎸 홍대입구역 | ☕ 성수동 카페거리 |\n|------|-------------|----------------|\n| **월 추정 "}
+
+data: {"type": "text", "content": "매출** | **약 532억 원** | **약 177억 원** |\n| **건당 평균 객단가** | 약 27,641원 | 약 54,082원 |\n| **월 결제 건수"}
+
+data: {"type": "text", "content": "** | 약 192만 건 | 약 33만 건 |\n| **주말 매출 비중** | 35.4% | 31.0% |\n| **피크 시간대** | 17~21시 (31.7%) |"}
+
+data: {"type": "text", "content": " 17~21시 (32.1%) |\n| **주력 연령** | 20대 (41.5%) | 30대 (28.1%) |\n| **주력 성별** | 여성 (54.3%) | 남성 "}
+
+data: {"type": "text", "content": "(51.9%) |\n\n---\n\n### 2️⃣ 해석 — 규모 vs 질\n\n#### 🎸 홍대 — \"압도적 규모, 박리다매형\"\n- 월 매출이 성수의 **약 3배** 수준으"}
+
+data: {"type": "text", "content": "로 서울 최상위 상권\n- 객단가 **2.8만 원**으로 낮지만, 월 **192만 건**의 폭발적 거래량이 매출을 견인\n- **20대 여성** 중심 소비 구조 → "}
+
+data: {"type": "text", "content": "패션·뷰티·저가 F&B에 강점\n- 심야(00~06시) 매출 비중이 **13.0%** → 클럽·주점 등 야간 경제 활성\n\n#### ☕ 성수동 카페거리 — \"고단가 "}
+
+data: {"type": "text", "content": "소비, 프리미엄형\"\n- 객단가 **5.4만 원**으로 홍대 대비 **약 2배** 높음 → 고부가가치 소비 집중\n- **30대** 주력 소비층 → 구매력 높은 직장"}
+
+data: {"type": "text", "content": "인·MZ 상위 소비층\n- 심야 매출 비중 **0.4%** → 낮 시간대(11~17시) 집중형 상권\n- 거래 건수는 적지만 건당 수익성이 높아 **프리미엄 업종 적"}
+
+data: {"type": "text", "content": "합**\n\n---\n\n### 3️⃣ 실행 시사점\n\n| 창업 목적 | 추천 상권 |\n|----------|---------|\n| 높은 유입량·회전율 중심 (분식·카페·"}
+
+data: {"type": "text", "content": "편의점) | **홍대** |\n| 고단가·브랜드 이미지 중심 (플래그십·프리미엄 F&B) | **성수동** |\n| 야간 영업 (주점·클럽·편의점 심야) | **홍대"}
+
+data: {"type": "text", "content": "** |\n| 주간 집중 영업 (브런치·디저트·체험형) | **성수동** |\n\n> 추정치이며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대) 추천 업종 알려줘", "홍대입구역(홍대) 리스크는 어때?", "홍대입구역(홍대) 유동인구 자세히"]}
+
+data: {"type": "done"}
+

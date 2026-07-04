@@ -1,0 +1,48 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3120103", "quarter": "2025Q4"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "tool", "name": "resolve_district", "input": {"name": "성수동 카페거리"}, "progress_label": "상권 찾는 중..."}
+
+data: {"type": "tool_end", "name": "resolve_district", "done_label": "상권 확인"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3110131", "quarter": "2025Q4"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "4106209 / 1092973"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "text", "content": "## 🚶 유동인구 비교 — 홍대 vs 성수동 (2025Q4)\n\n**압도적으로 홍대가 많습니다.**\n\n| 항목 | 🎸 홍대입구역 | ☕ 성수동 카페거리 |\n|---"}
+
+data: {"type": "text", "content": "---|-------------|----------------|\n| **분기 유동인구** | **4,106,209명** | **1,092,973명** |\n| **"}
+
+data: {"type": "text", "content": "피크 시간대** | 오후 5시 | 오후 2시 |\n| **여성 비율** | 52.7% | 54.1% |\n| **주요 연령대** | 20대 (43.5%) | 20대 "}
+
+data: {"type": "text", "content": "(28.6%) |\n\n---\n\n### 📌 핵심 해석\n\n1. **규모 차이**: 홍대 유동인구는 성수동의 약 **3.8배** 수준입니다.\n2. **피크 패턴**:\n "}
+
+data: {"type": "text", "content": "  - 홍대는 **저녁 5시** 피크 → 퇴근 후 유흥·식음료 소비 중심\n   - 성수동은 **오후 2시** 피크 → 낮 시간 카페·브런치 방문 중심\n3. **연"}
+
+data: {"type": "text", "content": "령 구성**:\n   - 홍대는 **20대 집중**(43.5%)으로 젊은 층 타깃 업종에 유리\n   - 성수동은 **20~40대 고른 분포** → 구매력 있는 30"}
+
+data: {"type": "text", "content": "~40대 비중이 상대적으로 높음\n\n### 💡 실행 시사점\n- **유동인구 볼륨**이 중요한 업종(편의점, 패스트푸드 등)이라면 → **홍대**\n- **체류형·고객"}
+
+data: {"type": "text", "content": "단가** 업종(프리미엄 카페, 편집숍 등)이라면 → **성수동**도 충분히 경쟁력 있음\n\n추정치이며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대) 추천 업종 알려줘", "홍대입구역(홍대) 리스크는 어때?", "홍대입구역(홍대) 유동인구 자세히"]}
+
+data: {"type": "done"}
+
