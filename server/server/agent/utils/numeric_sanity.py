@@ -175,11 +175,15 @@ def _within(actual: float, expected: float, tol: float = 0.05) -> bool:
 # Matches actual Tool return shapes (camelCase) — see agent/tools/*.py.
 _TOOL_SCALAR_FIELDS: tuple[tuple[str, str, str], ...] = (
     # get_district_summary
+    ("get_district_summary", "floatingPopulation.quarterTotal", "명"),
+    # legacy key — Redis 캐시된 구버전 card payload 방어 (rename 2026-07-04)
     ("get_district_summary", "floatingPopulation.dailyAvg", "명"),
     ("get_district_summary", "monthlySales", "원"),
     ("get_district_summary", "closeRate.current", "%"),
     ("get_district_summary", "insights.perStoreSales", "원"),
-    # get_floating_population (repo layer returns daily_avg)
+    # get_floating_population (repo layer returns quarter_total; daily_avg/dailyAvg = legacy)
+    ("get_floating_population", "quarter_total", "명"),
+    ("get_floating_population", "quarterTotal", "명"),
     ("get_floating_population", "daily_avg", "명"),
     ("get_floating_population", "dailyAvg", "명"),
     # get_estimated_sales

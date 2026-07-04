@@ -63,7 +63,7 @@ class TestFactPoolSuffixKeys:
     _POOL = {
         "get_district_summary#1": {
             "monthlySales": 14_700_000_000,
-            "floatingPopulation": {"dailyAvg": 1_022_060},
+            "floatingPopulation": {"quarterTotal": 1_022_060},
             "insights": {"perStoreSales": 14_503_839},
         }
     }

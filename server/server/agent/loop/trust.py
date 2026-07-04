@@ -160,12 +160,16 @@ def _entity_label(payload: dict) -> str:
 # fallback text originates from the model ⇒ fabrication-proof.
 _LABELED_FIELDS: dict[str, tuple[tuple[str, str, str], ...]] = {
     "get_district_summary": (
+        ("floatingPopulation.quarterTotal", "분기 유동인구", "명"),
+        # legacy key — Redis 캐시된 구버전 card payload 방어 (rename 2026-07-04)
         ("floatingPopulation.dailyAvg", "분기 유동인구", "명"),
         ("monthlySales", "월 추정 매출", "원"),
         ("closeRate.current", "폐업률", "%"),
         ("insights.perStoreSales", "점포당 월매출", "원"),
     ),
     "get_floating_population": (
+        ("quarter_total", "분기 유동인구", "명"),
+        ("quarterTotal", "분기 유동인구", "명"),
         ("daily_avg", "분기 유동인구", "명"),
         ("dailyAvg", "분기 유동인구", "명"),
     ),

@@ -24,7 +24,7 @@ ResultStatus = Literal["full", "partial", "empty"]
 # counts as an empty row. Derived from ``_compute_hints`` behaviour in
 # ``respond.py`` and the Repository return shapes.
 CRITICAL_FIELDS: dict[str, str] = {
-    "get_floating_population": "daily_avg",
+    "get_floating_population": "quarter_total",
     "get_estimated_sales": "total_monthly_sales",
     "get_store_info": "total_stores",
     "get_store_history": "benchmarks",

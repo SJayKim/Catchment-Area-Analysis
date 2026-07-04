@@ -36,7 +36,7 @@ class RealFloatingPopulationRepository:
             ).all()
 
             by_hour = [{"time_slot": row.time_slot, "population": int(row.total)} for row in hourly_rows]
-            daily_avg = sum(row.total for row in hourly_rows)
+            quarter_total = sum(row.total for row in hourly_rows)
             peak_hour = max(hourly_rows, key=lambda r: r.total).time_slot if hourly_rows else None
 
             # Gender totals
@@ -79,7 +79,7 @@ class RealFloatingPopulationRepository:
         return {
             "district_code": district_code,
             "quarter": quarter,
-            "daily_avg": int(daily_avg),
+            "quarter_total": int(quarter_total),
             "peak_hour": peak_hour,
             "by_hour": by_hour,
             "gender": {

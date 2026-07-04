@@ -2,7 +2,7 @@
   "D3001": {
     "district_code": "D3001",
     "quarter": "2025Q3",
-    "daily_avg": 124350,
+    "quarter_total": 124350,
     "peak_hour": 18,
     "by_hour": [
       {
@@ -118,7 +118,7 @@
   "D3002": {
     "district_code": "D3002",
     "quarter": "2025Q3",
-    "daily_avg": 98700,
+    "quarter_total": 98700,
     "peak_hour": 20,
     "by_hour": [
       {
@@ -234,7 +234,7 @@
   "D3003": {
     "district_code": "D3003",
     "quarter": "2025Q3",
-    "daily_avg": 72500,
+    "quarter_total": 72500,
     "peak_hour": 19,
     "by_hour": [
       {
@@ -350,7 +350,7 @@
   "D3004": {
     "district_code": "D3004",
     "quarter": "2025Q3",
-    "daily_avg": 156200,
+    "quarter_total": 156200,
     "peak_hour": 14,
     "by_hour": [
       {
@@ -466,7 +466,7 @@
   "D3005": {
     "district_code": "D3005",
     "quarter": "2025Q3",
-    "daily_avg": 45800,
+    "quarter_total": 45800,
     "peak_hour": 8,
     "by_hour": [
       {

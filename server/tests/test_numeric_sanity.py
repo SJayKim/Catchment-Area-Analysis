@@ -37,7 +37,7 @@ def test_match_against_tools_full_hit():
         "get_district_summary": {
             "monthlySales": 110_439_921_327,
             "closeRate": {"current": 1.6},
-            "floatingPopulation": {"dailyAvg": 5_906_000},
+            "floatingPopulation": {"quarterTotal": 5_906_000},
             "topCategories": [{"storeCount": 4125}],
         }
     }
@@ -57,7 +57,7 @@ def test_detect_entity_mismatch():
     tools = {
         "get_district_summary": {
             "monthlySales": 47_416_272_422,  # Different district
-            "floatingPopulation": {"dailyAvg": 2_183_029, "peakHour": 132_400},
+            "floatingPopulation": {"quarterTotal": 2_183_029, "peakHour": 132_400},
             "topCategories": [{"storeCount": 2406}],
         }
     }

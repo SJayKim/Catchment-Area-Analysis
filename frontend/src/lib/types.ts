@@ -33,7 +33,9 @@ export interface SummaryCardData {
   districtType: string;
   summary: string;
   floatingPopulation: {
-    dailyAvg: number;
+    quarterTotal: number;
+    /** @deprecated rename 이전(2026-07-04) Redis 캐시 payload 하위호환 */
+    dailyAvg?: number;
     peakHour: number;
     byHour: { hour: number; pop: number }[];
   };

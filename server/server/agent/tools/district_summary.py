@@ -84,11 +84,11 @@ async def get_district_summary(district_code: str) -> dict:
     if store_ok:
         close_rate["current"] = store_result.get("close_rate", 0.0)
 
-    daily_avg = fp_result.get("daily_avg", 0) if fp_ok else 0
+    quarter_total = fp_result.get("quarter_total", 0) if fp_ok else 0
     monthly_sales = sales_result.get("total_monthly_sales", 0) if sales_ok else 0
     status_label = {"growing": "성장 중인", "stable": "안정적인", "declining": "위축 중인"}.get(status, "안정적인")
     summary_text = (
-        f"분기 유동인구 {_format_population(daily_avg)}, "
+        f"분기 유동인구 {_format_population(quarter_total)}, "
         f"월 추정 매출 {_format_sales(monthly_sales)}의 "
         f"{status_label} {meta['type']}입니다."
     )
@@ -151,7 +151,7 @@ async def get_district_summary(district_code: str) -> dict:
     per_store = insights.get("perStoreSales", 0)
     benchmarks = await get_district_benchmarks(
         meta["type"],
-        floating_pop=daily_avg,
+        floating_pop=quarter_total,
         monthly_sales=monthly_sales,
         close_rate=close_rate["current"],
         store_count=total_stores,
@@ -164,7 +164,7 @@ async def get_district_summary(district_code: str) -> dict:
         "summary": summary_text,
         "monthlySales": monthly_sales,
         "floatingPopulation": {
-            "dailyAvg": daily_avg,
+            "quarterTotal": quarter_total,
             "peakHour": fp_result.get("peak_hour", 0) if fp_ok else 0,
             "byHour": by_hour,
         },

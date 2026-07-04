@@ -156,14 +156,14 @@ def _build_top_categories(store_info: dict) -> list[PreviewTopCategory]:
 
 
 def _build_floating(fp_current: dict, fp_prev: dict | None) -> PreviewFloatingPopulation:
-    current_total = fp_current.get("daily_avg") if "error" not in fp_current else None
+    current_total = fp_current.get("quarter_total") if "error" not in fp_current else None
     quarter = fp_current.get("quarter") if "error" not in fp_current else None
     peak_hour = fp_current.get("peak_hour") if "error" not in fp_current else None
 
     prev_total: int | None = None
     delta_pct: float | None = None
     if fp_prev and "error" not in fp_prev:
-        prev_total = fp_prev.get("daily_avg")
+        prev_total = fp_prev.get("quarter_total")
         if current_total and prev_total:
             delta_pct = round((current_total - prev_total) / prev_total * 100, 1)
 

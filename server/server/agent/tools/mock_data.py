@@ -58,7 +58,7 @@ def get_compare_data(district_codes: list[str]) -> dict:
         results[code] = {
             "district_code": code,
             "district_name": d["name"],
-            "floating_pop": fp["daily_avg"] if fp else 0,
+            "floating_pop": fp["quarter_total"] if fp else 0,
             "main_age": main_age,
             "store_count": si["total_stores"] if si else 0,
             "close_rate": si["close_rate"] if si else 0.0,

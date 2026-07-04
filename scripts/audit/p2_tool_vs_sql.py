@@ -119,11 +119,11 @@ async def audit_flpop(code: str) -> dict:
 
     db_sum = sum(db_by_hour.values())
     checks.append({
-        "field": "daily_avg",
-        "tool": tool_out.get("daily_avg"),
+        "field": "quarter_total",
+        "tool": tool_out.get("quarter_total"),
         "expected_sum_across_slots": db_sum,
-        "match": tool_out.get("daily_avg") == db_sum,
-        "note": "daily_avg field is SUM of 6 time_slot counts — potentially double-counts individuals",
+        "match": tool_out.get("quarter_total") == db_sum,
+        "note": "quarter_total field is SUM of 6 time_slot counts — potentially double-counts individuals",
     })
 
     return {

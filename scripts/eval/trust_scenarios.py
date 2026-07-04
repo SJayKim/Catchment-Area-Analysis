@@ -53,7 +53,7 @@ class Ground:
     monthly_sales_won: int  # /3 환산된 월 매출
     store_count: int
     close_rate_pct: float | None
-    floating_pop_daily_avg: int | None
+    floating_pop_quarter_total: int | None
 
 
 @dataclass
@@ -126,7 +126,7 @@ def fetch_ground(code: str, name: str, dtype: str) -> Ground:
         monthly_sales_won=monthly,
         store_count=store_count,
         close_rate_pct=close_rate,
-        floating_pop_daily_avg=pop,
+        floating_pop_quarter_total=pop,
     )
 
 
@@ -320,7 +320,7 @@ def write_reports(verdicts: list[Verdict], out_dir: Path) -> None:
         per_lines.append(f"- DB 월매출: {v.ground.monthly_sales_won:,} 원")
         per_lines.append(f"- DB 점포 수: {v.ground.store_count}")
         per_lines.append(f"- DB 폐업률: {v.ground.close_rate_pct}")
-        per_lines.append(f"- DB 일평균 유동인구: {v.ground.floating_pop_daily_avg:,}")
+        per_lines.append(f"- DB 분기 유동인구: {v.ground.floating_pop_quarter_total:,}")
         per_lines.append(f"- sent: `{v.sent_message}`")
         per_lines.append("")
         per_lines.append("| 규칙 | 기대 | 실측 | 판정 |")
