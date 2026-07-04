@@ -41,7 +41,10 @@ systemd timer (2분)
   └─ auto_deploy.sh
        1. flock 잠금 (동시 실행 차단, 진행 중이면 즉시 종료)
        2. git fetch origin main
-       3. 신규 커밋 없음(HEAD == origin/main) → exit 0 (no-op, 로그 미생성)
+       3. 신규 커밋 없음 → exit 0 (no-op, 로그 미생성)
+          ※ C9 중 정정: no-op 기준은 HEAD 비교가 아닌 `.last-deployed-sha`(마지막 SUCCESS 배포 SHA).
+          본 서버에서 직접 커밋→push 하면 HEAD == origin/main 이라 HEAD 비교로는 영원히 no-op
+          (배포 상태의 진실은 워킹트리가 아니라 이미지). 실패 SHA 는 blocked-shas 에 등재해 재배포 루프 차단.
        4. 안전 게이트:
           - 워킹트리 dirty 검사 — tracked 변경이 허용목록(.claude/settings.local.json) 외 존재 시 배포 중단 + 상태파일에 BLOCKED_DIRTY 기록
             (본 서버는 작업 세션 겸용 — 미커밋 작업물을 reset 으로 파괴하지 않는다. --ff-only 만 허용)
@@ -100,6 +103,7 @@ systemd timer (2분)
 - [x] **타 Plan 충돌**: e2e 스택(:8002)·dev 스택과 compose project 분리 완료(`marketscope-dev`) → 자동배포는 prod project 만 조작. 스트리밍 재설계(deferred) 등 코드 Plan 과 무충돌.
 - [x] **엣지 (구현 중 발견): systemd oneshot 기본 timeout 90s** — 빌드가 그보다 길어 강제종료 → `TimeoutStartSec=1800`.
 - [x] **엣지 (구현 중 발견): 함수 내부 실패의 ERR trap 미전파** — `set -e` 만으로는 함수 안 실패가 롤백을 건너뜀 → `set -E`(errtrace) 필수.
+- [x] **엣지 (C9 중 발견): 서버발 커밋은 HEAD 비교로 영원히 no-op** — 이 서버는 개발 세션 겸용이라 push 시점에 이미 HEAD == origin/main → no-op 기준을 `.last-deployed-sha` 파일로 교체. 부수 규칙: 배포 실패(ROLLED_BACK) SHA 도 blocked-shas 등재(아니면 매 tick 재배포 무한루프).
 
 ## Scenario (E2E Ring Mapping)
 

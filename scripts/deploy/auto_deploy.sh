@@ -26,7 +26,8 @@ IMAGES=(backend frontend migrate)
 STATE_DIR="$REPO_DIR/data/deploy-logs"
 LOCK_FILE="$STATE_DIR/.autodeploy.lock"
 STATUS_FILE="$STATE_DIR/last-deploy.json"
-BLOCKED_SHA_FILE="$STATE_DIR/blocked-shas.txt"  # CI failure SHA — 재시도 방지
+DEPLOYED_SHA_FILE="$STATE_DIR/.last-deployed-sha"  # 마지막 SUCCESS 배포 SHA (no-op 기준)
+BLOCKED_SHA_FILE="$STATE_DIR/blocked-shas.txt"  # CI failure / 배포실패 SHA — 재시도 방지
 GITHUB_REPO="SJayKim/Catchment-Area-Analysis"
 EXTERNAL_URL="https://marketscope.robitlabs.co.kr"
 HEALTHY_TIMEOUT=180
@@ -76,7 +77,11 @@ LOCAL_SHA="$(git rev-parse HEAD)"
 REMOTE_SHA="$(git rev-parse origin/main)"
 SHORT_SHA="${REMOTE_SHA:0:7}"
 
-if [ "$LOCAL_SHA" = "$REMOTE_SHA" ] && [ "$FORCE" -eq 0 ]; then
+# no-op 기준은 git HEAD 가 아닌 "마지막 배포 SHA" — 본 서버에서 직접 커밋→push 하면
+# HEAD == origin/main 이라 HEAD 비교로는 영원히 no-op (이미지가 stale 하게 남는 원 문제 재발).
+# 진짜 배포 상태는 워킹트리가 아니라 이미지이므로 SUCCESS 시 기록한 SHA 와 비교한다.
+LAST_DEPLOYED="$(cat "$DEPLOYED_SHA_FILE" 2>/dev/null || echo "")"
+if [ "$REMOTE_SHA" = "$LAST_DEPLOYED" ] && [ "$FORCE" -eq 0 ]; then
     # no-op: 로그 파일 미생성 (플랜 §흐름-3)
     exit 0
 fi
@@ -173,6 +178,8 @@ rollback() {
         fi
     done
     compose up -d --force-recreate backend frontend || true
+    # 실패 SHA 재시도 방지 — no-op 기준이 deployed-sha 라 이게 없으면 매 tick 재배포 루프
+    echo "$REMOTE_SHA" >>"$BLOCKED_SHA_FILE"
     if wait_healthy && smoke; then
         log "rollback smoke OK — service restored on prev-auto"
         write_status "ROLLED_BACK" "$REMOTE_SHA" "deploy failed at: ${FAILED_STEP:-unknown}; prev-auto restored, smoke OK"
@@ -269,5 +276,6 @@ smoke
 
 # --- 12) 성공 기록 ---
 trap - ERR
+echo "$REMOTE_SHA" >"$DEPLOYED_SHA_FILE"
 write_status "SUCCESS" "$REMOTE_SHA" "deployed and smoke passed"
 log "deploy SUCCESS: $REMOTE_SHA"
