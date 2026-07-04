@@ -88,8 +88,8 @@ systemd timer (2분)
 - [x] C6. systemd unit 2개 + `install_autodeploy.sh` 작성 (`TimeoutStartSec=1800` — oneshot 기본 90s 로는 빌드 중 강제종료). `systemd-analyze verify` PASS
 - [x] C7. `docs/ops/production-deployment.md` §6 자동배포 섹션 추가 (result 7종 해소표 포함)
 - [x] C8. 드라이런: 수동 1회 실행 no-op exit 0 · 로그 미생성 · flock 동시실행 차단 · smoke 4항목 라이브 개별 PASS · dirty 필터/date 파싱 단위 검증
-- [ ] C9. 실배포 리허설: 무해 커밋(문서 touch) push → timer 경유 자동배포 성공 확인 — timer 설치 완료(2026-07-04 17:52 enable, 2분 주기 active). 본 커밋이 리허설 트리거.
-- [ ] C10. 롤백 리허설: smoke 강제 실패 주입(예: 임시로 잘못된 헬스 URL) → prev-auto 복귀 확인 후 원복
+- [x] C9. 실배포 리허설 (2026-07-04 18:03): `3fc7d9a` push → CI green 대기 → timer 자동배포 **SUCCESS** (17:58 발화, 4.5분, migrate/seed no-op·flush 10키·smoke 4항목·이미지 신선·.env.dev 원복). 이후 `e1d28e4`(18:12, 23초)·`1f5d19b`(18:19) 연속 자동배포 SUCCESS — 3회 실증.
+- [x] C10. 롤백 리허설 (2026-07-04 18:20): untracked 사본에 1회성 smoke 실패 주입 + `--force` → smoke FAIL → prev-auto 재태그·recreate → 롤백 smoke OK → **ROLLED_BACK** 정확 기록, 서비스 무중단 복구. BLOCKED_DIRTY 도 2회 라이브 검증(미커밋 fix 편집 중 tick).
 
 ## 재검토 (Self-Review Gate)
 
@@ -104,6 +104,8 @@ systemd timer (2분)
 - [x] **엣지 (구현 중 발견): systemd oneshot 기본 timeout 90s** — 빌드가 그보다 길어 강제종료 → `TimeoutStartSec=1800`.
 - [x] **엣지 (구현 중 발견): 함수 내부 실패의 ERR trap 미전파** — `set -e` 만으로는 함수 안 실패가 롤백을 건너뜀 → `set -E`(errtrace) 필수.
 - [x] **엣지 (C9 중 발견): 서버발 커밋은 HEAD 비교로 영원히 no-op** — 이 서버는 개발 세션 겸용이라 push 시점에 이미 HEAD == origin/main → no-op 기준을 `.last-deployed-sha` 파일로 교체. 부수 규칙: 배포 실패(ROLLED_BACK) SHA 도 blocked-shas 등재(아니면 매 tick 재배포 무한루프).
+- [x] **엣지 (C10 중 발견): freshness 마커 false-positive** — 소스 미변경 push 는 전체 캐시 히트로 이미지 Created 미갱신이 정상인데 stale 오판정 → 롤백 오발동. server/·frontend/ diff 있는 push 에만 검사 (`e1d28e4`).
+- [x] **엣지 (C10 중 발견): 롤백 후 frontend cold-start 가짜 ROLLBACK_FAILED** — frontend 는 healthcheck 이 없어 force-recreate 직후 :3200 이 10~20s 거부 → `wait_frontend`(90s) 를 배포·롤백 양 경로에 추가 (`1f5d19b`).
 
 ## Scenario (E2E Ring Mapping)
 
