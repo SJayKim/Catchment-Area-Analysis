@@ -85,7 +85,7 @@ systemd timer (2분)
 - [x] C6. systemd unit 2개 + `install_autodeploy.sh` 작성 (`TimeoutStartSec=1800` — oneshot 기본 90s 로는 빌드 중 강제종료). `systemd-analyze verify` PASS
 - [x] C7. `docs/ops/production-deployment.md` §6 자동배포 섹션 추가 (result 7종 해소표 포함)
 - [x] C8. 드라이런: 수동 1회 실행 no-op exit 0 · 로그 미생성 · flock 동시실행 차단 · smoke 4항목 라이브 개별 PASS · dirty 필터/date 파싱 단위 검증
-- [ ] C9. 실배포 리허설: 무해 커밋(문서 touch) push → timer 경유 자동배포 성공 확인 — **선행: 사용자 `sudo bash scripts/deploy/install_autodeploy.sh`** (본 커밋 push 자체가 첫 리허설 트리거가 됨)
+- [ ] C9. 실배포 리허설: 무해 커밋(문서 touch) push → timer 경유 자동배포 성공 확인 — timer 설치 완료(2026-07-04 17:52 enable, 2분 주기 active). 본 커밋이 리허설 트리거.
 - [ ] C10. 롤백 리허설: smoke 강제 실패 주입(예: 임시로 잘못된 헬스 URL) → prev-auto 복귀 확인 후 원복
 
 ## 재검토 (Self-Review Gate)
