@@ -32,8 +32,14 @@ from server.agent.loop.tools_fc import (
     labels_for_tool,
     tool_schemas,
 )
-from server.agent.loop.trust import find_unbound_numbers, grounded_fallback
-from server.agent.nodes.actor import _truncate_result
+from server.agent.loop.trust import (
+    binding_stats,
+    find_scale_errors,
+    find_unbound_numbers,
+    grounded_fallback,
+    mask_unbound,
+    should_fallback,
+)
 from server.config import settings
 
 logger = logging.getLogger(__name__)
@@ -149,6 +155,7 @@ async def run_agent(
     abstain_reason: str | None = None
     final_text = ""
     tool_calls_made = 0
+    cards_emitted = 0
     started = time.monotonic()
     fact_idx = 0
     resolved_name = ""  # resolve_district 가 찾은 상권명 — suggestion 개인화용
@@ -207,10 +214,14 @@ async def run_agent(
                         pass
                 elif result and not error:
                     fact_idx += 1
-                    stored = _truncate_result(result) if isinstance(result, dict) else result
-                    fact_pool[f"{name}#{fact_idx}"] = stored
+                    # Store the UNTRUNCATED result: the model's ToolMessage gets
+                    # the full payload, so a truncated pool makes values past the
+                    # list cap unbindable (Round 3 RC3). The pool never reaches
+                    # the LLM — zero token cost.
+                    fact_pool[f"{name}#{fact_idx}"] = result
                     card = card_for_tool(name, result)
                     if card:
+                        cards_emitted += 1
                         yield {"type": "card", "card_type": card["card_type"], "data": card["data"]}
 
                 yield {"type": "tool_end", "name": name, "done_label": done}
@@ -234,10 +245,20 @@ async def run_agent(
             )
 
         unbound = find_unbound_numbers(final_text, fact_pool, computed)
-        if unbound and abstain_reason is None:
-            logger.info("trust: %d unbound numbers, corrective pass", len(unbound))
+        scale_errors = find_scale_errors(final_text, fact_pool, computed)
+        if (unbound or scale_errors) and abstain_reason is None:
+            logger.info(
+                "trust: %d unbound / %d scale-suspect numbers, corrective pass",
+                len(unbound),
+                len(scale_errors),
+            )
             yield {"type": "thinking", "step": "수치 검증 중..."}
-            messages.append(HumanMessage(content=corrective_instruction([n.raw for n in unbound])))
+            value_hints = [
+                f"'{s.number.raw}' → 도구 확인값 {int(s.expected):,}{s.number.tail or ''}" for s in scale_errors
+            ]
+            messages.append(
+                HumanMessage(content=corrective_instruction([n.raw for n in unbound], value_hints=value_hints or None))
+            )
             try:
                 # 교정 턴은 prose 전용(도구 없음): 도구를 주면 모델이 도구 호출
                 # 서두("...확인하겠습니다")만 텍스트로 남기고, v1은 재루프하지
@@ -253,12 +274,29 @@ async def run_agent(
                 logger.warning("trust corrective pass failed", exc_info=True)
 
             still = find_unbound_numbers(final_text, fact_pool, computed)
-            if still:
-                logger.warning("trust: %d still unbound → deterministic fallback", len(still))
-                final_text = grounded_fallback(fact_pool)
+            still_scale = find_scale_errors(final_text, fact_pool, computed)
+            if still or still_scale:
+                scored_total, _ = binding_stats(final_text, fact_pool, computed)
+                if should_fallback(len(still), scored_total):
+                    # Entity-mismatch-grade fabrication — 폐기가 맞다.
+                    logger.warning(
+                        "trust: %d/%d still unbound → deterministic fallback",
+                        len(still),
+                        scored_total,
+                    )
+                    final_text = grounded_fallback(fact_pool, cards_emitted=cards_emitted > 0)
+                else:
+                    # 소수 잔존 — draft 를 살리고 해당 수치만 마스킹 (Round 3 P1:
+                    # 과잉 방어의 가용성 손실 방지).
+                    logger.warning(
+                        "trust: masking %d unbound + %d scale-suspect, draft preserved",
+                        len(still),
+                        len(still_scale),
+                    )
+                    final_text = mask_unbound(final_text, still + [s.number for s in still_scale])
 
         if not final_text.strip():
-            final_text = grounded_fallback(fact_pool)
+            final_text = grounded_fallback(fact_pool, cards_emitted=cards_emitted > 0)
 
         for chunk in _chunks(final_text):
             yield {"type": "text", "content": chunk}

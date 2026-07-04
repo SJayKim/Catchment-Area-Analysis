@@ -33,21 +33,28 @@ from typing import Any
 _UNIT_SCALE: dict[str | None, int] = {
     "조": 10**12,
     "억": 10**8,
+    "천만": 10**7,
+    "백만": 10**6,
+    "십만": 10**5,
     "만": 10**4,
     "천": 10**3,
+    "백": 10**2,
+    "십": 10,
     None: 1,
 }
 
 # Compound pattern: "590만 6천명" → 5,906,000. Must run before the simple
-# pattern so the lo-unit part is not double-counted.
+# pattern so the lo-unit part is not double-counted. lo_unit is REQUIRED —
+# without it "3억 5,000만원" mis-parses (lo=5,000 at scale 1) and two adjacent
+# independent numbers ("14억 ... 8개") get merged into one bogus compound.
 _COMPOUND_RE = re.compile(
     r"(?P<hi>\d+(?:,\d{3})*)\s*(?P<hi_unit>조|억|만)\s*"
-    r"(?P<lo>\d+(?:,\d{3})*)\s*(?P<lo_unit>천|백|십)?\s*(?P<tail>원|명|개)?"
+    r"(?P<lo>\d+(?:,\d{3})*)\s*(?P<lo_unit>천만|백만|십만|만|천|백|십)\s*(?P<tail>원|명|개)?"
 )
 
 _SIMPLE_RE = re.compile(
     r"(?P<num>\d{1,3}(?:,\d{3})*|\d+)(?:\.(?P<frac>\d+))?"
-    r"\s*(?P<unit>조|억|만|천)?\s*(?P<tail>원|명|개|%|퍼센트)?"
+    r"\s*(?P<unit>조|억|천만|백만|십만|만|천)?\s*(?P<tail>원|명|개|%|퍼센트)?"
 )
 
 
@@ -104,7 +111,7 @@ def extract_numbers(text: str) -> list[ExtractedNumber]:
         hi = int(m.group("hi").replace(",", ""))
         hi_scale = _UNIT_SCALE[m.group("hi_unit")]
         lo = int(m.group("lo").replace(",", ""))
-        lo_scale = _UNIT_SCALE.get(m.group("lo_unit"))
+        lo_scale = _UNIT_SCALE[m.group("lo_unit")]
         value = hi * hi_scale + lo * lo_scale
         tail = m.group("tail")
         found.append(
@@ -221,11 +228,16 @@ def _walk_numeric_leaves(obj: Any, acc: list[float], depth: int = 0) -> None:
 
 
 def _collect_tool_scalars(tool_results: dict[str, dict]) -> list[tuple[str, float, str]]:
-    """Flatten tool_results into (tool_name, scalar, unit_tail) tuples."""
+    """Flatten tool_results into (tool_name, scalar, unit_tail) tuples.
+
+    Pool keys may carry a ``#N`` call-index suffix (v2 loop fact_pool stores
+    ``get_district_summary#1``) — normalize before comparing to tool names.
+    """
     scalars: list[tuple[str, float, str]] = []
-    for tool_name, payload in (tool_results or {}).items():
+    for pool_key, payload in (tool_results or {}).items():
         if not isinstance(payload, dict):
             continue
+        tool_name = pool_key.split("#", 1)[0]
         for candidate_tool, path, unit in _TOOL_SCALAR_FIELDS:
             if candidate_tool != tool_name:
                 continue
@@ -233,11 +245,11 @@ def _collect_tool_scalars(tool_results: dict[str, dict]) -> list[tuple[str, floa
             if isinstance(value, (int, float)) and value > 0:
                 scalars.append((tool_name, float(value), unit))
         # get_district_summary.topCategories[] — list of store_count per category
-        top_cats = payload.get("topCategories") if isinstance(payload, dict) else None
+        top_cats = payload.get("topCategories") or payload.get("top_categories")
         if isinstance(top_cats, list):
             for cat in top_cats:
                 if isinstance(cat, dict):
-                    sc = cat.get("storeCount") or cat.get("store_count")
+                    sc = cat.get("storeCount") or cat.get("store_count") or cat.get("count")
                     if isinstance(sc, (int, float)) and sc > 0:
                         scalars.append((tool_name, float(sc), "개"))
         # get_store_info return — category breakdown
@@ -274,6 +286,7 @@ def _collect_tool_scalars(tool_results: dict[str, dict]) -> list[tuple[str, floa
                 for key, unit_tail in (
                     ("monthly_sales", "원"),
                     ("avg_monthly_sales", "원"),
+                    ("per_store_sales", "원"),
                     ("store_count", "개"),
                     ("close_rate", "%"),
                 ):
@@ -329,6 +342,72 @@ def match_numbers_to_tools(
         else:
             unmatched.append(num)
     return matched, unmatched
+
+
+@dataclass(frozen=True)
+class ScaleMismatch:
+    """A number whose ×10/×100 multiple matches a tool scalar — 자릿수 오기."""
+
+    number: ExtractedNumber
+    expected: float  # the tool-confirmed value the text should have used
+    factor: int  # 10 or 100
+
+
+# Suspect ranges sit BELOW the per-unit scoring floor in
+# match_numbers_to_tools — such numbers skip binding entirely, so a 10x
+# under-statement ("145만 원" for 14,503,839원) passes unchecked. Ranges are
+# deliberately narrow and 개-unit is excluded to suppress false positives on
+# legit small numbers (객단가, 임대료, rank labels).
+_SCALE_SUSPECT_RANGES: dict[str, tuple[float, float]] = {
+    "원": (100_000, 10_000_000),
+    "명": (10_000, 100_000),
+}
+
+
+def find_scale_mismatches(
+    text: str,
+    tool_results: dict[str, dict],
+    tol: float = 0.05,
+) -> list[ScaleMismatch]:
+    """Detect ×10/×100 under-stated numbers against typed tool scalars.
+
+    Only fires when the number itself binds to nothing but its ×10 or ×100
+    multiple matches a typed scalar of the same unit within ``tol``.
+    """
+    numbers = extract_numbers(text or "")
+    if not numbers:
+        return []
+    typed_scalars = _collect_tool_scalars(tool_results or {})
+    if not typed_scalars:
+        return []
+    wildcard_scalars: list[float] = []
+    for payload in (tool_results or {}).values():
+        _walk_numeric_leaves(payload, wildcard_scalars)
+    out: list[ScaleMismatch] = []
+    for num in numbers:
+        rng = _SCALE_SUSPECT_RANGES.get(num.tail or "")
+        if rng is None:
+            continue
+        lo, hi = rng
+        if not (lo <= num.value < hi):
+            continue
+        # A value the tools actually returned at face value is fine.
+        if any(_within(num.value, s, tol) for s in wildcard_scalars):
+            continue
+        hit: ScaleMismatch | None = None
+        for factor in (10, 100):
+            scaled = num.value * factor
+            for _tool, scalar, unit in typed_scalars:
+                if unit != num.tail:
+                    continue
+                if _within(scaled, scalar, tol):
+                    hit = ScaleMismatch(number=num, expected=scalar, factor=factor)
+                    break
+            if hit:
+                break
+        if hit:
+            out.append(hit)
+    return out
 
 
 def check_benchmark_outliers(

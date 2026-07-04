@@ -32,16 +32,33 @@ LOOP_SYSTEM_PROMPT = """당신은 서울 상권 분석 컨설턴트 AI '마켓�
   표기하지 말고 "분기 유동인구"로 부르세요. 집계값을 일수로 나눈 파생 '일평균'도 만들지 마세요.
 - 매출·추천·리스크 등 분석 결과의 마지막엔 면책을 한 줄로 붙이세요: "추정치이며 실제와 다를 수 있습니다(참고용)".
 - 도구 함수명(get_*, compute 등)을 답변 본문에 그대로 노출하지 마세요.
+- 금액·인구를 만/억 단위로 줄여 쓸 때는 자릿수를 도구 반환값과 다시 대조하세요.
+  (예: 14,503,839원 → "약 1,450만 원"이 맞고 "145만 원"은 10배 축소 오기입니다.)
 """
 
 
-def corrective_instruction(unbound_raw: list[str]) -> str:
-    """Appended when the first answer contained unbound numbers — force a redo."""
-    joined = ", ".join(unbound_raw[:8])
-    return (
-        "방금 작성한 답변에 도구 결과로 뒷받침되지 않는 수치가 있습니다: "
-        f"[{joined}]. 이 숫자들은 데이터에 없습니다. "
+def corrective_instruction(unbound_raw: list[str], value_hints: list[str] | None = None) -> str:
+    """Appended when the first answer contained unbound numbers — force a redo.
+
+    ``value_hints`` carries scale-error corrections the kernel already knows
+    (예: "'145만 원' → 도구 확인값 14,503,839원") so the rewrite lands on the
+    exact tool value instead of guessing again.
+    """
+    parts: list[str] = []
+    if unbound_raw:
+        joined = ", ".join(unbound_raw[:8])
+        parts.append(
+            "방금 작성한 답변에 도구 결과로 뒷받침되지 않는 수치가 있습니다: "
+            f"[{joined}]. 이 숫자들은 데이터에 없습니다. "
+        )
+    if value_hints:
+        hint_lines = "\n".join(f"- {h}" for h in value_hints[:5])
+        parts.append(
+            f"다음 수치는 만/억 자릿수 오기로 보입니다 — 도구가 반환한 정확한 값으로 바꾸세요:\n{hint_lines}\n"
+        )
+    parts.append(
         "이미 받은 도구 결과의 값만 사용해 최종 답변 전문을 즉시 다시 작성하세요. "
         "사과·확인·안내 같은 메타 문구 없이 답변 본문만 출력하고, "
         "근거가 없는 수치는 빼거나 '데이터 없음'으로 처리하세요."
     )
+    return "".join(parts)
