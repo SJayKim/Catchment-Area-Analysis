@@ -180,7 +180,7 @@ rollback() {
     compose up -d --force-recreate backend frontend || true
     # 실패 SHA 재시도 방지 — no-op 기준이 deployed-sha 라 이게 없으면 매 tick 재배포 루프
     echo "$REMOTE_SHA" >>"$BLOCKED_SHA_FILE"
-    if wait_healthy && smoke; then
+    if wait_healthy && wait_frontend && smoke; then
         log "rollback smoke OK — service restored on prev-auto"
         write_status "ROLLED_BACK" "$REMOTE_SHA" "deploy failed at: ${FAILED_STEP:-unknown}; prev-auto restored, smoke OK"
     else
@@ -210,6 +210,19 @@ wait_healthy() {
         waited=$((waited + 5))
     done
     log "backend not healthy after ${HEALTHY_TIMEOUT}s (last=$status)"
+    return 1
+}
+
+# frontend 는 compose healthcheck 이 없어 recreate 직후 cold start(~10-20s) 동안 :3200 거부
+# — smoke 는 검증 전용으로 유지하고 준비 대기는 여기서 (C10 리허설에서 가짜 ROLLBACK_FAILED 실증)
+wait_frontend() {
+    local waited=0
+    while [ "$waited" -lt 90 ]; do
+        curl -fsS -m 5 -o /dev/null http://localhost:3200 2>/dev/null && return 0
+        sleep 5
+        waited=$((waited + 5))
+    done
+    log "frontend not responding on :3200 after 90s"
     return 1
 }
 
@@ -273,6 +286,8 @@ FAILED_STEP="compose up"
 compose up -d
 FAILED_STEP="backend healthy wait"
 wait_healthy
+FAILED_STEP="frontend ready wait"
+wait_frontend
 
 # --- 9) 캐시 flush (report 계열 포이즈닝 방지 — 배포 필수 스텝) ---
 FAILED_STEP="flush_cache"
