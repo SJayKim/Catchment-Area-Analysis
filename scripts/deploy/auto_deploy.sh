@@ -251,13 +251,21 @@ fi
 compose build backend frontend migrate
 restore_env_dev
 
-# stale-image 마커: 빌드 산출물이 이번 run 에서 생성됐는지 확인 (교훈: 6주 stale 이미지)
+# stale-image 마커: 빌드 산출물이 이번 run 에서 생성됐는지 확인 (교훈: 6주 stale 이미지).
+# 단, 소스 컨텍스트(server/·frontend/)가 변하지 않은 push 는 전체 캐시 히트로
+# Created 가 갱신되지 않는 게 정상 (C10 리허설 실증) — 소스 변경 push 에만 적용.
 FAILED_STEP="image freshness check"
-IMG_CREATED="$(docker inspect --format '{{.Created}}' "$IMAGE_PREFIX-backend:latest")"
-IMG_EPOCH="$(date -d "$IMG_CREATED" +%s)"
-if [ "$IMG_EPOCH" -lt "$DEPLOY_START_EPOCH" ]; then
-    log "backend image Created=$IMG_CREATED predates deploy start — stale build"
-    false # ERR trap → rollback
+if [ -z "$LAST_DEPLOYED" ]; then
+    log "freshness check skipped — no last-deployed sha (bootstrap)"
+elif git diff --quiet "$LAST_DEPLOYED" "$REMOTE_SHA" -- server frontend 2>/dev/null; then
+    log "freshness check skipped — server/·frontend/ unchanged since ${LAST_DEPLOYED:0:7} (cache-hit build OK)"
+else
+    IMG_CREATED="$(docker inspect --format '{{.Created}}' "$IMAGE_PREFIX-backend:latest")"
+    IMG_EPOCH="$(date -d "$IMG_CREATED" +%s)"
+    if [ "$IMG_EPOCH" -lt "$DEPLOY_START_EPOCH" ]; then
+        log "backend image Created=$IMG_CREATED predates deploy start despite source changes — stale build"
+        false # ERR trap → rollback
+    fi
 fi
 
 # --- 8) 기동 + healthy 대기 ---
