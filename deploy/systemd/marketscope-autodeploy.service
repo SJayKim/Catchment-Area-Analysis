@@ -1,0 +1,17 @@
+# MarketScope 자동배포 oneshot — timer 가 2분 주기로 호출
+# 설치: sudo bash scripts/deploy/install_autodeploy.sh
+[Unit]
+Description=MarketScope auto deploy on origin/main push
+Wants=docker.service network-online.target
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+User=sjkim
+WorkingDirectory=/home/sjkim/Catchment-Area-Analysis
+ExecStart=/usr/bin/bash /home/sjkim/Catchment-Area-Analysis/scripts/deploy/auto_deploy.sh
+# 빌드(backend+frontend) 10분+ 가능 — oneshot 기본 90s 로는 도중 강제종료됨
+TimeoutStartSec=1800
+# no-op tick 은 즉시 exit 0, 로그는 journal + data/deploy-logs/
+StandardOutput=journal
+StandardError=journal

@@ -60,3 +60,8 @@ test-results/
 CLAUDE.local.md
 .gstack/
 data/backups/
+
+# 자동배포 run 로그 + 상태 파일 (scripts/deploy/auto_deploy.sh)
+data/deploy-logs/
+# 빌드 중 auto_deploy 가 임시 이동한 .env.dev (비정상 종료 잔존물)
+.env.dev.autodeploy-moved

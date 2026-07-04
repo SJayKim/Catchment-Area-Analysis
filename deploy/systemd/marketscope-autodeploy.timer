@@ -1,0 +1,12 @@
+# MarketScope 자동배포 폴링 timer — 2분 주기
+[Unit]
+Description=Poll origin/main every 2 minutes for auto deploy
+
+[Timer]
+OnBootSec=2min
+# 직전 실행 "종료" 기준 2분 — 빌드 중 재발화 없음 (스크립트 flock 이 2차 방어)
+OnUnitActiveSec=2min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

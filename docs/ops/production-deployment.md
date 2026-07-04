@@ -117,7 +117,56 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ---
 
-## 6. 보안 체크
+## 6. 자동배포 (auto deploy on push)
+
+origin/main push 를 systemd timer(2분 폴링)가 감지해 자동 배포한다. 설계: [plan/infra/auto-deploy-on-push.md](../plan/infra/auto-deploy-on-push.md).
+
+```
+timer(2min) → scripts/deploy/auto_deploy.sh
+  fetch → 신규 커밋 없으면 no-op → dirty/ahead 가드 → CI green 게이트(check-runs API)
+  → prev-auto 재태그 → ff merge → build(.env.dev 임시이동) → up -d → healthy 대기
+  → flush_cache.py → smoke 4항목 → 실패 시 prev-auto 자동 롤백
+```
+
+### 활성화 / 비활성화
+
+```bash
+sudo bash scripts/deploy/install_autodeploy.sh                  # 설치 + enable --now
+sudo systemctl disable --now marketscope-autodeploy.timer       # 중지 (수동 배포 세션 전 권장)
+systemctl list-timers marketscope-autodeploy.timer              # 다음 발화 확인
+```
+
+### 상태 확인
+
+```bash
+cat data/deploy-logs/last-deploy.json        # 최근 결과 {result, sha, detail, ts, log}
+ls -t data/deploy-logs/deploy-*.log | head   # run 별 로그 (no-op tick 은 로그 미생성)
+journalctl -u marketscope-autodeploy.service -n 50   # no-op/차단 tick 포함 전체
+bash scripts/deploy/auto_deploy.sh           # 수동 1회 실행 (신규 커밋 없으면 no-op)
+bash scripts/deploy/auto_deploy.sh --force   # 현 origin/main tip 강제 재배포
+```
+
+### `result` 값과 해소법
+
+| result | 의미 | 해소 |
+|---|---|---|
+| `SUCCESS` | 배포 + smoke 통과 | — |
+| `BLOCKED_DIRTY` | 허용목록(`.claude/settings.local.json`) 외 tracked 변경 존재 | 커밋/스태시 정리. 스크립트는 절대 reset 하지 않음 |
+| `BLOCKED_AHEAD` | 서버 로컬 커밋이 origin 보다 ahead | 수동 push 후 다음 tick 에 자동 재개 |
+| `BLOCKED_CI` | 해당 SHA 의 check-runs failure. 같은 SHA 재시도 안 함 | CI fix 커밋 push (새 SHA 는 자동 재개). 강제는 `--force` |
+| `BLOCKED_BRANCH` | HEAD 가 main 이 아님 | `git switch main` |
+| `ROLLED_BACK` | 배포 실패 → `prev-auto` 이미지 복귀 + smoke OK | run 로그에서 실패 스텝 확인 후 fix push |
+| `ROLLBACK_FAILED` | 롤백 후에도 smoke 실패 | **수동 개입 필수** — §5 트러블슈팅 + [disaster-recovery.md](disaster-recovery.md) |
+
+### 수동 배포와의 관계
+
+- 수동 배포 세션(대규모 마이그레이션·DB 복구 동반) 전에는 timer 를 **disable** 하고, 끝나면 다시 enable. flock 이 겹침을 막지만 수동 작업 중 자동 배포가 끼어드는 것 자체를 피하는 게 안전.
+- DB 마이그레이션/시드는 기존 migrate init-container 관례 그대로 (자동 롤백은 이미지 레벨만). DB 롤백은 수동 runbook — 복원 문장은 `public.` 한정 + `--single-transaction` 패턴 유지.
+- CI 게이트는 GitHub 무인증 API(60 req/h) 사용 — private 전환 시 서비스 env 에 `GITHUB_TOKEN` 추가.
+
+---
+
+## 7. 보안 체크
 
 - [ ] 호스트 nginx 가 HTTPS 강제 (`return 301 https://...`)
 - [ ] DB/Redis 포트 외부 노출 없음
