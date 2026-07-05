@@ -138,7 +138,7 @@ sequenceDiagram
 
 > **SSE 이벤트 계약:**
 > - **v2 루프 방출 7종**: `thinking → tool → tool_end → card → text → suggestion → done` (`loop/engine.py`)
-> - **`map_cmd` 는 `api/routes/chat.py` 가 에이전트 밖에서 방출** (유일 방출처, chat.py:325). 인사말 단축(text/suggestion/done)도 chat.py 계층.
+> - **`map_cmd` 는 `api/routes/chat.py` 가 에이전트 밖에서 방출** (유일 방출처, chat.py:327). 인사말 단축(text/suggestion/done)도 chat.py 계층.
 > - 프론트 `SSEEvent` 유니온은 10종 정의 (`lib/types.ts:163-173`) — `plan` 은 v2 에서 발생하지 않는 방어 코드, `error` 는 프론트 측 정의. (레거시 각주: mock 모드의 레거시 경로에서는 `plan` 이 실제 발생한다.)
 
 ---
@@ -240,7 +240,7 @@ flowchart TB
 
 | 개념 | 어디서 실현 | 코드 (file:line) |
 |---|---|---|
-| **SSE 스트리밍** | 백엔드 이벤트 발행 → 프론트 파싱 | 발행: `agent/loop/engine.py:124` (`run_agent`) · 라우트: `api/routes/chat.py:184` · 파싱: `lib/sseParser.ts:10` · 라우팅: `lib/eventHandlers.ts:55` |
+| **SSE 스트리밍** | 백엔드 이벤트 발행 → 프론트 파싱 | 발행: `agent/loop/engine.py:124` (`run_agent`) · 라우트: `api/routes/chat.py:186` · 파싱: `lib/sseParser.ts:10` · 라우팅: `lib/eventHandlers.ts:55` |
 | **v2 agentic loop + Trust Kernel** | 모델주도 tool-calling 루프 + 수치 반환-근거 게이트 | 디스패치: `agent/runtime.py:16` (`_use_v2`) · 루프: `agent/loop/engine.py:124` (`run_agent`) · 검증: `agent/loop/trust.py` |
 | **Repository 패턴** | 같은 인터페이스 Mock/Real 2구현 | 계약: `repositories/protocols.py` · 분기: `main.py:21`(lifespan) · Facade: `repositories/data_access.py` |
 | **지도↔챗 동기화** | Zustand 4스토어 + useMapSync | `hooks/useMapSync.ts:29` · `stores/chatStore.ts:102` |
@@ -252,10 +252,10 @@ flowchart TB
 | 설계도 노드 | 구현 함수 | file:line |
 |---|---|---|
 | 앱 부팅 / 의존성 초기화 | `lifespan` | `main.py:21` |
-| 챗 SSE 진입점 | `chat` | `api/routes/chat.py:184` |
+| 챗 SSE 진입점 | `chat` | `api/routes/chat.py:186` |
 | 세션 슬롯/락 관리 | `_claim_session_slot` / `_get_session` | `chat.py:46, 83` |
 | greeting 정규식 단축 | `_GREETING_PATTERN` | `chat.py:126` |
-| `map_cmd` 방출 (유일 방출처) | event_generator 내 | `chat.py:325` |
+| `map_cmd` 방출 (유일 방출처) | event_generator 내 | `chat.py:327` |
 | 런타임 디스패치 | `_use_v2` / `run_agent` | `agent/runtime.py:16, 30` |
 
 **v2 agentic loop**
