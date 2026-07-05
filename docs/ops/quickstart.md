@@ -58,8 +58,8 @@ LLM_PROVIDER=gemini                 # "gemini" 또는 "anthropic"
 > 나머지 값(DATABASE_URL, REDIS_URL 등)은 docker-compose 기본값과 일치하므로 수정 불필요.
 >
 > 참고: Agent 아키텍처 기본값은 **v2 agentic loop**(`agent_loop_version="v2"`)이며, PAE(Planner-Actor-Evaluator)는
-> Mock 모드 폴백 및 `AGENT_LOOP_VERSION=pae` 롤백 스위치용 레거시다. `.env.example` 에 있는 `AGENT_MODE` 는
-> 디스패치에 쓰이지 않는 관측 라벨(`/api/health/detail`, Langfuse trace 메타)이므로 설정할 필요 없다.
+> Mock 모드 폴백 및 `AGENT_LOOP_VERSION=pae` 롤백 스위치용 레거시다. (구 `AGENT_MODE` 설정은 2026-07-05 제거 —
+> 관측 필드 `agent_mode` 는 이제 실효 서빙 루프를 자동 보고한다.)
 
 ---
 

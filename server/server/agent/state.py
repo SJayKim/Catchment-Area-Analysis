@@ -28,9 +28,9 @@ class EvaluationResult(TypedDict):
 
 
 class AgentState(TypedDict):
-    """State for the MarketScope agent graph (ReAct & PAE compatible)."""
+    """State for the legacy PAE agent graph (v2 loop keeps its own state)."""
 
-    # --- existing (ReAct) ---
+    # --- core request context ---
     messages: Annotated[list[BaseMessage], add_messages]
     district_code: str
     district_name: str

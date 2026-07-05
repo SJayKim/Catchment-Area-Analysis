@@ -17,6 +17,16 @@ def _use_v2() -> bool:
     return settings.agent_loop_version == "v2" and settings.llm_provider != "mock"
 
 
+def effective_loop_version() -> str:
+    """The loop actually serving requests ("v2" | "pae").
+
+    Differs from ``settings.agent_loop_version`` when the mock provider
+    forces the PAE fallback — observability must report this value, not
+    the raw setting.
+    """
+    return "v2" if _use_v2() else "pae"
+
+
 async def run_agent(*args: Any, **kwargs: Any) -> AsyncGenerator[dict[str, Any], None]:
     if _use_v2():
         from server.agent.loop.engine import run_agent as _impl

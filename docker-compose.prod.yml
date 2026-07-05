@@ -91,7 +91,8 @@ services:
       CORS_ORIGINS: '["https://marketscope.robitlabs.co.kr","http://localhost:3200","http://localhost:3000","http://localhost:80","http://localhost","http://frontend:3000"]'
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
-      AGENT_MODE: ${AGENT_MODE:-pae}
+      # v2 = function-calling 루프 (기본). 롤백: AGENT_LOOP_VERSION=pae 로 재기동.
+      AGENT_LOOP_VERSION: ${AGENT_LOOP_VERSION:-v2}
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
       LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}

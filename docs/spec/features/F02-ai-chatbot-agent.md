@@ -17,7 +17,7 @@
 | LLM | per-invoke fallback chain: `claude-sonnet-4-6` → `gemini-2.5-pro` → `gemini-2.5-flash` (전부 env-overridable) / Mock 프로바이더는 PAE 폴백 |
 | 현재 세팅 | `agent_loop_version=v2` (config 기본값) + budget governor `agent_loop_max_iterations=6` · `agent_loop_max_tool_calls=12` · `agent_loop_wall_clock=90s` |
 
-> **디스패치**: `agent/runtime.py::_use_v2()` 가 `agent_loop_version == "v2" and llm_provider != "mock"` 일 때 v2 루프(`agent/loop/engine.py`)를, 그 외에는 PAE 그래프를 선택한다. mock 의 FakeListChatModel 은 tool-call 을 못 하므로 Mock E2E 는 항상 PAE 로 돈다. `AGENT_MODE`(=`agent_mode`, 기본 `"pae"`) 는 디스패치에 사용되지 않는 관측 라벨(`/api/health/detail`, Langfuse metadata)이며 실제 스위치는 `agent_loop_version` 뿐이다.
+> **디스패치**: `agent/runtime.py::_use_v2()` 가 `agent_loop_version == "v2" and llm_provider != "mock"` 일 때 v2 루프(`agent/loop/engine.py`)를, 그 외에는 PAE 그래프를 선택한다. mock 의 FakeListChatModel 은 tool-call 을 못 하므로 Mock E2E 는 항상 PAE 로 돈다. 실제 스위치는 `agent_loop_version` 뿐이며, 관측 필드 `agent_mode`(`/api/health/detail`, Langfuse metadata)는 `runtime.py::effective_loop_version()` 의 실효값(v2|pae)을 보고한다.
 
 ## 2. 실행 구조
 

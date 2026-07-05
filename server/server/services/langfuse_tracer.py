@@ -209,6 +209,9 @@ def build_langchain_metadata(handler) -> dict:
     """
     if handler is None:
         return {}
+    # lazy import — services 레이어에서 agent 로의 모듈-로드 순환 방지
+    from server.agent.runtime import effective_loop_version
+
     session_hash = getattr(handler, "_ms_session_hash", "")
     return {
         # Langfuse v3 1급 키 — Sessions 뷰 활성화
@@ -216,7 +219,8 @@ def build_langchain_metadata(handler) -> dict:
         # 도메인 메타 — Traces/Dashboards 필터
         "request_id": getattr(handler, "_ms_request_id", ""),
         "llm_provider": settings.llm_provider,
-        "agent_mode": settings.agent_mode,
+        # 실제 서빙 루프 (v2 | pae) — settings 원값이 아닌 실효값
+        "agent_mode": effective_loop_version(),
         "use_mock": settings.use_mock,
     }
 

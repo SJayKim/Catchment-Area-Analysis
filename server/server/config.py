@@ -72,8 +72,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     # Agent architecture
-    agent_mode: str = "pae"  # Planner-Actor-Evaluator
-    agent_max_rounds: int = 3  # max Planner→Actor→Evaluator loops
+    agent_max_rounds: int = 3  # max Planner→Actor→Evaluator loops (PAE legacy)
 
     # Agent loop version. "v2" = model-driven tool loop + Trust Kernel
     # (server/agent/loop/). "pae" = legacy Planner-Actor-Evaluator graph.

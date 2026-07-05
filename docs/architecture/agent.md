@@ -13,7 +13,7 @@ def _use_v2() -> bool:
 - `_use_v2()` True → `agent/loop/engine.py::run_agent` (v2 루프) / False → `agent/graph.py::run_agent` (레거시 PAE).
 - **`agent_loop_version` 기본값 = `"v2"`** (config.py, env `AGENT_LOOP_VERSION`). `"pae"` 로 내리면 롤백.
 - **mock 프로바이더는 항상 PAE 폴백** — mock 의 FakeListChatModel 이 tool-call 을 못 하므로 Mock E2E 는 PAE 경로로 돈다.
-- `agent_mode`(기본 `"pae"`) 는 **디스패치에 관여하지 않는 관측 라벨** — 사용처는 `/api/health/detail` 응답 필드와 Langfuse trace 메타데이터 2곳뿐.
+- 관측 필드 `agent_mode`(`/api/health/detail` 응답·Langfuse trace 메타데이터)는 `runtime.py::effective_loop_version()` 이 반환하는 **실효 서빙 루프**(`v2`|`pae`, mock 폴백 반영)를 보고한다. 구 설정 `agent_mode` 는 제거됨 (2026-07-05).
 
 ## 2. v2 루프 구조 (`agent/loop/engine.py`)
 

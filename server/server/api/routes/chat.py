@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 from server.agent.history import ConversationHistory
-from server.agent.runtime import run_agent
+from server.agent.runtime import effective_loop_version, run_agent
 from server.config import settings
 from server.middleware.metrics import sse_connection_closed, sse_connection_opened
 from server.repositories import get_data_access
@@ -174,7 +174,9 @@ async def health_detail(request: Request) -> dict:
         "active_sessions": len(_sessions),
         **db_info,
         "redis_connected": redis_connected,
-        "agent_mode": settings.agent_mode,
+        # 실제 서빙 루프 (v2 | pae). 키 이름은 OPS-01 e2e spec 호환 유지.
+        "agent_mode": effective_loop_version(),
+        "agent_loop_version": settings.agent_loop_version,
         "llm_provider": settings.llm_provider,
         "use_mock": settings.use_mock,
     }

@@ -74,7 +74,6 @@ compose project 명은 `name: marketscope-dev` 로 명시 (기본 네트워크 �
 | `DATABASE_URL` / `DATABASE_URL_SYNC` | PostgreSQL async / sync | `postgresql+asyncpg://...` |
 | `REDIS_URL` | Redis 접속 | `redis://redis:6379/0` |
 | `AGENT_LOOP_VERSION` | **Agent 아키텍처 스위치** — `v2`(모델주도 루프 + Trust Kernel, config 기본값) / `pae`(레거시 롤백). mock 프로바이더는 항상 PAE 폴백 | `v2` (`.env` 에 명시) |
-| `AGENT_MODE` | 디스패치와 무관한 관측 라벨 잔재 (`/api/health/detail`·Langfuse metadata 에만 사용) | `pae` |
 | `LLM_PROVIDER` | `gemini`(코드 기본값) / `anthropic` / `mock` | `anthropic` (현 운영) |
 | `BACKEND_INTERNAL_URL` | 프론트 → 백엔드 rewrite 대상. **compose 파일이 `http://backend:8000` 하드코딩 주입** — `.env.example` 에는 없음 | `http://backend:8000` |
 | `NEXT_PUBLIC_API_URL` | 브라우저용 (SSE 직접 호출). `/api` 로 끝나면 빌드 실패 가드 | `https://marketscope.robitlabs.co.kr` |

@@ -1,8 +1,9 @@
 # 아키텍처 맵 — MarketScope AI (상권분석)
 
-> 실제 구현 코드 기준의 구조·설계도·코드 매핑 문서. **학습용**. (2026-07-04 코드 기준 전면 갱신 — v2 agentic loop 반영)
+> 실제 구현 코드 기준의 구조·설계도·코드 매핑 문서. **학습용**. (2026-07-05 v2 아키텍처 기준 개정 — 공통 색상 팔레트 적용)
 > 서술형 학습 코스는 [`00-시작하기.md`](./00-시작하기.md) ~ [`06-데이터레이어-자료실.md`](./06-데이터레이어-자료실.md) 참고.
 > 레이어별 상세는 [`../architecture/`](../architecture/) (backend/frontend/agent/data) 참고.
+> Mermaid 색상 범례 정본은 [`00-시작하기.md`](./00-시작하기.md#공통-색상-범례) 참고 (🔵프론트 / 🟣백엔드 / 🔴에이전트 / 🟢데이터 / 🟠외부·LLM / 🩷Trust 게이트).
 
 이 프로젝트는 **지도에서 상권을 고르면 AI가 공공데이터를 해석해 답해주는** Freemium SaaS다.
 한 문장으로: **"지도 클릭 → 질문 → AI 에이전트가 도구로 데이터 긁어와 → 카드+글로 스트리밍 응답"**.
@@ -14,7 +15,7 @@
    지도 + 챗 화면              AI 에이전트(v2 루프 + Trust Kernel)      상권 1,650개
 ```
 
-**4대 학습 포인트** → SSE 스트리밍 · v2 agentic loop + Trust Kernel (레거시 PAE 그래프 포함) · Repository 패턴(Mock/Real) · 지도↔챗 양방향 동기화
+**4대 학습 포인트** → SSE 스트리밍 · v2 agentic loop + Trust Kernel · Repository 패턴(Mock/Real) · 지도↔챗 양방향 동기화
 
 ---
 
@@ -36,15 +37,14 @@ flowchart TB
     subgraph BE["⚙️ BACKEND · FastAPI (server/server)"]
         direction TB
         API["🚪 API 라우트<br/>chat · districts · map_data · feedback"]
-        RT["🔀 agent/runtime.py<br/>v2 ↔ PAE 디스패치"]
-        LOOP["🧠 v2 agentic loop (현행 기본)<br/>loop/engine.py — 모델주도 function-calling<br/>+ Trust Kernel (loop/trust.py)"]
-        PAE["🗂️ PAE 그래프 (레거시 폴백)<br/>graph.py — Planner→Actor→Evaluator→Respond<br/>Mock 모드 · AGENT_LOOP_VERSION=pae 시"]
-        TOOLS["🔧 도구<br/>도메인 9종 (tools/registry.py)<br/>+ v2 메타 3종 (loop/tools_fc.py)"]
+        RT["🔀 agent/runtime.py<br/>run_agent 단일 진입점"]
+        LOOP["🧠 v2 agentic loop (현행 기본)<br/>loop/engine.py — 모델주도 function-calling"]
+        TK["🛡️ Trust Kernel<br/>loop/trust.py — 수치 바인딩 하드 게이트"]
+        TOOLS["🔧 도구 12종<br/>도메인 9종 (tools/registry.py)<br/>+ 메타 3종 (loop/tools_fc.py)"]
         API --> RT
         RT --> LOOP
-        RT --> PAE
         LOOP --> TOOLS
-        PAE --> TOOLS
+        LOOP --> TK
     end
 
     subgraph DATA["💾 DATA LAYER"]
@@ -58,26 +58,32 @@ flowchart TB
     LLM["🤖 LLM<br/>Claude Sonnet (claude-sonnet-4-6)<br/>→ Gemini 2.5 pro → flash 폴백 체인"]
 
     USER --> FE
-    FE -->|"🟣 REST + SSE<br/>POST /api/chat"| BE
+    FE -->|"REST + SSE<br/>POST /api/chat"| BE
     TOOLS -->|"데이터 조회"| REPO
-    LOOP -->|"🟠 tool-calling 추론"| LLM
-    PAE -->|"역할별 호출"| LLM
+    LOOP -->|"tool-calling 추론"| LLM
 
     classDef fe fill:#e3f2fd,stroke:#1e88e5,color:#000
     classDef be fill:#ede7f6,stroke:#5e35b1,color:#000
+    classDef agent fill:#ffebee,stroke:#e53935,color:#000
     classDef data fill:#e8f5e9,stroke:#43a047,color:#000
     classDef ext fill:#fff3e0,stroke:#fb8c00,color:#000
+    classDef gate fill:#fce4ec,stroke:#c2185b,color:#000
     class FE,MAP,CHAT,STORE fe
-    class BE,API,RT,LOOP,PAE,TOOLS be
+    class BE,API,RT be
+    class LOOP,TOOLS agent
+    class TK gate
     class DATA,REPO,PG,RD data
     class LLM,USER ext
 ```
 
 | 경계 | 색 | 의미 |
 |---|---|---|
-| 🟣 **REST + SSE** | 파랑 | 브라우저 ↔ 백엔드. 질문은 POST, 답변은 SSE 스트림 (v2 는 7종 이벤트 + chat.py 계층의 `map_cmd`) |
-| 🟠 **LLM** | 주황 | 에이전트 ↔ Claude/Gemini. v2 는 단일 tool-calling 모델 체인, PAE 는 역할별(planner/evaluator/respond) 호출 |
-| 🟢 **Repository** | 초록 | 도구 ↔ DB. `USE_MOCK` 한 줄로 가짜/진짜 데이터 전환 |
+| **REST + SSE** | 🔵↔🟣 | 브라우저 ↔ 백엔드. 질문은 POST, 답변은 SSE 스트림 (v2 루프 방출 7종 + chat.py 계층의 `map_cmd`) |
+| **LLM** | 🔴↔🟠 | 에이전트 ↔ Claude/Gemini. 단일 tool-calling 모델에 per-invoke 폴백 체인 |
+| **Repository** | 🔴↔🟢 | 도구 ↔ DB. `USE_MOCK` 한 줄로 가짜/진짜 데이터 전환 |
+| **Trust 게이트** | 🩷 | 답변 방출 직전 수치 검증 — v2 를 v2 답게 만드는 관문 |
+
+> (레거시 각주) mock 모드(`LLM_PROVIDER=mock`) 또는 `AGENT_LOOP_VERSION=pae` 롤백 시에는 레거시 경로(`agent/graph.py`)를 탄다 — 학습 범위 외.
 
 > **핵심 불변식 1:** 프론트는 **DB를 직접 모른다.** 항상 백엔드 API만 호출한다. 백엔드 에이전트도 **DB를 직접 모른다.** 항상 Repository(`protocols.py`)를 통해서만 데이터를 만진다. → 갈아끼우기 쉬움.
 >
@@ -105,7 +111,7 @@ sequenceDiagram
     Note over API: 인사말이면 정규식 단축 —<br/>에이전트 미호출, text+suggestion+done
     API-->>U: map_cmd (상권 좌표 해석 성공 시, 에이전트 실행 전 1회)
 
-    rect rgba(237,231,246,0.4)
+    rect rgba(255,235,238,0.45)
     note over E: 반복 루프 (최대 6 모델 턴)
     API->>E: 메시지 + district_code + 히스토리(최근 6턴)
     E->>LLM: ainvoke_with_fallback(도구 스키마 12종 바인딩)
@@ -121,7 +127,7 @@ sequenceDiagram
     Note over E: budget governor —<br/>도구 12회 / 90s 초과 시 강제 마무리,<br/>마지막 턴은 도구 없이 prose 강제
     end
 
-    rect rgba(232,245,233,0.4)
+    rect rgba(252,228,236,0.45)
     note over TK: 수치 검증 (반환-근거 게이트)
     E->>TK: 최종 draft + fact_pool
     TK-->>E: unbound/스케일 오기 검출 → prose 교정 1회<br/>잔존 시 [미확인] 마스킹 or 결정론적 대체
@@ -130,21 +136,19 @@ sequenceDiagram
     E-->>U: text (90자 청크) → suggestion → done(trace_id)
 ```
 
-> **SSE 이벤트 계약 (경로별로 다름):**
+> **SSE 이벤트 계약:**
 > - **v2 루프 방출 7종**: `thinking → tool → tool_end → card → text → suggestion → done` (`loop/engine.py`)
-> - **PAE 그래프 방출 9종**: 위 7종 + `plan` + `warning` (`graph.py` + `nodes/`)
-> - **`map_cmd` 는 두 루프 공통으로 `api/routes/chat.py` 가 에이전트 밖에서 방출** (유일 방출처, chat.py:325). 인사말 단축(text/suggestion/done)도 chat.py 계층.
-> - 프론트 `SSEEvent` 유니온은 `error` 까지 포함해 10종 (`lib/types.ts`).
+> - **`map_cmd` 는 `api/routes/chat.py` 가 에이전트 밖에서 방출** (유일 방출처, chat.py:325). 인사말 단축(text/suggestion/done)도 chat.py 계층.
+> - 프론트 `SSEEvent` 유니온은 10종 정의 (`lib/types.ts:163-173`) — `plan` 은 v2 에서 발생하지 않는 방어 코드, `error` 는 프론트 측 정의. (레거시 각주: mock 모드의 레거시 경로에서는 `plan` 이 실제 발생한다.)
 
 ---
 
-## 3. AI 에이전트 내부 — v2 agentic loop + Trust Kernel (현행 기본)
+## 3. AI 에이전트 내부 — v2 agentic loop + Trust Kernel
 
-기본 런타임은 PAE 가 아니라 **v2 모델주도 루프**다. `agent/runtime.py::_use_v2` 가
+런타임은 **v2 모델주도 루프**다. `agent/runtime.py::_use_v2` 가
 `agent_loop_version == "v2"`(config.py:81 기본값) **이고** `llm_provider != "mock"` 일 때
-`agent/loop/engine.py` 로 디스패치한다. Mock 모드는 FakeListChatModel 이 tool-call 을 못 하므로
-**항상 PAE 로 폴백** — Mock E2E 는 PAE 경로로 돈다.
-(`agent_mode`(기본 "pae") 는 디스패치와 무관한 관측 라벨 — `/api/health/detail`·Langfuse metadata 전용.)
+`agent/loop/engine.py` 로 디스패치한다. (레거시 각주: mock 모드는 FakeListChatModel 이
+tool-call 을 못 하므로 레거시 경로(`graph.py`)를 탄다 — Mock E2E 도 그 경로다.)
 
 ```mermaid
 flowchart TB
@@ -165,10 +169,10 @@ flowchart TB
     GF --> OUT
     OUT --> E((END))
 
-    classDef loop fill:#ede7f6,stroke:#5e35b1,color:#000
-    classDef trust fill:#e8f5e9,stroke:#43a047,color:#000
-    class SYS,TURN,EXEC,BUDGET,FINAL loop
-    class TK,CORR,TK2,MASK,GF trust
+    classDef agent fill:#ffebee,stroke:#e53935,color:#000
+    classDef gate fill:#fce4ec,stroke:#c2185b,color:#000
+    class SYS,TURN,EXEC,BUDGET,FINAL agent
+    class TK,CORR,TK2,MASK,GF gate
 ```
 
 | 구성요소 | 값/역할 | 코드 |
@@ -183,48 +187,9 @@ flowchart TB
 | 수치 허용오차 | `trust_numeric_tolerance` = **0.05** (±5%) | `config.py:87` |
 | Trust 집행 | 교정 1회 → `should_fallback`(unbound ≥3 AND ≥50%) 시 `grounded_fallback`, 미만이면 `mask_unbound` | `loop/trust.py` |
 
-> **PAE 와 결정적으로 다른 점:** ① 계획을 미리 세우지 않고 **모델이 매 턴 도구를 직접 고른다** (그래서 `plan` 이벤트가 없다). ② 도구는 **순차 실행** (PAE Actor 의 `asyncio.gather` 병렬과 다름). ③ 응답 후 **Trust Kernel 이 수치를 검증**한 뒤에야 방출한다 (검증-후-방출 — 토큰 단위 스트리밍이 아닌 90자 청크인 이유).
+> **설계 포인트 3가지:** ① 계획을 미리 세우지 않는다 — **모델이 매 턴 도구를 직접 고른다** (그래서 `plan` 이벤트가 없다). ② 도구는 **순차 실행**된다 (병렬화가 필요한 조합은 `get_district_summary` 처럼 도구 **내부**에 캡슐화). ③ 응답 후 **Trust Kernel 이 수치를 검증**한 뒤에야 방출한다 (검증-후-방출 — 토큰 단위 스트리밍이 아닌 90자 청크인 이유).
 
-### 3-b. 레거시 폴백 — PAE 그래프 (Mock 모드 · `AGENT_LOOP_VERSION=pae`)
-
-LangGraph 커스텀 그래프. `create_react_agent` 블랙박스를 **Planner-Actor-Evaluator**로 풀어 헤친 것. 최대 3라운드 반복. **삭제되지 않은 현행 코드**로, Mock E2E 와 롤백 스위치용으로 유지된다.
-
-```mermaid
-flowchart TB
-    START((START)) --> PLAN["🗂️ PLANNER<br/>의도분류 + 계획수립<br/>planner.py"]
-
-    PLAN -->|인사| GREET["👋 greeting<br/>즉시 END (~1s)"]
-    PLAN -->|서울 밖·모호| CLAR["❓ clarification<br/>정중 거절/되묻기"]
-    PLAN -->|계획 有| ACTOR["🔧 ACTOR<br/>병렬 도구 실행 + 카드<br/>actor.py"]
-
-    ACTOR --> EVAL["✅ EVALUATOR<br/>충분성 판정 + 추천질문<br/>evaluator.py"]
-    EVAL -->|insufficient<br/>max 3| PLAN
-    EVAL -->|sufficient| RESP["💬 RESPOND<br/>LLM 스트리밍 응답<br/>respond.py"]
-
-    GREET --> E((END))
-    CLAR --> E
-    RESP --> E
-
-    classDef plan fill:#ede7f6,stroke:#5e35b1,color:#000
-    classDef act fill:#fff3e0,stroke:#fb8c00,color:#000
-    classDef eval fill:#e8f5e9,stroke:#43a047,color:#000
-    classDef resp fill:#e3f2fd,stroke:#1e88e5,color:#000
-    classDef short fill:#fafafa,stroke:#9e9e9e,color:#000
-    class PLAN plan
-    class ACTOR act
-    class EVAL eval
-    class RESP resp
-    class GREET,CLAR short
-```
-
-| 노드 | 역할 | LLM 사용 | 비고 |
-|---|---|---|---|
-| **Planner** | 의도분류(summary/compare/...) + 엔티티추출 + 계획 | 규칙 우선, LLM fallback | `intents.yaml` **의도 규칙 8종** (greeting/out_of_scope/simulation/comparison/risk/recommendation/category_analysis/summary — 각 정규식 1개, 내부 대안 토큰은 다수) |
-| **Actor** | 의존성 DAG → 위상정렬 → `asyncio.gather` 병렬 | ✗ (도구만) | 15s 타임아웃 + 재시도 |
-| **Evaluator** | 결과 충분한지 판정 + 추천질문 생성 | 단순=규칙 / 복잡=LLM | `evaluator_skip_simple` |
-| **Respond** | 한국어 컨설턴트 톤 최종응답 스트리밍 | ✓ (필수) | XML/Tool태그 sanitize 가드 |
-
-> **단락(short-circuit):** "안녕" 같은 인사는 두 루프 공통으로 `chat.py` 의 정규식 단축(`_GREETING_PATTERN`, chat.py:126)이 에이전트 호출 전에 처리한다. PAE 경로에서는 그래프 안에도 greeting/clarification 단락 노드가 있어 "부산 알려줘"(서울 밖) 같은 건 Actor/도구를 거치지 않고 즉시 끝난다. LLM·DB 비용 0.
+> **단락(short-circuit):** "안녕" 같은 인사는 `chat.py` 의 정규식 단축(`_GREETING_PATTERN`, chat.py:126)이 에이전트 호출 전에 처리한다(LLM·DB 비용 0). "부산 알려줘"(서울 밖)·데이터 없는 질문은 루프 안에서 모델이 `abstain` 도구를 호출해 1급 거부로 끝난다.
 
 ---
 
@@ -238,13 +203,11 @@ flowchart TB
 | `config.py` | pydantic-settings, 모든 환경변수 (`use_mock` · `agent_loop_version` 등) | 설정 |
 | `api/routes/` | 4개 라우트: `chat`(SSE) · `districts` · `map_data` · `feedback` | HTTP 경계 |
 | `api/middleware.py` · `rate_limiter.py` · `errors.py` | RequestId/보안헤더 · 레이트리밋 · 에러규약 | 횡단관심사 |
-| `agent/runtime.py` | **v2 ↔ PAE 디스패치** — 단일 `run_agent` 진입점 | 런타임 스위치 |
-| `agent/loop/` | **v2 agentic loop**: `engine.py`(루프 본체) · `trust.py`(Trust Kernel) · `tools_fc.py`(스키마 12종+메타툴) · `models.py`(LLM 폴백 체인) · `prompts.py` | 현행 에이전트 |
-| `agent/graph.py` | PAE 그래프 빌드 + `run_agent` (레거시 폴백 — Mock/`pae` 시) | 에이전트 골격 |
-| `agent/nodes/` | planner · actor · evaluator · respond 4노드 (PAE 전용) | PAE |
-| `agent/tools/` | **도메인 도구 9종** + `registry.py`(자체등록) — 양 루프 공용 | Tool 경계 |
-| `agent/config/intents.yaml` | PAE Planner 용 의도 규칙 8종 (규칙 우선 분류) | 규칙 우선 분류 |
-| `agent/utils/` | entity_matching · abstention · numeric_sanity · formatting · rewriter | 정확도 가드 (numeric_sanity 는 Trust Kernel 이 재사용) |
+| `agent/runtime.py` | **단일 `run_agent` 진입점** — v2 루프로 디스패치 (mock 시 레거시 폴백) | 런타임 스위치 |
+| `agent/loop/` | **v2 agentic loop**: `engine.py`(루프 본체) · `trust.py`(Trust Kernel) · `tools_fc.py`(스키마 12종+메타툴) · `models.py`(LLM 폴백 체인) · `prompts.py`(시스템 프롬프트+교정 지시) | 현행 에이전트 |
+| `agent/graph.py` · `agent/nodes/` · `agent/config/intents.yaml` | 레거시 경로 일체 (mock 모드 폴백·롤백 스위치용 — 학습 범위 외) | 레거시 |
+| `agent/tools/` | **도메인 도구 9종** + `registry.py`(자체등록) | Tool 경계 |
+| `agent/utils/` | entity_matching · abstention · numeric_sanity · formatting · rewriter | 정확도 가드 (`numeric_sanity` 의 한국어 수치 추출·±5% 매칭을 Trust Kernel 이 재사용) |
 | `agent/history.py` | 세션별 대화 히스토리 (최근 10턴, 인메모리 — v2 루프는 최근 6턴만 소비) | 컨텍스트 |
 | `repositories/protocols.py` | **10개 인터페이스 정의** (로직 없음) | 계약 우선 |
 | `repositories/mock/` · `real/` | 같은 인터페이스 두 구현체 (`USE_MOCK` 분기) | Repository 패턴 |
@@ -277,14 +240,14 @@ flowchart TB
 
 | 개념 | 어디서 실현 | 코드 (file:line) |
 |---|---|---|
-| **SSE 스트리밍** | 백엔드 이벤트 발행 → 프론트 파싱 | 발행: v2 `agent/loop/engine.py:run_agent` / PAE `agent/graph.py:run_agent` · 라우트: `api/routes/chat.py:184` · 파싱: `lib/sseParser.ts:10` · 라우팅: `lib/eventHandlers.ts:55` |
-| **v2 agentic loop + Trust Kernel** | 모델주도 tool-calling 루프 + 수치 반환-근거 게이트 | 디스패치: `agent/runtime.py:16` (`_use_v2`) · 루프: `agent/loop/engine.py:124` (`run_agent`) · 검증: `agent/loop/trust.py` — 레거시 PAE 그래프는 `agent/graph.py:148` (`_build_pae_graph`) |
+| **SSE 스트리밍** | 백엔드 이벤트 발행 → 프론트 파싱 | 발행: `agent/loop/engine.py:124` (`run_agent`) · 라우트: `api/routes/chat.py:184` · 파싱: `lib/sseParser.ts:10` · 라우팅: `lib/eventHandlers.ts:55` |
+| **v2 agentic loop + Trust Kernel** | 모델주도 tool-calling 루프 + 수치 반환-근거 게이트 | 디스패치: `agent/runtime.py:16` (`_use_v2`) · 루프: `agent/loop/engine.py:124` (`run_agent`) · 검증: `agent/loop/trust.py` |
 | **Repository 패턴** | 같은 인터페이스 Mock/Real 2구현 | 계약: `repositories/protocols.py` · 분기: `main.py:21`(lifespan) · Facade: `repositories/data_access.py` |
 | **지도↔챗 동기화** | Zustand 4스토어 + useMapSync | `hooks/useMapSync.ts:29` · `stores/chatStore.ts:102` |
 
 ### 5-2. 흐름 노드 ↔ 코드 (백엔드)
 
-**공통 계층 (양 루프)**
+**공통 계층 (라우트 ↔ 에이전트 경계)**
 
 | 설계도 노드 | 구현 함수 | file:line |
 |---|---|---|
@@ -293,39 +256,25 @@ flowchart TB
 | 세션 슬롯/락 관리 | `_claim_session_slot` / `_get_session` | `chat.py:46, 83` |
 | greeting 정규식 단축 | `_GREETING_PATTERN` | `chat.py:126` |
 | `map_cmd` 방출 (유일 방출처) | event_generator 내 | `chat.py:325` |
-| v2/PAE 디스패치 | `_use_v2` / `run_agent` | `agent/runtime.py:16, 20` |
+| 런타임 디스패치 | `_use_v2` / `run_agent` | `agent/runtime.py:16, 20` |
 
-**v2 agentic loop (현행 기본)**
+**v2 agentic loop**
 
 | 설계도 노드 | 구현 함수 | file:line |
 |---|---|---|
-| 루프 본체 (모델 턴 + budget) | `run_agent` | `agent/loop/engine.py:124` |
+| 루프 본체 (모델 턴 + budget governor + Trust 집행) | `run_agent` | `agent/loop/engine.py:124` (루프: 166 · Trust 집행: 240) |
+| 교정 턴 메타 발화 필터 | `_is_answer_shaped` | `engine.py:113` |
 | 도구 스키마 12종 (도메인 9 + 메타 3) | `tool_schemas` | `agent/loop/tools_fc.py:37` |
-| 메타툴 실행 (resolve/compute/abstain) | `execute_fc_tool` / `safe_compute` | `tools_fc.py:237, 202` |
+| 도구 실행 (메타 3종 로컬 / 도메인 9종 registry 위임) | `execute_fc_tool` / `safe_compute` | `tools_fc.py:237, 202` |
+| 업종명 → category_code 정규화 | `_normalize_category` | `tools_fc.py:219` |
 | LLM 폴백 체인 | `_candidate_chain` / `ainvoke_with_fallback` | `agent/loop/models.py:38, 76` |
 | 수치 바인딩 검사 | `find_unbound_numbers` / `binding_stats` | `agent/loop/trust.py:41, 68` |
+| ×10/×100 자릿수 오기 검출 | `find_scale_errors` | `trust.py:87` |
 | 마스킹 / 전체 대체 판정 | `mask_unbound` / `should_fallback` | `trust.py:106, 122` |
 | 결정론적 폴백 텍스트 | `grounded_fallback` | `trust.py:268` |
+| 시스템 프롬프트 / 교정 지시 | `LOOP_SYSTEM_PROMPT` / `corrective_instruction` | `agent/loop/prompts.py:6, 40` |
 
-**PAE 그래프 (레거시 폴백)**
-
-| 설계도 노드 | 구현 함수 | file:line |
-|---|---|---|
-| 에이전트 실행 엔트리 | `run_agent` / `_build_pae_graph` | `agent/graph.py:248, 148` |
-| **PLAN**: 규칙 의도분류 | `_classify_by_rules` | `agent/nodes/planner.py:121` |
-| **PLAN**: LLM 분류 fallback | `_classify_with_llm` | `planner.py:211` |
-| **PLAN**: 계획 생성 | `_build_plan` / `planner_node` | `planner.py:258, 325` |
-| **ACT**: 의존성 그룹핑 | `group_by_dependencies` | `agent/nodes/actor.py:63` |
-| **ACT**: 도구 1개 실행 | `execute_tool` | `actor.py:99` |
-| **ACT**: 노드 본체(병렬+카드) | `actor_node` | `actor.py:156` |
-| **EVAL**: 규칙 평가(fast) | `_fast_evaluate` | `agent/nodes/evaluator.py:76` |
-| **EVAL**: LLM 평가(slow) | `_llm_evaluate` | `evaluator.py:132` |
-| **EVAL**: 추천질문 생성 | `generate_proactive_suggestions` | `evaluator.py:195` |
-| **RESPOND**: 프롬프트 빌드 | `build_respond_prompt` | `agent/nodes/respond.py:355` |
-| **RESPOND**: 응답 스트리밍 | `respond_node` | `respond.py:433` |
-| RESPOND: 태그 누수 가드 | `_XMLTagSanitizer` / `_ToolTagSanitizer` | `respond.py:52, 160` |
-
-> 라인 번호는 2026-07-04 확인값 — 드리프트가 의심되면 함수명으로 grep 하라.
+> 라인 번호는 2026-07-05 확인값 — 드리프트가 의심되면 함수명으로 grep 하라.
 
 ### 5-3. 도구(Tool) 레지스트리
 
@@ -336,7 +285,7 @@ flowchart TB
 | 도구 메타데이터 | `ToolMeta` | `registry.py:16` |
 | 도구 사용 예시 | `@register_tool` | `agent/tools/district_summary.py:40` |
 
-도메인 도구 9종 (모두 `@register_tool`로 자체 등록, 양 루프 공용):
+도메인 도구 9종 (모두 `@register_tool`로 자체 등록):
 
 | 도구 | 입력 | card_type (코드 실젯값) | 기능 |
 |---|---|---|---|
@@ -435,7 +384,7 @@ cd server && ruff check . && pytest             # 린트 + 테스트
 ```
 
 핵심 env: `USE_MOCK`(true/false), `AGENT_LOOP_VERSION`(`v2` 기본 / `pae` 롤백 스위치), `LLM_PROVIDER`(anthropic/gemini/mock — mock 이면 PAE 폴백), `DATABASE_URL`, `REDIS_URL`, `NEXT_PUBLIC_API_URL`(SSE 직접호출용, `:8000` 권장), `NEXT_PUBLIC_KAKAO_MAP_KEY`, `ANTHROPIC_API_KEY`.
-관련 설정(`config.py`): `agent_loop_max_iterations=6` · `agent_loop_max_tool_calls=12` · `agent_loop_wall_clock=90.0` · `trust_numeric_tolerance=0.05`. (`AGENT_MODE` 는 디스패치와 무관한 관측 라벨이다.)
+관련 설정(`config.py`): `agent_loop_max_iterations=6` · `agent_loop_max_tool_calls=12` · `agent_loop_wall_clock=90.0` · `trust_numeric_tolerance=0.05`. (구 `AGENT_MODE` 설정은 제거됨 — 관측 필드 `agent_mode` 는 `runtime.py::effective_loop_version()` 실효값을 보고한다.)
 
 ---
 

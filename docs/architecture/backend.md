@@ -94,7 +94,6 @@ server/server/
 | `agent_loop_max_tool_calls` | `12` | v2 budget governor — 요청당 도구 실행 총량 |
 | `agent_loop_wall_clock` | `90.0s` | v2 budget governor — 경과 시 강제 finalize |
 | `trust_numeric_tolerance` | `0.05` | Trust Kernel — 응답 수치↔도구 값 바인딩 허용 오차 (±5%) |
-| `agent_mode` | `pae` | ⚠ 디스패치와 무관한 **관측 라벨** (`/api/health/detail` 응답 + Langfuse metadata 전용) |
 | `agent_max_rounds` | `3` | 레거시 PAE 전용 — planner→actor→evaluator 재진입 상한 |
 | `evaluator_skip_simple` | `true` | 레거시 PAE 전용 — 단순 의도는 LLM 평가 생략 (rule path) |
 | `llm_timeout_fast` / `llm_timeout_slow` | `15s` / `60s` | fast = PAE planner/evaluator, slow = v2 모델 턴 / PAE respond |
@@ -120,7 +119,7 @@ server/server/
 | Method | Path | 요청 | 응답 | 비고 |
 |---|---|---|---|---|
 | GET | `/health` | — | `{status}` | Liveness |
-| GET | `/api/health/detail` | — | DB pool / Redis / sessions / `agent_mode` / `llm_provider` | Readiness. `agent_loop_version` 은 미노출 |
+| GET | `/api/health/detail` | — | DB pool / Redis / sessions / `agent_mode`(실효 루프 v2\|pae) / `agent_loop_version` / `llm_provider` | Readiness |
 | POST | `/api/chat` | `{message(≤500), session_id?, district_code?}` | `text/event-stream` | SSE — 이벤트 집합은 아래 표 (경로별 상이) |
 | GET | `/api/districts` | `search?`, `type?`, `limit`, `offset` | `{total, items[]}` | 한글 조사 strip |
 | GET | `/api/districts/{code}` | — | District + polygon | GeoJSON. 없으면 404 |

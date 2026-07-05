@@ -16,7 +16,7 @@ def test_settings_loads_with_mock_defaults() -> None:
     settings = Settings(use_mock=True)
 
     assert settings.use_mock is True
-    assert settings.agent_mode == "pae"
+    assert settings.agent_loop_version in ("v2", "pae")
     assert settings.agent_max_rounds >= 1
     assert settings.langfuse_enabled is False
 
