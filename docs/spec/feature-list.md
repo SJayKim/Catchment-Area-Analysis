@@ -7,7 +7,7 @@
 | ID | 기능명 | Phase | 상태 | 참조 |
 |---|---|---|---|---|
 | D01 | 데이터 파이프라인 (ETL) | 1B | ✅ 완료 (2025Q4) | [data/D01-data-pipeline.md](data/D01-data-pipeline.md) |
-| D02 | DB 스키마 + PostGIS | 1B | ✅ 완료 (Alembic 001~003) | [../architecture/data.md](../architecture/data.md) |
+| D02 | DB 스키마 + PostGIS | 1B | ✅ 완료 (Alembic 001~005) | [../architecture/data.md](../architecture/data.md) |
 | D03 | Docker 개발환경 | 1B | ✅ 완료 (compose dev + prod) | [../architecture/deployment.md](../architecture/deployment.md) |
 | M01 | Mock 데이터 레이어 | 1A | ✅ 완료 | [../architecture/data.md §1](../architecture/data.md) |
 
@@ -16,7 +16,7 @@
 | ID | 기능명 | Phase | 상태 | Tier | 스펙 |
 |---|---|---|---|---|---|
 | F01 | 지도 기반 상권 선택 | 1A · 1B | ✅ 완료 | Free | [features/F01-map-district-selection.md](features/F01-map-district-selection.md) |
-| F02 | AI 챗봇 (PAE Agent) | 1A · 1B | ✅ 완료 | Free (Phase 2 에서 일 5회 제한 예정) | [features/F02-ai-chatbot-agent.md](features/F02-ai-chatbot-agent.md) |
+| F02 | AI 챗봇 (v2 agentic loop + Trust Kernel, PAE 는 legacy 폴백) | 1A · 1B | ✅ 완료 | Free (Phase 2 에서 일 5회 제한 예정) | [features/F02-ai-chatbot-agent.md](features/F02-ai-chatbot-agent.md) |
 | F03 | 상권 기본 리포트 | 1A · 1B | ✅ 완료 | Free | [features/F03-basic-report.md](features/F03-basic-report.md) |
 | F04 | 업종별 심층 분석 | 2 | ⏳ Tool 부분 구현 / UI 미구현 | Premium | [features/F04-industry-analysis.md](features/F04-industry-analysis.md) |
 | F05 | 상권 비교 | 1A · 1B | ✅ 완료 (다색 하이라이트) | Free (Phase 2 에서 Premium) | [features/F05-district-comparison.md](features/F05-district-comparison.md) |
@@ -32,7 +32,7 @@
 ## Phase 요약
 
 - **Phase 1A — Mock E2E** ✅ 완료. DB 없이 Agent 전체 흐름 검증.
-- **Phase 1B — Real Data** ✅ 완료. 1,650개 상권 ETL 적재 + PAE 전환 + 프로덕션 배포.
+- **Phase 1B — Real Data** ✅ 완료. 1,650개 상권 ETL 적재 + PAE 전환(2026-07 v2 agentic loop 로 대체, PAE 는 Mock 폴백) + 프로덕션 배포.
 - **Phase 3 — 확장** ✅ 완료. F06 / F09 / F10 구현.
 - **Phase 2 — Premium** ⏳ 미착수. OAuth2 / 결제 / Tier 게이팅 / F04 카드 UI.
 
@@ -56,6 +56,8 @@
 | PDF 리포트 (F10) | X | O |
 
 세부 정책은 [business/B01-business-model.md](business/B01-business-model.md) 참조.
+
+> ⚠ 프런트 Tier 스텁(`frontend/src/hooks/useTier.ts`)은 `Tier = 'free' | 'pro' | 'team'` **3단** placeholder 타입을 정의한다 (현재 하드코딩 `'free'` 반환, 게이팅 호출 0건). Phase 2 게이팅 구현 시 본 문서의 Free/Premium 2단 정책과 티어 명칭·단수를 정합시켜야 한다.
 
 ## 기능 의존 관계
 

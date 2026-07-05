@@ -10,10 +10,10 @@
 | 레이어 | 기술 |
 |--------|------|
 | Frontend | Next.js 14 (App Router, TypeScript), Kakao Map SDK, deck.gl, Recharts, Zustand, Tailwind |
-| Backend | FastAPI (Python 3.12, async), LangGraph (Planner-Actor-Evaluator), Claude/Gemini API |
+| Backend | FastAPI (Python 3.12, async), v2 agentic loop (function-calling + Trust Kernel; LangGraph PAE 는 legacy 폴백), Claude/Gemini API |
 | Database | PostgreSQL 16 + PostGIS, Redis 7 |
-| Infra | Docker Compose (dev + prod), 외부 Nginx (프로덕션) |
-| Observability | Langfuse (환경변수만 준비, wiring 향후) |
+| Infra | Docker Compose (dev + prod + e2e), 외부 Nginx (프로덕션), 자동배포 (systemd timer 폴링) |
+| Observability | Langfuse (L1 trace wiring 적용, graceful degrade) |
 
 ## 리포지토리 구조
 
@@ -25,17 +25,20 @@ Catchment-Area-Analysis/
 │   │   ├── main.py         # FastAPI 앱 + lifespan
 │   │   ├── config.py       # pydantic-settings
 │   │   ├── api/            # routes, middleware, rate_limiter, errors
-│   │   ├── agent/          # PAE graph, nodes, tools, prompts
+│   │   ├── agent/          # loop/ (v2 엔진 + Trust Kernel) + graph.py (PAE legacy), nodes, tools, prompts
 │   │   ├── data/etl/       # 공공데이터 수집
 │   │   ├── repositories/   # mock/, real/ 분리 + protocols.py
 │   │   ├── models/         # SQLAlchemy
 │   │   └── services/       # cache, circuit_breaker, category_resolver, langfuse_tracer
-│   └── alembic/            # 001~005 마이그레이션
+│   ├── alembic/            # 001~005 마이그레이션
+│   └── tests/              # backend pytest (테스트 모듈 22개)
 ├── data/                    # SHP 폴리곤, seed 덤프
-├── scripts/                 # 운영 유틸 (verify_sales_units, validate_env, setup_db, …)
+├── scripts/                 # 운영 유틸 (verify_sales_units, validate_env, setup_db, deploy/, eval/, …)
+├── deploy/systemd/          # 자동배포 systemd 유닛 (marketscope-autodeploy.{service,timer})
 ├── nginx/                   # 내장 + 외부 리버스 프록시 설정
 ├── docker-compose.yml       # 개발
 ├── docker-compose.prod.yml  # 프로덕션
+├── docker-compose.e2e.yml   # E2E 전용 스택 (:3001/:8002)
 └── docs/                    # 아래 참조
 ```
 
@@ -48,7 +51,7 @@ docs/
 │   ├── overview.md                 # 전체 요약 (먼저 읽기)
 │   ├── backend.md                  # FastAPI / API / 서비스
 │   ├── frontend.md                 # Next.js / Zustand / SSE 파서
-│   ├── agent.md                    # PAE 그래프 / Tool 9종
+│   ├── agent.md                    # Agent (v2 loop + Trust Kernel · PAE legacy) / Tool 9종
 │   ├── data.md                     # DB 스키마 / 레포 / ETL / 캐시
 │   └── deployment.md               # Docker / Nginx / 환경변수
 ├── spec/                            # 계층 2: 기능 스펙
@@ -93,8 +96,8 @@ cd server && pip install -e ".[dev]"
 uvicorn server.main:app --reload --port 8000
 
 # 테스트
-cd frontend && npm test                           # Playwright E2E
-cd server && pytest                               # (아직 없음)
+cd frontend && npm run test:e2e                   # Playwright E2E (`npm test` 스크립트 없음)
+cd server && pytest                               # backend pytest (모듈 22개, CI 상시 게이트)
 
 # 린트/포맷
 npx prettier --write .                            # TypeScript
@@ -102,6 +105,7 @@ cd server && ruff check --fix . && ruff format .  # Python
 ```
 
 > Mock 모드(USE_MOCK=true)는 DB/Redis 없이 FastAPI + Next.js 단독 기동 가능.
+> Mock 모드의 Agent 는 항상 PAE 폴백 (mock LLM 은 tool-call 불가).
 > 실제 데이터로 실행하려면 [ops/quickstart.md](docs/ops/quickstart.md) 참조.
 
 ## 개발 Phase
@@ -109,13 +113,15 @@ cd server && ruff check --fix . && ruff format .  # Python
 - **Phase 1A — Mock E2E** ✅ 완료. 5개 샘플 상권으로 전체 흐름 검증.
 - **Phase 1B — Real Data** ✅ 완료. 1,650개 상권 ETL + PAE 전환 + 프로덕션 배포.
 - **Phase 3 — 확장** ✅ 완료. F06 히트맵, F09 매출 시뮬레이션, F10 PDF.
+- **v2 Agent 전환** ✅ 완료 (2026-07-03 main 머지). 모델주도 loop + Trust Kernel 기본, PAE 는 legacy 폴백.
 - **Phase 2 — Premium** ⏳ 미착수. OAuth2, 결제, Tier 게이팅, F04 업종 심층.
 
 ## 핵심 아키텍처 패턴
 
-- **AI Agent**: LangGraph **Planner-Actor-Evaluator** 커스텀 그래프 (max 3 rounds)
-- **통신**: FastAPI → SSE 스트리밍 (9 이벤트: thinking/plan/tool/tool_end/text/card/suggestion/map_cmd/done)
-- **지도-챗봇 연동**: Zustand 3 스토어(map/chat/district) + `useMapSync` 훅
+- **AI Agent**: **v2 agentic loop** — 모델 주도 function-calling (도구 스키마 12개 = 도메인 9 + 메타 3: resolve_district/compute/abstain) + budget governor (모델 턴 6 / tool 12회 / 90s). `agent_loop_version="v2"` 기본, Mock 모드·롤백 시 legacy LangGraph **PAE**(Planner-Actor-Evaluator, max 3 rounds) 그래프 폴백
+- **Trust Kernel**: 응답의 모든 수치를 tool 반환값에 ±5% 바인딩 검증 — 교정 패스 1회 → 잔존 시 `[미확인]` 마스킹 / grounded fallback (anti-fabrication)
+- **통신**: FastAPI → SSE 스트리밍 — v2 는 thinking/tool/tool_end/card/text/suggestion/done 7종, `plan`·`warning` 은 PAE 전용, `map_cmd`·greeting 단축은 chat.py 가 방출
+- **지도-챗봇 연동**: Zustand 4 스토어(map/chat/district/toast) + `useMapSync` 훅
 - **공간 쿼리**: PostGIS `ST_Intersects`, `ST_AsGeoJSON`
 - **Mock/Real 전환**: `USE_MOCK` 플래그 + Repository 패턴 (`mock/` · `real/`)
 - **캐싱**: Redis (TTL 24h) + 메모리 fallback (graceful degradation)
@@ -131,7 +137,7 @@ cd server && ruff check --fix . && ruff format .  # Python
 
 ## 주요 DB 테이블
 
-districts · floating_population · estimated_sales · stores · store_history · resident_population · category_metadata · chat_sessions · chat_messages (세션은 인메모리 사용)
+districts · floating_population · estimated_sales · stores · store_history · resident_population · category_metadata · learned_aliases · chat_sessions · chat_messages (세션은 인메모리 사용)
 
 > ⚠ `estimated_sales.monthly_sales` 컬럼은 서울 열린데이터 `THSMON_SELNG_AMT` = **분기 누적**. Repository 에서 월 환산 후 응답.
 
@@ -170,7 +176,7 @@ Global `~/.claude/settings.json` 의 `PostToolUseFailure` + `Stop` 훅이 도구
 - `/plan-new <category> <name>` — 표준 5섹션 Plan 템플릿
 - `/status-update "<요약>"` — 오늘 날짜 진행 기록 추가
 - `/e2e-run <ring>` — USE_MOCK preflight 포함 E2E 실행 (수동 호출만)
-- Subagent: `qa-tester` / `code-reviewer` / `db-expert` / `frontend-specialist` — Agent 도구로 호출
+- Subagent: `code-reviewer` / `db-validator` / `qa-scenario-runner` — Agent 도구로 호출 (`.claude/agents/` 실파일 기준)
 
 ## 참고 문서
 
@@ -186,3 +192,4 @@ Global `~/.claude/settings.json` 의 `PostToolUseFailure` + `Stop` 훅이 도구
 - typecheck: cd frontend && npx tsc --noEmit
 - lint: cd frontend && npm run lint ; cd server && ruff check .
 - test: cd server && pytest
+- CI: `.github/workflows/ci.yml` — push/PR(main) 5 잡: backend-lint(ruff) · frontend-lint(next lint + tsc) · backend-test(`pytest -m "not real"` + cov) · docker-build · security-audit. 자동배포 CI green 게이트가 이 check-runs 를 조회.

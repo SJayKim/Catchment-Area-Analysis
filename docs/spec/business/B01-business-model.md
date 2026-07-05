@@ -17,6 +17,8 @@
 
 ## 2. Tier 구분
 
+> ⚠ 정합 주의 (2026-07-04): 현재 프런트 Tier 스텁(`frontend/src/hooks/useTier.ts`)은 `Tier = 'free' | 'pro' | 'team'` **3단** placeholder 타입을 정의한다 (하드코딩 `'free'` 반환, `FeatureGate` 도 동일 타입 사용). 본 문서의 Free/Premium **2단** 구조(§5.2 `users.tier` `'free' | 'premium'` 포함)와 명칭·단수가 다르므로, Phase 2 게이팅 구현 시 한쪽으로 확정해 정합시켜야 한다.
+
 ### 2.1 Free Tier
 
 | 항목 | 제한 |

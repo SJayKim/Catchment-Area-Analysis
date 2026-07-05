@@ -8,15 +8,17 @@
 ```
 docs/
 ├── architecture/   계층 1 — 시스템 설계 (overview / backend / frontend / agent / data / deployment)
-├── spec/           계층 2 — 기능 스펙 (F01~F10, D01, B01)
+├── spec/           계층 2 — 기능 스펙 (F01~F13, D01, B01)
 ├── ops/            운영 (quickstart, runbook, DR, deployment, database setup, serving stability)
-├── plan/           진행 중 / 미래 계획만 (완료된 plan 은 제거)
+├── plan/           구현 계획 (완료 plan 도 이력 기록으로 유지)
 │   ├── business/   상용화 / 비즈니스 (commercialization-plan.md)
+│   ├── docs/       문서 / 학습 자료 계획 (learning-materials.md)
 │   ├── fix/        버그 / 정확도 hotfix (out-of-scope, district-click-race, accuracy-gap …)
 │   ├── infra/      서빙 안정성 / 배포 / Langfuse / refactoring
 │   ├── qa/         QA sweep (user-journey, e2e-quality, ux-phase-a-f-test-plan, ux-final-e2e-regression-plan)
 │   └── ui/         UX Sweep phase 묶음 (ux-sweep-phase-{a,b,c,d,e,f}-*)
 ├── qa/             E2E test plan + runs/
+├── learning/       학습 자료 — 비개발자용 커리큘럼 00~06 + ARCHITECTURE-MAP.md
 ├── status/         현재 상태 단일 마스터 (current-status.md)
 ├── screenshots/    UI 스크린샷 (dev, e2e-qa, real-mode, ux)
 ├── images/         README 이미지
@@ -35,6 +37,7 @@ docs/
 | 프로덕션 배포 | [ops/production-deployment.md](ops/production-deployment.md) |
 | E2E 테스트 플랜 | [qa/test-plan.md](qa/test-plan.md) |
 | 상용화 로드맵 | [plan/business/commercialization-plan.md](plan/business/commercialization-plan.md) |
+| 학습 자료 (신규 합류자) | [learning/00-시작하기.md](learning/00-시작하기.md) |
 
 ## 읽는 순서 가이드
 
@@ -52,7 +55,7 @@ docs/
 
 ## 문서 삭제/정리 원칙
 
-- **완료된 plan**: 삭제 (git history 에 남음). `archive/` 는 운영하지 않음
+- **완료된 plan**: 유지 — 의사결정·이력 기록 (2026-07-04 원칙 변경, 기존 "삭제" 원칙 폐기). `archive/` 는 운영하지 않음
 - **구식 status 리포트**: 단일 `status/current-status.md` 만 유지
 - **레이어별 중복 정보**: `architecture/` 가 단일 진실. spec 은 링크로 대체
 - **수치/설정값**: `config.py` / `docker-compose.yml` 이 단일 진실

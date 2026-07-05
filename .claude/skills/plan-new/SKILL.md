@@ -9,23 +9,25 @@ allowed-tools: Read, Write, Grep, Glob, Bash
 
 `$ARGUMENTS = <category> <kebab-case-name>`
 
-- category: `phase | fix | infra | data | ui | business | agent-improvement`
+- category: `business | docs | fix | infra | qa | ui` (docs/plan/ 실존 디렉토리 기준)
 - 예: `/plan-new fix sales-unit-conversion-fix`
 
 ## 절차
 
 ### 1. 카테고리 검증
-`$1` 이 허용된 7개 중 하나인지 확인. 아니면 에러.
+`$1` 이 `docs/plan/` 하위 실존 디렉토리(현재 business/docs/fix/infra/qa/ui) 중 하나인지 확인. 아니면 에러.
 
 ### 2. 중복 방지
 `docs/plan/$1/$2.md` 가 이미 존재하면 abort.
 
 ### 3. Memory 훑기
 ```bash
-# 환경변수 우선, fallback 으로 절대 경로
-MEM_DIR="${CLAUDE_MEMORY_DIR:-${HOME}/.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory}"
-grep -l "<키워드>" "${MEM_DIR}"/feedback_*.md
+# 환경변수 우선. fallback 은 현 머신의 프로젝트 memory 슬러그를 자동 탐색 (머신별 절대경로 하드코딩 금지)
+MEM_DIR="${CLAUDE_MEMORY_DIR:-$(ls -d "${HOME}"/.claude/projects/*Catchment-Area-Analysis*/memory 2>/dev/null | head -1)}"
+[ -n "$MEM_DIR" ] && grep -l "<키워드>" "${MEM_DIR}"/feedback_*.md 2>/dev/null
 ```
+
+디렉토리가 없거나 `feedback_*.md` 가 없으면(무매치) 참조 없이 진행 — 무음 실패로 취급하지 말 것.
 `$2` 에서 핵심 키워드 추출(예: sse, mock, sales, utf-8, react, playwright) 후 feedback 파일 최대 3건 수집.
 
 ### 4. 오늘 날짜

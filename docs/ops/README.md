@@ -20,8 +20,10 @@
 | `generate_seed.py` | seed 덤프 생성 |
 | `backup_db.sh` | DB 백업 (pg_dump) |
 | `setup_db.py` | 신규 환경 DB 초기화 |
+| `deploy/auto_deploy.sh` | push 자동배포 — origin/main 폴링, CI green 게이트 → ff merge → 빌드 → smoke → 실패 시 prev-auto 롤백 |
+| `deploy/install_autodeploy.sh` | 자동배포 systemd 유닛(`deploy/systemd/marketscope-autodeploy.{service,timer}`, 2분 주기 타이머) 설치 (sudo) |
 | `server/scripts/cleanup_alembic.py` | stale `alembic_version` 정리 |
-| `server/scripts/flush_cache.py` | Redis 캐시 flush (단위 변환 후 stale 제거) |
+| `server/scripts/flush_cache.py` | Redis 캐시 flush (단위 변환 후 stale 제거 — 배포 필수 스텝) |
 
 ## 관련 문서
 

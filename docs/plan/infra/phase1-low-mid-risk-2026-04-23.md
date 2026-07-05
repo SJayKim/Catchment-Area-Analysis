@@ -9,12 +9,12 @@
 - 프론트 audit: `chatStore.ts` 381 LOC (state 13 + action 18) · 레거시 `feature1~7-*.spec.ts` 8건과 `ring1/f01~f03` 중복
 - 횡단 audit: `docs/status/current-status.md` 411줄 (status-compress 400줄 임계 초과)
 
-**Memory 참조**:
-- [feedback_formatter_strips_unused_imports.md](../../../memory/feedback_formatter_strips_unused_imports.md) — `Any` 미사용 import 정리 시 ruff/prettier 가 제거. "사용 지점" 분리 Edit 금지 → 단일 Edit 또는 lazy import.
-- [feedback_structlog_extra_silent.md](../../../memory/feedback_structlog_extra_silent.md) — except 좁히기 후 추가 로그는 printf-style 유지, `extra=` kwargs 드롭.
-- [feedback_read_large_doc_chunking.md](../../../memory/feedback_read_large_doc_chunking.md) — current-status.md 압축 시 limit=150~200 청크 Read.
-- [feedback_e2e_user_message_pollution.md](../../../memory/feedback_e2e_user_message_pollution.md) — 레거시 spec 삭제 전 ring1 이 동일 키워드 검증 실제 커버하는지 확인.
-- [feedback_react_event_keys_unique.md](../../../memory/feedback_react_event_keys_unique.md) — chatStore slice 분할 시 message key 유일성 회귀 주의.
+**Memory 참조** (2026-07-04 정정: 리포 루트 `memory/` 디렉토리 부재로 링크 제거, 교훈 요지만 보존):
+- [[feedback_formatter_strips_unused_imports]] — `Any` 미사용 import 정리 시 ruff/prettier 가 제거. "사용 지점" 분리 Edit 금지 → 단일 Edit 또는 lazy import.
+- [[feedback_structlog_extra_silent]] — except 좁히기 후 추가 로그는 printf-style 유지, `extra=` kwargs 드롭.
+- [[feedback_read_large_doc_chunking]] — current-status.md 압축 시 limit=150~200 청크 Read.
+- [[feedback_e2e_user_message_pollution]] — 레거시 spec 삭제 전 ring1 이 동일 키워드 검증 실제 커버하는지 확인.
+- [[feedback_react_event_keys_unique]] — chatStore slice 분할 시 message key 유일성 회귀 주의.
 
 ## Scope
 

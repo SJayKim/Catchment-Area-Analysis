@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: 변경 코드 리뷰. ruff 컨벤션(line 100, py3.12), SSE 파싱 정합성, USE_MOCK 분기, UTF-8 인코딩, React key 유일성 점검. Read-only.
+description: 변경 코드 리뷰. ruff 컨벤션(line-length 120, py3.12), SSE 파싱 정합성, USE_MOCK 분기, UTF-8 인코딩, React key 유일성 점검. Read-only.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15
@@ -25,7 +25,7 @@ git diff main...HEAD # 브랜치 전체 변경
 - React 컴포넌트 key 가 type-only(예: `tool-${name}`) — 동일 도구 다회 호출 시 duplicate-key 경고
 
 ### Warning (수정 권장)
-- ruff line length 100 초과
+- ruff line-length 120 초과 (`server/pyproject.toml` `line-length = 120`)
 - `USE_MOCK` env 체크 없이 tool 실행
 - Tool 반환 dict 에 분기(quarter) 키 누락
 - `git mv` 를 untracked 파일에 적용

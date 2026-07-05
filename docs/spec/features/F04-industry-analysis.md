@@ -13,7 +13,7 @@
 | 의존성 | F02 (AI 챗봇), F03 (기본 리포트), Tier 게이팅 (OAuth2/결제 Phase 2) |
 | 트리거 | "카페 하면 어때?", "치킨집 분석해줘" 등 업종 지정 질문 |
 | F03 과의 차이 | F03 은 상권 전체 개요, F04 는 **특정 업종** 관점 |
-| 현재 상태 | Tool 코드는 존재 (`get_estimated_sales`, `get_store_info` 가 `category_code` 필터 지원). 별도 카드 UI 및 Tier 게이팅 미구현. |
+| 현재 상태 | Tool 코드는 존재 (`get_estimated_sales`, `get_store_info` 가 `category_code` 필터 지원). **자연어 업종 → 코드 매핑은 이미 구현·가동 중** (§4.0 — CategoryResolver substring + learned_aliases, v2 루프가 업종명 인자를 자동 정규화). 별도 카드 UI 및 Tier 게이팅 미구현. |
 
 ## 2. 분석 항목
 
@@ -41,7 +41,21 @@ Agent:
 
 ## 4. 업종 코드 매핑
 
-### 4.1 매핑 전략: DB 퍼지 검색 + LLM 폴백 (2단계)
+### 4.0 현행 구현 (2026-07-04 기준) — substring 매칭 + 자가학습 별칭
+
+아래 §4.1~4.3 의 트라이그램 퍼지 검색 설계와 달리, 현재 가동 중인 매핑은 **키워드 부분일치(substring)** 방식이다:
+
+- **`server/server/services/category_resolver.py::CategoryResolver.resolve()`** — 등록된 키워드를 case-insensitive 로 메시지에 부분일치(`kw.lower() in msg_lower`)시켜 첫 매치의 `category_code` 를 반환. 트라이그램 유사도·LLM 폴백·confidence 밴딩은 없다.
+- **키워드 소스 3층** (Real 모드 기동 시 병합):
+  1. 내장 기본 13종 (`_DEFAULT_KEYWORDS` — Mock 관례 코드, 예: 카페→CS100001)
+  2. `category_metadata.category_name`(`/` 분리) + `category_metadata.aliases`(쉼표 구분 VARCHAR(500) 컬럼, alembic 003) — 핵심 32종은 `data/etl/category_aliases.json` 큐레이션 시드. **Real 시드 기준 카페→CS100010, 편의점→CS300002** (Mock 기본값과 코드 상이)
+  3. `learned_aliases` 테이블(alembic 004)의 `confidence >= 0.7` 별칭 자동 병합 (기존 키워드 우선)
+- **자가학습 파이프라인 (부분 구현)**: `learned_aliases(alias PK, code FK, confidence CHECK 0~1, source, hit_count, created_at, last_used_at)` 테이블과 `record_learned_alias()` upsert(중복 시 `hit_count+1`·`confidence` GREATEST 승격)가 구현되어 있으나, **write-back 호출부는 현재 미연결** — LLM 매핑 폴백에서 호출하는 wiring 이 후속 과제. 읽기(기동 시 병합)는 활성.
+- **Agent 소비처**: v2 루프 `agent/loop/tools_fc.py::_normalize_category` — Tool 호출 인자 `category_code` 가 `^CS\d+$` 형식이 아니면(예: "카페") resolver 로 코드 변환. 실패 시 원값이 그대로 전달되어 레포지토리가 빈 결과를 반환한다.
+
+### 4.1 매핑 전략 — Phase 2 설계안 (미구현): DB 퍼지 검색 + LLM 폴백 (2단계)
+
+> ⚠ 아래는 Phase 2 를 위한 설계안이며 현행 구현(§4.0)과 다르다. `resolve_category_code()`·`category_aliases` 테이블·`similarity()` 트라이그램 검색은 코드에 존재하지 않는다.
 
 LLM 단독 매핑은 환각(hallucination) 리스크가 있으므로, **DB 우선 검색 → LLM 보조** 전략을 사용한다.
 
@@ -72,7 +86,9 @@ def resolve_category_code(user_input: str) -> dict:
     return {"code": None, "confidence": "low", "message": f"'{user_input}'에 해당하는 업종을 찾지 못했습니다. 좀 더 구체적으로 말씀해주세요."}
 ```
 
-### 4.2 업종 별칭(alias) 테이블
+### 4.2 업종 별칭(alias) 테이블 — Phase 2 설계안 (미구현)
+
+> ⚠ 별도 `category_aliases` 테이블과 pg_trgm gin 인덱스는 **미구현**. 실제 별칭 저장소는 `category_metadata.aliases`(쉼표 구분 문자열, alembic 003) + 런타임 자가학습용 `learned_aliases` 테이블(alembic 004)이다 (§4.0).
 
 ```sql
 CREATE TABLE category_aliases (
@@ -93,10 +109,14 @@ CREATE INDEX idx_alias_trgm ON category_aliases USING gin (alias gin_trgm_ops);
 | CS200002 | 한식, 밥집, 한식당, 한정식, 백반 |
 | CS300001 | 편의점, 씨유, GS25, 세븐일레븐 |
 
-- **초기 데이터**: 서울시 SEMAS 업종 분류 247개 × 평균 3~5개 alias = ~1,000건 수동 시딩
-- **운영 시**: Langfuse에서 매핑 실패 로그 → 주기적으로 alias 추가
+> 예시의 코드는 설계 당시 표기. 실 DB 시드 기준 카페=CS100010, 편의점=CS300002 (Mock 기본값은 CS100001/CS300001).
 
-### 4.3 매핑 신뢰도별 동작
+- **초기 데이터 (설계)**: 서울시 SEMAS 업종 분류 247개 × 평균 3~5개 alias = ~1,000건 수동 시딩 → **실제**: 핵심 32종만 `category_aliases.json` 큐레이션 시딩, 나머지는 카테고리명 분해 + learned_aliases 위임 (§4.0)
+- **운영 시 (설계)**: Langfuse에서 매핑 실패 로그 → 주기적으로 alias 추가 → **실제**: 런타임 자가학습용 `learned_aliases` 테이블 + `record_learned_alias()` upsert 가 준비돼 있고(§4.0 — 호출부 wiring 은 후속), 수동 큐레이션은 `category_aliases.json` 갱신 + 재시드로 수행
+
+### 4.3 매핑 신뢰도별 동작 — Phase 2 설계안 (미구현)
+
+> ⚠ 현행 구현에는 confidence 밴딩이 없다 (learned_aliases 로드 임계 `>= 0.7` 만 존재). resolve 실패 시 원값이 Tool 에 그대로 전달되어 레포지토리가 빈 결과를 반환하고, v2 루프 모델이 재질문 또는 abstain 으로 처리한다.
 
 | confidence | 동작 |
 |------------|------|
@@ -104,7 +124,7 @@ CREATE INDEX idx_alias_trgm ON category_aliases USING gin (alias gin_trgm_ops);
 | `medium` (0.3 < sim ≤ 0.6) | "'{업종명}'으로 분석할까요?" 확인 후 진행 |
 | `low` (매칭 없음) | "어떤 업종을 말씀하시는지 좀 더 구체적으로 알려주세요" 재질문 |
 
-- 업종 코드 목록은 DB `category_codes` 참조 테이블에 보관
+- 업종 코드 목록은 DB `category_metadata` 테이블에 보관 (설계의 `category_codes` 별도 테이블은 없음)
 - Agent 시스템 프롬프트에 주요 매핑 포함
 
 ## 4-A. 타겟 고객 매칭률 산출 로직
@@ -168,7 +188,9 @@ def calculate_customer_match(district_code: str, category_code: str) -> dict:
 | 한식 | 40대(28%), 50대(25%), 30대(20%) = 73% | 30~50대 52% | 52점 |
 | 편의점 | 20대(42%), 10대(18%), 30대(15%) = 75% | 10~30대 71% | 71점 |
 
-> **설계 근거**: `estimated_sales` 테이블에 이미 연령대별 매출 컬럼(`sales_age_10`, `sales_age_20`, ...)이 있으므로 별도 메타데이터 불필요. 분기마다 자동 갱신되어 트렌드 변화도 반영됨.
+> **설계 근거**: `estimated_sales` 테이블에 이미 연령대별 매출 컬럼(`age_10_sales`, `age_20_sales`, ..., `age_60_plus_sales`)이 있으므로 별도 메타데이터 불필요. 분기마다 자동 갱신되어 트렌드 변화도 반영됨.
+>
+> 이 로직(연령대 매출 상위 누적 70% 주 소비층 도출 → 유동인구 비율 매칭)은 F07 추천 스코어링에 인라인으로 구현되어 있다 (`repositories/real/recommendation.py` 의 `age_match` 산출). F04 자체 카드 UI 는 미구현. 위 의사코드의 `age_group` 컬럼 표기는 설계 시점 것으로, 실제 두 테이블은 연령대별 wide 컬럼(`age_*_sales` / `age_*_pop`) 구조다.
 
 ## 5. 응답 형태
 
@@ -240,6 +262,8 @@ JOIN stores s ON es.district_code = s.district_code
 WHERE es.category_code = $1 AND es.quarter = $2;
 ```
 
+> ⚠ `estimated_sales.monthly_sales` 컬럼은 이름과 달리 **분기 누적(원)** (서울 열린데이터 `THSMON_SELNG_AMT`) — 실제 구현은 `// MONTHS_PER_QUARTER` 로 월 환산 후 사용한다 (`repositories/real/_units.py`). 위 설계 SQL 을 그대로 쓰면 분기값이 월값으로 라벨된다.
+
 ## 7. 수용 기준
 
 - [ ] 업종 지정 질문 시 해당 업종의 심층 분석이 제공된다
@@ -248,7 +272,7 @@ WHERE es.category_code = $1 AND es.quarter = $2;
 - [ ] 시간대별 매출 비중 차트가 표시된다
 - [ ] 타겟 고객 매칭률이 계산되어 표시된다
 - [ ] 업종 생존율/평균 영업 기간이 표시된다
-- [ ] 자연어 업종 입력이 정확한 업종 코드로 매핑된다
+- [x] 자연어 업종 입력이 업종 코드로 매핑된다 (2026-07-04 문서 정합성 감사에서 구현 확인 — §4.0 substring + learned_aliases 방식. §4.1 트라이그램 설계와는 상이)
 
 ---
 

@@ -9,11 +9,11 @@
 - **목적**: 
   - L1 trace 가 실제로 Langfuse 에 기록됨을 1회 명시적 검증 (로컬 + 프로덕션).
   - 백엔드 구조화 로그에 `trace_id` 를 1회 INFO 로 emit 하여 Loki/CloudWatch grep 으로 양방향 매핑 가능하게.
-- **Memory 참조**:
-  - [feedback_check_env_before_test.md](../../../memory/feedback_check_env_before_test.md) — 테스트 전 env (USE_MOCK · 키 셋팅) 확인. 본 plan 도 첫 단계에서 `langfuse_enabled` 가 실제로 True 인지 확인하지 않으면 "trace 가 안 잡힌다" 가 키 미설정인지 wiring 버그인지 구분 불가.
-  - [feedback_marketscope_sse_format.md](../../../memory/feedback_marketscope_sse_format.md) — `event:` 라인 없이 type 이 `data:` JSON 안에 임베드. curl sanity 에서 `data: ` prefix 자르고 `python -m json.tool` 파싱 필요.
-  - [feedback_probe_endpoint_shape_first.md](../../../memory/feedback_probe_endpoint_shape_first.md) — `done.trace_id` 가 실제로 응답에 포함되는지 source Read 만으로 추정 금지. curl 로 raw shape 직접 확인.
-  - [feedback_stale_container_vs_source.md](../../../memory/feedback_stale_container_vs_source.md) — 프로덕션 검증 시 backend 컨테이너 재배포 시각이 wiring 커밋(`42b2209` 이후)인지 먼저 확인. 2026-04-23 운영 재배포는 `a5bef97` 기준이므로 OK 지만 향후 plan 적용 시 재확인.
+- **Memory 참조** (2026-07-04 정정: 리포 루트 `memory/` 디렉토리 부재로 링크 제거, 교훈 요지만 보존):
+  - [[feedback_check_env_before_test]] — 테스트 전 env (USE_MOCK · 키 셋팅) 확인. 본 plan 도 첫 단계에서 `langfuse_enabled` 가 실제로 True 인지 확인하지 않으면 "trace 가 안 잡힌다" 가 키 미설정인지 wiring 버그인지 구분 불가.
+  - [[feedback_marketscope_sse_format]] — `event:` 라인 없이 type 이 `data:` JSON 안에 임베드. curl sanity 에서 `data: ` prefix 자르고 `python -m json.tool` 파싱 필요.
+  - [[feedback_probe_endpoint_shape_first]] — `done.trace_id` 가 실제로 응답에 포함되는지 source Read 만으로 추정 금지. curl 로 raw shape 직접 확인.
+  - [[feedback_stale_container_vs_source]] — 프로덕션 검증 시 backend 컨테이너 재배포 시각이 wiring 커밋(`42b2209` 이후)인지 먼저 확인. 2026-04-23 운영 재배포는 `a5bef97` 기준이므로 OK 지만 향후 plan 적용 시 재확인.
 
 ## Scope
 

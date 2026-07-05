@@ -25,10 +25,12 @@
 {
   "trace_id": "...",
   "value": "up" | "down",
-  "reason": "부정확함 | 느림 | 주제 벗어남 | null",
-  "comment": "optional, max 60자"
+  "reason": "부정확함 | 느림 | 주제 벗어남 | null (max 32자)",
+  "comment": "optional, max 120자"
 }
 ```
+
+> 서버 검증 (`api/routes/feedback.py::FeedbackScoreRequest`): `trace_id` 1~128자 · `value` `^(up|down)$` · `reason` max 32자 · `comment` max 120자.
 
 **응답**:
 
@@ -53,7 +55,7 @@ Langfuse score `comment` 필드에 전달.
 **UI**:
 
 1. 문항 1 (필수): `"방금 받은 분석, 얼마나 도움이 됐나요?"` → 5-emoji (😡😞😐🙂😍)
-2. 문항 2 (선택): 문항 1 ≥ 4 응답 시만 `"Premium 요금(월 ₩9,900)에 관심 있으신가요?"` 네/아니오/나중에
+2. 문항 2 (선택): **`NEXT_PUBLIC_PREMIUM_CTA_ENABLED === 'true'`(빌드 타임 env, 기본 off — Phase E.3) 이고** 문항 1 ≥ 4 응답 시만 `"Premium 요금(월 ₩9,900)에 관심 있으신가요?"` 네/아니오/나중에. 기본 환경(env 미설정)에서는 문항 2 미노출.
 
 **수집**: `window.dataLayer.push({event:'free_limit_survey', mood, premium_interest})`.
 GA4 차단 환경에서도 UI 는 성공 상태로 마감 (ACK 불필요).
@@ -77,6 +79,7 @@ bottom-sheet drag handle 옆으로 이동 예정.
 ```bash
 NEXT_PUBLIC_KAKAO_CHANNEL_URL=https://pf.kakao.com/_xxxxx/chat
 NEXT_PUBLIC_FEEDBACK_FORM_URL=https://tally.so/r/xxxxx
+NEXT_PUBLIC_PREMIUM_CTA_ENABLED=false   # L2 문항 2 (Premium CTA) 게이트 — 'true' 일 때만 노출 (기본 off)
 ```
 
 빌드 타임 bake-in — 변경 시 frontend 재빌드 필수.

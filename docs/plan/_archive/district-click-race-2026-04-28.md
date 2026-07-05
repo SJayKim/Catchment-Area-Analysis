@@ -335,15 +335,17 @@ export async function fetchDistrictPreview(
 
 ## 4. Checklist
 
-- [ ] **C1** `chatStore.sendMessage` `isLoading return` → `abort + restart` (3.1.1)
-- [ ] **C2-1** `chatStore.currentRequestId` 카운터 + `EventHandlerContext.requestId` 추가 (3.1.2, 3.2.1)
-- [ ] **C2-2** `ChatPanel` PreviewCard / Chips / Input `disabled={false}` (3.3)
-- [ ] **C3** `chatStore.setPreview` AbortController + monotonic seq (3.1.3) + `lib/api.ts` signal 지원 (3.5)
-- [ ] **C4** `eventHandlers` `done` / `text` / `card` / `tool` / `tool_end` / `suggestion` / `map_cmd` / `error` staleness 가드 (3.2)
-- [ ] **C5** `chat.py` per-session in-flight task 추적 + cancel + history finally 이동 (3.4)
-- [ ] **C6** `eventHandlers.text:137` 1.5s setTimeout 가드 (3.2.3 에 포함)
-- [ ] **검증** ruff (server) · tsc (frontend) · pytest (server) · Playwright e2e 신규 spec
-- [ ] **메모리** feedback 4건 신규 작성 (`feedback_chat_inflight_guard.md` 외 3건)
+- [x] **C1** `chatStore.sendMessage` `isLoading return` → `abort + restart` (3.1.1)
+- [x] **C2-1** `chatStore.currentRequestId` 카운터 + `EventHandlerContext.requestId` 추가 (3.1.2, 3.2.1)
+- [x] **C2-2** `ChatPanel` PreviewCard / Chips / Input `disabled={false}` (3.3)
+- [x] **C3** `chatStore.setPreview` AbortController + monotonic seq (3.1.3) + `lib/api.ts` signal 지원 (3.5)
+- [x] **C4** `eventHandlers` `done` / `text` / `card` / `tool` / `tool_end` / `suggestion` / `map_cmd` / `error` staleness 가드 (3.2)
+- [x] **C5** `chat.py` per-session in-flight task 추적 + cancel + history finally 이동 (3.4)
+- [x] **C6** `eventHandlers.text:137` 1.5s setTimeout 가드 (3.2.3 에 포함)
+- [x] **검증** ruff (server) · tsc (frontend) · pytest (server) · Playwright e2e 신규 spec
+- [x] **메모리** feedback 4건 신규 작성 (`feedback_chat_inflight_guard.md` 외 3건)
+
+> ✅ 2026-07-04 문서 정합성 감사에서 구현 완료 확인 — `chatStore.ts` `currentRequestId` + module-private `_previewSeq`/`_previewAbort`, `eventHandlers.ts` requestId staleness 가드, `chat.py` `_session_inflight`/`_claim_session_slot`(이전 task cancel), `server/tests/test_chat_session_concurrency.py` + e2e `f01-rapid-switch`/`f01-preview-rapid-switch` spec 전부 현행 코드 존재. 실행 결과는 status 2026-04-28 기록(ruff/tsc/pytest 49/50 · memory 4건 신규).
 
 ## 5. 재검toot (Self-Review Gate)
 

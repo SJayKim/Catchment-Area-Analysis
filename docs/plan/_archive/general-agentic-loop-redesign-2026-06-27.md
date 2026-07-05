@@ -4,6 +4,8 @@
 > 목표: 현재 고정 파이프라인 PAE 를 **Claude Code 류의 범용·안정 모델주도 루프**로 전환하는
 > 아키텍처 비전. "현재 구현은 고려하지 말고 최종 목표(사용자에게 AI 로 가치 있는 서비스)
 > 관점으로" 라는 사용자 지시에 따라 green-field 로 설계.
+>
+> (2026-07-04 문서 정합성 감사 주석: 본 비전의 핵심 — 모델주도 function-calling 루프 + Trust Kernel — 은 `feat/agentic-loop-v2` 로 구현되어 2026-07-03 main 머지 완료. 현행 기본 경로는 `agent/loop/engine.py` (`agent_loop_version="v2"`), PAE 는 Mock 폴백·롤백 스위치로 잔존.)
 
 ---
 
@@ -81,6 +83,8 @@ USER MESSAGE
   ground truth.
 - **단위·의미를 fact 에 명시** (현재 `daily_avg` 가 실제론 분기 시간대 합계인데 이름이 오해를
   부른 그 버그류를 구조적으로 차단 — fact 는 `hourly_total` 처럼 정직한 라벨 + unit 보유).
+
+> ⚠ 2026-07-04 정정: 위에서 인용한 `daily_avg` 필드는 이후 `quarter_total` 로 rename 완료(커밋 `07d8ad8`). 현행 코드는 `repositories/real/floating_population.py` 가 `quarter_total` 을 반환하며, `daily_avg`/`dailyAvg` 는 legacy 캐시 매처·프론트 fallback 으로만 잔존한다.
 
 ### 2.3 Trust Kernel — 구조적 grounded-answer 계약 (B 의 본체)
 

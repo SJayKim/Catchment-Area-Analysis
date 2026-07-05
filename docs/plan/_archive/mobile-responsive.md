@@ -6,6 +6,13 @@
 > 선행 / 병행: `docs/plan/ui/landing-onboarding-feedback.md` (Phase E 모바일 bottom sheet 일부 중복 — 본 Plan 이 **확장·흡수**)
 > 독립 진행 가능: Accuracy Gap Fix W1~W4, Phase 2 Premium 과 무관
 
+> ⚠ 2026-07-04 정정 (문서 정합성 감사): 상태 "계획 수립 (구현 전)" 은 낡음 — **Phase A/B/C 핵심은 구현·배포 완료** 확인:
+> `hooks/useBreakpoint.ts`·`hooks/useKeyboardInset.ts`, `components/mobile/` 4종(BottomSheet/BottomSheetHandle/BottomNav/MobileLayout),
+> `app/app/page.tsx` 의 `useBreakpoint()` → `<MobileLayout/>` 분기, `app/layout.tsx` `export const viewport`, `chatStore` 의
+> mobileTab/sheetSnap/unreadCount 상태·액션, `ChatInput` IME 가드(`isComposing`/`keyCode 229`), Playwright 4 project
+> (chromium/mobile-iphone/mobile-galaxy/tablet-ipad), e2e `mobile-sheet-open`·`d9-bottomnav` spec.
+> **Phase D(PWA manifest/Service Worker)·B5(MobileMapControls) 는 미구현.** 아래 체크박스는 감사에서 코드로 확인된 항목만 `[x]` 갱신.
+
 ---
 
 ## Context
@@ -32,6 +39,10 @@
 | 10 | `next/image` · `next/font` · AVIF | `next/image` 0건 · 폰트는 `layout.tsx:44~47` CDN link 로만 Pretendard 로드 · `images.formats` 미설정 | 🟡 부분 | 번들 · LCP 최적화 여지 |
 | 11 | aria-label · `role="dialog"` | 2건 (RoleSelector · SourcesCitation) · dialog 0건 | 🟡 부분 | WCAG 2.2 + KWCAG 2.2 미달 |
 | 12 | Playwright 모바일 device | `playwright.config.ts` chromium 1개 프로젝트만 | ❌ 없음 | 모바일 회귀 0 |
+
+> ⚠ 2026-07-04 정정: 위 갭 표는 2026-04-23 조사 스냅샷. #1(viewport — `app/layout.tsx` `export const viewport`) ·
+> #5(useIsMobile — `hooks/useBreakpoint.ts`) · #6(Bottom sheet — `components/mobile/BottomSheet.tsx`) ·
+> #7(가상키보드 — `hooks/useKeyboardInset.ts`) · #8(IME 가드 — `ChatInput.tsx`) · #12(Playwright 모바일 project 3종 추가) 는 이후 구현으로 해소됨.
 
 ### 2026 모바일 UI/UX 트렌드 리서치 델타 (2026-04-23)
 
@@ -595,22 +606,22 @@ Toast: "연결이 불안정해요. 다시 시도할까요?" + [재시도] 버튼
 
 ### Phase A — Foundation (P0 · 1.5d)
 
-- [ ] A1. `app/layout.tsx` 에 `export const viewport: Viewport` 추가 (`viewport-fit: cover` + `themeColor`)
+- [x] A1. `app/layout.tsx` 에 `export const viewport: Viewport` 추가 (`viewport-fit: cover` + `themeColor`)
 - [ ] A2. `tailwind.config.ts` screens 확장 (`xs: 375px`) 및 mobile-first 일관 적용 가이드 추가 (JSDoc)
-- [ ] A3. `hooks/useBreakpoint.ts` 신규 (SSR 안전, `'desktop'` 초기값)
+- [x] A3. `hooks/useBreakpoint.ts` 신규 (SSR 안전, `'desktop'` 초기값)
 - [ ] A4. `globals.css` 에 `.touch-target` utility + `env(safe-area-inset-*)` CSS 변수 정의 (`--safe-top`, `--safe-bottom`, `--safe-left`, `--safe-right`)
-- [ ] A5. `app/app/page.tsx` 에서 `useBreakpoint()` 로 `MobileLayout` vs 기존 SplitPanel 분기
+- [x] A5. `app/app/page.tsx` 에서 `useBreakpoint()` 로 `MobileLayout` vs 기존 SplitPanel 분기
 - [ ] A6. 768~1023px tablet 구간 SplitPanel 50/50 고정 (drag 비활성)
-- [ ] A7. `playwright.config.ts` 에 mobile 2종 + tablet 1종 device project 추가
+- [x] A7. `playwright.config.ts` 에 mobile 2종 + tablet 1종 device project 추가
 
 ### Phase B — Bottom Sheet + Bottom Nav (P0 · 3d)
 
-- [ ] B1. `components/mobile/BottomSheet.tsx` 신규 — 3-snap (15vh peek / 55vh half / 90vh full) · CSS scroll-snap
-- [ ] B2. `components/mobile/BottomSheetHandle.tsx` — drag indicator 36×4px + `role="slider"` + 키보드 arrow 지원
-- [ ] B3. `components/mobile/MobileLayout.tsx` — 지도 full-bleed + BottomSheet 통합 컨테이너
-- [ ] B4. `components/mobile/BottomNav.tsx` — 2-tab (`지도` / `챗` + 뱃지) · `role="tablist"`
+- [x] B1. `components/mobile/BottomSheet.tsx` 신규 — 3-snap (15vh peek / 55vh half / 90vh full) · CSS scroll-snap
+- [x] B2. `components/mobile/BottomSheetHandle.tsx` — drag indicator 36×4px + `role="slider"` + 키보드 arrow 지원
+- [x] B3. `components/mobile/MobileLayout.tsx` — 지도 full-bleed + BottomSheet 통합 컨테이너
+- [x] B4. `components/mobile/BottomNav.tsx` — 2-tab (`지도` / `챗` + 뱃지) · `role="tablist"`
 - [ ] B5. `components/mobile/MobileMapControls.tsx` — 기존 `MapControls` 를 상단 우측으로 offset (sheet peek 위)
-- [ ] B6. `chatStore` 에 `mobileTab`, `sheetSnap`, `unreadCount`, `setMobileTab`, `setSheetSnap` 상태/액션 추가
+- [x] B6. `chatStore` 에 `mobileTab`, `sheetSnap`, `unreadCount`, `setMobileTab`, `setSheetSnap` 상태/액션 추가
 - [ ] B7. 지도 폴리곤 클릭 → `setSheetSnap('peek')` 자동 · CTA "AI 분석 보기" → `setSheetSnap('full') + setMobileTab('chat')`
 - [ ] B8. `useMapSync` 와 sheet snap 전환 동기 (기존 자동 쿼리 OFF 유지)
 - [ ] B9. deck.gl 터치 파라미터 튜닝 — `radiusPixels` 30, `lineWidthMinPixels` 2, `autoHighlight` 유지
@@ -621,9 +632,9 @@ Toast: "연결이 불안정해요. 다시 시도할까요?" + [재시도] 버튼
 ### Phase C — ChatInput · IME · 자동 스크롤 (P0 · 2d)
 
 - [ ] C1. `ChatInput.tsx` · `ChatPanel.tsx` 에 `100dvh` + `env(safe-area-inset-bottom)` 적용
-- [ ] C2. VirtualKeyboard API 감지 + overlaysContent=true · CSS `env(keyboard-inset-height)` 참조
-- [ ] C3. `VisualViewport` API fallback (iOS Safari) · `--kb-inset` CSS 변수 동기
-- [ ] C4. IME 가드 — `onKeyDown` 에서 `e.nativeEvent.isComposing` + `e.keyCode === 229` fallback
+- [x] C2. VirtualKeyboard API 감지 + overlaysContent=true · CSS `env(keyboard-inset-height)` 참조
+- [x] C3. `VisualViewport` API fallback (iOS Safari) · `--kb-inset` CSS 변수 동기
+- [x] C4. IME 가드 — `onKeyDown` 에서 `e.nativeEvent.isComposing` + `e.keyCode === 229` fallback
 - [ ] C5. `MessageList.tsx` 에 `IntersectionObserver` 기반 `isAtBottom` state
 - [ ] C6. 스트리밍 자동 scroll 은 `isAtBottom === true` 일 때만 `scrollIntoView`
 - [ ] C7. "↓ 최신 메시지" FAB — `isAtBottom === false` + 신규 메시지 존재 시 노출 (우하단 · safe-area 준수)

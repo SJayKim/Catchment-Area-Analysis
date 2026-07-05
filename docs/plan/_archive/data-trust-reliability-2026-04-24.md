@@ -50,6 +50,8 @@ LLM 응답의 "상위 25%" 라벨은 Tool 이 제공하는 `get_district_benchma
 - Layer 4 — **Trust Regression**: `scripts/eval/trust_scenarios.py` 5 상권 eval harness + DB ground truth 자동 대조
 - Layer 5 — **문서/코드 guardrail**: `estimated_sales` 테이블 DDL 에 column comment `"SOURCE: THSMON_SELNG_AMT, UNIT: KRW, AGGREGATION: quarterly cumulative"` 추가 + Alembic migration. Repository 에 `QUARTER_TO_MONTH_DIVISOR = 3` 상수화 + assertion
 
+> ⚠ 2026-07-04 정정: 상수는 이 이름으로 구현되지 않았다 — 실제 런타임 상수는 **`MONTHS_PER_QUARTER = 3`** (`server/server/repositories/real/_units.py`, real repo 4곳에서 import). `QUARTER_TO_MONTH_DIVISOR` 라는 Python 상수는 코드에 정의된 적 없음(alembic 005 의 column comment 문자열에만 그 이름이 남아 있음). 새 코드/문서에서는 `MONTHS_PER_QUARTER` 를 쓸 것.
+
 ### Out
 - 컬럼 rename `monthly_sales → quarterly_sales_raw_krw` (breaking change, Phase 2 에서 pg view 로 soft-migrate 권장)
 - pg_trgm / Learned aliases DB 쿼리 튜닝 (별도 Plan)
@@ -125,22 +127,28 @@ def _enrich_sales(row):
     return {..., "monthly_sales": monthly}
 ```
 
+> ⚠ 2026-07-04 정정: 위 스니펫은 설계안일 뿐 최종 구현과 다르다 — 따라 쓰지 말 것.
+> - 월 환산 상수의 실명은 **`MONTHS_PER_QUARTER = 3`** (`server/server/repositories/real/_units.py` 유일 정의, `estimated_sales.py`/`comparison.py`/`recommendation.py`/`simulation.py` 에서 import 하여 `// MONTHS_PER_QUARTER` 인라인 환산). `QUARTER_TO_MONTH_DIVISOR` 라는 Python 상수는 존재하지 않는다(alembic 005 comment 문자열에만 잔존).
+> - `_enrich_sales` 함수는 repo 가 아니라 **agent tool 레이어**(`server/server/agent/tools/estimated_sales.py`)에 있으며 파생지표(computed) 생성을 담당 — 월 환산은 repo 읽기 경계에서 수행.
+
 ## Checklist
 
 ### Phase A — Immediate (Pass 1, 1 session)
-- [ ] Layer 1 프롬프트 규칙 추가 + 단일 시나리오 smoke
-- [ ] Layer 4 scripts/eval/trust_scenarios.py 5 상권 수집 (read-only)
-- [ ] Ground truth diff 리포트 작성
-- [ ] Layer 5 alembic 005 column comment + `QUARTER_TO_MONTH_DIVISOR` 상수화
+- [x] Layer 1 프롬프트 규칙 추가 + 단일 시나리오 smoke
+- [x] Layer 4 scripts/eval/trust_scenarios.py 5 상권 수집 (read-only)
+- [x] Ground truth diff 리포트 작성
+- [x] Layer 5 alembic 005 column comment + `QUARTER_TO_MONTH_DIVISOR` 상수화 (상수 최종 구현명은 `MONTHS_PER_QUARTER` — 위 ⚠ 정정 참조)
 
 ### Phase B — Core (Pass 2, 1~2 session)
-- [ ] Layer 3 `numeric_sanity.py` 유닛 테스트 포함 구현
-- [ ] `respond_node` 통합 + SSE `warning` 이벤트 추가
-- [ ] `state.py` `quality_flags` 필드 추가
-- [ ] `done.quality_flags` payload 추가
+- [x] Layer 3 `numeric_sanity.py` 유닛 테스트 포함 구현
+- [x] `respond_node` 통합 + SSE `warning` 이벤트 추가
+- [x] `state.py` `quality_flags` 필드 추가
+- [x] `done.quality_flags` payload 추가
+
+> ✅ 2026-07-04 문서 정합성 감사에서 Phase A/B 구현 완료 확인 — `agent/utils/numeric_sanity.py` + `respond.py` warning 방출 + `graph.py` `done.quality_flags` 현행 코드 존재, `scripts/eval/trust_scenarios.py` 존재, alembic 005 적용. (Phase A/B 완료는 본 문서 Status 라인과 status 2026-04-24 기록에도 부합)
 
 ### Phase C — Broaden (Pass 3)
-- [ ] Layer 2 intents.yaml 벤치마크 병렬 호출
+- [ ] Layer 2 intents.yaml 벤치마크 병렬 호출 (2026-07-04 감사: defer 상태 유지 — Status 라인 "L2 defer")
 - [ ] Trust regression 자동화 (pytest or ci 주기)
 - [ ] `docs/architecture/agent.md` evaluator 확장 기록
 
@@ -240,5 +248,5 @@ def _enrich_sales(row):
 - Owner: cyon1
 - Parent: `docs/plan/fix/accuracy-gap-fix.md`
 - Trigger: 2026-04-24 종로3가역 UI 응답 불신 피드백
-- Status: Phase A + Phase B Pass 1 완료 (L1/L3/L5 구현, L2 defer, L4 자동화 완료)
+- Status: Phase A + Phase B Pass 1 완료 (L1/L3/L5 구현, L2 defer, L4 자동화 완료) — L5 월 환산 상수의 최종 구현명은 `MONTHS_PER_QUARTER`(`repositories/real/_units.py`), `QUARTER_TO_MONTH_DIVISOR` 아님 (2026-07-04 문서 정합성 감사 확인)
 - Next: W1 entity_matching 재점검 (남대문시장/명동 케이스) — 별도 Plan

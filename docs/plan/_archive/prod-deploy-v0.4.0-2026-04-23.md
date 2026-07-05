@@ -41,8 +41,10 @@ LANGFUSE_OTEL_INSECURE=<present>        # false 권장
 
 ### Memory 참조
 
-- [feedback_stale_container_vs_source.md](../../../memory/feedback_stale_container_vs_source.md) — 배포 후 FAIL 시 컨테이너 빌드 시각부터 확인.
-- [feedback_probe_endpoint_shape_first.md](../../../memory/feedback_probe_endpoint_shape_first.md) — 신규 `/api/districts/{code}/preview`, `/api/feedback` 스키마는 실호출로 확인.
+> (2026-07-04 정정: 아래 auto-memory 파일 링크는 리포 루트 `memory/` 부재로 해석 불가 — 링크 제거, 교훈 요지만 보존.)
+
+- [[feedback_stale_container_vs_source]] — 배포 후 FAIL 시 컨테이너 빌드 시각부터 확인.
+- [[feedback_probe_endpoint_shape_first]] — 신규 `/api/districts/{code}/preview`, `/api/feedback` 스키마는 실호출로 확인.
 - (앞 plan `production-redeploy-2026-04-23.md`) — compose 가 쓰는 이미지 4종(backend/frontend/migrate/seed) 모두 rebuild 필요.
 
 ## Scope

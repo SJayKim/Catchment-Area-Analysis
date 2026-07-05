@@ -7,11 +7,12 @@
 ## 1. 배경
 
 2026-04-23 이전: 지도 클릭 → `useMapSync` 가 `"{name} 상권 요약해줘"` 를 즉시 `sendMessage` →
-PAE 풀파이프 (6~8 Tool + 5~6 Card 스트림). 탐색 의도와 분석 의도를 구분하지 못해 모든 클릭이
-LLM 토큰/비용 소모.
+Agent 풀파이프 (당시 PAE, 6~8 Tool + 5~6 Card 스트림). 탐색 의도와 분석 의도를 구분하지 못해
+모든 클릭이 LLM 토큰/비용 소모.
 
 **해결**: 지도 클릭 → zero-LLM preview. 사용자가 chip 을 클릭하거나 `"AI 분석 보기"` 를 눌러야
-PAE 풀파이프 진입.
+Agent 풀파이프 진입 (현행 기본 = **v2 agentic loop + Trust Kernel**, `agent_loop_version="v2"`.
+PAE 그래프는 legacy — Mock 모드 및 `AGENT_LOOP_VERSION=pae` 롤백 스위치용 폴백).
 
 ## 2. API
 
@@ -45,6 +46,8 @@ PAE 풀파이프 진입.
   ]
 }
 ```
+
+> ⚠ `floating_population.daily_total` 필드명 주의: 내부적으로 repo 의 `quarter_total`(해당 분기 시간대별 합계 총량)을 담는다 — '일평균/일합계'가 아님 (2026-07-04 백엔드 `quarter_total` rename 이 API 응답 필드명에는 미반영된 잔존 표면).
 
 **내부 구현** (`server/server/api/routes/districts.py`):
 
@@ -87,7 +90,7 @@ PAE 풀파이프 진입.
            ↓
    chatStore.sendMessage(prompt)
            ↓
-   preview=null (sendMessage 내에서 자동 클리어) + PAE 풀파이프 실행
+   preview=null (sendMessage 내에서 자동 클리어) + Agent 풀파이프 실행 (v2 agentic loop, legacy 폴백 PAE)
 ```
 
 ## 4. `role` 별 suggested_questions

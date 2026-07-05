@@ -14,7 +14,7 @@ maxTurns: 20
 echo "USE_MOCK=$USE_MOCK"
 ```
 - 비어 있으면 즉시 abort ("USE_MOCK 미설정 — Mock/Real 결정 불가").
-- `curl -sf http://localhost:8000/api/health` 로 백엔드 확인. 실패 시 abort.
+- `curl -sf http://localhost:8000/health` 로 백엔드 확인. 실패 시 abort. (헬스는 루트 `/health` — `/api/health` 라우트는 없음. 상세 readiness 는 `/api/health/detail`.)
 - `frontend/playwright.config.ts` 에서 baseURL 확인 (기본 localhost:3001).
 
 ## 2. 실행
@@ -53,5 +53,5 @@ Artifacts: <path>
 
 ## 주의
 
-- Playwright SSE route 가로채기 금지 (memory/feedback_playwright_sse_capture.md 참조) — 직접 backend POST 사용.
-- user 메시지와 검증 키워드 분리 (memory/feedback_e2e_user_message_pollution.md).
+- Playwright SSE route 가로채기 금지 — 직접 backend POST 로 SSE 를 수집할 것 ([[feedback_playwright_sse_capture]] 교훈).
+- user 메시지와 검증 키워드 분리 — 검증용 키워드를 user 발화에 섞으면 응답 판정이 오염됨 ([[feedback_e2e_user_message_pollution]] 교훈).

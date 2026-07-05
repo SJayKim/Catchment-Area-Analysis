@@ -1,5 +1,7 @@
 # 서비스 운영 부하 테스트 계획 — MarketScope AI
 
+> 2026-07-04 문서 정합성 감사: Phase 1~3(인프라·계측·SSE 클라이언트) 및 시나리오 파일 8종(`loadtest/scenarios/a~h`)은 구현 완료 확인 — 의존성은 dev 가 아닌 `[loadtest]` extra(`server/pyproject.toml`)로, Locust User 클래스는 `SseUser` 대신 `ChatUser`/`GreetingFloodUser` 로 구현됨. Phase 4~7 부하 **실행**·리포트는 실행 기록 미확인(체크박스 미체크 유지).
+
 ## Context
 
 MarketScope AI는 동시 다수 사용자가 AI 챗봇으로 상권 분석을 요청하는 서비스입니다.
@@ -11,6 +13,8 @@ MarketScope AI는 동시 다수 사용자가 AI 챗봇으로 상권 분석을 �
 - PAE 모드: per-request 그래프 (격리 OK), ReAct 모드: singleton (LangChain 내부 격리)
 - SSE 큐: bounded 256, LLM timeout: fast 15s / slow 60s
 - 인메모리 세션 (서버 재시작 시 유실), Redis graceful degradation
+
+> ⚠ 2026-07-04 정정: 위 "PAE 모드 / ReAct 모드" 서술은 작성 시점 기준. 현행 기본 실행 경로는 **v2 agentic loop + Trust Kernel**(`config.py` `agent_loop_version="v2"` → `agent/runtime.py` 가 비-mock 프로바이더에서 `agent/loop/engine.py` 로 디스패치)이며, PAE 그래프는 Mock 모드·`AGENT_LOOP_VERSION=pae` 롤백용 레거시 폴백이다. 'ReAct 모드'는 런타임에서 선택 불가(레거시 흔적만 잔존). v2 루프도 per-request 격리이고, 도구는 요청 내 **직렬** 실행이다.
 
 **목표**: 동시 사용자 환경에서 정상 동작, 세션 격리, 장애 복구를 검증하는 부하 테스트 인프라 구축 + 실행
 
@@ -52,16 +56,16 @@ docs/plan/infra/load-test-plan.md   # 이 계획 문서의 정식 저장본
 
 ### Phase 1: 인프라 셋업
 
-- [ ] **1.1** `server/pyproject.toml` dev 의존성에 `locust>=2.29`, `httpx>=0.27` 추가
-- [ ] **1.2** `loadtest/` 디렉토리 생성 + `README.md` (실행 가이드)
-- [ ] **1.3** `.gitignore`에 `loadtest/results/` 추가
-- [ ] **1.4** `config.py`에 `llm_provider: "mock"` 분기 추가
-- [ ] **1.5** `graph.py`의 `_create_llm()`에 mock provider → `FakeListChatModel` (토큰당 20ms sleep, 한국어 고정 텍스트 반환)
+- [x] **1.1** `server/pyproject.toml` dev 의존성에 `locust>=2.29`, `httpx>=0.27` 추가 (2026-07-04 감사: `[loadtest]` extra 로 구현 확인)
+- [x] **1.2** `loadtest/` 디렉토리 생성 + `README.md` (실행 가이드)
+- [x] **1.3** `.gitignore`에 `loadtest/results/` 추가
+- [x] **1.4** `config.py`에 `llm_provider: "mock"` 분기 추가
+- [x] **1.5** `graph.py`의 `_create_llm()`에 mock provider → `FakeListChatModel` (토큰당 20ms sleep, 한국어 고정 텍스트 반환)
 - [ ] **1.6** Mock LLM으로 PAE 전체 그래프 정상 동작 확인 (수동 1회)
 
 ### Phase 2: 계측 코드 추가
 
-- [ ] **2.1** `chat.py`에 `/api/health/detail` GET 엔드포인트 추가:
+- [x] **2.1** `chat.py`에 `/api/health/detail` GET 엔드포인트 추가 (2026-07-04 감사에서 구현 확인):
   ```json
   {
     "semaphore_available": 18,
@@ -73,17 +77,17 @@ docs/plan/infra/load-test-plan.md   # 이 계획 문서의 정식 저장본
     "redis_connected": true
   }
   ```
-- [ ] **2.2** `main.py`에서 engine pool status를 health detail에 노출하는 헬퍼 등록
+- [x] **2.2** `main.py`에서 engine pool status를 health detail에 노출하는 헬퍼 등록 (`app.state.db_engine` 보관으로 구현)
 
 ### Phase 3: SSE 클라이언트 + Locust User 클래스
 
-- [ ] **3.1** `loadtest/sse_client.py` 작성
+- [x] **3.1** `loadtest/sse_client.py` 작성 (2026-07-04 감사에서 구현 확인)
   - `httpx.AsyncClient`로 `POST /api/chat` (stream=True)
   - `data:` 접두사 파싱 → JSON 내부 `type` 필드 추출 (비표준 SSE 포맷)
   - 이벤트 카운터: thinking/tool/tool_end/text/card/suggestion/done
   - 타이밍: TTFB, 첫 text 이벤트, done 시각
   - 60초 타임아웃 (done 미수신 시 에러)
-- [ ] **3.2** `loadtest/locustfile.py` — `SseUser(User)` 클래스
+- [x] **3.2** `loadtest/locustfile.py` — `SseUser(User)` 클래스 (2026-07-04 감사: `ChatUser`/`GreetingFloodUser` 클래스명으로 구현 확인)
   - `on_start`: httpx 클라이언트 초기화, 고유 session_id 생성
   - SSE 응답 시간을 Locust `request_meta` 이벤트로 보고
   - TTFB / 전체 응답 시간 / 이벤트 수 태그 구분
@@ -130,6 +134,8 @@ docs/plan/infra/load-test-plan.md   # 이 계획 문서의 정식 저장본
 #### 시나리오 G — PAE/ReAct 격리
 - [ ] **5G.1** PAE 모드에서 5명 × 5종 의도 동시 → 카드 타입 일치 확인
 - [ ] **5G.2** ReAct 모드에서 5명 동시 → 상태 오염 없음 확인
+
+> ⚠ 2026-07-04 정정: 'ReAct 모드'는 현행 코드에서 선택 불가 — 본 시나리오를 실행한다면 **v2 루프(기본) vs PAE(Mock 폴백)** 격리 검증으로 대체해야 한다. 참고로 구현된 `loadtest/scenarios/g_client_disconnect.py`/`h_redis_failure.py` 는 본 계획의 I/J 시나리오에 대응하며, 계획의 G/H/K/L 전용 시나리오 파일은 없다.
 
 #### 시나리오 H — 동일 세션 경합
 - [ ] **5H.1** 같은 session_id로 3명 동시 요청
@@ -201,3 +207,5 @@ Phase 1 (인프라) → Phase 2 (계측) → Phase 3 (SSE 클라이언트)
 - LLM API rate limit: per-provider semaphore 미구현 (Real 모드에서 과도 호출 시 429 가능)
 - Uvicorn 단일 워커: 프로덕션에서는 `--workers 4` 이상 필요
 - DB 풀(30) < PAE 병렬 Tool(20×4=80): 대기 발생 가능 (graceful)
+
+> ⚠ 2026-07-04 정정: 병렬 4-Tool 산식은 PAE 기준. 현행 v2 루프는 도구를 요청 내 직렬 실행하므로 순간 동시 DB 쿼리 압력은 이보다 낮다 (PAE 는 Mock 폴백 경로에서만 유효).

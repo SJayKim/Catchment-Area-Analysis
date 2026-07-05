@@ -22,7 +22,7 @@
 | 조작 | 설명 |
 |------|------|
 | 시간 슬라이더 | 0시~23시 드래그/클릭, 현재 시간 히트맵 표시 |
-| 평일/주말 토글 | 평일(월~금 평균) / 주말(토~일 평균) 전환 |
+| 평일/주말 토글 | **미구현** — `floating_population` 에 `day_type` 컬럼이 없어 API/UI 모두 부재 (Phase 2 후보) |
 | 레이어 토글 | Toolbar [히트맵] 버튼 ON/OFF |
 | 애니메이션 | 재생 버튼 → 0시~23시 자동 재생 (1초/시간) |
 
@@ -31,39 +31,39 @@
 ### 3.1 히트맵 API
 
 ```
-GET /api/map-data/heatmap?time_slot={0-23}&day_type={weekday|weekend}
+GET /api/map-data/heatmap?time_slot={0-23}[&quarter={YYYYQN}]
 ```
 
-**Response:**
+**Response** (`server/server/api/routes/map_data.py::get_heatmap` + `repositories/real/heatmap.py`):
 ```json
 {
+  "time_slot": 12,
+  "quarter": "2025Q4",
   "points": [
     {"lat": 37.4979, "lng": 127.0276, "weight": 18000},
     {"lat": 37.5563, "lng": 126.9237, "weight": 12500},
     ...
-  ],
-  "time_slot": 12,
-  "day_type": "weekday",
-  "quarter": "2025Q4"
+  ]
 }
 ```
 
-- `weight`: 해당 상권 중심점의 유동인구 수
-- 전체 상권 ~1,000개 포인트
+- `time_slot` 필수(0~23), `quarter` 생략 시 최신 분기. Redis 캐시 `heatmap:{time_slot}:{quarter|latest}` TTL 24h + singleflight
+- `day_type` 파라미터/응답 필드는 **설계만 존재, 미구현** (§1 주석 참조 — 요청/응답 어디에도 없음)
+- `weight`: 해당 상권 중심점의 유동인구 수 (`total_pop` 합계)
+- 포인트 수 = `center_point` 보유 상권 전체 — 서울 1,650개 상권 규모
 
 ### 3.2 DB 쿼리
 
 ```sql
-SELECT d.center_point,
-       ST_Y(d.center_point) as lat,
+SELECT ST_Y(d.center_point) as lat,
        ST_X(d.center_point) as lng,
-       SUM(fp.population) as weight
-FROM districts d
-JOIN floating_population fp ON d.district_code = fp.district_code
-WHERE fp.time_slot = $1
-  AND fp.day_type = $2
-  AND fp.quarter = $3
-GROUP BY d.district_code, d.center_point;
+       SUM(fp.total_pop) as weight
+FROM floating_population fp
+JOIN districts d ON fp.district_code = d.district_code
+WHERE fp.quarter = $1
+  AND fp.time_slot = $2
+  AND d.center_point IS NOT NULL
+GROUP BY d.center_point;
 ```
 
 ## 4. Frontend 구현
@@ -77,7 +77,7 @@ const heatmapLayer = new HeatmapLayer({
   data: points,
   getPosition: d => [d.lng, d.lat],
   getWeight: d => d.weight,
-  radiusPixels: 60,
+  radiusPixels: 60, // 모바일 breakpoint 는 40 (INP 개선)
   intensity: 1,
   threshold: 0.05,
   colorRange: [
@@ -97,20 +97,21 @@ const heatmapLayer = new HeatmapLayer({
 ┌─ 시간대 슬라이더 ─────────────────────────────────────┐
 │ ▶  ◀ 06  08  10  12  14  16  18  20  22 ▶           │
 │         ────────●──────────────                       │
-│ [평일] [주말]                          현재: 12시      │
+│                                        현재: 12시      │
 └─────────────────────────────────────────────────────┘
 ```
 
-- 슬라이더 변경 → debounce 200ms → API 호출 또는 프리로드 데이터 전환
-- 프리로드: 초기 로드 시 24시간 전체 데이터를 한 번에 가져와 클라이언트에서 전환
+- 슬라이더 변경 → `requestAnimationFrame` throttle (`TimeSlider.tsx::handleSliderChange`) → 프리로드된 슬롯 데이터로 즉시 전환 (슬라이더 조작당 API 호출 없음)
+- 프리로드: 히트맵 최초 활성화 시 24시간 전체 데이터를 한 번에 가져와 클라이언트에서 전환
+- 평일/주말 토글 UI 는 미구현 (§1 주석)
 
 ### 4.3 프리로드 전략
 
 ```
-GET /api/map-data/heatmap/all?day_type={weekday|weekend}
+GET /api/map-data/heatmap/all[?quarter={YYYYQN}]
 ```
-→ 24시간 전체 데이터 반환 (클라이언트 메모리 캐시)
-→ 슬라이더 조작 시 API 호출 없이 즉시 전환
+→ `{"quarter": "2025Q4", "slots": {"0": [...], ..., "23": [...]}}` — 24시간 전체 데이터 반환 (클라이언트 메모리 캐시, `mapStore.heatmapData`)
+→ 슬라이더 조작 시 API 호출 없이 즉시 전환. 서버측 Redis 캐시 `heatmap:all:{quarter|latest}` TTL 24h + singleflight
 
 ## 5. Kakao Map + deck.gl 통합
 

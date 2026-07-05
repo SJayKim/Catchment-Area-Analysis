@@ -24,46 +24,55 @@
 | 업종별 평균 생존 기간 | 점포가 평균 몇 개월 유지되는지 | `store_history.duration_months` 평균 |
 | 업종 회전율 | 특정 기간 내 개업/폐업 비율 | `stores.open_count + close_count / store_count` |
 | 위험 업종 경고 | 폐업률이 극단적으로 높은 업종 | 폐업률 > 상위 10% 기준 |
-| 상권 안정성 점수 | 전체 점포 회전율 기반 0~100 | 100 - (전체 회전율 × 가중치) |
+| 상권 안정성 점수 | 평균 폐업률 기반 0~100 | 100 − 평균 폐업률(분수) × 1000 + 추세 보정 |
 | 최근 변동 추이 | 분기별 개폐업 수 추이 | 최근 4분기 stores 데이터 |
 
 ## 3. Agent Tool: `get_store_history`
 
+실 구현: `server/server/agent/tools/store_history.py` (`@register_tool("get_store_history", card_type="risk", ...)`) →
+`server/server/repositories/real/stores.py::get_store_history`. 개념 흐름:
+
 ```python
-@tool
-def get_store_history(district_code: str) -> dict:
+@register_tool("get_store_history", card_type="risk", ...)
+async def get_store_history(district_code: str) -> dict:
     """상권의 점포 이력 및 리스크 지표를 분석합니다."""
 
-    # 1. 업종별 평균 생존 기간
+    # 1. 업종별 평균 생존 기간 (store_history, close_date 확정 + 표본 ≥3)
     survival = query_avg_survival_by_category(district_code)
 
-    # 2. 업종별 회전율
-    turnover = query_turnover_by_category(district_code)
+    # 2. 분기별 추이 (stores 최근 4분기, 오래된→최신 순)
+    quarterly_trend = query_quarterly_open_close(district_code)
 
-    # 3. 위험 업종 식별
-    risk_categories = [c for c in turnover if c["close_rate"] > threshold]
+    # 3. 상권 안정성 점수 (§5.1) — 중첩 객체로 구성
+    stability = calculate_stability(quarterly_trend)
 
-    # 4. 상권 안정성 점수
-    stability = calculate_stability_score(district_code)
-
-    # 5. 분기별 추이
-    trend = query_quarterly_open_close(district_code)
+    # 4. 위험 업종 식별 (최신 분기, 상대+절대 임계 — §5.4)
+    risk_categories = find_risk_categories(district_code)
 
     return {
+        "district_code": district_code,
+        "stability": stability,               # {score, grade, trend, quarters_analyzed}
         "survival_by_category": survival,
-        "turnover_by_category": turnover,
-        "risk_categories": risk_categories,
-        "stability_score": stability,
-        "quarterly_trend": trend
+        "risk_categories": risk_categories,   # 최대 10개
+        "quarterly_trend": quarterly_trend,
     }
 ```
 
+> Tool 레이어(`_enrich_history`)가 반환에 `benchmarks: {districtType, seoulAvgCloseRate}` 를 best-effort 로 추가한다 (내부 헬퍼 `get_district_benchmarks` 사용).
+
 ## 4. 반환 데이터
+
+안정성 지표는 최상위 flat 키가 아니라 **중첩 객체 `stability`** 로 반환된다 (`repositories/real/stores.py::get_store_history`):
 
 ```json
 {
-  "stability_score": 72,
-  "stability_grade": "양호",
+  "district_code": "3120052",
+  "stability": {
+    "score": 72,
+    "grade": "양호",
+    "trend": {"direction": "stable", "adjustment": 0, "detail": "폐업 추세 보합"},
+    "quarters_analyzed": 4
+  },
   "survival_by_category": [
     {"category": "카페", "avg_months": 21.6, "sample_count": 45},
     {"category": "치킨전문점", "avg_months": 10.8, "sample_count": 23},
@@ -74,13 +83,15 @@ def get_store_history(district_code: str) -> dict:
     {"category": "주점", "close_rate": 14.5, "warning": "폐업률 높음"}
   ],
   "quarterly_trend": [
-    {"quarter": "2025Q1", "open": 28, "close": 22},
-    {"quarter": "2025Q2", "open": 31, "close": 25},
-    {"quarter": "2025Q3", "open": 26, "close": 30},
-    {"quarter": "2025Q4", "open": 32, "close": 28}
+    {"quarter": "2025Q1", "store_count": 812, "open": 28, "close": 22},
+    {"quarter": "2025Q2", "store_count": 820, "open": 31, "close": 25},
+    {"quarter": "2025Q3", "store_count": 815, "open": 26, "close": 30},
+    {"quarter": "2025Q4", "store_count": 818, "open": 32, "close": 28}
   ]
 }
 ```
+
+> 2분기 미만 데이터면 `stability = {"score": null, "grade": "데이터 부족", "message": "...", "quarters_analyzed": N}`.
 
 ## 5. 안정성 점수 산출
 
@@ -96,12 +107,13 @@ def calculate_stability_score(district_code: str) -> dict:
         return {"score": None, "grade": "데이터 부족",
                 "message": "2분기 이상 데이터가 쌓이면 리스크 분석이 가능합니다"}
 
-    total_stores = sum(d["store_count"] for d in data) / len(data)
+    avg_stores = sum(d["store_count"] for d in data) / len(data)
     total_close = sum(d["close_count"] for d in data)
-    avg_close_rate = total_close / (total_stores * len(data))
+    avg_close_rate = total_close / (avg_stores * len(data))   # 분수 (예: 0.02 = 분기당 2%)
 
-    # 기본 점수: 100에서 폐업률 비례 차감
-    base_score = max(0, 100 - avg_close_rate * 10)
+    # 기본 점수: 100에서 폐업률 비례 차감 (avg_close_rate 가 분수이므로 ×1000 스케일)
+    # 예: 분기 평균 폐업률 2% (0.02) → 100 - 20 = 80
+    base_score = max(0, 100 - avg_close_rate * 1000)
 
     # 추세 보정
     trend_result = detect_trend([d["close_count"] for d in data])
@@ -168,11 +180,13 @@ def detect_trend(close_counts: list[int]) -> dict:
 
 ### 5.4 위험 업종 경고 임계값
 
-| 등급 | 폐업률 기준 | UI 표시 |
+| 등급 | 폐업률 기준 (`repositories/real/stores.py`) | UI 표시 |
 |------|-----------|---------|
-| 매우 높음 | 해당 상권 전체 업종 폐업률의 **상위 10%** 또는 절대값 15% 초과 | 🔴 + "폐업률 매우 높음" |
-| 높음 | 상위 10~25% 또는 절대값 10~15% | 🟡 + "폐업률 높음" |
+| 매우 높음 | 절대 폐업률 **15% 초과** | 🔴 + "폐업률 매우 높음" |
+| 높음 | 해당 상권 전체 업종 폐업률의 **상위 10% 분위값 이상** (분포 없으면 기본 임계 10%) | 🟡 + "폐업률 높음" |
 | 보통 | 그 외 | 경고 없음 |
+
+> `risk_categories` 는 최대 10개까지 반환.
 
 > **상대+절대 기준 병용 이유**: 전체적으로 안정적인 상권에서도 특정 업종의 절대 폐업률이 높으면 경고가 필요하고, 반대로 전체가 불안정한 상권에서는 상대적으로 더 나쁜 업종을 식별해야 하기 때문.
 
@@ -234,8 +248,11 @@ SELECT category_name,
        AVG(duration_months) as avg_duration,
        COUNT(*) as sample_count
 FROM store_history
-WHERE district_code = $1 AND close_date IS NOT NULL
+WHERE district_code = $1
+  AND close_date IS NOT NULL
+  AND duration_months IS NOT NULL
 GROUP BY category_name
+HAVING COUNT(*) >= 3
 ORDER BY avg_duration DESC;
 
 -- 분기별 개폐업 추이

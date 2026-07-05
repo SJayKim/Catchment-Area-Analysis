@@ -1,202 +1,31 @@
 # 현재 진행 상황
 
 > 최종 갱신: 2026-07-04
-> **2026-07-04 자동배포 파이프라인 구현 — auto_deploy.sh + systemd timer 폴링, Pass 1 (C1~C8) 완료** 🆕 — Plan [auto-deploy-on-push](../plan/infra/auto-deploy-on-push.md). origin/main push 를 2분 주기 폴링으로 감지해 **CI green 게이트 → prev-auto 재태그 → ff merge → 빌드(.env.dev trap 이동) → healthy 대기 → flush_cache → smoke 4항목 → 실패 시 prev-auto 자동 롤백** 하는 상시 파이프라인. 방식=폴링 채택(self-hosted runner/webhook 기각 — 인바운드 표면 0). **신규 4파일**: `scripts/deploy/auto_deploy.sh`(flock·dirty/ahead/branch 가드·check-runs 4분기 게이트·blocked-sha 캐시·stale-image 마커·`set -E`+ERR trap 롤백·`last-deploy.json` 상태) · `install_autodeploy.sh`(sudo, 사용자 실행) · systemd `marketscope-autodeploy.{service,timer}`(**`TimeoutStartSec=1800`** — oneshot 기본 90s 로는 빌드 중 강제종료 함정). 안전설계: 본 서버=작업세션 겸용이라 **reset 절대 금지**(`--ff-only`+BLOCKED_DIRTY/AHEAD), 호스트 env 오염 방어(USE_MOCK 등 unset — [[feedback_compose_env_block_overrides_env_file]]), 07-04 수동 런로그 golden path 코드화. **검증(C8)**: no-op exit 0·로그 미생성·flock 동시실행 차단 실측·CI jq 게이트 synthetic 5케이스+live green·smoke 4항목 라이브 개별 PASS. **구현 중 정정**: 외부 도메인 `/health` 는 nginx 라우팅상 404(backend 루트 미노출) → smoke 를 `/`(frontend)+`/api/health/detail`(backend) 로 교체. `.gitignore` +`data/deploy-logs/`+`.env.dev.autodeploy-moved`, ops 문서 §6 자동배포 섹션(result 7종 해소표). **Pass 2 (C9/C10) 완료 — timer 설치(17:52) 후 라이브 리허설로 결함 3건 추가 발견·즉시 fix**: ① 서버발 커밋은 HEAD 비교로 영원히 no-op(개발 세션 겸용 서버라 push 시점 HEAD==origin) → no-op 기준 `.last-deployed-sha` 교체+실패 SHA blocked 등재(`3fc7d9a`) ② freshness 마커 false-positive(소스 미변경 push=캐시 히트로 Created 미갱신이 정상) → server/·frontend/ diff 있는 push 만 검사(`e1d28e4`) ③ 롤백 force-recreate 후 frontend cold-start 10~20s 로 가짜 ROLLBACK_FAILED → `wait_frontend`(90s) 양 경로 추가(`1f5d19b`). **C9**: timer 경유 자동배포 3회 연속 SUCCESS(4.5분→23초 캐시히트, flush·smoke·이미지신선·.env.dev 원복 전확인). **C10**: 1회성 smoke 실패 주입 → prev-auto 복귀 → ROLLED_BACK 정확 기록·무중단. BLOCKED_DIRTY 2회 라이브 검증(미커밋 편집 중 tick 차단). **다음**: Pass 3 — 2분 폴링 24h 관찰(no-op 부하·API rate) · 수동 배포 세션 전 timer disable 관례.
-> **2026-07-04 Deferred 백로그 처리 — daily_avg→quarter_total rename + recommend score 밴드 정규화 + 스트리밍 재설계 게이팅** 🆕 — Plan [deferred-backlog-2026-07-04](../plan/fix/deferred-backlog-2026-07-04.md). 배포 후 잔여 deferred 3건 전용 Plan 작성 + 2건 구현. **[Item 1] `daily_avg` → `quarter_total` rename**: 분기 시간대 합계인데 이름이 daily_avg 라 '일평균' 라벨·분할 날조를 유발하던 필드(06-26 S7 물리모순 근원)를 근본 정정. 백엔드 10파일(real repo·mock fixture 5키·mock_data·district_summary card `dailyAvg`→`quarterTotal`·districts preview·abstention·numeric_sanity·trust·loop/prompts·respond 프롬프트 룰) + 프론트 2파일(types.ts `quarterTotal` + `dailyAvg?` deprecated·SummaryCard `?? dailyAvg` fallback) + 테스트 3건 + 스크립트 2건(trust_scenarios 'DB 분기 유동인구' 라벨 교정 포함). trust/numeric_sanity 매처는 신규 키 추가 + 구 키 legacy 유지(Redis 캐시 구버전 payload 방어) — **배포 시 `flush_cache.py` 필수**(프론트 fallback 이중 방어). 잔존 grep = 의도된 legacy/fallback 만. **[Item 2] recommend score 밴드 정규화**: min-max 0~100 스케일이 1위를 항상 **score 100.0 고정**(절대 확신 오독, p0-backlog-2026-06-09 잔여)+단일 카테고리 0.0 버그 → `_band_scores` 순수함수(55~95 유계 밴드, 동점/단일=75.0) 교체, mock recommendations.json 4리스트 재스케일(100.0 제거), 회귀 3케이스(1위≠100/spread=0→75/순위 보존). **[Item 3] 스트리밍 재설계 — 설계만, 착수 보류**: 토큰 스트리밍은 Trust Kernel 검증-후-방출과 정면 충돌 → 옵션 A(문장 단위 검증, 교정 패스 상실 위험)/B(astream 버퍼링+진행 세분화, trust 의미론 불변 — 권고)/C(낙관 방출+patch, UX 리스크) 기록, 착수 게이트=eval 스택 가용+S1~S8 평균 ≥9.0·날조 0 재판정. **검증**: pytest **190 passed/6 skip**(기존 187+신규 3, prod 이미지 throwaway 컨테이너)·ruff check/format PASS·tsc 0 error. **다음**: 커밋 + origin push(직전 3커밋 포함 미push — push 권한 사용자 승인 대기) · Item 3 별도 eval-gated 사이클.
-> **2026-07-04 v2 프로덕션 배포 완료 — Trust Kernel P1/P2 fix → Eval R4 GATE PASS 4/4 → prod DB 복구 → 컷오버/스모크 전항목 PASS** ⭐ — Plan(세션) 런로그 [prod-deploy-2026-07-04](../plan/infra/prod-deploy-2026-07-04.md) · Verdict [eval-round4-2026-07-04/_verdict.md](../qa/runs/eval-round4-2026-07-04/_verdict.md). **[Phase 0] P1/P2 근본원인 5건(RC1~RC5) fix**: RC1 fact_pool `#N` 접미키 매칭 전멸(`_collect_tool_scalars` split 정규화) · RC2 `_COMPOUND_RE` "3억 5,000만원"→300,005,000 오파싱+인접숫자 오병합(lo_unit 확장·필수화, 천만/백만/십만/백/십 단위 추가) · RC3 fact_pool truncate본↔ToolMessage 전체본 불일치(원본 저장, LLM 미전송 토큰 0) · RC4 still-unbound 1개에도 전체 대체(`should_fallback` ≥3 AND ≥50% + `mask_unbound` "[미확인]" draft 보존 + 라벨된 fallback + 카드 존재 시 abstention 금지) · RC5 원화 floor(10M) 미만 스케일 오기 무검증(`find_scale_mismatches` ×10/×100 typed 매칭 + 교정 value_hints). 신규 `test_trust_kernel_regressions.py` 19케이스, **pytest 187 passed·ruff PASS**(prod 이미지 throwaway 컨테이너). **[Phase 1] Eval R4**: e2e `:8002` fresh volume(corrected seed 자동복원, fix marker grep 확인) S2/S4/S8 ×2 + S7 smoke, done 8/8 절단 0. **S2 3.3→10.0·S4 3.3→10.0·S8 9.2→10.0, 평균 10.0, 날조 0/8**(R3 P1 abstention 유출·무라벨 나열·P2 "145만" 스케일 오기 전부 0/2 미재현. "6.5%/5.9%" 런간 차이는 둘 다 tool 반환값 확인 — 날조 아님). trust 로그 "still unbound→fallback" **0건**(교정 1회 발생·성공) → **GATE PASS 4/4, 배포 진행**. **[Phase 3] prod DB 복구**: targeted data-only 단일 트랜잭션(TRUNCATE→COPY→setval, 1차 search_path 함정 자동 롤백 후 `public.` 한정 재실행) → worker_sum **4,724,265**·catmeta **100**·unit_price NULL 0·aliases **32**·orphan 0·무관 테이블 불변, 백업 2중(`data/backups/`, gitignore). cutover 후 `runner validate 2025Q4` **16/16 PASS**. **[Phase 4/5] 배포**: 롤백 태그 `prev-2026-07-04` 3종(migrate 갭 해소)·`.env.dev` 이동 후 빌드 3종·migrate no-op·flush(0키=TTL 기만료)·`AGENT_LOOP_VERSION=v2` `.env` 명시. 스모크: 외부 도메인 200×5·SSE 3건(trace_id 동봉, **직장인구 87,191=DB 정확**, **카페→CS100010 resolve + 시뮬 3,864만=GT + 객단가 12,000** — 복구 데이터 3종 라이브 실증)·**Anthropic 401/404 0건**(2개월 Gemini fallback 상태 해소, Claude 실응답)·번들 dev-URL 0건·prod-smoke 26P/6F/4S(**F 전건 로컬 WebKit 바이너리 부재, 앱 결함 0** — Chromium 계열 16/16)·10분 로그 이상 0. **[Phase 6] 정리**: stale `migrate-run-*` 2개 제거·e2e down(볼륨 보존)·dev compose `name: marketscope-dev`(project-name 충돌 구조 해소). **관찰(비차단)**: `/api/kakao-sdk` 404 프로브(P7 지도 PASS) · `frontend/test-results/` root 소유 · '서울 평균' 라벨의 tool 필드 선택 비결정. **다음**: origin push · deferred(스트리밍 재설계·recommend score100·daily_avg rename).
-> **2026-07-03 Accuracy Eval Round 3 (v2 Real) — GATE FAIL 2/4, prod 배포 정지** ⭐ — Plan [accuracy-eval-round3-prod-deploy-2026-07-03](../plan/qa/accuracy-eval-round3-prod-deploy-2026-07-03.md). e2e 스택 `:8002`(USE_MOCK=false·1,650상권·anthropic·`agent_loop_version=v2` 확인, eval 전 flush + GT 현DB 스냅샷) S1~S8 message-only 수집, 절단 0. **Gate: 평균 8.2(<9.0)❌ · R2 미달 3건(S2/S4/S8)❌ · 날조 0✅ · S7 10.0(≥9.3)✅ → 배포 미진행**(plan 규정). **⬆ 최대 성과 — S7 coref 구조 해소 실증**: 재현 2/2 tool 강제(get_floating_population+resolve+compute), run1 성수동카페거리 1,092,973·run2 성수역 1,412,369 전부 DB 정확, 직전 비교와 참조 일관, R2 5.0→**10.0**. S1/S3/S5/S6 만점(분기 라벨 fix·카페→CS100010 시뮬 3,864만=GT·전 수치 DB 일치 — 07-02 5fix 라이브 검증). **❌ 신규 P1 — Trust Kernel deterministic fallback 응답 붕괴**: `engine.py:238/257` unbound number → 교정 → still unbound → 전체 답변 대체. S2=abstention 유출(카드 2장 정상인데 "데이터 가져오지 못했습니다", 재현 1/2 비결정) · S4=무라벨 숫자 나열("- 약 14.7억원 - 8개…", **재현 2/2 결정론** — diag byte-동일, 회귀 테스트 용이). 날조는 아님(fallback 수치 전부 tool-bound 정확) — 과잉 방어의 가용성 손실, 07-02 `7cae440`(메타발화 가드)의 잔여 갭. fix 방향: fallback 라벨 바인딩/unbound만 마스킹/교정에 unbound 목록 전달/카드 존재 시 abstention 금지. **❌ 신규 P2 — S8 텍스트 단위 오기**: 점포당 월매출 14,503,839→"145만"(10배 축소, 카드·백분율은 정확) → 9.2. 산출물 `docs/qa/runs/eval-round3-2026-07-03/`(S*.sse 13 + `_parsed.md` + `_verdict.md` R1/R2/R3 비교). **다음**: trust fallback P1 fix(+S8 스케일 가드) → S2/S4/S8 재측정 → gate 재판정 → 배포 재개(배포 시 prod `flush_cache.py` 필수 유지).
-> **2026-07-03 v2 → main 머지 완료 — P0~P2 revert 후 merge, 결과 트리 = v2 tip byte-동일 실증** ⭐ — `feat/agentic-loop-v2`(모델주도 루프 + Trust Kernel, 12커밋)를 main 에 머지. main 의 병렬 P0~P2 agentic 구현(`74a63e1`~`af23e05`, origin 미push 상태였음)은 revert 커밋 `1b5512c` 로 역적용(복구 필요 시 해당 커밋 revert) 후 merge `ecfdf17` — **충돌 0**, `git diff feat/agentic-loop-v2 main` 빈 출력으로 결과 트리가 QA 검증 상태(Mock E2E 131 passed·PAE baseline 회귀 0·Real QA 날조 0/10)와 완전 동일함을 실증. origin/main push 완료. **다음**: Real accuracy eval(S1~S8) v2 재실행 · prod 배포 시 `report:*` Redis flush 필수 · deferred(스트리밍 재설계·grounded_fallback 라벨링·recommend score100·daily_avg rename).
-> **2026-07-02 /qa 실사용자 분석퀄리티 QA — v2 Real모드 최초 품질검증, 6 발견/5 fix, 건강도 90→99** ⭐ — e2e 스택을 **Real 모드**(USE_MOCK=false·1,650상권·live Claude)로 기동해 v2 루프 최초의 분석 퀄리티 검증(브라우저 + SSE 10 시나리오 + DB ground-truth 교차검증). **수치 신뢰성 탁월: 날조 0/10, GT 전수 일치**(강남 1,395.7억·홍대 4.11M·건대 per_store 184,053,847 등), Q10 데이터 없는 업종에 "억지로 숫자 안 만든다" 명시 거부(Trust Kernel 의도 작동), S7 coref 자연 해소 재확인. **HIGH 2건 fix**: (1) trust 교정 패스가 도구 스키마를 재제공받아 메타 발화("지적 감사합니다...검토하겠습니다")만 남기고 그게 최종 답변으로 유출(분석 턴 3/5, 실 UI 재현) → 교정 턴 prose 전용 + `_is_answer_shaped` 가드(`7cae440`). (2) 프롬프트가 약속한 category_code 업종명 허용을 실행부가 불이행 → simulate_revenue("카페") 항상 빈 반환(Mock E2E는 면책 문구만 assert해 미검출) → `_normalize_category` resolve 위임(`c5aee3c`), fix 후 시뮬 카드 평균 3,864만=GT(45.98억/119) 정확. **MED 3건**: '일평균 745만' 오라벨 3면(카드 문구·SummaryCard·프롬프트 규칙) 교정(`929885b`, 배포 시 report:* 캐시 flush 필요) · 상권 미선택 "이 상권" 칩 → 스타터 대체+resolve명 개인화(`843b147`) · v2 비스트리밍 침묵 18~43s 완화(thinking 진행 이벤트, `dcb5f8a`; 근본 스트리밍은 defer). 회귀 테스트 12케이스(`8a56ea7`, 컨테이너 인라인 12/12). **환경 발견**: e2e pgdata 볼륨이 06-25 데이터fix 이전 시드로 잔존(worker 전량0·aliases 0) → 재시드로 해소, 신선도 마커=SUM(worker)>0·aliases=32. e2e frontend 재빌드 시 `NEXT_PUBLIC_KAKAO_MAP_KEY` 호스트 export 필수. 리포트 `.gstack/qa-reports/qa-report-localhost-2026-07-02.md`. Deferred: grounded_fallback 라벨링(OBS-007)·recommend score100(기존 트랙)·스트리밍 재설계.
-> **2026-07-02 v2 agentic-loop E2E 마무리 — S9-5 fix + PAE baseline로 v2 회귀 0 실증 (근본원인=환경)** ⭐ — Plan [v2-loop-e2e-verification-2026-06-28](../plan/qa/v2-loop-e2e-verification-2026-06-28.md). `feat/agentic-loop-v2`(모델주도 function-calling 루프 + Trust Kernel, PAE 대체) 마무리 검증. **[1] S9-5 fix**: `agent/loop/prompts.py` 면책 문구를 PAE 표준("추정치이며 실제와 다를 수 있습니다")으로 상속 + terse 프롬프트 simulate 유도(선택된 상권 되묻기 금지·매출/시뮬레이션 질문 simulate_revenue 호출·category_code 에 업종명 허용). **[1-verify] v2 전체 Mock E2E 131 passed / 25 failed / 8 skip**(S9-5 PASS·≥131 충족·프롬프트 변경 신규 회귀 0). **[2] PAE baseline**: `AGENT_LOOP_VERSION=pae` 토글 후 실패 10 spec 재실행 → **v2·PAE 실패 25건 완전 동일**(diff: v2-only 0·pae-only 0·공통 25) → **v2-유발 회귀 0건 실증**, S9-5 는 v2·PAE 양쪽 PASS. 25 실패는 전부 loop 무관 사전결함(prod-only spec↔Mock·real-db-spec↔Mock·히트맵/PDF/TimeSlider UI 셀렉터·Langfuse SDK 드리프트·perf brittle). **🔑 최대 발견 — S9-5 실패 근본원인은 disclaimer 아닌 환경 오설정**: `docker-compose.e2e.yml` 의 `environment: USE_MOCK: ${USE_MOCK:-true}` 가 `env_file: .env.e2e`(USE_MOCK=true)를 오버라이드 + compose-up 시점 **호스트 셸 env** 를 읽어 스택이 조용히 **Real 모드**로 기동 → 테스트의 Mock 코드 `D3001` 이 Real DB(코드 `3120189`)에 없어 resolve 실패 → v2 가 "상권 미선택"으로 clarify/abstain(카드·면책 미발행). `docker exec printenv USE_MOCK`=false 로 확정, `USE_MOCK=true` 재생성으로 해소(메모리 [[feedback_compose_env_block_overrides_env_file]]). **환경 정리**: e2e LLM 키 재교체(`.env.e2e`, 직전 키 401 dead)·SSL MITM 은 `PIP_TRUSTED_HOST` 빌드arg 우회·compose 임시 `AGENT_LOOP_VERSION` 라인 `git checkout` 복원(diff 클린)·e2e 스택 teardown(volume 보존). **검증**: ruff PASS(`prompts.py`). **커밋 `69b16cb`**(S9-5 fix, `prompts.py` 1파일. `.claude/settings.local.json` 기존 drift·`docs/architecture/tech-stack-rationale.md` 무관 제외). Verdict/핸드오프 §5 반영.
-> **2026-06-26 S7 coref 수치 날조 fix — Pass 3 라이브 검증 완료 + 죽은 모델 ID fix** ⭐ — 복원 세션에서 잔여 P0(S7 coref, eval Round 2 8.9→5.0 회귀) 마무리. Plan [s7-coref-toolless-fabrication](../plan/fix/s7-coref-toolless-fabrication.md). **Pass 3**(R3-COREF-NUMERIC-01, USE_MOCK=false·1,650상권): `backend-dev` 프로필(`./server:/app` bind-mount + `--reload`)로 미커밋 소스 라이브 반영(기존 backend 이미지 `--no-build` 태그로 SSL 빌드 우회). "홍대랑 성수 비교"→"거기 중 유동인구 더 많은 곳?" 2턴 ×5: **tool 호출률 5/5**(get_floating_population 강제 발화)·정답(홍대 4.11M>성수 1.41M) 5/5·원 날조값(124,386/67,741) 0/5·물리 모순 0/5. S7 회귀 구조적 해소(9.3+ 목표 충족). **근본원인 2건 추가 처리**: (1) `graph.py:74/96` 하드코딩 모델 `claude-sonnet-4-20250514`가 현 키에서 404 은퇴 → anthropic respond 전량 실패 → `claude-sonnet-4-6` 교체(/v1/models 확인, 별건 인프라). (2) 1차 패스에서 respond가 `daily_avg`(실제 분기 시간대 합계인데 필드명이 daily_avg)를 ÷30/÷3로 '일평균' 날조 → 시간대 peak 초과 물리모순 3/5 → `respond.py` `FLOATING_POP_PRESENTATION_RULES` 가드(집계값 그대로 인용·일수 분할 금지·peak는 by_hour 실값만) 추가 → 2차 0/5. **검증**: ruff PASS, 어떤 테스트도 프롬프트·모델문자열 assert 안 함. pytest 재실행은 본 환경(호스트 앱deps 부재+컨테이너 pytest 부재) 불가 — planner.py+test_coref(16)는 prior세션 148 passed, 이번 변경 미접촉. **커밋 2건 main 직접**: `c62bb17`(S7 fix) + `654029a`(모델 fix). Verdict [s7-coref-pass3-2026-06-26/_verdict.md](../qa/runs/s7-coref-pass3-2026-06-26/_verdict.md).
-> **2026-06-25 데이터 신뢰성 확보 — 적재 결손 3건 근본수정 + 컬럼내용 검증 게이트 + 적대검증 워크플로우** ⭐ — Plan [data-reliability-2026-06-25](../plan/fix/data-reliability-2026-06-25.md). 2026-06-25 정합성 감사가 surfaced 한 **3개월 잠복 적재결손 3건**(행은 존재하나 컬럼 전량 0/NULL → 기존 행수·FK·boundary 검증을 조용히 통과) 근본수정 + 재발차단. **RC1 worker 19,692행 전량0**: `transformers.py` worker 분기가 resident 접미사(`MAG_POPLTN_CO`) 재사용 → 실 API 키 `MAG_{n}_WRC_POPLTN_CO`/`FAG_{n}` 빌더 분리(live API 1행 dump 로 검증). 재적재 후 worker total_pop **472만**(was 0). **RC2 default_unit_price 100% NULL**: alembic 002 백필이 category 시드 전 실행돼 0행 no-op → `seed_category_metadata.py` INSERT 에 major 기준 객단가(외식12000/서비스25000/소매15000, 기본15000) + `simulation.py` 2차 폴백. NULL **0건**. **RC3 aliases 100% NULL**: source 부재 → `category_aliases.json` 핵심 **32종** 신규 + seed 결합. 32 set/68 NULL(의도). **RC0 게이트**: `runner.py::_validate_data` per-column NULL/all-zero(`bool_and`)/음수 sanity + **비-0 exit**, 행수 quarter-scope(빈 분기 FAIL). 주입 worker=0 → FAIL 재현. **검증**: pytest **132 passed/8 skip** + data-integrity 13(7 unit + 6 `@real`, gate FAIL-injection 포함). ruff PASS. 시드 덤프 재생성(5.6MB). **적대검증 워크플로우**(5 lens→finding별 회의적 검증·16 agent): 11 finding 전건 confirmed → **P1 3건**(alias '학원' 학원 subtype 오라우팅·빈분기 false-pass·게이트 무테스트) + **P2 3건** 즉시 수정, GATE-3(all-constant)·SEED-2(price/major decouple) 는 단일분기 설계·도달불가로 의도적 defer. 코드: `transformers.py`·`seed_category_metadata.py`·`category_aliases.json`(신규)·`simulation.py`·`runner.py`·`p1_api_vs_db.py`·`test_data_integrity.py`(신규)·`ci.yml`.
-> **2026-06-21 학습용 ARCHITECTURE-MAP.md 신규 — Mermaid 도식 3종 + 코드 매핑** 🆕 — `docs/learning/ARCHITECTURE-MAP.md` 신규. `crypto_deep_research/docs/ARCHITECTURE-MAP.md` 포맷 차용(Mermaid 도식 + 폴더 책임표 + 설계↔코드 file:line 매핑). **도식 3종**: (1) 시스템 토폴로지 — 프론트(Next.js) ─REST+SSE─ 백엔드(FastAPI) ─Repository─ 데이터(PostGIS/Redis) 색상 경계, (2) 단일 요청 시퀀스 "강남역 알려줘" Plan→Act→Eval→Respond + SSE 9이벤트, (3) PAE 에이전트 내부 그래프(greeting/clarification 단락 포함). **매핑표**: 폴더별 책임(백/프론트 분리) · 4대 학습포인트(SSE/PAE/Repository/지도↔챗 동기화)↔코드 · 흐름노드↔file:line(actor.py:156·chatStore.ts:240·sseParser.ts:10 등 실 grep) · 도구 9종 · 주요 설계결정(월환산/서울밖 3중가드/저점포 floor) · F01~F13 기능↔코드 인덱스. 기존 서술형 코스(00~06) + `architecture/` 스펙과 양끝 링크 연결. 코드 변경 0(문서 only).
-> **2026-06-10 Accuracy Eval Round 2 (Item 4) — ISSUE-003 fix 라이브 검증 + S7 coref 수치 날조 신규 P1** ⭐ — P0 백로그 Item 4 실행(003 fix `90937c6` 머지 후 게이트 해제). 스택: 기존 backend 컨테이너(`--reload` + `server` bind-mount)에 003 fix 이미 반영 확인 후 **clean re-import용 `docker compose restart backend`**(Windows/OneDrive bind-mount 파일워치 누락 방지), `USE_MOCK=false`·1,650 상권·`:8000` health 200. 수집: `OUT=docs/qa/runs/eval-round2-2026-06-10 BASE=:8000 run_accuracy_round2.sh`(message-only=entity-linking 검증, 04-24 baseline 보존). **결과 평균 8.0→9.4**(7/8 만점, 전 tool-backed 수치 DB일치). **ISSUE-003 라이브 재현 검증**: 성수동카페거리(편의점 1점포 @₩202M)·성수초등학교(1점포 @₩835M) 추천 #1에서 단일점포 편의점 **제외**(top-5 전부 store_count≥4), S4 건대 #1=편의점 store_count=8 — `_apply_store_floor` 의도대로. DB교차검증 강남1,396억/서울201억/홍대532억/성수221억/건대260억 전부 자릿수 일치. **신규 P1**: S7 coref 후속질문("거기 중 유동인구 더 많은 곳?")이 **tool 0건으로 유동인구 수치 날조**(124,386/67,741 — 카드 실값 411만/141만 무시, "일평균>시간대최고" 물리 모순). W1 abstention 가드가 tool-less 후속질문 수치주장 미포착(003 fix 무관, recommend 외 경로). S7 8.9→5.0 회귀. 권고: 수치 coref 후속질문은 tool 강제호출 or 카드값 인용 강제 + S7 재현율 측정. Verdict [eval-round2-2026-06-10/_verdict.md](../qa/runs/eval-round2-2026-06-10/_verdict.md).
-> **2026-06-09 P0 백로그 — ISSUE-003 recommend 저점포수 랭킹 fix + ISSUE-002 Hero H1 줄바꿈 fix** ⭐ — 2026-06-08 QA 디퍼 2건 + 워킹트리 처리. **ISSUE-003 (medium, data accuracy)**: `recommendation.py` 가 점포 1~2개 카테고리를 `per_store_sales`(=monthly/store_count) 아티팩트 + competition 하한(0.01) 증폭으로 score 100 1순위 고정(성수 편의점 월 2억 from 1점포). 댐핑 단독은 ~100x 우위라 수학적으로 불충분 → 스코어링 루프 직후 `_apply_store_floor`(`MIN_RELIABLE_STORES=3`) 파티션, 통과 카테고리 0이면 전체 fallback + `low_confidence` 안내 메시지("점포 표본이 적어(<3개) 참고용 추천"). 루프 내부 미수정(surgical, ~8줄). 회귀 `test_recommendation_scoring.py` 3건 + mock 회귀 10건 = **13 passed**, ruff PASS. **ISSUE-002 (low, cosmetic)**: Hero H1 한글 "데이터로" 단어중간 줄바꿈 → Tailwind `break-keep`(word-break: keep-all). tsc 0 error · lint pre-existing 3 warning만(변경 무관). **워킹트리 chore**: `.gitignore`(+`.gstack/`) + `CLAUDE.md`(+`## Health Stack`) 커밋. 커밋 4건(chore `7fbc118` / 003 fix `90937c6` / 002 fix `7ff871d`). **Item 4 Accuracy Eval Round 2**: 003 fix 가 recommend 품질을 바꾸므로 머지 후 별도 실행 패스로 게이트(미실행, 사용자 트리거). Plan [p0-backlog-2026-06-09](../plan/fix/p0-backlog-2026-06-09.md).
-> **2026-06-08 QA(/qa) Standard 풀앱 패스 — out_of_scope/greeting 중복 suggestion fix + 회귀 테스트** ⭐ — Docker 실데이터 스택(frontend :3000 / backend :8000 / PostGIS 1,650 상권 / Redis) 기동 후 브라우저+SSE 검증. 기존 이미지 6주 stale → current source 재빌드(backend+frontend, pip SSL 은 Dockerfile `PIP_TRUSTED_HOST` build-arg 우회). 건강도 **98→99**. **ISSUE-001(medium) fix**: `graph.py` 스트림 말미 fallback suggestion 방출을 `greeting_direct`/`clarification_direct` 모드에서 skip — greeting/clarification 노드가 실행 중 tailored suggestion 을 직접 방출하는데 말미 generic 셋이 한 번 더 방출돼 client replace 로 tailored 를 덮어쓰던 문제(서울 외 거부 응답에 "이 자리 위험하지 않아?" 노출). 회귀 `test_graph_suggestion_emission.py` 2 passed. main 머지 후 **origin push 완료** (`44b9438..eb3e10f`, 4커밋). 검증(SSE): 부산/제주 out_of_scope=suggestion 1회(tailored)·greeting 1회·normal summary 1회(card+evaluator 유지)·회귀 0. 정상 플로우 전수 PASS(F03 요약/F05 비교 멀티상권추출/F07 추천/F13 프리뷰/F06 히트맵/검색 자동완성/privacy·terms/모바일), 콘솔 에러 0·XML leak 0·실수치 월환산 정상. **디퍼 2건**: ISSUE-003(recommend 가 점포 1~2개 카테고리를 점포당매출 아티팩트로 1순위 — 성수 편의점 score100/월2억 from 1점포, accuracy-eval 트랙 권장) · ISSUE-002(랜딩 H1 단어중간 줄바꿈 cosmetic). **환경 플래그(미수정)**: `.env`/`.env.dev` 의 `NEXT_PUBLIC_API_URL=:3000`(프론트포트) → 재빌드 시 chat SSE 버퍼링, `:8000` 권장(QA 중 임시 override). 리포트 `.gstack/qa-reports/qa-report-localhost-2026-06-08.md`.
-> **2026-05-07 4 Plan 일괄 Pass 1 — Heatmap Singleflight + Backend pytest 확장 + W1 Type Boost 측정/튜닝 + Langfuse L2 Foundation** ⭐ — 4 P1 Plan ([heatmap-singleflight-reintroduce](../plan/infra/heatmap-singleflight-reintroduce.md) · [backend-pytest-coverage-expansion](../plan/infra/backend-pytest-coverage-expansion.md) · [w1-type-boost-tuning-2026-05-06](../plan/fix/w1-type-boost-tuning-2026-05-06.md) · [langfuse-l2-token-cost-eval](../plan/infra/langfuse-l2-token-cost-eval.md)) 의 Pass 1 일괄 구현. (1) **Heatmap Singleflight** — `services/singleflight.py` 재작성 (per-key Future + asyncio.Lock + leader cancel-shield), `map_data.py::get_heatmap[/all]` 통합, `/metrics` 에 `singleflight_coalesced_total` 노출. 9 testcase PASS (concurrent 50 → fn() 1회, exception propagation, follower-cancel-no-leak). (2) **Backend pytest 확장** — `conftest.py` fixture 5종 (`mock_da` / `memory_cache` / `category_resolver_default` / `app_client` / `mock_district_code`), `test_services_{cache,circuit_breaker,category_resolver}.py` + `test_repos_mock.py` (10 protocol smoke) + `test_routes_health_and_map.py` (lifespan + httpx ASGITransport) — 35 신규 testcase. `pyproject.toml` coverage 설정 + `scripts/run_tests.sh` + `.github/workflows/ci.yml::backend-test` dummy env + coverage XML artifact 통합. (3) **W1 Type Boost 측정** — `tests/data/w1_adversarial_2026-05-06.yaml` 32 case (TM=6/CDST=5/ST=5/CTS=5/BR=6/ABST=5), `scripts/w1_eval.py` (baseline + 4×3 sweep grid), 회귀 가드 `test_adversarial_accuracy_meets_95pct`. **Baseline 96.9% (31/32)**, sweep 12 셀 모두 동일 96.9% — boost/damp 와 무관한 단일 구조적 fail (BR-6, 3-char query × 22-char alias-paren). 현재 (boost=0.15, damp=0.5) 유지 채택. (4) **Langfuse L2 Foundation** — `langfuse_tracer.py::_normalize_usage` (LangChain/Anthropic/Gemini/OpenAI 4 shape 흡수) + `attach_generation_usage` (v3 `start_observation(as_type="generation", usage_details, prompt_name+version metadata)`) + `prompt_version("v1.0.0")` + `_git_sha()` 헬퍼. 12 testcase PASS. 노드 wiring (planner/evaluator/respond) + L2-C eval harness 는 Pass 2/3 으로 분리. **검증**: 전체 backend pytest **120 passed / 8 skipped** (신규 65 + 기존 55, 8 skip = `app_client` fixture host structlog 미설치). ruff PASS. 기존 `test_smoke::langfuse_enabled` host env fail 도 conftest 의 `LANGFUSE_PUBLIC_KEY=""` 로 자동 해결. CI workflow 에 dummy env 주입 + coverage XML artifact.
-> **2026-04-30 UX Sweep Phase A-F Plan 2 Pass 1 — 통합 5 journey spec 신규 + 정적 baseline 9 testcase PASS** ⭐ — Plan [ux-final-e2e-regression-plan](../plan/qa/ux-final-e2e-regression-plan.md). Plan 1 verdict ✅ 후속 회차 — `frontend/e2e/ring2-journeys/j06-ux-a2f-integration.spec.ts` 신규 1 파일 (~960 LOC) 에 Phase A→F 횡단 5 journey 1:1 매핑 (J01 onboarding-to-feedback A.4+B.6+F11+F12+F13+D.4 / J02 compare 풀사이클 B.1~B.5 / J03 모바일 첫 진입 C.2+D.2+D.9+B.3 / J04 에러복구+Tally폴백 D.1+D.5+B.4 / J05 a11y 종합 D.2+D.3+D.4+D.6+D.9+WCAG). 각 step 독립 try/catch 로 부분 PASS 가능 (StepCheck[] 누적 + passCount ≥ 임계 시만 fail). 검증: tsc 0 error · next lint 0 warning · dry-list 5 testcase 인식 · 정적 baseline 9 testcase (Ring0-D1 + Ring0-F1 + Ring0-F2) 재현 PASS. Pass 1/2/3 + prod-smoke runtime 은 본 머신 :3001/:8002 점유로 user 수동 트리거 권장. [Verdict](../qa/runs/ux-final-e2e-2026-04-30/summary.md)
-> **2026-04-30 UX Sweep Phase A-F Pass 1 — 13 신규 시나리오 작성** ⭐ — Plan [ux-phase-a-f-test-plan](../plan/qa/ux-phase-a-f-test-plan.md). 기존 25 + 신규 13 = 38 시나리오 매트릭스 확정. 변경 9 spec 수정 + 2 spec 신규 + verdict 1: A 엣지 3건 (`A1-EDGE-PRIVATE` Safari Private localStorage / `A4-EDGE-EMPTY` 빈 q scrub / `A4-BENTO-ALL6` 6 cell 매핑) · B 보강 2건 (`B5-FALSE-POS-EXT` negative 3건 추가 / `B4-RETRY-LOOP` 5회 직렬 가드) · C perf 2건 (`C3-PERF` INP < 500ms / `C4-FAILED` 600ms transition) · D 보강 6건 (`D1-RESET-LOOP` self-throw 정적 invariant / `D5-IFRAME-BLOCK` Tally route.abort fallback / `D7-PERF` getComputedStyle 캐시 / `D8-HOVER` Header Tailwind hover / `D9-WCAG258` BottomNav minHeight 60+icon 24+label 13 mobile-iphone / `D10-VISUAL` mouseout styleFor 재계산) · F SSR 2건 (`F1-SSR` no use client / `F2-IMPORT-MAP` import 사용처 0). 검증: tsc 0 error · 정적 회귀 9 testcase PASS (Ring0-D1 + Ring0-F1 + Ring0-F2). Ring1+ 27건은 USE_MOCK e2e stack 필요 (본 머신 :3001/:8002 외부 점유로 user 수동 트리거 권장). [Verdict](../qa/runs/ux-phase-a-f-pass1/summary.md)
-> **2026-04-30 UX Sweep Phase F — Tier hook stub (옵션 phase)** — Plan [ux-sweep-phase-f-tier-hook](../plan/ui/ux-sweep-phase-f-tier-hook.md). Phase 2 (OAuth/결제/Tier 게이팅) 머지 시 surface diff 최소화를 위한 hook 자리만 마련. 코드 변경 2 신규 + spec 1 신규: (F.1) `frontend/src/hooks/useTier.ts` — `Tier = 'free' | 'pro' | 'team'` 타입 + `useTier()` 하드코딩 `'free'` 반환 stub. (F.2) `frontend/src/components/common/FeatureGate.tsx` — `'use client'` wrapper, `useTier()` 호출 (grep 표면 유지) 후 children 그대로 렌더 (no-op). spec: `ring0-preflight/03-tier-hook.spec.ts` 신규 — Tier 타입 export + `tier:'free'` 하드코딩 + FeatureGate `<>{children}</>` 정적 invariant 회귀. tsc 0 error · next lint 0 warning. Phase 2 머지 시 본 2 파일 비교 로직만 활성화하면 일괄 게이팅 가능.
-> **2026-04-30 UX Sweep Phase E — Premium Deferred (toggle 1건)** — Plan [ux-sweep-phase-e-premium-deferred](../plan/ui/ux-sweep-phase-e-premium-deferred.md). Phase 2 (OAuth/결제/Tier 게이팅) 의존 3건 (E.1 F06 평일/주말 토글 · E.2 F09 What-If UI · E.3 FreeLimitSurvey Premium CTA) 차단 사유 + 선행 요건 명시. 코드 변경은 E.3 임시 결정만 적용 — `FreeLimitSurvey` Premium CTA 블록에 `NEXT_PUBLIC_PREMIUM_CTA_ENABLED` env 게이트 추가 (default off, `'true'` 일 때만 노출), `data-testid="survey-premium-cta"` 부여. spec 보강 1건: `f12-feedback.spec.ts::Ring1-F12-E3` — env off 시 mood ≥ 4 응답에도 CTA 미노출 회귀. tsc 0 error.
-> **2026-04-30 UX Sweep Phase D — A11y / 마감** ⭐ — Plan [ux-sweep-phase-d-a11y](../plan/ui/ux-sweep-phase-d-a11y.md). 10 항목 (D.1~D.10) 일괄 구현: (D.1) `app/error.tsx` · `app/loading.tsx` · `app/app/error.tsx` · `app/app/loading.tsx` 4 boundary 신규 — reset+홈 동선 + split-panel skeleton. (D.2) `globals.css` `:focus-visible` 글로벌 룰 + Header/Hero/BetaBanner/Footer focus-visible:ring 보강. (D.4) `FeedbackRow` ack 후 ↩️ 수정 토글 + `useToastStore` 안내. (D.5) `FeedbackModal` iframe 5s timeout fallback (mailto/Kakao). (D.6) `CompareCard`/`SuggestionChips` 안정 키 (`${index}-${value}`). (D.7) `InlineChart` CSS 변수 토큰화 (`useEffect` 1회 read + SSR fallback) + 차트 토큰 5종 light/dark 추가. (D.8) `Header` Tailwind hover 전환 (inline JS 제거). (D.9) `BottomNav` minHeight 60px + 폰트 22→24/12→13 (WCAG 2.5.8 AA). (D.10) `DistrictLayer` mouseout 시 `styleFor` 전체 재계산 (compare 슬롯 색 race 방지). 변경 12 파일 + 신규 spec 2건 (`ring0-preflight/02-error-boundary.spec.ts` · `ring1-features/a11y.spec.ts`). 검증: tsc 0 error · next lint 신규 변경 0 warning (pre-existing 4건만 잔존).
-> **2026-04-29 Out-of-Scope (서울 외 지역) 거부 3중 가드 구현** ⭐ — Plan [out-of-scope-handling-2026-04-29](../plan/fix/out-of-scope-handling-2026-04-29.md). 사용자 보고 ("부산/제주 등 서울 외 질문 처리 안 됨") → 3중 가드 설계: (L1) `intents.yaml` `out_of_scope` intent 신규 (광역지명 + 비-서울 시단위 + 부산 동단위 + 제주 동단위 패턴, 한글 word-boundary `(?<![가-힣])...(?![가-힣ㄱ-ㅎㅏ-ㅣ])` 로 substring 오매치 차단). (L2) `planner.py` `_classify_by_rules` 진입 직후 `out_of_scope` 분기 + `_CLARIFICATION_TEMPLATES["out_of_scope"]` 추가, LLM/Tool 호출 0건으로 즉시 clarification_direct 반환. (L3) `entity_matching.py` `STRONG_TOP1_MIN=0.70` 상수 + `chat.py` message-detect 분기에서 score < STRONG_TOP1_MIN 시 거부 (silent wrong-district 가상 비-서울 fuzzy 매치 차단). (L4) `system.py::_BASE_PROMPT` rule 11 + `respond.py::RESPOND_SYSTEM_PROMPT` rule 13 거부 룰 명시. 변경 6 파일 + 신규 unit `test_out_of_scope.py` 21 testcase + Plan 1건. 검증: ruff PASS · **pytest 70/71** (신규 21 + 기존 49, 1 fail = `test_smoke::langfuse_enabled` host env pre-existing) · 회귀 0.
+> 상세 이력은 git history (`git log --follow docs/status/current-status.md`) + `docs/qa/runs/` + `docs/plan/` 로 복원.
 
 ---
 
-## 2026-06-26 — S7 coref 수치 날조 fix Pass 3 라이브 검증 + 죽은 모델 ID fix
+## 최근 작업 (2026-07-04)
 
-### 개요
-- **Plan**: [s7-coref-toolless-fabrication.md](../plan/fix/s7-coref-toolless-fabrication.md) · **Verdict**: [s7-coref-pass3-2026-06-26/_verdict.md](../qa/runs/s7-coref-pass3-2026-06-26/_verdict.md)
-- 복원 세션에서 잔여 P0(S7 coref, eval Round 2 8.9→5.0 회귀)를 prior 세션 구현(planner force-plan)의 **라이브 Pass 3**로 마무리. 검증 중 근본원인 2건을 추가 처리.
-- ✅ Pass 3 5회 (tool 5/5·정답 5/5·날조 0/5·물리모순 0/5) / ✅ 모델 ID fix / ✅ respond 유동인구 가드 / ✅ 커밋 2건
+### v2 프로덕션 배포 완료 ⭐ — Eval R4 GATE PASS 4/4 → prod DB 복구 → 컷오버/스모크 전항목 PASS
+- **Plan**: [prod-deploy-2026-07-04](../plan/infra/prod-deploy-2026-07-04.md) · **Verdict**: [eval-round4-2026-07-04/_verdict.md](../qa/runs/eval-round4-2026-07-04/_verdict.md)
+- **Trust Kernel P1/P2 근본원인 5건(RC1~RC5) fix**: fact_pool `#N` 접미키 매칭 · `_COMPOUND_RE` "3억 5,000만원" 오파싱 · truncate본↔ToolMessage 불일치 · still-unbound 전체대체 과잉방어(`should_fallback` ≥3 AND ≥50% + `mask_unbound` "[미확인]" + 카드 존재 시 abstention 금지) · 원화 floor 미만 스케일 오기(`find_scale_mismatches`). 신규 `test_trust_kernel_regressions.py` 19케이스, pytest 187 passed.
+- **Eval R4**: S2 3.3→10.0 · S4 3.3→10.0 · S8 9.2→10.0, 평균 10.0, 날조 0/8 → GATE PASS 4/4.
+- **prod DB 복구**: data-only 단일 트랜잭션(TRUNCATE→COPY→setval), worker_sum 4,724,265 · catmeta 100 · unit_price NULL 0 · aliases 32. 스모크: 외부도메인 200×5 · SSE 3건(직장인구 87,191=DB · 카페→CS100010 시뮬 3,864만=GT) · Anthropic 401/404 0건(2개월 Gemini fallback 해소).
 
-### Pass 3 라이브 검증 (R3-COREF-NUMERIC-01)
-| 항목 | 내용 |
-|---|---|
-| 환경 | USE_MOCK=false·1,650 상권. `backend-dev` 프로필(`./server:/app` bind-mount + `--reload`)로 미커밋 소스 라이브 반영. 기존 `catchment-area-analysis-backend` 이미지를 `backend-dev`로 태그 후 `--profile dev --no-build` 기동(빌드 SSL 우회) |
-| 시나리오 | 동일 session_id 2턴 ×5: ① "홍대랑 성수 비교해줘"(compare 카드) → ② "거기 중 유동인구가 더 많은 곳은 어디야?"(coref) |
-| DB GT | 홍대(3120103) 4,106,209 · 성수(3120052) 1,412,369 (floating_population 시간대 합계, 2025Q4). peak 988,851/312,134 |
-| 결과 | tool 호출률 **5/5**(get_floating_population 강제) · 정답(홍대) 5/5 · 원 날조값(124,386/67,741) 0/5 · 물리 모순(파생 일평균>peak) 0/5 |
+### Deferred 백로그 처리 — daily_avg→quarter_total rename + recommend score 밴드 정규화
+- **Plan**: [deferred-backlog-2026-07-04](../plan/fix/deferred-backlog-2026-07-04.md)
+- **Item 1** `daily_avg`→`quarter_total` rename: '일평균' 라벨·분할 날조 근원(06-26 S7 물리모순) 근본 정정. 백엔드 10파일 + 프론트 2파일(types.ts `quarterTotal` + `dailyAvg?` deprecated fallback) + 테스트 3건. trust/numeric_sanity 매처는 신규 키 + 구 키 legacy 유지 → **배포 시 `flush_cache.py` 필수**.
+- **Item 2** recommend score: min-max 0~100(1위 항상 100.0 고정 오독) → `_band_scores` 순수함수(55~95 유계 밴드, 동점/단일=75.0). mock recommendations.json 재스케일, 회귀 3케이스.
+- **Item 3** 스트리밍 재설계 — **설계만, 착수 보류** (eval-gated). 토큰 스트리밍 ↔ Trust Kernel 검증-후-방출 충돌. 옵션 B(astream 버퍼링) 권고.
+- **검증**: pytest 190 passed/6 skip · ruff PASS · tsc 0 error.
 
-### RC-모델 — graph.py 죽은 모델 ID (✅ fixed, 별건 인프라)
-- `graph.py:74`(planner)/`96`(respond·default) 하드코딩 `claude-sonnet-4-20250514`가 현 ANTHROPIC_API_KEY 에서 404(not_found, 은퇴) → anthropic provider respond 전량 graceful-error. `/v1/models` 확인 결과 유효 Sonnet = `claude-sonnet-4-6` 교체. planner 는 rule path 라 우회됐으나 respond 는 항상 LLM → Pass 3 선결조건. 커밋 `654029a`.
-
-### RC-respond — 파생 '일평균' 오계산 (✅ fixed)
-- 1차 Pass 3에서 respond가 headline(410만/141만)은 맞게 인용하나 파생 "일 평균"을 ÷30/÷3 불일치로 날조 → 성수 47.1만·홍대 136만 등 시간대 peak 초과(물리 모순 3/5). 근원: repository `get_floating_population` 반환 `daily_avg` 필드가 실제로는 **분기 시간대 합계**인데 이름이 daily_avg → LLM이 "일평균"으로 라벨·분할. peak 값은 반환 안 됨(`peak_hour`=슬롯 인덱스).
-- **fix**: `respond.py` `RESPOND_SYSTEM_PROMPT`에 `FLOATING_POP_PRESENTATION_RULES`(집계값 그대로 인용·일수 분할 금지·peak는 by_hour 실값만·비교는 집계값 직접) 추가 → 2차 Pass 3 물리모순 0/5. 필드명 정정은 blast radius(카드/mock/테스트)로 follow-up.
-
-### 검증
-- ✅ ruff check/format PASS (planner.py/respond.py/graph.py). 어떤 테스트도 프롬프트 텍스트·모델 문자열 assert 안 함(test_langfuse_l2 `claude-sonnet-4` 는 self-contained 리터럴).
-- ⚠️ pytest 재실행은 본 환경(호스트 앱-deps 부재 + 컨테이너 pytest 부재)에서 불가 — planner.py + test_coref_numeric_followup.py(16)는 prior 세션 **148 passed**, 이번 변경(모델 문자열·프롬프트 텍스트)은 그 경로 미접촉.
-
-### 커밋 (main 직접, 프로젝트 관례)
-- `c62bb17` fix(agent): S7 coref 수치 날조 — planner force-plan + respond 유동인구 가드 (planner.py·respond.py·test_coref_numeric_followup.py·plan·verdict)
-- `654029a` fix(agent): 죽은 모델 ID claude-sonnet-4-20250514 → claude-sonnet-4-6 (graph.py)
-- 제외: `.claude/settings.local.json`(기존 drift) · `docs/architecture/tech-stack-rationale.md`(무관)
-
-### 다음 (선택)
-- 🔧 `daily_avg` 필드명 정정(`quarter_total` 등) — repository + 카드 + mock parity + 테스트 동반(별건 follow-up)
-- 🔧 검증용 `backend-dev`+redis 컨테이너 기동 상태 — 불필요 시 `docker compose --profile dev down`
-- 🔧 origin/main push (커밋 2건 미push)
-
----
-
-## 2026-06-25 — 데이터 신뢰성 확보 (적재 결손 3건 + 검증 게이트)
-
-### 개요
-- **Plan**: [data-reliability-2026-06-25.md](../plan/fix/data-reliability-2026-06-25.md)
-- 2026-06-25 정합성 감사가 발견한 **3개월 잠복 적재결손 3건** 근본수정(Part A) + **컬럼내용 검증 게이트**로 재발차단(Part B). 세 결손 모두 "행은 존재하나 컬럼 전량 0/NULL" 이라 기존 행수·FK·boundary 검증을 조용히 통과했다.
-- ✅ Pass 1(C1~C5 수정·재적재) / ✅ Pass 2(C6~C9 게이트·회귀·CI) / ✅ Pass 3(C10 시드재생성·C11 문서) / ✅ 적대검증 워크플로우(11 finding→P1·P2 수정)
-
-### RC1 — 직장인구(worker) 19,692행 전량 0 (✅ fixed)
-| 항목 | 내용 |
-|---|---|
-| 원인 | `data/etl/transformers.py::transform_resident_pop` worker 분기가 resident 접미사(`MAG_POPLTN_CO`/`FAG_POPLTN_CO`) 재사용 → `AGRDE_10_MAG_POPLTN_CO` 등 worker API 에 없는 키 조회 → 전부 None→0 |
-| 수정 | worker 분기에서 `MAG_{n}_WRC_POPLTN_CO`/`FAG_{n}_WRC_POPLTN_CO`(n=age_prefix−`AGRDE_`) 빌더 분리. resident 분기 무변경 + "API path dormant(CSV)" 주석. **live API 1행 dump 로 키 사전검증**([[feedback_etl_api_column_rename]]) |
-| 검증 | 단위: 12행, Σ=`TOT_WRC_POPLTN_CO`. 재적재(`runner run 2025Q4 --table resident_pop`, 19,692행) 후 worker `bool_and(population=0)=f`, total_pop **4,724,265** |
-
-### RC2 — `default_unit_price` 100% NULL (✅ fixed)
-| 항목 | 내용 |
-|---|---|
-| 원인 | alembic 002 백필 `UPDATE ... WHERE major_category=...` 이 category_metadata 시드(stores 적재 후) **전에** 실행돼 0행 no-op. 이후 `seed_category_metadata.py` INSERT 가 컬럼 누락 → 영구 NULL |
-| 수정 | `_UNIT_PRICES`(외식12000/서비스25000/소매15000)+`_DEFAULT_UNIT_PRICE=15000` 공유, INSERT/ON CONFLICT 에 `default_unit_price` 포함. 2차 방어선 `repositories/real/simulation.py::get_default_unit_price` NULL→major 기본값 폴백 |
-| 검증 | 재시드 후 NULL **0건**. 분포 12000×10/25000×10/15000×80. `@real` 테스트가 major↔price 일치 검증 |
-
-### RC3 — `aliases` 100% NULL (✅ fixed)
-| 항목 | 내용 |
-|---|---|
-| 원인 | source of truth 부재 + seed INSERT 누락 |
-| 수정 | `data/etl/category_aliases.json` 핵심 **32종**(콜로키얼: 스벅·편의점·약국·부동산·피시방 등) 신규 + seed 에 콤마조인 결합. 나머지 NULL 은 의도(카테고리명+learned_aliases+LLM 위임) |
-| 검증 | 재시드 후 32 set/68 NULL. resolver 가 카페→CS100010·편의점→CS300002·부동산→CS200033 정확 매칭 |
-
-### RC0 — 컬럼내용 검증 게이트 (✅)
-- `runner.py::_validate_data` → 테스트 가능한 `_collect_validation_checks(conn, quarter)` 로 분리. per-column NULL 비율, all-zero(`bool_and`, NULL-safe `COALESCE`), 음수 sanity, **비-0 exit**. 행수 체크는 **quarter-scope**(빈 분기 false-pass 차단).
-- `scripts/audit/p1_api_vs_db.py` `--strict` exit code(API↔DB 불일치 게이팅).
-
-### 적대검증 워크플로우 (11 finding 전건 confirmed)
-5 lens(rc1-worker/gate-logic/seed-idempotency/test-coverage/plan-conformance) × finding별 회의적 검증, 16 agent. **rc1-worker lens 0 finding**(핵심 수정 무결).
-- **P1 수정**: SEED-1(alias `학원` 이 외국어/예술/컴퓨터학원 name 의 substring → resolver naive 매칭이 모든 학원 subtype 을 CS200001 로 오라우팅) — `학원` 제거, subtype 정상 복구 검증 / GATE-1(행수 미-scope → `validate <빈분기>` false-pass) — 4 시계열 테이블 quarter-scope, `validate 2026Q1` FAIL(exit1) / TC-1(게이트 무테스트) — `@real` gate FAIL-injection 테스트(롤백 트랜잭션)로 R3-VALIDATE-GATE 코드화.
-- **P2 수정**: GATE-2(floating_pop all-zero NULL-unsafe → `COALESCE`) / TC-2(RC2 단위테스트 동어반복 → seed 결과 `@real` 검증) / PC-1(잉여 noqa 제거).
-- **의도적 defer**: GATE-3(all-constant `count(distinct)=1` 은 단일분기 설계와 충돌 → false-FAIL) / SEED-2(price↔major decouple 은 category_name 안정성상 도달불가) / PC-3(`settings.local.json` 은 본 작업 무관 기존 drift).
-
-### 검증 종합
-- `ruff check` PASS · pytest **132 passed / 8 skipped**(기존 structlog skip) · data-integrity 13 테스트(7 unit CI-safe + 6 `@pytest.mark.real`, gate FAIL-injection 포함) · CI `backend-test` 는 `-m "not real"` 로 DB 테스트 deselect.
-- `runner validate 2025Q4` ALL PASS / `2026Q1`(빈 분기) FAIL / worker=0 주입시 FAIL 재현.
-- 시드 덤프 `data/seed/marketscope_seed.dump` 재생성(5.26→5.6MB, 정정 데이터 반영, TOC 검증). **fresh compose 복원 재검증은 live DB 파괴적이라 미실행 — 클린 세션 권장**.
-
-### Memory 신규
-- `feedback_rich_table_bracket_markup` — rich.Table 셀의 `[worker]` 동적 라벨이 스타일 markup 으로 파싱돼 증발(게이트 행 식별 불가) → `(..)`/`:` 사용.
-
-### 다음 (선택)
-- 🔧 커밋(미수행 — 사용자 확인 대기): 코드 8파일 + 신규 2 + 시드 덤프(LFS). `settings.local.json`(기존 drift) 은 스테이징 제외 권장.
-- 🔧 fresh `docker compose up` 로 시드 복원 end-to-end 재검증(클린 세션).
-- 🔧 2026Q1 분기 갱신 시 전 테이블 동시 적재(별도 사이클) — 게이트가 누락 분기를 FAIL 로 잡음.
-
----
-
-## 2026-06-09 — P0 백로그 (ISSUE-003 / ISSUE-002 / 워킹트리)
-
-### 개요
-- **Plan**: [p0-backlog-2026-06-09.md](../plan/fix/p0-backlog-2026-06-09.md)
-- 2026-06-08 QA 디퍼 2건(ISSUE-003 / ISSUE-002) fix + 워킹트리 chore 정리. 커밋 4건 main 직접(프로젝트 관례).
-- ✅ ISSUE-003 (medium, data accuracy) fix + 회귀 테스트 / ✅ ISSUE-002 (low, cosmetic) fix / ✅ 워킹트리 chore 커밋
-- 🔧 Item 4 Accuracy Eval Round 2 — 003 fix 머지 후 별도 실행 패스로 게이트(미실행, 사용자 트리거)
-
-### ISSUE-003 — recommend_business 저점포수 랭킹 아티팩트 (✅ fixed)
-
-| 항목 | 내용 |
-|---|---|
-| 원인 | `repositories/real/recommendation.py:153` `raw_score = (per_store_sales * age_match * (1-close_rate)) / max(competition, 0.01)`. 점포 1개면 `per_store_sales`(=monthly/store_count)가 카테고리 전체매출(월 2억)로 잡히고, `competition`(=store_count/total) 하한 0.01 로 희소 카테고리 ×100 증폭 → 정규화 후 score 100 1순위 고정 |
-| 수정 | 모듈 상수 `MIN_RELIABLE_STORES=3` + 순수함수 `_apply_store_floor` 추가. 스코어링 루프 직후(L181) `filtered, low_confidence = _apply_store_floor(raw_scores)` 로 `store_count < 3` 카테고리 제외. 통과 카테고리 0이면(작은 골목상권) 전체 fallback + `low_confidence=True`. 결과 dict 에 안내 메시지("점포 표본이 적어(<3개) 참고용 추천입니다") |
-| 범위 | 루프 내부(per-category 계산) 미수정 — 플로어는 루프 직후 파티션. ~8줄. Mock 레포는 fixture 기반이라 공식 미사용 → 변경 불필요 |
-| 검증 | `tests/test_recommendation_scoring.py` 신규 3건(단일점포 제외 + 전부미달 fallback + 상수 sanity) + `test_repos_mock.py` 회귀 10건 = **13 passed**. ruff/format PASS. `_apply_store_floor` 는 신규 함수라 fix 없으면 import 자체 실패(회귀 가드 성립) |
-| 커밋 | `90937c6` |
-
-### ISSUE-002 — Hero H1 줄바꿈 (✅ fixed)
-
-| 항목 | 내용 |
-|---|---|
-| 원인 | `components/landing/Hero.tsx:75` `<h1>` 에 word-break 없음 → 한글 "데이터로" 단어중간 줄바꿈. codebase 전체 break-keep 사용처 0 |
-| 수정 | className 에 Tailwind `break-keep`(word-break: keep-all) 추가. 기본/investor 카피 양쪽 커버 |
-| 검증 | tsc 0 error · next lint pre-existing 3 warning(DistrictLayer/MapContainer, 변경 무관)만 |
-| 커밋 | `7ff871d` |
-
-### 워킹트리 chore (✅)
-- `.gitignore` +`.gstack/` · `CLAUDE.md` +`## Health Stack` (이전 세션 산출물) → chore 커밋 `7fbc118` 로 먼저 클린 후 fix 진행.
-
-### 다음 P0
-- 🔧 Item 4 Accuracy Eval Round 2 — `scripts/eval/run_accuracy_round2.sh`(BASE=:8000) → S1~S8 SSE 수집, S4(건대 추천)는 003 fix 후 1순위가 점포 ≥3 인지 확인. current source 재빌드 필수(`feedback_stale_container_vs_source`). 사용자 트리거.
-- 🔧 origin/main push (커밋 4건 미push)
-- 🔧 `.env`/`.env.dev` `NEXT_PUBLIC_API_URL` → `:8000` 교정(직전 세션 임시 override만)
-
----
-
-## 2026-06-08 — QA (/qa) Standard 풀앱 패스
-
-### 개요
-- **리포트**: `.gstack/qa-reports/qa-report-localhost-2026-06-08.md` (12 스크린샷 + baseline.json)
-- ✅ Docker 실데이터 스택 기동 — 기존 이미지 6주 stale → current source 재빌드(backend+frontend). pip SSL(사내 MITM)은 Dockerfile `--build-arg PIP_TRUSTED_HOST` 우회. `NEXT_PUBLIC_API_URL` 은 빌드 시 `:8000` 으로 override(`.env` 값 `:3000` 버그 회피)
-- ✅ 건강도 **98 → 99 (Δ+1)**. 콘솔 에러 0 / XML leak 0 / 실수치·월환산 정상
-- ✅ ISSUE-001 (medium) fix + 회귀 테스트 main 머지
-- 🔧 디퍼 2건 (ISSUE-003 recommend 저점포수 랭킹 · ISSUE-002 H1 줄바꿈)
-- ⚠️ 환경(미수정): `.env`/`.env.dev` `NEXT_PUBLIC_API_URL=:3000`(프론트포트) → 재빌드 시 chat SSE 버퍼링, `:8000` 권장
-
-### ISSUE-001 — out_of_scope/greeting 중복 suggestion (✅ fixed)
-
-| 항목 | 내용 |
-|---|---|
-| 원인 | `_greeting`/`_clarification` 노드가 실행 중 tailored suggestion 을 직접 방출하나 `final_suggestions`(state) 미설정 → 스트림 말미 fallback 이 generic suggestion 한 번 더 방출 |
-| 증상 | client 가 suggestion 을 replace → generic("이 자리 위험하지 않아?"/"카페 하면 어때?", district 선택 가정)이 tailored Seoul-redirect 셋을 덮어씀. 서울 외 거부 UX 훼손 |
-| 수정 | `graph.py` 말미 방출을 `final_response_mode in ("greeting_direct","clarification_direct")` 일 때 skip (두 노드는 항상 1회 self-emit → 누락 없음) |
-| 검증 | SSE 부산/제주/greeting=1회(tailored)·normal summary=1회(card+evaluator 유지)·회귀 0. UI 확인(tailored 칩만). `test_graph_suggestion_emission.py` 2 passed (컨테이너 pytest 9.0.3/py3.12) |
-| 커밋 | c777f49 (fix) · 2d13d22 (test) — main FF 머지, 로컬 3커밋 ahead(미push) |
-
-### 검증 PASS (정상 플로우)
-요약 F03 / 비교 F05(멀티상권 추출, hallucination 0) / 추천 F07 / 프리뷰 F13(zero-LLM) / 히트맵 F06(+TimeSlider) / 검색 자동완성 / privacy·terms / 모바일(390×844 BottomNav). out_of_scope 가드(부산/제주) 정상. Redis lazy-init 정상 연결.
-
-### 디퍼 (사용자 결정 대기)
-- **ISSUE-003 (medium, data accuracy)**: `recommend_business` 가 점포수 1~2개 카테고리를 점포당매출 아티팩트로 1순위 랭크 (성수동 편의점 score 100 / 월 2억 from 1점포). 점포수 floor(예 <3) damp/제외 권장 — [accuracy-gap-fix](../plan/fix/accuracy-gap-fix.md) 트랙.
-- **ISSUE-002 (low, cosmetic)**: 랜딩 H1 "데이터로" 단어중간 줄바꿈 → `word-break: keep-all` 권장.
-
-### 다음 P0
-- ✅ origin/main push 완료 (`44b9438..eb3e10f`, 4커밋 — origin↔local 동기화)
-- 🔧 `.env`/`.env.dev` `NEXT_PUBLIC_API_URL` → `:8000` 교정
-- 🔧 ISSUE-003 accuracy-eval 트랙 반영 / ISSUE-002 cosmetic
-
----
-
-## 전략
-
-Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(Premium)
-
-| Phase | 범위 | 상태 |
-|-------|------|------|
-| 1A | Mock E2E, Card UI, Agent 전체 흐름 | ✅ 완료 |
-| 1B | 공공데이터 ETL + 1,650 상권 적재 + 프로덕션 배포 | ✅ 완료 (2026-03-30) |
-| 3 | F06 히트맵 · F09 매출 시뮬레이션 · F10 PDF | ✅ 완료 (2026-04-06) |
-| Prod | `marketscope.robitlabs.co.kr` 라이브 | ✅ 완료 (2026-04-16) |
-| 2 | OAuth2 · 결제 · Tier 게이팅 · F04 UI | ⏳ 미착수 (Accuracy Gap 선행 권장) |
+### 자동배포 파이프라인 Pass 1+2 (C1~C10) 🆕 — auto_deploy.sh + systemd timer 폴링
+- **Plan**: [auto-deploy-on-push](../plan/infra/auto-deploy-on-push.md)
+- origin/main push 를 2분 폴링 감지 → CI green 게이트 → prev-auto 재태그 → ff merge → 빌드 → healthy 대기 → flush_cache → smoke 4항목 → 실패 시 prev-auto 자동 롤백.
+- 신규 4파일: `scripts/deploy/auto_deploy.sh`(flock·`--ff-only`·ERR trap 롤백·`last-deploy.json`) · `install_autodeploy.sh` · systemd `marketscope-autodeploy.{service,timer}`(`TimeoutStartSec=1800`). 안전설계: 본 서버=작업세션 겸용이라 **reset 금지**, 호스트 env 오염 방어.
+- **Pass 2 (C9/C10) 완료** — timer 설치 후 라이브 리허설로 결함 3건 발견·즉시 fix: ① 서버발 커밋 no-op 기준 `.last-deployed-sha` 교체(`3fc7d9a`) ② freshness 마커 false-positive → server/·frontend/ diff push 만 검사(`e1d28e4`) ③ 롤백 후 frontend cold-start 가짜 ROLLBACK_FAILED → `wait_frontend`(90s)(`1f5d19b`). C9 자동배포 3회 연속 SUCCESS(4.5분→23초 캐시), C10 smoke 실패 주입 → prev-auto 복귀 ROLLED_BACK 무중단, BLOCKED_DIRTY 2회 검증.
+- **다음**: Pass 3 — 2분 폴링 24h 관찰(no-op 부하·API rate) · 수동 배포 세션 전 timer disable 관례.
 
 ---
 
@@ -212,8 +41,7 @@ Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(
 | LLM 설정 | 값 |
 |----------|-----|
 | LLM_PROVIDER | **anthropic** (claude-sonnet-4-6) |
-| Loop | Claude Sonnet (function-calling) |
-| Fallback | gemini-2.5-pro / flash |
+| Loop | Claude Sonnet (function-calling), fallback gemini-2.5-pro/flash |
 | Agent 모드 | **v2 agentic loop + Trust Kernel** (`AGENT_LOOP_VERSION=v2`, 롤백 스위치=pae) |
 | 관측성 | Langfuse L1 (trace wiring, graceful degrade) |
 
@@ -222,101 +50,68 @@ Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(
 ## 현재 서비스 지표
 
 - Mock 상권 5개 · Real 상권 1,650개
-- ETL 적재 (2025Q4): floating_pop 9,888 / estimated_sales 21,333 / stores 75,985 / resident 39,288
-- Agent Tool 9종 · Card 타입 5종 · SSE 이벤트 9종
-- E2E: ring0~3 78 test (66 PASS / 0 FAIL / 12 SKIP) + prod-smoke 28/28
+- ETL 적재 (2025Q4): floating_pop 9,888 / estimated_sales 21,333 / stores 75,985 / resident 39,288 / worker total 4,724,265
+- Agent Tool 9종 · Card 타입 5종(summary/risk/compare/recommend/simulation)
+- SSE 이벤트: v2 루프 7종(thinking/tool/tool_end/card/text/suggestion/done) + `map_cmd`/greeting 단축은 chat.py, PAE(legacy) 경로는 plan/warning 추가 · 프론트 SSEEvent 유니온 10종(`error` 포함)
+- Backend pytest: 테스트 모듈 22 · 최근 실측 2026-07-04 **190 passed / 6 skipped**(`@pytest.mark.real` DB 통합 6)
+- E2E(Playwright): spec 44파일 · ring0~3 + prod-smoke. 최근 실측 2026-07-02 Mock 131 passed / 25 failed(loop 무관 사전결함) / 8 skip
 
----
-
-## 프로젝트 완성도 평가 (2026-04-22 기준, W1~W3 반영 전)
-
-| 축 | 점수 | 판정 | 약점 |
-|---|---:|------|------|
-| 안정성 | **85** | 프로덕션 운영 가능 | 세션 인메모리 · `store_history` 실데이터 부재 · backend pytest 부재 |
-| 효율성 | **82** | 양호 | Langfuse L2+ 미구현 · Heatmap singleflight 미통합 |
-| 정확성 | **74** | 주요 시나리오 합격 | 6 GAP (A~F) — W1~W3 적용 후 재측정 대기 |
-
-**로드맵**: [Accuracy Gap Fix](../plan/fix/accuracy-gap-fix.md) W1~W4 · [Eval Round 2](../plan/fix/accuracy-gap-eval-round2-2026-04-24.md) — 목표 74 → 85+.
-
----
-
-## 이력 요약 (2026-03-30 ~ 2026-04-30)
-
-> 상세는 git history (`git log --follow docs/status/current-status.md`) + `docs/qa/runs/` + `docs/plan/` 로 복원.
-
-| 날짜 | 주요 내용 |
-|------|----------|
-| 2026-04-30 | UX Sweep Phase A-F Pass 1 — 13 신규 e2e 시나리오(기존 25+13=38) + 통합 5 journey(j06) 신규. 정적 회귀 9 testcase PASS · tsc 0. Ring1+ runtime 은 user 수동(:3001/:8002 점유). [Plan](../plan/qa/ux-phase-a-f-test-plan.md) · [Plan2](../plan/qa/ux-final-e2e-regression-plan.md) |
-| 2026-04-29 | Out-of-Scope(서울 외) 거부 3중 가드 — out_of_scope intent + STRONG_TOP1_MIN(0.70) + system/respond prompt rule. 한글 word-boundary 로 substring trap(부산물/광주리) 차단. ruff PASS · pytest 70/71. [Plan](../plan/fix/out-of-scope-handling-2026-04-29.md) |
-| 2026-04-28 (저녁) | Prod 재배포 — district-click-race fix 라이브 적용. dev/prod compose project name 충돌로 `:3200` stop → 502 → A 방식 destructive 4 Pass. frontend `46815639...` + backend `6be3098215b9` healthy. P1~P9 ALL PASS · Playwright real-DB 3/3 · prev-2026-04-28b tag. [Plan](../plan/infra/prod-redeploy-2026-04-28-evening.md) |
-| 2026-04-28 | District click race / "먹통" fix — 6 근본 원인 (sendMessage isLoading return / ChatPanel disabled / setPreview lastDistrictCode race / SSE late-done / per-session lock 부재 / 1.5s setTimeout). Stale-while-cancel + Monotonic requestId + AbortController + Per-session async cancellation. ruff/tsc/pytest 49/50 · memory 4건 신규. [Plan](../plan/fix/district-click-race-2026-04-28.md) |
-| 2026-04-28 | 프로덕션 재배포 (`52ae7db → 04376a4`) + Tool 함수명 노출 fix. alembic 005 + Langfuse 11차원/6스코어 + W1 X시장 boost + planner clarification + numeric_sanity + respond.py 502→280 LOC. ATTRIBUTION_PROMPT_RULE + `_ToolTagSanitizer` 11종 가드. prod-smoke 30/30 · live raw tool name leak 0건. [Plan](../plan/infra/prod-deploy-2026-04-28.md) |
-| 2026-04-28 | Langfuse 전체 통계 집계 Phase 1+2 — v3 tracer 에 `district_type_for` / `attach_summary_observation` (start_observation 우회) / `emit_score`. graph finally 에서 11 차원 metadata + 6 score emit. unit 10/10 + Playwright stats-aggregate 16/16 PASS. [Plan](../plan/infra/langfuse-aggregate-stats-2026-04-28.md) |
-| 2026-04-27 | P0 우선순위 6건 — W1 entity_matching X시장 boost + paren-alias dampen, RESPOND XML leak `_XMLTagSanitizer` (rule 13), Planner empty-plan clarification 3종, Eval district_code 하드코딩 제거 + drift guard, status-compress 517→383, Refactor Pass 2 `api/errors.py` 헬퍼. ruff/tsc/pytest 22/22 PASS. [Plan](../plan/fix/p0-priority-2026-04-27.md) |
-| 2026-04-24 | User-Journey Sweep 16 journey/45 turn — Pass1 71.3% → **Pass3 99.1% (16/0 PASS)**. Planner 4 fix (compare-coref history fallback · rule 다중매치 우선순위 · 장문 synthesis summary fan-out · risk→recommendation 교정). [Plan](../plan/qa/user-journey-quality-2026-04-24.md) |
-| 2026-04-24 | Langfuse 비용 커버리지 fix — dev 컨테이너 `langfuse==2.60.10` stale → v3 업그레이드 후 `done.trace_id=310fc8bf…` 실 발행. Eval harness `REQUIRE_TRACE=1` preflight + `validate_env.py` SDK drift 가드. [Plan](../plan/infra/langfuse-cost-coverage-fix-2026-04-24.md) |
-| 2026-04-24 | Data Trust Reliability Phase A+B — `numeric_sanity` evaluator (216 LOC, 6/6 unit) + alembic 005 컬럼 코멘트 + RESPOND SALES_PRESENTATION_RULES 프롬프트 + trust eval 25/30 (5 상권). L3 한계: Planner entity mismatch 는 W1 별도 Plan. [Plan](../plan/fix/data-trust-reliability-2026-04-24.md) |
-| 2026-04-24 | E2E 품질 Sweep 107 시나리오 — Pass 1 96.1% (10 FAIL) → Pass 2 96.4% (9 FAIL). Planner ambiguous→clarification short-circuit + `scenarios.py` rubric 보정 6건. [Plan](../plan/qa/e2e-quality-improvement-2026-04-24.md) |
-| 2026-04-24 | Refactoring Pass 1+2 + Accuracy Eval Round 2 — `singleflight.py`/레거시 spec 7건 삭제, `respond.py` 502→280 LOC (`utils/formatting.py` 분할). Round 2 평균 7.6/10 FAIL — XML leak / W1 type boost 약화 / multi-district regression / coref empty-plan 4 P0 신규. [Plan](../plan/fix/accuracy-gap-eval-round2-2026-04-24.md) |
-| 2026-04-24 (iOS) | BottomSheet 챗 탭 즉시 닫힘 fix — `BottomSheetHandle` 6px deadzone + `moved` 플래그, `BottomSheet.onDragEnd` `closest` 초기값을 현재 `snap`으로. iPhone E2E spec 신규. |
-| 2026-04-23 (저녁) | E2E Pass 2 hotfix — FAIL 0 달성 (StatusBar testid · waitSSE · f12 skip-guard · reg python3 · F01-H3 timeout). v0.4.0 재배포 `c6cc60e` — learned_aliases 004 · 라우트 분리 (`/` 랜딩 / `/app` 챗맵) · P1~P7+N1~N2 전수 PASS. |
-| 2026-04-23 | F-01 ETL fix (21,333 행 재적재, 8 컬럼 NULL 해소) + Accuracy Gap W1/W2/W3 구현 (entity_matching/abstention/rewriter utils + learned_aliases 004). LLMOps L1 SDK v2→v3 포팅, trace 발행 확인. Env 관례 분리 (`.env`=prod · `.env.dev`=dev). UI Landing/Feedback/Preview Phase A~D. Mobile Responsive Phase A+B+C. Data Integrity Audit. Refactoring Phase 1 Plan 작성. |
-| 2026-04-22 | E2E + Ops 회귀 2차 READY (Dockerfile pip SSL 우회 · E2E 전용 stack 포트 재할당 · OPS-01/02 spec). 완성도 평가 85/82/74. [Run](../qa/runs/e2e-run-2026-04-22.md) |
-| 2026-04-21 | E2E 회귀 Pass 1~3 그린 (Mock 39/39 + Real 24/24). LLMOps L1 Langfuse trace wiring (graceful degrade · SSE `done.trace_id`). |
-| 2026-04-19 | v0.3.0 — 문서 계층화 · `docker-compose.e2e.yml` + `prodGuard` · 회귀 spec 4종. |
-| 2026-04-17 | 매출 단위 fix (`_enrich_sales` sales→monthly_sales). 배포 근본해결 7건. 비교모드 다색 하이라이트. |
-| 2026-04-16 | **프로덕션 런치** (marketscope.robitlabs.co.kr). 외부 nginx + LE · `docker-compose.prod.yml`. |
-| 2026-04-14 | 서빙 안정성 Phase 1~10. 체크리스트 24% → 61%. Docker 하드닝 · DB/Redis 풀 · SSE heartbeat · Circuit Breaker · `/metrics` · DR. |
-| 2026-04-13 | 분석 품질 Phase 1~3 (3단 해석법 · Tool enrich · 벤치마크). SSE 최적화 — TTFT 25s→1.5s. E2E eval S1 9.8 / S2 9.6 / S3 2.6 / S6 6.1 / S7 8.9 / S8 9.7 (평균 8.0). |
-| 2026-04-08 | F05-H1 fix — `detect_districts_in_message` multi-extract. Real 45 시나리오 41 PASS. |
-| 2026-04-07 | E2E QA Run (Mock 42 시나리오 94/100). 4-ring helper + 22 spec. React duplicate-key fix. |
-| 2026-04-06 | P0 8건 수정 (`d8c0155`) — category aliases · LLM timeout · SSE 백프레셔 · AbortController. Phase 3 완료 (F06/F09/F10). |
-| 2026-04-05 | Docker 통합. `docker compose up` 원커맨드 · Multi-stage + standalone · `--profile dev`. |
-| 2026-04-04 | QA P0+P1 8건 (Tool 크래시 · 인젝션 방어 · Redis fallback · Semaphore(20)). |
-| 2026-04-03 | PAE Agent 전환. Repository 패턴 (`DataAccess` + 7 Protocol). Frontend 리팩토링. 데이터 출처 citation. |
-| 2026-04-02 | DB 셋업 자동화 — `setup_db.py --quick/full/reset` · seed 덤프 LFS · OA-15584 CSV 로더. |
-| 2026-04-01 | Playwright E2E 26 시나리오 22 PASS · SHP→PostGIS 1,650 적재 · Real 모드 전환. |
-| 2026-03-30~31 | **Phase 1B 완료** — Agent Progress Indicator · SSE 버퍼링 해결 · 다크 테마 · ETL 적재 · E2E 32/32. |
+> 완성도 평가(2026-04-22 스냅샷 안정성85/효율82/정확74)는 이후 해소: backend pytest·Langfuse L2·Heatmap singleflight = 2026-05-07 완료, 정확성 = Eval Round 4(평균 10.0, GATE PASS 4/4, 2026-07-04) 재측정 완료.
 
 ---
 
 ## Next Items (우선순위 순)
 
-### 🟠 Accuracy Eval Round 2 — W1~W3 KPI 재측정
+### 🟠 자동배포 파이프라인 Pass 3 (24h 관찰)
+**Plan**: [auto-deploy-on-push.md](../plan/infra/auto-deploy-on-push.md)
+- C9/C10 완료(자동배포 3회 SUCCESS · 롤백 무중단 검증) → Pass 3 잔여: 2분 폴링 24h 관찰(no-op 부하·API rate) · 수동 배포 세션 전 timer disable 관례화
 
-**Plan**: [accuracy-gap-eval-round2-2026-04-24.md](../plan/fix/accuracy-gap-eval-round2-2026-04-24.md)
+### 🟡 스트리밍 재설계 (eval-gated, 설계만 완료)
+**Plan**: [deferred-backlog-2026-07-04.md](../plan/fix/deferred-backlog-2026-07-04.md) Item 3
+- v2 루프는 검증-후-방출(비스트리밍). 옵션 B(astream 버퍼링 + 진행 세분화) 권고안 기록됨
+- 착수 게이트: eval 스택 가용 + S1~S8 평균 ≥9.0 · 날조 0 재판정
 
-- S1~S8 curl SSE 수집 + DB ground truth 교차검증
-- Round 1 (2026-04-13) 대비 변화 기록 · KPI 테이블 업데이트
-- Refactoring Pass 2 (respond.py 분할) 전에 baseline 확보
-
-### 🟡 Refactoring Phase 1 Pass 2 (중위험)
-
+### 🟡 Refactoring Phase 1 Pass 2 — 잔여분
 **Plan**: [phase1-low-mid-risk-2026-04-23.md](../plan/infra/phase1-low-mid-risk-2026-04-23.md)
+- ✅ `api/errors.py` 래퍼 · ✅ `respond.py`→`agent/utils/formatting.py` 분할
+- 🔧 `agent/nodes/respond.py` 재증식(575 LOC) · `stores/chatStore.ts`(455 LOC) slices 분할 미착수 · `except Exception` 좁히기
 
-- `server/server/api/errors.py::make_error_response` 래퍼로 routes `HTTPException` 15건 통합
-- `except Exception` 9건 → 구체 exception tuple 좁히기
-- `agent/nodes/respond.py` 502 LOC → `agent/utils/formatting.py` 3종 이식, 목표 ~300 LOC
-- `stores/chatStore.ts` 381 LOC → `stores/slices/{preview,mobile,feedback}.ts` 분할
-
-### 🟡 관측성 L2+
-
-- Langfuse L2+ (토큰/비용 측정, prompt version, eval harness)
-- Heatmap preload singleflight 통합 (Pass 1 에서 `singleflight.py` 삭제 후 별도 Plan 으로 재도입)
-- backend pytest 인프라
+### 🟡 관측성 L2 잔여
+- Langfuse L2 Foundation 구현 완료(2026-05-07) — **노드 wiring(planner/evaluator/respond) + L2-C eval harness 미착수** (Plan [langfuse-l2-token-cost-eval.md](../plan/infra/langfuse-l2-token-cost-eval.md) Pass 2/3)
 
 ### 🟡 Phase 2 — Premium (미착수)
-
-- OAuth2 + 결제 (Toss Payments / PortOne)
-- Tier 게이팅 미들웨어 (Free 일 5회)
-- F04 업종 심층 UI
-- category_aliases 퍼지 검색 (pg_trgm)
+- OAuth2 + 결제(Toss/PortOne) · Tier 게이팅 미들웨어(Free 일 5회) · F04 업종 심층 UI · category_aliases 퍼지 검색(pg_trgm)
 
 ### 🟢 장기 / 후순위
+- 세션 저장소 Redis/Postgres 이관 · `store_history` 대안 데이터셋 · Docker 이미지 최적화
 
-- 세션 저장소 Redis/Postgres 이관
-- `store_history` 대안 데이터셋
-- Docker 이미지 최적화
+---
+
+## 이력 요약
+
+> 상세는 각 Plan / `docs/qa/runs/` / git history 참조.
+
+| 날짜 | 주요 내용 |
+|------|----------|
+| 2026-07-03 | Accuracy Eval Round 3(v2 Real) GATE FAIL 2/4(평균 8.2) → P1 Trust Kernel fallback 붕괴 + P2 S8 스케일 오기 발견(07-04 R4 에서 해소). v2→main 머지 완료(결과 트리 = v2 tip byte-동일). |
+| 2026-07-02 | /qa v2 Real 최초 품질검증 — 날조 0/10 GT 전수일치, 건강도 90→99, HIGH 2 fix(trust 교정턴 메타발화 가드 · simulate category resolve). v2 E2E 마무리 — S9-5 fix + PAE baseline로 v2 회귀 0 실증(근본원인=compose env 오설정). |
+| 2026-06-26 | S7 coref 수치 날조 fix Pass 3(tool 5/5·날조 0/5) + 죽은 모델 ID `claude-sonnet-4-20250514`→`claude-sonnet-4-6`. [Plan](../plan/fix/s7-coref-toolless-fabrication.md) |
+| 2026-06-25 | 데이터 신뢰성 — 적재 결손 3건(worker 전량0·unit_price NULL·aliases NULL) 근본수정 + 컬럼내용 검증 게이트 + 적대검증 워크플로우(11 finding). [Plan](../plan/fix/data-reliability-2026-06-25.md) |
+| 2026-06-10 | Accuracy Eval Round 2 평균 8.0→9.4 + ISSUE-003 라이브 검증 + S7 coref P1 발견. [Verdict](../qa/runs/eval-round2-2026-06-10/_verdict.md) |
+| 2026-06-09 | P0 백로그 — recommend 저점포수 floor(`_apply_store_floor` MIN_RELIABLE_STORES=3) + Hero H1 break-keep. [Plan](../plan/fix/p0-backlog-2026-06-09.md) |
+| 2026-06-08 | QA 풀앱 패스 건강도 98→99 — out_of_scope/greeting 중복 suggestion fix(`graph.py`). |
+| 2026-05-07 | 4 Plan Pass 1 — Heatmap singleflight 재도입 + backend pytest 확장(35 신규) + W1 boost 측정(baseline 96.9%) + Langfuse L2 Foundation. |
+| 2026-04-30 | UX Sweep Phase A-F Pass 1 — 13 신규 e2e + 통합 5 journey(j06). [Plan](../plan/qa/ux-phase-a-f-test-plan.md) |
+| 2026-04-29 | Out-of-Scope(서울 외) 거부 3중 가드 — out_of_scope intent + STRONG_TOP1_MIN(0.70) + prompt rule. [Plan](../plan/fix/out-of-scope-handling-2026-04-29.md) |
+| 2026-04-28 | Prod 재배포(district-click-race fix) · Tool 함수명 노출 fix(alembic 005 + Langfuse 11차원/6스코어 + `_ToolTagSanitizer`) · Langfuse 통계 집계 Phase 1+2. |
+| 2026-04-27 | P0 우선순위 6건 — W1 entity_matching boost · RESPOND XML leak `_XMLTagSanitizer` · Planner empty-plan clarification · Eval drift guard. [Plan](../plan/fix/p0-priority-2026-04-27.md) |
+| 2026-04-24 | User-Journey Sweep(Pass3 99.1%) · Data Trust `numeric_sanity` · E2E 품질 Sweep 107 · Refactoring Pass1+2 · Langfuse 비용 커버리지 fix(SDK v2→v3). |
+| 2026-04-23 | F-01 ETL fix(21,333 행 재적재) + Accuracy Gap W1/W2/W3(entity_matching/abstention/rewriter + learned_aliases 004) · LLMOps L1 v3 포팅 · v0.4.0 재배포(라우트 `/` `/app` 분리). |
+| 2026-04-21~22 | E2E 회귀 Pass 1~3 그린(Mock 39 + Real 24) · LLMOps L1 trace wiring · 완성도 평가 85/82/74. |
+| 2026-04-16~19 | **프로덕션 런치**(marketscope.robitlabs.co.kr) — 외부 nginx + LE · `docker-compose.prod.yml` · 문서 계층화 · 매출 단위 fix. |
+| 2026-04-13~14 | 분석 품질 Phase 1~3(3단 해석법) · SSE TTFT 25s→1.5s · 서빙 안정성 Phase 1~10(Circuit Breaker · `/metrics` · DR). |
+| 2026-04-03~08 | PAE Agent 전환 · Repository 패턴 · Phase 3 완료(F06/F09/F10) · Docker 통합 · QA P0 다수. |
+| 2026-03-30~04-02 | **Phase 1B 완료** — SHP→PostGIS 1,650 적재 · Real 모드 전환 · DB 셋업 자동화 · ETL 적재 · E2E 32/32. |
 
 ---
 
@@ -324,13 +119,8 @@ Phase 1A(Mock E2E) → Phase 1B(Real Data + UX) → Phase 3(확장) → Phase 2(
 
 | 영역 | 경로 |
 |------|------|
-| 종합 QA | `docs/qa/qa-summary-report.md` · `qa-detailed-results.md` · `qa-improvements.md` |
-| E2E run | `docs/qa/runs/e2e-run-2026-04-23-full.md` · `e2e-run-2026-04-22.md` · `e2e-run-2026-04-19.md` |
-| 분석 품질 eval | `docs/qa/analysis-quality-eval-2026-04-13.md` (Round 1) · `analysis-quality-eval-2026-04-24.md` (Round 2, 대기) |
-| Accuracy Gap | `docs/plan/fix/accuracy-gap-fix.md` · `accuracy-gap-eval-round2-2026-04-24.md` |
-| Refactoring | `docs/plan/infra/phase1-low-mid-risk-2026-04-23.md` |
-| 서빙 안정성 체크리스트 | `docs/spec/serving-stability-checklist.md` |
-| 아키텍처 overview | `docs/architecture/overview.md` (backend/frontend/agent/data/deployment) |
+| 종합 QA | `docs/qa/README.md` · `docs/qa/test-plan.md` · 최근 로그 `docs/qa/runs/` |
+| 분석 품질 eval | `docs/qa/runs/eval-round4-2026-07-04/` (최신 — GATE PASS 4/4) · `eval-round3-2026-07-03/` · `eval-round2-2026-06-10/` |
+| 아키텍처 | `docs/architecture/overview.md` (backend/frontend/agent/data/deployment) |
 | 기능 목록 | `docs/spec/feature-list.md` · `features/F01~F13-*.md` |
-| LLMOps L1 | `docs/plan/infra/llmops-l1-adr-hosting.md` · `llmops-l1-verification.md` |
-| E2E 회귀 인프라 | `docs/plan/infra/e2e-regression-plan-2026-04-19.md` · `e2e-ops-2026-04-22.md` |
+| 배포/운영 | `docs/ops/` (runbook · disaster-recovery · production-deployment) |

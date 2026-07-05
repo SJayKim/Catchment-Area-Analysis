@@ -8,7 +8,7 @@
   daily_avg 라서 LLM 이 '일평균'으로 라벨·분할 날조(2026-06-26 S7 물리모순 3/5)했고, 지금은
   프롬프트 가드 3면(respond.py rule / loop/prompts.py / trust.py 라벨)으로 억누르는 상태.
   이름 자체를 `quarter_total` 로 바꿔 근본 해소한다(2026-06-26 status 가 명시한 follow-up).
-- **Item 2 — recommend score100**: `repositories/real/recommendation.py:208-213` min-max 정규화가
+- **Item 2 — recommend score100**: `repositories/real/recommendation.py` 의 min-max 정규화가
   1위를 **항상 score 100.0, 꼴찌를 0.0 에 고정** — 실제 품질 격차와 무관하게 "만점 확신"으로 오독됨
   (p0-backlog-2026-06-09 L41 지적, ISSUE-003 플로어 fix 때 정규화 자체는 defer). 상대 순위는 유지하되
   100/0 핀 고정을 없앤 유계 밴드로 교체한다. 단일 카테고리(spread=0) 시 현재 score 0 이 되는 엣지도 함께 해소.
@@ -25,8 +25,8 @@
 ## Scope
 - **In Scope**:
   - Item 1: repo 반환 키 `daily_avg`→`quarter_total`, card payload `dailyAvg`→`quarterTotal`,
-    전 소비처(백엔드 8파일 + mock fixture + frontend 2파일 + 테스트 3파일 + eval/audit 스크립트) 일괄 rename,
-    프론트 하위호환 fallback(`quarterTotal ?? dailyAvg` — prod Redis `report:*` 캐시 구버전 payload 방어)
+    전 소비처(백엔드 9파일 + mock fixture + frontend 2파일 + 테스트 2파일(3개소) + eval/audit 스크립트) 일괄 rename,
+    프론트 하위호환 fallback(`quarterTotal ?? dailyAvg` — prod Redis 캐시(`summary:*`/`preview:*`) 구버전 payload 방어. `report:*` 키는 코드에 존재하지 않음)
   - Item 2: min-max → 유계 밴드(55~95) 매핑, spread=0 시 75 고정, mock fixture score 100.0 제거(95 캡),
     회귀 테스트 추가
   - Item 3: 설계 옵션 기록 + 착수 조건(게이트) 명시 — 코드 변경 없음
@@ -53,19 +53,19 @@
 - `frontend/src/components/chat/cards/SummaryCard.tsx:78`: `quarterTotal ?? dailyAvg` fallback 읽기
 - 테스트: `server/tests/test_numeric_sanity.py` ×2, `server/tests/test_trust_kernel_regressions.py` ×1 fixture 키 갱신
 - 스크립트: `scripts/eval/trust_scenarios.py`(변수명·라벨), `scripts/audit/p2_tool_vs_sql.py`(tool 필드 참조)
-- 배포 주의: prod Redis `report:*`/preview 캐시에 구 `dailyAvg` payload 잔존 → **배포 시 flush_cache.py 필수**(기존 관례) + 프론트 fallback 이중 방어
+- 배포 주의: prod Redis `summary:*`/`preview:*` 캐시에 구 `dailyAvg` payload 잔존 → **배포 시 flush_cache.py 필수**(기존 관례) + 프론트 fallback 이중 방어
 
 ### Item 2 — score 밴드 정규화
-- `repositories/real/recommendation.py:208-213`:
+- `repositories/real/recommendation.py` — 구현 위치: 모듈 상단 상수 `SCORE_BAND_MIN/MAX/FLAT` + 순수함수 `_band_scores`, 적용부는 `recommend_business` 내 `_band_scores([s["raw_score"] ...])` 호출:
   ```python
   SCORE_BAND_MIN, SCORE_BAND_MAX = 55.0, 95.0   # 모듈 상수
   # spread > 0: score = 55 + (raw-min)/spread * 40  → 1위 95.0, 꼴찌 55.0
   # spread == 0 (단일/동점): 전원 75.0 (현재는 0.0 이 되는 버그성 엣지)
   ```
-  순수함수 `_band_score(raw_scores: list[float]) -> list[float]` 로 추출(테스트 용이).
+  순수함수 `_band_scores(values: list[float]) -> list[float]` 로 추출(테스트 용이).
 - `server/server/agent/tools/mock/recommendations.json`: score 100.0 → 95.0 등 밴드 내 재배치 (mock parity)
 - RecommendCard 색상 임계(≥80 green / ≥60 blue / ≥40 yellow)와 정합: 상위권 green~blue, 하위 55→yellow — 의도된 시각 완화
-- 회귀 테스트: `test_recommendation_scoring.py` 에 `_band_score` 3건 추가 (1위≠100 / spread=0→75 / 순위 보존)
+- 회귀 테스트: `test_recommendation_scoring.py` 에 `_band_scores` 3건 추가 (1위≠100 / spread=0→75 / 순위 보존)
 
 ### Item 3 — 스트리밍 재설계 (설계만, 착수 보류)
 - 현 구조: `engine.py` 가 final ainvoke → trust 검증/교정/fallback → `_chunks(90)` 방출. 침묵은

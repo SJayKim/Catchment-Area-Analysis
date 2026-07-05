@@ -17,10 +17,13 @@ L1 (trace wiring + graceful degrade + 11차원 metadata + 6 score) 은 2026-04-2
 목표: **토큰/비용 generation 단위 attach + prompt version 태깅 + Datasets/Experiments 기반 nightly eval** 3축으로 LLMOps 운영 자동화.
 
 ### 메모리 참조
-- [feedback_langfuse_v2_langchain1_incompatible.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_langfuse_v2_langchain1_incompatible.md) — v3 + langchain 1.x 조합 필수
-- [feedback_langfuse_sdk_drift_silent.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_langfuse_sdk_drift_silent.md) — 컨테이너 stale SDK silent fail
-- [feedback_langfuse_v3_no_update_trace.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_langfuse_v3_no_update_trace.md) — v3 update_trace 부재, score 는 trace_id 기반
-- [feedback_langfuse_otel_insecure_partial.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_langfuse_otel_insecure_partial.md) — REST 호출은 OTEL_INSECURE 미적용
+
+> (2026-07-04 정정: 아래 auto-memory 파일 링크는 구 머신 경로라 현 리포에서 해석 불가 — 링크 제거, 교훈 요지만 보존.)
+
+- [[feedback_langfuse_v2_langchain1_incompatible]] — v3 + langchain 1.x 조합 필수
+- [[feedback_langfuse_sdk_drift_silent]] — 컨테이너 stale SDK silent fail
+- [[feedback_langfuse_v3_no_update_trace]] — v3 update_trace 부재, score 는 trace_id 기반
+- [[feedback_langfuse_otel_insecure_partial]] — REST 호출은 OTEL_INSECURE 미적용
 
 ### 관련 Plan
 - [llmops-platform.md](./llmops-platform.md) — 전체 LLMOps 청사진

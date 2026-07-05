@@ -32,10 +32,15 @@
 ## Step 1. 환경 변수 설정
 
 ```bash
-cp .env.example .env
+# 로컬 개발용 env 파일 생성 (.env=prod, .env.dev=로컬 dev 관례)
+cp .env.example .env.dev
 ```
 
-`.env` 파일을 열고 아래 값을 입력:
+> ⚠ `docker compose up`(전체 스택) / `--profile dev` 경로는 **`.env.dev` 파일이 반드시 있어야 한다**
+> (backend / backend-dev / frontend-dev 서비스가 `env_file: .env.dev` 를 요구 — 없으면 `env file .env.dev not found` 로 기동 실패).
+> 호스트에서 직접 uvicorn 을 띄우는 경우에도 `config.py` 가 `.env.dev` 를 우선 로드하고, 없으면 `.env` 로 폴백한다.
+
+`.env.dev` 파일을 열고 아래 값을 입력:
 
 ```dotenv
 # 필수 — LLM (둘 중 하나)
@@ -47,10 +52,14 @@ NEXT_PUBLIC_KAKAO_MAP_KEY=your_kakao_js_key
 
 # LLM 설정 (기본값: Gemini)
 LLM_PROVIDER=gemini                 # "gemini" 또는 "anthropic"
-AGENT_MODE=pae                      # Planner-Actor-Evaluator (기본)
+# AGENT_LOOP_VERSION=v2             # 기본값 v2 (모델주도 agentic loop + Trust Kernel) — 레거시 PAE 그래프로 롤백 시 pae
 ```
 
 > 나머지 값(DATABASE_URL, REDIS_URL 등)은 docker-compose 기본값과 일치하므로 수정 불필요.
+>
+> 참고: Agent 아키텍처 기본값은 **v2 agentic loop**(`agent_loop_version="v2"`)이며, PAE(Planner-Actor-Evaluator)는
+> Mock 모드 폴백 및 `AGENT_LOOP_VERSION=pae` 롤백 스위치용 레거시다. `.env.example` 에 있는 `AGENT_MODE` 는
+> 디스패치에 쓰이지 않는 관측 라벨(`/api/health/detail`, Langfuse trace 메타)이므로 설정할 필요 없다.
 
 ---
 
@@ -69,7 +78,7 @@ AGENT_MODE=pae                      # Planner-Actor-Evaluator (기본)
 Docker 없이 Backend + Frontend만 실행합니다. 5개 샘플 상권(강남역, 홍대, 건대, 명동, 서울역)으로 전체 기능을 체험합니다.
 
 ```bash
-# 1. .env에서 Mock 모드 활성화
+# 1. .env.dev에서 Mock 모드 활성화
 #    USE_MOCK=true 로 변경
 
 # 2. Backend 실행
@@ -93,7 +102,7 @@ npm run dev
 서울 열린데이터 API 키 없이도 실제 1,650개 상권 데이터로 실행 가능합니다.
 
 ```bash
-# 1. .env 확인: USE_MOCK=false (기본값)
+# 1. .env.dev 확인: USE_MOCK=false
 
 # 2. 자동 세팅 스크립트 (Docker 시작 → 마이그레이션 → 시드 복원 → 검증)
 python scripts/setup_db.py --quick
@@ -126,7 +135,7 @@ npm run dev
 서울 열린데이터 API에서 최신 데이터를 직접 수집합니다.
 
 ```bash
-# 1. .env에 서울 열린데이터 API 키 입력
+# 1. .env.dev에 서울 열린데이터 API 키 입력
 #    SEOUL_OPENDATA_API_KEY=your_key
 #    USE_MOCK=false
 
@@ -143,10 +152,13 @@ cd frontend && npm run dev
 
 ### 대안: Docker Compose로 전체 서비스 한 번에 실행
 
-Backend와 Frontend도 Docker 컨테이너로 실행하고 싶다면:
+Backend와 Frontend도 Docker 컨테이너로 실행하고 싶다면 (**`.env.dev` 필수** — Step 1 참조):
 
 ```bash
-# 전체 서비스 (db + redis + migrate + seed + backend + frontend)
+# frontend 이미지는 빌드 타임에 Kakao 키를 bake — 빌드 전에 호스트 셸에 export 필요
+export NEXT_PUBLIC_KAKAO_MAP_KEY=your_kakao_js_key
+
+# 전체 서비스 (db + redis + migrate + seed + backend + frontend + nginx)
 docker compose up -d
 
 # 로그 확인
@@ -169,8 +181,8 @@ docker compose --profile dev up
 
 서비스가 정상 실행되면:
 
-1. `http://localhost:3000` 접속 — 서울 지도 + 채팅 화면 로드
-2. 지도에서 상권 폴리곤 클릭 → AI가 자동으로 상권 분석
+1. `http://localhost:3000` 접속 — 랜딩 페이지 로드, `/app` 진입 시 서울 지도 + 채팅 화면
+2. 지도에서 상권 폴리곤 클릭 → 프리뷰 카드(Zero-LLM, F13) 표시 → "AI 분석 보기" 클릭 시 AI 분석 시작
 3. 채팅창에 자연어 입력:
    - `"강남역 분석해줘"` → SummaryCard (유동인구 + 매출 + 점포)
    - `"여기서 뭐하면 좋을까?"` → RecommendCard (업종 추천)
@@ -257,11 +269,12 @@ $env:PYTHONIOENCODING="utf-8"   # PowerShell
 ```
 
 ### Kakao Map이 로드되지 않음
-→ `.env`에 `NEXT_PUBLIC_KAKAO_MAP_KEY` 값 확인.
+→ `.env.dev`에 `NEXT_PUBLIC_KAKAO_MAP_KEY` 값 확인.
+→ Docker 로 frontend 를 빌드하는 경우 키는 **빌드 타임 build-arg** 로 들어감 — 빌드 전에 호스트 셸에 `export NEXT_PUBLIC_KAKAO_MAP_KEY=...` 후 `docker compose build frontend` 재실행.
 → Kakao Developers 콘솔에서 **플랫폼 → Web → 사이트 도메인**에 `http://localhost:3000` 등록.
 
 ### AI 챗봇이 응답하지 않음
-→ `.env`에 LLM API 키 확인 (`ANTHROPIC_API_KEY` 또는 `GOOGLE_API_KEY`).
+→ `.env.dev`에 LLM API 키 확인 (`ANTHROPIC_API_KEY` 또는 `GOOGLE_API_KEY`).
 → `LLM_PROVIDER`가 설정한 키와 일치하는지 확인 (`gemini` vs `anthropic`).
 → Backend 로그 확인: `docker compose logs -f backend` 또는 터미널 출력.
 
@@ -270,13 +283,13 @@ $env:PYTHONIOENCODING="utf-8"   # PowerShell
 ## 프로젝트 구조 참고
 
 ```
-├── .env.example                   # 환경 변수 템플릿
-├── docker-compose.yml             # PostGIS + Redis + Backend + Frontend
+├── .env.example                   # 환경 변수 템플릿 (.env=prod / .env.dev=로컬 dev 로 복사해 사용)
+├── docker-compose.yml             # PostGIS + Redis + Backend + Frontend + Nginx
 ├── scripts/setup_db.py            # DB 자동 프로비저닝 스크립트
 ├── data/
-│   ├── seed/marketscope_seed.dump # 시드 데이터 (pg_restore용)
-│   ├── shp/OA-15560.shp          # 상권 폴리곤 SHP
-│   └── csv/OA-15584.csv          # 상주인구 CSV
+│   └── seed/marketscope_seed.dump # 시드 데이터 (pg_restore용) — 리포에 포함된 유일한 데이터 파일
+│       # (선택) data/shp/OA-15560.shp, data/csv/OA-15584.csv 는 서울 열린데이터에서
+│       # 직접 내려받아 배치하는 파일 — 리포 미포함, setup_db.py 가 존재할 때만 사용
 ├── server/                        # FastAPI Backend
 │   ├── server/main.py            # 앱 진입점
 │   ├── server/config.py          # 환경 설정

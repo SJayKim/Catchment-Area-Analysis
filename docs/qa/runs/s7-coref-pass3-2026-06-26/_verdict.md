@@ -40,6 +40,8 @@
 - repository가 반환하는 `daily_avg` 필드는 실제로 **분기 시간대 합계**인데 이름이 "daily_avg"라 respond LLM이 "일 평균"으로 라벨 → 4.1M을 ÷30/÷3로 "보정" 날조 → 시간대 peak 초과 물리 모순. 프롬프트 예시("하루 평균 12만 4천명")도 부추김. `peak` 값은 반환 안 됨(`peak_hour`=슬롯 인덱스).
 - **fix**: `respond.py` `RESPOND_SYSTEM_PROMPT`에 `FLOATING_POP_PRESENTATION_RULES` 추가 — 집계값 그대로 인용, ÷일수 파생 금지, peak는 `by_hour` 실값 있을 때만 인용. (필드명 변경은 카드/테스트 blast radius로 범위 밖 → follow-up.)
 
+> 📌 2026-07-04 추기: 해당 필드명 정정(`daily_avg` → `quarter_total`)은 이후 완료됨 — §Follow-up 추기 참조.
+
 ## 부수 인프라 fix
 - `graph.py:74/96` 하드코딩 모델 `claude-sonnet-4-20250514` → 현 키에서 404(은퇴) → anthropic provider respond 전량 실패. `claude-sonnet-4-6`(현 키 유효)로 교체. S7과 무관한 별개 breakage이나 Pass 3 선결 조건.
 
@@ -54,3 +56,5 @@ plan 기준 4종(tool 5/5 · DB일치 · 물리모순 0 · 정답 5/5) 전부 �
 
 ## Follow-up (별건)
 - 🔧 `daily_avg` 필드명 정정(`quarter_total` 등) — repository + 카드 + mock parity + 테스트 동반 수정 필요(blast radius). 본 Pass는 프롬프트 가드로 대응.
+
+> 📌 2026-07-04 추기: 완료됨 — rename 이 전 계층에 반영됨: real repo 는 `quarter_total` 반환(`repositories/real/floating_population.py`), summary 카드는 `quarterTotal` 키만 발행(`agent/tools/district_summary.py`, `dailyAvg` 미발행), mock fixture 도 `quarter_total`, `numeric_sanity`/trust/프론트 types.ts 의 `daily_avg`/`dailyAvg` 는 구버전 캐시 방어용 legacy 매처·fallback 으로만 잔존. 2026-07-04 deferred 백로그 Plan([deferred-backlog-2026-07-04](../../../plan/fix/deferred-backlog-2026-07-04.md)) Item 1 로 처리.

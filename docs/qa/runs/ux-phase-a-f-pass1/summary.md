@@ -2,6 +2,7 @@
 
 > Plan: [`docs/plan/qa/ux-phase-a-f-test-plan.md`](../../plan/qa/ux-phase-a-f-test-plan.md)
 > Phase별 코드 머지: [A](../../plan/ui/ux-sweep-phase-a-trust-legal.md) · [B](../../plan/ui/ux-sweep-phase-b-core-blockers.md) · [C](../../plan/ui/ux-sweep-phase-c-polish.md) · [D](../../plan/ui/ux-sweep-phase-d-a11y.md) · [E](../../plan/ui/ux-sweep-phase-e-premium-deferred.md) · [F](../../plan/ui/ux-sweep-phase-f-tier-hook.md)
+> 📌 2026-07-04 추기: 위 Plan 링크 7건의 상대경로(`../../plan/...`)는 깊이 오류로 깨져 있음 — 본 문서 위치(docs/qa/runs/ux-phase-a-f-pass1/) 기준 올바른 경로는 `../../../plan/qa/...` · `../../../plan/ui/...` (대상 파일은 전부 docs/plan/ 하위에 실존).
 >
 > 본 회차 범위: **13 신규 시나리오 작성 + tsc 0-error + 정적 회귀 9건 PASS** + 풀-스택 Pass 1 실행 가이드
 
@@ -118,6 +119,8 @@ docker compose -f docker-compose.e2e.yml -p marketscope-e2e down
 - 🔧 user 가 Pass 1 수동 트리거 → 본 verdict §3 표 의 "✅ written" 27건 모두 PASS 확인
 - 🔧 FAIL 발견 시: spec 격리 → atomic edit (sonnet) → 재실행 (Plan §Pass 1 의 "FAIL 시 처리" 참조)
 - 🔧 Pass 1 PASS 확인 후 → Plan 2 ([`ux-final-e2e-regression-plan.md`](../../plan/qa/ux-final-e2e-regression-plan.md)) 진입 게이트 통과
+
+> 📌 2026-07-04 추기: 위 링크도 동일 깊이 오류로 깨짐 — 올바른 경로는 `../../../plan/qa/ux-final-e2e-regression-plan.md` (docs/plan/qa/ 에 실존).
 - 🔧 정적 회귀 9건은 본 머신에서 baseline 으로 등록 — 추후 spec rewrite 시 회귀 비교 기준점
 
 ## 6. 변경 파일 (8 파일)

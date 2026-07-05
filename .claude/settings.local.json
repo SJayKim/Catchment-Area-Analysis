@@ -67,7 +67,12 @@
       "Bash(USE_MOCK=true PYTHONIOENCODING=utf-8 python -m pytest -x -q)",
       "Bash(echo \"EXIT: $?\")",
       "Bash(chmod:*)",
-      "Bash(git lfs:*)"
+      "Bash(git lfs:*)",
+      "Bash(git rev-list *)",
+      "Bash(git merge *)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright"
+  ]
 }

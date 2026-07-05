@@ -21,6 +21,8 @@ MarketScope AI는 기술적으로는 거의 다 만들어진 상태(Phase 1A 100
 | 사업자등록/약관/도메인 | 없음 |
 | Real 모드 블로커 | `districts.boundary` NULL (지도 폴리곤 표시 불가), `district_summary` Real DB 분기 미작동 |
 
+> ⚠ 2026-07-04 정정 (문서 정합성 감사): 위 표는 2026-04-08 스냅샷. 현재는 — 백엔드 테스트 `server/tests` **22모듈·173 테스트 함수**(parametrize 수집 196케이스, 최근 실측 190 passed/6 skipped) · E2E **spec 44파일·test 선언 164개** · CI 5잡(`.github/workflows/ci.yml`) + push 자동배포 파이프라인(`scripts/deploy/auto_deploy.sh`) 운영 · Real 모드 블로커(boundary NULL, `district_summary` 분기) 해소 · `marketscope.robitlabs.co.kr` 프로덕션 라이브. 수익화(Phase 2)·고객·마케팅 축은 여전히 0 으로 유효.
+
 **경쟁 환경** (가장 중요한 진실):
 오픈업/소상공인365/우리마을가게/나이스비즈맵 — 경쟁사 4개 모두 무료. 이들은 정부·대기업이 운영하는 "데이터 대시보드"입니다. **데이터로는 절대 이길 수 없으며**, 우리의 단 하나의 무기는 **"데이터를 해석해서 결정을 내려주는 AI 컨설턴트"** 포지셔닝입니다.
 
@@ -399,20 +401,22 @@ MRR 500만~1,000만, B2B 고객 5~10개사, 1인 → 1.5인 (외주/파트타임
 
 ## 10. Critical Files (참고/수정 대상)
 
-이 plan을 실행할 때 가장 중요한 파일들 (절대 경로):
+이 plan을 실행할 때 가장 중요한 파일들 (리포 상대 경로 — 2026-07-04 옛 머신 절대경로에서 교체):
 
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\server\server\agent\tools\district_summary.py` — **Stage 0 블로커**. Real DB 분기 작동 수정. 수정 안 되면 데모 불가.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\server\server\data\etl\seoul_opendata.py` — **Stage 0 블로커**. 5개 핵심 상권 boundary 수동 폴리곤 주입 (또는 fixture). 지도 데모 가능 여부 결정.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\frontend\src\components\chat\cards\` — Summary/Compare/Recommend/Risk Card 4종 다크 테마 일관성. 베타 첫인상의 90%.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\server\server\api\routes\chat.py` — `_sessions` dict (line 25), `_chat_semaphore=20` (line 31). **Stage 1**: 베타 키 화이트리스트 + 사용량 JSON Lines 로그 추가. **Stage 2**: Redis store 이관 필수.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\server\server\main.py` — lifespan, CORS, health endpoint. **Stage 2 P0**: `/ready` 분리 + CORS env화 + Sentry + slowapi rate limit.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\server\server\config.py` — `cors_origins` (line 50) 환경변수화 + LLM provider/timeout. 모든 환경변수의 single source of truth.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\server\Dockerfile` — multi-stage runner target, **이미 production-ready**, Fly/Render/ECS에 그대로 배포.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\docker-compose.yml` — Fly/ECS 매핑 reference. release_command/healthcheck 패턴 재사용.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\frontend\next.config.mjs` — Vercel rewrite 정책. **SSE는 직접 호출로 분리** (Vercel을 통하지 않음).
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\server\alembic\versions\001_initial_schema.py` — PostGIS schema (Neon/Aurora migration reference). Stage 2에서 4번째 리비전(users/subscriptions/usage_logs) 추가.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\docs\spec\B01-business-model.md` — Stage 2 OAuth/Toss/Tier 청사진. 이미 잘 작성되어 있어 Stage 0~1엔 손대지 말 것.
-- `C:\Users\cyon1\OneDrive\Desktop\Catchment-Area-Analysis\data\seed\marketscope_seed.dump` — 5MB binary, 초기 Neon import 자료.
+- `server/server/agent/tools/district_summary.py` — **Stage 0 블로커**. Real DB 분기 작동 수정. 수정 안 되면 데모 불가.
+- `server/server/data/etl/seoul_opendata.py` — **Stage 0 블로커**. 5개 핵심 상권 boundary 수동 폴리곤 주입 (또는 fixture). 지도 데모 가능 여부 결정.
+- `frontend/src/components/chat/cards/` — Summary/Compare/Recommend/Risk Card 4종 다크 테마 일관성. 베타 첫인상의 90%.
+- `server/server/api/routes/chat.py` — `_sessions` dict (line 25), `_chat_semaphore=20` (line 31). **Stage 1**: 베타 키 화이트리스트 + 사용량 JSON Lines 로그 추가. **Stage 2**: Redis store 이관 필수.
+- `server/server/main.py` — lifespan, CORS, health endpoint. **Stage 2 P0**: `/ready` 분리 + CORS env화 + Sentry + slowapi rate limit.
+- `server/server/config.py` — `cors_origins` (line 50) 환경변수화 + LLM provider/timeout. 모든 환경변수의 single source of truth.
+- `server/Dockerfile` — multi-stage runner target, **이미 production-ready**, Fly/Render/ECS에 그대로 배포.
+- `docker-compose.yml` — Fly/ECS 매핑 reference. release_command/healthcheck 패턴 재사용.
+- `frontend/next.config.mjs` — Vercel rewrite 정책. **SSE는 직접 호출로 분리** (Vercel을 통하지 않음).
+- `server/alembic/versions/001_initial_schema.py` — PostGIS schema (Neon/Aurora migration reference). Stage 2에서 다음 리비전(users/subscriptions/usage_logs) 추가.
+- `docs/spec/B01-business-model.md` — Stage 2 OAuth/Toss/Tier 청사진. 이미 잘 작성되어 있어 Stage 0~1엔 손대지 말 것.
+- `data/seed/marketscope_seed.dump` — 5MB binary, 초기 Neon import 자료.
+
+> ⚠ 2026-07-04 정정: 일부 라인 참조는 드리프트됨 — `cors_origins` 는 현행 `config.py:72`, alembic 은 이미 001~005 존재(다음 리비전은 006). Stage 0 블로커 2건은 해소 완료.
 
 ---
 

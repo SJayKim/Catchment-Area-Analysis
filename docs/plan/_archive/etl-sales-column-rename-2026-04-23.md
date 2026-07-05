@@ -3,7 +3,7 @@
 > Plan 유형: fix
 > 작성일: 2026-04-23
 > 선행 Audit: [docs/qa/runs/data-integrity-audit-2026-04-23.md](../../qa/runs/data-integrity-audit-2026-04-23.md) §1.1
-> 상태: 진행 중
+> 상태: ✅ 완료 (2026-07-04 문서 정합성 감사에서 구현 완료 확인 — `transformers.py::transform_estimated_sales` 가 MDWK/WKEND/TMZON_HH_HH 키 사용 중, 재적재·NULL 해소는 status 2026-04-23 "F-01 ETL fix" 기록)
 
 ---
 
@@ -111,13 +111,15 @@ Docstring 도 함께 갱신: "평일/주말/시간대 키는 서울 열린데이
 ### 4.1 구현
 
 - [x] Plan 문서 작성 (본 문서)
-- [ ] `transformers.py:214-229` 8 key rename + docstring 갱신
-- [ ] backend 이미지 재빌드
-- [ ] backend 컨테이너 재기동
-- [ ] `estimated_sales` 재적재 (quarter=2025Q4, --table estimated_sales)
-- [ ] Redis flush (`sales:*`, `report:*`, `heatmap:*`)
-- [ ] DB 검증 쿼리 — 5 sample × weekday/weekend/time_{1..6} 8 컬럼
-- [ ] audit p1 재실행 (2025Q4 sales row 5 체크)
+- [x] `transformers.py:214-229` 8 key rename + docstring 갱신
+- [x] backend 이미지 재빌드
+- [x] backend 컨테이너 재기동
+- [x] `estimated_sales` 재적재 (quarter=2025Q4, --table estimated_sales)
+- [x] Redis flush (`sales:*`, `report:*`, `heatmap:*`)
+- [x] DB 검증 쿼리 — 5 sample × weekday/weekend/time_{1..6} 8 컬럼
+- [x] audit p1 재실행 (2025Q4 sales row 5 체크)
+
+> ✅ 2026-07-04 문서 정합성 감사에서 구현 완료 확인: 코드는 `transformers.py::transform_estimated_sales` 에 `MDWK_SELNG_AMT`/`WKEND_SELNG_AMT`/`TMZON_00_06~21_24_SELNG_AMT` 전부 반영(docstring 개편 이력 포함), 재적재·8컬럼 NULL 해소는 status 2026-04-23 "F-01 ETL fix (21,333 행 재적재, 8 컬럼 NULL 해소)" 기록으로 완료.
 
 ### 4.2 재검토 (Self-Review Gate)
 

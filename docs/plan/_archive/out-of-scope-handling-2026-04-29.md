@@ -4,6 +4,7 @@
 > 생성일: 2026-04-29
 > 담당: sjkim
 > 모델: 설계 opus / 구현 sonnet / 검증 haiku
+> 상태: ✅ 완료 (2026-07-04 문서 정합성 감사에서 구현 완료 확인 — intents.yaml `out_of_scope` · planner short-circuit · `_CLARIFICATION_TEMPLATES["out_of_scope"]` · `STRONG_TOP1_MIN=0.70` · `test_out_of_scope.py` 전부 현행 코드에 존재)
 
 ## Context
 
@@ -16,10 +17,11 @@
 목표: **명시적 out-of-scope intent + 강한 entity 임계 + system prompt 거부 룰** 3중 가드로 silent 오답 0건 달성.
 
 ### 메모리 참조
-- [feedback_eval_district_code_hardcode.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_eval_district_code_hardcode.md) — DB ground truth + entity linking 검증 패턴
-- [feedback_comparison_intent_halluc.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_comparison_intent_halluc.md) — entity 매칭 실패 시 LLM 일반지식 fallback 으로 40~80% hallucination
-- [feedback_respond_tool_use_xml_leak.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_respond_tool_use_xml_leak.md) — LLM 거부 룰 + sanitizer 패턴
-- [project_e2e_port_convention.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/project_e2e_port_convention.md) — dev=8000/3000, E2E=8002/3001
+<!-- 2026-07-04 정합성 감사: 옛 머신(cyon1) auto-memory 절대경로 링크는 현 환경에서 해석 불가 → 평문 전환 (교훈 요지는 보존) -->
+- [[feedback_eval_district_code_hardcode]] — DB ground truth + entity linking 검증 패턴
+- [[feedback_comparison_intent_halluc]] — entity 매칭 실패 시 LLM 일반지식 fallback 으로 40~80% hallucination
+- [[feedback_respond_tool_use_xml_leak]] — LLM 거부 룰 + sanitizer 패턴
+- [[project_e2e_port_convention]] — dev=8000/3000, E2E=8002/3001
 
 ### 관련 Plan
 - [accuracy-gap-fix.md](./accuracy-gap-fix.md) — W1 entity_matching baseline
@@ -160,35 +162,37 @@ if not district_code and multi:
 
 ### Pass 1 — 기본 (out-of-scope 명시 거부)
 
-- [ ] `agent/config/intents.yaml` 에 `out_of_scope` intent 추가 (greeting 직후, comparison 앞)
-- [ ] `non_summary_overrides` 패턴에 영향 없는지 확인 — 광역지명 토큰이 우연히 매칭되지 않도록
-- [ ] `agent/nodes/planner.py::_CLARIFICATION_TEMPLATES` 에 `out_of_scope` 키 추가
-- [ ] `planner_node` 에서 rule 분류 직후 `intent == "out_of_scope"` 분기 추가 → 즉시 clarification 반환
-- [ ] `agent/prompts/system.py::_BASE_PROMPT` rule 11 추가
-- [ ] `agent/nodes/respond.py::RESPOND_SYSTEM_PROMPT` 동일 룰 미러
-- [ ] `server/tests/test_out_of_scope.py` 신규 — 4 케이스
-  - [ ] "부산 해운대 상권 알려줘" → out_of_scope clarification
-  - [ ] "제주 vs 강남 비교" → out_of_scope clarification (mixed)
-  - [ ] "분당 신도시 분석" → out_of_scope clarification
-  - [ ] "강남역 요약" (제어군) → out_of_scope 으로 분류되지 않음
+- [x] `agent/config/intents.yaml` 에 `out_of_scope` intent 추가 (greeting 직후, comparison 앞)
+- [x] `non_summary_overrides` 패턴에 영향 없는지 확인 — 광역지명 토큰이 우연히 매칭되지 않도록
+- [x] `agent/nodes/planner.py::_CLARIFICATION_TEMPLATES` 에 `out_of_scope` 키 추가
+- [x] `planner_node` 에서 rule 분류 직후 `intent == "out_of_scope"` 분기 추가 → 즉시 clarification 반환
+- [x] `agent/prompts/system.py::_BASE_PROMPT` rule 11 추가
+- [x] `agent/nodes/respond.py::RESPOND_SYSTEM_PROMPT` 동일 룰 미러
+- [x] `server/tests/test_out_of_scope.py` 신규 — 4 케이스 (실제 구현은 7 함수 / parametrize 포함 21 케이스)
+  - [x] "부산 해운대 상권 알려줘" → out_of_scope clarification
+  - [x] "제주 vs 강남 비교" → out_of_scope clarification (mixed)
+  - [x] "분당 신도시 분석" → out_of_scope clarification
+  - [x] "강남역 요약" (제어군) → out_of_scope 으로 분류되지 않음
 
 ### Pass 2 — 엣지 (silent wrong-district)
 
-- [ ] `agent/utils/entity_matching.py` 에 `STRONG_TOP1_MIN = 0.70` 상수 추가
-- [ ] `planner.py` 의 `detect_districts_in_message` 호출 후 weak match 필터링
-- [ ] `server/tests/test_entity_matching.py` 에 `STRONG_TOP1_MIN` 시나리오 추가 (가상 비-서울 시장명 → 약한 매치 → abstention)
+- [x] `agent/utils/entity_matching.py` 에 `STRONG_TOP1_MIN = 0.70` 상수 추가
+- [x] `planner.py` 의 `detect_districts_in_message` 호출 후 weak match 필터링 (최종 구현은 `api/routes/chat.py` message-detect 분기에서 `score < STRONG_TOP1_MIN` 거부로 위치 확정)
+- [x] `server/tests/test_entity_matching.py` 에 `STRONG_TOP1_MIN` 시나리오 추가 (실제 수록 위치는 `test_out_of_scope.py` — `STRONG_TOP1_MIN > TOP1_MIN` + 0.65~0.80 범위 가드)
 
 ### Pass 3 — 검증 (regression + 성능)
 
-- [ ] `ruff check server/` All passed
-- [ ] `pytest server/tests/` — 기존 49 + 신규 5+ PASS, 회귀 0 (test_smoke env-dep 1건 제외)
-- [ ] manual smoke (Mock 모드, USE_MOCK=true): backend `:8000` 띄워 curl 4종
+- [x] `ruff check server/` All passed
+- [x] `pytest server/tests/` — 기존 49 + 신규 5+ PASS, 회귀 0 (test_smoke env-dep 1건 제외) — 실측 70/71 (신규 21 + 기존 49)
+- [x] manual smoke (Mock 모드, USE_MOCK=true): backend `:8000` 띄워 curl 4종
   - "부산 해운대 알려줘" → out_of_scope text
   - "제주 vs 강남" → out_of_scope text
   - "강남역 요약" → 정상 summary 카드
   - "비교해줘" (district 없음) → comparison_under_2 clarification (회귀 0)
-- [ ] `docs/status/current-status.md` 갱신 (`/status-update`)
-- [ ] memory `feedback_out_of_scope_handling.md` 신규 + MEMORY.md 인덱스 추가
+- [x] `docs/status/current-status.md` 갱신 (`/status-update`)
+- [ ] memory `feedback_out_of_scope_handling.md` 신규 + MEMORY.md 인덱스 추가 (2026-07-04 감사: 현 머신 auto-memory 에 해당 파일 부재 — 미확인)
+
+> ✅ 2026-07-04 문서 정합성 감사에서 구현 완료 확인: `intents.yaml:18 out_of_scope` · `planner.py` `_CLARIFICATION_TEMPLATES["out_of_scope"]` + `intent == "out_of_scope"` short-circuit(`clarification_direct`) · `entity_matching.py STRONG_TOP1_MIN = 0.70`(적용부는 chat.py message-detect 분기) · `test_out_of_scope.py` 7 함수(21 케이스). 실행 결과는 status 2026-04-29 기록(ruff PASS · pytest 70/71 · 회귀 0).
 
 ---
 
@@ -269,7 +273,7 @@ if not district_code and multi:
 ## Metadata
 
 - 생성: 2026-04-29
-- 마지막 업데이트: 2026-04-29
-- 상태: 진행 중
+- 마지막 업데이트: 2026-07-04 (문서 정합성 감사 — 체크리스트/상태 실태 반영)
+- 상태: ✅ 완료 (2026-07-04 문서 정합성 감사에서 구현 완료 확인)
 - 관련 commit: (구현 후 추가)
 - 참조 메모리: 4건 (Context 섹션 참조)

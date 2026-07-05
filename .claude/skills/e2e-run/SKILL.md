@@ -17,10 +17,12 @@ allowed-tools: Bash, Read, Write
 ```bash
 echo "USE_MOCK=$USE_MOCK"
 [ -z "$USE_MOCK" ] && echo "ABORT: USE_MOCK 미설정" && exit 1
-curl -sf http://localhost:8000/api/health || { echo "ABORT: backend 미기동"; exit 1; }
+curl -sf http://localhost:8000/health || { echo "ABORT: backend 미기동"; exit 1; }
 ```
 
-건너뛰지 말 것 (memory/feedback_check_env_before_test.md): USE_MOCK 불일치 시 Mock(D3001) vs Real(3120189) district code 로 전체 tool 실패.
+헬스는 루트 `/health` (main.py `@app.get("/health")`) — `/api/health` 라우트는 없음(404). 상세 readiness 는 `/api/health/detail`.
+
+건너뛰지 말 것 ([[feedback_check_env_before_test]] 교훈): USE_MOCK 불일치 시 Mock(D3001) vs Real(3120189) district code 로 전체 tool 실패.
 
 ### 2. 실행
 
@@ -53,4 +55,4 @@ Ring <N> E2E Run:
 ## 주의
 
 - `disable-model-invocation: true` — Claude 자동 호출 차단. 사용자가 `/e2e-run 1` 직접 입력해야 실행.
-- Playwright SSE route 가로채기 금지 (memory/feedback_playwright_sse_capture.md). 직접 backend POST 사용.
+- Playwright SSE route 가로채기 금지 — 직접 backend POST 로 SSE 를 수집할 것 ([[feedback_playwright_sse_capture]] 교훈).

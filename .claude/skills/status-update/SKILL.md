@@ -24,7 +24,7 @@ wc -l docs/status/current-status.md
 ```
 Read docs/status/current-status.md
 ```
-큰 파일이므로 `limit=150` 으로 청크 분할 (memory/feedback_read_large_doc_chunking.md 관례).
+파일이 길어질 수 있으므로(가드 상한 400줄) 필요 시 `limit=150` 청크 분할로 읽기 — 대용량 문서 통읽기는 컨텍스트 낭비 ([[feedback_read_large_doc_chunking]] 교훈).
 
 ### 2. 오늘 날짜
 ```bash

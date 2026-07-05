@@ -17,10 +17,11 @@ W1 (`server/server/agent/utils/entity_matching.py`) 의 `_market_type_boost` 는
 목표: **30+ adversarial case 측정 + 임계 sweep 그리드 + 회귀 가드** 3 단계로 W1 entity 정확도 90% → 95%+ 달성.
 
 ### 메모리 참조
-- [feedback_eval_district_code_hardcode.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_eval_district_code_hardcode.md) — DB ground truth 교차검증 패턴
-- [feedback_comparison_intent_halluc.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_comparison_intent_halluc.md) — multi-district hallucination
-- [feedback_out_of_scope_handling.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_out_of_scope_handling.md) — STRONG_TOP1_MIN + word-boundary
-- [feedback_plan_regex_literal_vs_gate.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_plan_regex_literal_vs_gate.md) — 헐거운 alternation 강화 금지
+<!-- 2026-07-04 정합성 감사: 옛 머신(cyon1) auto-memory 절대경로 링크는 현 환경에서 해석 불가 → 평문 전환 (교훈 요지는 보존) -->
+- [[feedback_eval_district_code_hardcode]] — DB ground truth 교차검증 패턴
+- [[feedback_comparison_intent_halluc]] — multi-district hallucination
+- [[feedback_out_of_scope_handling]] — STRONG_TOP1_MIN + word-boundary
+- [[feedback_plan_regex_literal_vs_gate]] — 헐거운 alternation 강화 금지
 
 ### 관련 Plan
 - [accuracy-gap-fix.md](./accuracy-gap-fix.md) — W1 baseline + W2/W3

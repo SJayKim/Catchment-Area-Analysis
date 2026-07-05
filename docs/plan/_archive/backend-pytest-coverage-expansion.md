@@ -32,10 +32,13 @@ server/tests/
 목표: **conftest 정비 + 핵심 5 모듈 커버리지 70%+ + pre-commit + GitHub Actions 통합** 으로 회귀 자동 차단.
 
 ### 메모리 참조
-- [feedback_python_utf8_windows.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_python_utf8_windows.md) — Windows pytest 실행 시 `PYTHONIOENCODING=utf-8`
-- [feedback_eval_district_code_hardcode.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_eval_district_code_hardcode.md) — DB ground truth 패턴
-- [feedback_check_env_before_test.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_check_env_before_test.md) — USE_MOCK 환경 가드
-- [feedback_marketscope_sse_format.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_marketscope_sse_format.md) — SSE 포맷 (테스트 클라이언트 작성 시 참조)
+
+> (2026-07-04 정정: 아래 auto-memory 파일 링크는 구 머신 경로라 현 리포에서 해석 불가 — 링크 제거, 교훈 요지만 보존.)
+
+- [[feedback_python_utf8_windows]] — Windows pytest 실행 시 `PYTHONIOENCODING=utf-8`
+- [[feedback_eval_district_code_hardcode]] — DB ground truth 패턴
+- [[feedback_check_env_before_test]] — USE_MOCK 환경 가드
+- [[feedback_marketscope_sse_format]] — SSE 포맷 (테스트 클라이언트 작성 시 참조)
 
 ### 관련 Plan
 - [phase1-low-mid-risk-2026-04-23.md](./phase1-low-mid-risk-2026-04-23.md) — 분할된 모듈 회귀 테스트 부재 인지

@@ -18,8 +18,11 @@
 목표: **요청-coalescing singleflight + 경량 in-process 락** 으로 동일 cache key 동시 호출을 1건으로 수렴, p99 latency 보호.
 
 ### 메모리 참조
-- [feedback_check_env_before_test.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_check_env_before_test.md) — Mock vs Real 분기
-- [project_e2e_port_convention.md](../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/project_e2e_port_convention.md) — E2E 포트 분리
+
+> (2026-07-04 정정: 아래 auto-memory 파일 링크는 구 머신 경로라 현 리포에서 해석 불가 — 링크 제거, 교훈 요지만 보존.)
+
+- [[feedback_check_env_before_test]] — Mock vs Real 분기
+- [[project_e2e_port_convention]] — E2E 포트 분리
 
 ### 관련 Plan
 - [accuracy-gap-eval-round2-2026-04-24.md](../fix/accuracy-gap-eval-round2-2026-04-24.md) — Refactoring Pass 1 에서 singleflight 삭제 기록

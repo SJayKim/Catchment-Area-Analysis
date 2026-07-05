@@ -1,6 +1,6 @@
 ---
 name: db-validator
-description: DB 환경 사전 검증. USE_MOCK 상태, alembic head, PostGIS 마이그레이션 003(상권 1650개) 적용 여부 확인.
+description: DB 환경 사전 검증. USE_MOCK 상태, alembic head(005) 적용, 1,650 상권 데이터(ETL/seed) 적재 여부 확인.
 tools: Bash, Read, Grep
 model: haiku
 maxTurns: 8
@@ -16,8 +16,8 @@ echo "USE_MOCK=$USE_MOCK"
 
 ## 2. Mock 모드 (`USE_MOCK=true`)
 
-- `server/server/agent/tools/mock_data.py` (정의) + `server/server/repositories/mock/` (repo 래퍼) 존재 확인
-- 5개 상권(D3001~D3005: 강남역/홍대/건대/명동/서울역) 정의 여부 grep
+- `server/server/agent/tools/mock/*.json` (fixture 정의 — 5개 상권은 `districts.json`) + `server/server/agent/tools/mock_data.py` (로더) + `server/server/repositories/mock/` (repo 래퍼) 존재 확인
+- 5개 상권(D3001~D3005: 강남역/홍대/건대/명동/서울역) 정의 여부는 `server/server/agent/tools/mock/districts.json` 을 grep (⚠ mock_data.py 에는 D3001 리터럴이 없음 — JSON 로더일 뿐. 히트맵 중심좌표는 `repositories/mock/heatmap.py`)
 - 이상 없으면 "Mock OK" 반환 후 종료
 
 ## 3. Real 모드 (`USE_MOCK=false` 또는 미설정)
@@ -29,7 +29,9 @@ cd server && alembic current            # 현재 적용 버전
 ls server/alembic/versions/             # 001~005 마이그레이션 존재
 ```
 
-> 현재 alembic head: **005** (`005_estimated_sales_column_comment`). 마이그레이션 5종: 001 initial / 002 default_unit_price / 003 category_aliases (PostGIS 1,650 상권) / 004 learned_aliases / 005 estimated_sales 컬럼 코멘트.
+> 현재 alembic head: **005** (`005_estimated_sales_column_comment`). 마이그레이션 5종: 001 initial (PostGIS extension + 9테이블) / 002 default_unit_price / 003 category_metadata.aliases 컬럼 추가 / 004 learned_aliases 테이블 / 005 estimated_sales 컬럼 코멘트.
+>
+> ⚠ **1,650개 상권 데이터는 마이그레이션이 아니라 ETL/seed 로 적재된다** (`docker compose up seed` 시드 복원 또는 `server/server/data/etl/runner.py`). 마이그레이션은 스키마만 만든다 — 상권 수 확인은 `SELECT count(*) FROM districts` 로 별도 검증할 것.
 
 ## 4. 불일치 시 수정 명령 제시
 
@@ -37,7 +39,7 @@ ls server/alembic/versions/             # 001~005 마이그레이션 존재
 |------|------|
 | DB down | `docker compose up -d db` |
 | 마이그레이션 미적용 | `cd server && alembic upgrade head` |
-| Migration 003 누락 (1,650 상권 없음) | `/plan-new data migration-003-recovery` 로 복구 Plan 작성 |
+| 상권 1,650개 없음 (districts 비어있음/부족) | ETL/seed 미적재 문제 (마이그레이션 무관) — `docker compose up seed` 로 시드 복원, 또는 `scripts/setup_db.py` / ETL runner 실행 |
 | Migration 005 미적용 | `cd server && alembic upgrade head` (단순 컬럼 코멘트) |
 | USE_MOCK 미설정 | `.env.dev`(로컬) 또는 `.env`(프로덕션)에 `USE_MOCK=true/false` 명시 |
 

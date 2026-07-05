@@ -25,6 +25,10 @@
 
 **Critical path**: db -> backend -> nginx (if db is down, backend health fails, nginx returns 502)
 
+> ⚠ 위 맵은 **개발용 `docker-compose.yml`** 기준. 프로덕션(`docker-compose.prod.yml`)에는 nginx 서비스가 **없고**
+> (db/redis/migrate/seed/backend/frontend 6개뿐) 호스트의 외부 nginx 가 리버스 프록시를 담당한다 — nginx 관련
+> compose 명령은 dev 전용이며, prod 에서는 `sudo nginx -t && sudo systemctl reload nginx` 를 사용한다.
+
 ---
 
 ## Recovery Procedures
@@ -74,7 +78,7 @@ docker compose up migrate seed  # re-run init containers
 
 ### Scenario 2: Redis Down
 
-**Symptoms**: Cache misses (slower responses), rate limiting may not work, but service still functional.
+**Symptoms**: Cache misses (slower responses), but service still functional. (Redis is cache-only — rate limiting is not Redis-backed; `rate_limit_*` config values are defined but no route decorator applies them currently.)
 
 **Diagnosis**:
 ```bash
@@ -178,8 +182,14 @@ docker compose exec db psql -U marketscope -d marketscope -c "
 
 **Recovery**:
 ```bash
-# Option A: Re-run ETL for affected data
-docker compose exec backend python -m server.data.etl.scheduler --quarter 2025Q4
+# Option A: Re-run ETL for affected data (Typer CLI — quarter is a positional arg)
+docker compose exec backend python -m server.data.etl.runner run 2025Q4
+
+# Only specific tables (valid: districts, floating_pop, estimated_sales, stores, resident_pop)
+docker compose exec backend python -m server.data.etl.runner run 2025Q4 --table floating_pop
+
+# Validate after reload (column-content gate, non-zero exit on failure)
+docker compose exec backend python -m server.data.etl.runner validate 2025Q4
 
 # Option B: Restore from backup (see disaster-recovery.md)
 bash scripts/backup_db.sh                    # backup current state first
@@ -243,11 +253,15 @@ docker compose exec redis redis-cli dbsize          # Key count
 docker compose exec redis redis-cli flushdb         # Clear cache (safe)
 ```
 
-### Nginx
+### Nginx (dev 전용 — prod 는 외부 호스트 nginx)
 ```bash
 docker compose exec nginx nginx -t                  # Test config syntax
 docker compose exec nginx nginx -s reload           # Reload config (no downtime)
 docker compose logs nginx | grep " 5[0-9][0-9] "    # Find 5xx errors
+
+# prod (호스트 nginx)
+sudo nginx -t && sudo systemctl reload nginx
+sudo tail -f /var/log/nginx/error.log
 ```
 
 ### Monitoring
@@ -261,15 +275,16 @@ docker stats --no-stream                                 # Resource usage snapsh
 
 **Tracing sanity**
 ```bash
-# 1) Container SDK version
-docker exec catchment-area-analysis-backend-1 pip show langfuse | grep Version   # Must be 3.x
-docker exec catchment-area-analysis-backend-1 python -c "from langfuse.langchain import CallbackHandler; from langfuse.types import TraceContext; print('ok')"
+# 1) Container SDK version (compose project 이름 무관하게 서비스명으로 exec —
+#    dev project 는 marketscope-dev, prod 는 catchment-area-analysis)
+docker compose exec -T backend pip show langfuse | grep Version   # Must be 3.x
+docker compose exec -T backend python -c "from langfuse.langchain import CallbackHandler; from langfuse.types import TraceContext; print('ok')"
 
 # 2) /api/chat must return done.trace_id
 curl -s -X POST http://localhost:8000/api/chat -H "Content-Type: application/json" -d '{"message":"강남역 요약"}' --max-time 90 | grep -o '"trace_id":"[^"]*"'
 
 # 3) Backend log must carry real hex
-docker logs catchment-area-analysis-backend-1 --tail 100 | grep agent_done | tail -3
+docker compose logs backend --tail 100 | grep agent_done | tail -3
 # → trace_id=- 이면 tracing OFF. docs/plan/infra/langfuse-cost-coverage-fix-2026-04-24.md 참조.
 ```
 
@@ -278,10 +293,11 @@ docker logs catchment-area-analysis-backend-1 --tail 100 | grep agent_done | tai
 
 | 모델 ID | 역할 | 확인 위치 |
 |---|---|---|
-| `claude-sonnet-4-20250514` | Planner / Respond (anthropic mode) | Langfuse Cloud → Settings → Models |
-| `claude-opus-4-*` | Fallback / 실험 | 동일 |
-| `gemini-2.5-pro` | Respond (gemini mode) | 동일 |
-| `gemini-2.5-flash` | Planner / Evaluator (gemini mode) | 동일 |
+| `claude-sonnet-4-6` | v2 루프 1순위 (tool-calling) / PAE planner·respond (anthropic mode) | Langfuse Cloud → Settings → Models |
+| `gemini-2.5-pro` | v2 fallback 2순위 / PAE respond (gemini mode) | 동일 |
+| `gemini-2.5-flash` | v2 fallback 3순위 / PAE planner·evaluator (gemini mode) | 동일 |
+
+> 구 모델 ID `claude-sonnet-4-20250514` 는 은퇴(404) — 2026-06-26 에 `claude-sonnet-4-6` 으로 교체됨. 과거 trace 가격 대조 시에만 참고.
 
 **등록 방법** (Langfuse Cloud UI):
 1. Organization → Settings → Models → `+ Add model`

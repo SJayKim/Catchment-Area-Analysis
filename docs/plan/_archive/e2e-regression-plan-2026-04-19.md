@@ -202,6 +202,6 @@ Host (Windows/WSL) ─┐
 
 - 작성일: 2026-04-19
 - 작성자: Claude Code (plan-new skill 수동 적용)
-- 선행 Plan: `docs/plan/fix/deployment-root-cause-fixes.md`, `docs/plan/fix/sales-unit-conversion-fix.md`
-- 관련 문서: `docs/qa/e2e-qa-test-plan.md`, `docs/qa/runs/e2e-run-2026-04-07-real.md`
+- 선행 Plan: 배포 근본해결 7건 + 매출 단위 fix — 기록은 current-status.md 2026-04-17 이력 참조 (2026-07-04 정정: 구 인용처 `docs/plan/fix/deployment-root-cause-fixes.md` · `docs/plan/fix/sales-unit-conversion-fix.md` 는 리포에 부재)
+- 관련 문서: `docs/qa/test-plan.md` (2026-07-04 정정: 구 경로 `docs/qa/e2e-qa-test-plan.md`), `docs/qa/runs/e2e-run-2026-04-07-real.md`
 - 예상 작업량: Pass 1 ≈ 3h, Pass 2 ≈ 2h, Pass 3 ≈ 4h (총 ~9h)

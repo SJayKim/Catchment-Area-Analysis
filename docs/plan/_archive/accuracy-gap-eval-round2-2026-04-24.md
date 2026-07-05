@@ -63,6 +63,8 @@
 **district_code 매핑** (Real):
 - 강남역 = `3120189`, 서울역 = `3110023`, 홍대입구역 = `3120050`, 성수역 = `3120052`, 건대입구 = `3120053`, 명동 = `3110010`
 
+> ⚠ 2026-07-04 정정: 위 매핑 중 일부는 **오매핑으로 판명**되어 2026-04-27 P0-4 에서 폐기됨 — `3110023` 은 서울역이 아니라 서울대병원, `3110010` 은 명동이 아니라 평창동서측 상권이다. 현행 ground-truth 코드는 `scripts/eval/run_accuracy_round2.sh` 주석 기준 서울역=`3120043`, 명동=`3120028` (홍대는 S7 GT 기준 `3120103`). 이 표를 그대로 재사용하지 말 것.
+
 ### Rubric (Round 1 복제)
 
 | 축 | 0점 | 1점 | 2점 |
@@ -116,7 +118,11 @@ SESSION_S7="$SESSION-s7" \
 scenario S8 "홍대 말고 성수역이랑 건대 비교"
 ```
 
+> ⚠ 2026-07-04 정정: 위 설계 스니펫은 **현행 스크립트와 다르다 — 따라가지 말 것.** 현행 `scripts/eval/run_accuracy_round2.sh` 는 ① 기본 `BASE=${BASE:-http://localhost:8000}` (`:8002` 는 e2e 스택 전용 포트), ② 2026-04-27 P0-4 로 **district_code 하드코딩 제거** — 기본은 message-only payload(planner entity-linking 자체 검증)이며 코드는 ground-truth 주석으로만 유지, `WITH_CODES=1` 일 때만 동봉. 이 스니펫대로 실행하면 잘못된 포트 + 제거된 하드코딩(오매핑 코드 포함)을 재도입한다.
+
 **후처리**: `python scripts/eval/extract_sse.py $OUT/*.sse` 로 text/card/tool_end 를 markdown 테이블화.
+
+> ⚠ 2026-07-04 정정: `extract_sse.py` 는 존재하지 않음 — 현행 후처리 스크립트는 `scripts/eval/parse_sse.py`.
 
 ### Ground Truth 쿼리
 
@@ -150,6 +156,7 @@ SELECT district_code, SUM(monthly_sales)/3 AS monthly_won
 - [ ] `docker compose config | grep USE_MOCK` → `false` 확인 (.env.dev 확인)
 - [ ] `docker compose up -d` (`db`, `redis`, `backend`, `frontend`)
 - [ ] `curl http://localhost:8002/health` 200
+  > ⚠ 2026-07-04 정정: dev compose backend 는 `:8000`. `:8002` 는 `docker-compose.e2e.yml` e2e 스택 backend 포트 — 위 "docker compose up -d"(dev) 전제와 불일치.
 - [ ] `scripts/eval/run_accuracy_round2.sh` 실행 → 8 raw SSE 파일 생성
 - [ ] `psql ... -f scripts/eval/ground_truth.sql > ground_truth.tsv` 추출
 

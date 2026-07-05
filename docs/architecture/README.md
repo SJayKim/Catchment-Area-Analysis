@@ -7,7 +7,7 @@ MarketScope AI 시스템 설계 문서. 레이어별로 분리되어 있으며, 
 | [overview.md](overview.md) | 전체 시스템 요약 — 이 문서를 먼저 읽을 것 |
 | [backend.md](backend.md) | FastAPI 앱 / API 라우트 / 서비스 / 미들웨어 |
 | [frontend.md](frontend.md) | Next.js App Router / Zustand / SSE 파서 / Card UI |
-| [agent.md](agent.md) | PAE 그래프 / Tool 9종 / 프롬프트 / 세션 히스토리 |
+| [agent.md](agent.md) | Agent 런타임 — v2 agentic loop + Trust Kernel (레거시 PAE 그래프 폴백) / Tool 9종 / 프롬프트 / 세션 히스토리 |
 | [data.md](data.md) | DB 스키마 / Repository / PostGIS / ETL / 캐시 규약 |
 | [deployment.md](deployment.md) | Docker Compose / Nginx / 환경변수 / 배포 순서 |
 

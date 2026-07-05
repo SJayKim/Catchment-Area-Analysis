@@ -28,12 +28,16 @@
           │                                │
           ▼                                ▼
 ┌──────────────────────┐        ┌──────────────────────────────┐
-│  AI Agent (LangGraph)│        │  Data Layer                  │
-│  Planner→Actor→      │─tool──▶│  PostgreSQL 16 + PostGIS     │
-│  Evaluator→Respond   │        │  Redis 7 (cache, TTL 24h)    │
-│  LLM: Claude/Gemini  │        │  SQLAlchemy async repos      │
+│  AI Agent (v2 loop)  │        │  Data Layer                  │
+│  model-driven        │─tool──▶│  PostgreSQL 16 + PostGIS     │
+│  function-calling    │        │  Redis 7 (cache, TTL 24h)    │
+│  + Trust Kernel      │        │  SQLAlchemy async repos      │
 └──────────────────────┘        └──────────────────────────────┘
 ```
+
+> Agent 기본 경로는 **v2 agentic loop**(모델주도 function-calling + Trust Kernel, `agent/loop/`).
+> LLM 은 단일 tool-calling 모델 fallback chain(`claude-sonnet-4-6` → `gemini-2.5-pro` → `gemini-2.5-flash`)으로 호출한다.
+> 레거시 **PAE(Planner-Actor-Evaluator) 그래프**(`agent/graph.py`)는 Mock 모드 · `AGENT_LOOP_VERSION=pae` 롤백용 폴백으로 유지.
 
 ## 3. 기술 스택 (요약)
 
@@ -45,9 +49,9 @@
 | Charts | Recharts | 2.15 |
 | PDF | @react-pdf/renderer + html2canvas | 4.3 / 1.4 |
 | State | Zustand | 5.0 |
-| API | FastAPI + slowapi rate-limit | 0.115 |
-| Agent | LangGraph (custom PAE graph) | 0.2 |
-| LLM | Claude Sonnet 4 (planner) / Gemini 2.5 (role-based) | — |
+| API | FastAPI (slowapi 는 config 정의만 — 라우트 실적용 미결) | 0.115 |
+| Agent | v2 agentic loop (자체 구현 function-calling + Trust Kernel, `agent/loop/`) / 레거시 PAE = LangGraph | — / 0.2 |
+| LLM | fallback chain: `claude-sonnet-4-6` → `gemini-2.5-pro` → `gemini-2.5-flash` (v2 는 단일 tool-calling 모델 — 역할별 분리는 레거시 PAE 전용) | — |
 | DB | PostgreSQL + PostGIS | 16 / 3.4 |
 | Cache | Redis | 7 |
 | Container | Docker Compose | — |
@@ -57,10 +61,13 @@
 - **Mock/Real 전환**: `USE_MOCK` 플래그. Mock은 DB/Redis 없이 FastAPI 단독 기동 (JSON fixture).
 - **Repository 패턴**: `repositories/protocols.py` 에 10개 인터페이스 정의 → `mock/` · `real/` 두 구현체.
 - **Tool Registry**: Agent Tool 9종이 `@register_tool` 데코레이터로 자체 등록 (`agent/tools/registry.py`).
-- **SSE 스트리밍**: thinking → plan → tool → tool_end → card → text → suggestion → done 순차 이벤트.
-- **Map–Chat 양방향 동기화**: Zustand 3 store (chat/district/map) + `useMapSync` 훅.
+- **v2 agentic loop (기본 경로)**: `agent/runtime.py` 가 `agent_loop_version == "v2"` 이고 `llm_provider != "mock"` 이면 모델주도 function-calling 루프(`agent/loop/engine.py`)로 디스패치. budget governor(모델 턴 6 / tool call 12 / wall-clock 90s)가 종결을 보장하고, LLM 은 per-invoke fallback chain(anthropic → gemini pro → flash)으로 호출.
+- **Trust Kernel**: 최종 답변의 모든 수치를 도구 반환값(또는 compute 파생값)에 ±5%(`trust_numeric_tolerance=0.05`) 이내로 바인딩 검사(`agent/loop/trust.py`) — unbound/스케일 오기(×10/×100) 검출 → prose 전용 교정 패스 → 잔존 시 `[미확인]` 마스킹 또는 결정론적 grounded_fallback (카드 발행 시 abstention 금지).
+- **PAE 레거시 폴백**: Planner-Actor-Evaluator 그래프(`agent/graph.py`)는 Mock 모드 및 `AGENT_LOOP_VERSION=pae` 롤백 스위치용으로 유지 — mock 의 FakeListChatModel 은 tool-call 불가라 Mock E2E 는 항상 PAE 로 돈다.
+- **SSE 스트리밍**: v2 루프는 thinking / tool / tool_end / card / text / suggestion / done **7종** 방출. `plan` · `warning` 은 레거시 PAE 전용, `map_cmd` 와 greeting 단축 응답은 `api/routes/chat.py` 가 에이전트 밖에서 방출 (프론트 `SSEEvent` 유니온은 `error` 포함 10종).
+- **Map–Chat 양방향 동기화**: Zustand 4 store (chat/district/map/toast) + `useMapSync` 훅.
 - **Circuit Breaker + Singleflight**: LLM/DB 장애 시 degraded 동작, 캐시 미스 시 중복 호출 방지.
-- **Per-request agent graph (PAE)**: 세션 단위 상태 격리, 메모리 512KB 상한.
+- **요청/세션 격리**: per-request 에이전트 실행 + 인메모리 세션 저장소 (세션당 메모리 512KB 상한).
 
 ## 5. 레이어별 상세 문서
 
@@ -68,7 +75,7 @@
 |---|---|
 | [backend.md](backend.md) | FastAPI 앱 구성, API 라우트, 서비스(cache/circuit_breaker/category_resolver), 미들웨어, 에러 규약 |
 | [frontend.md](frontend.md) | App Router, 레이아웃·맵·챗 컴포넌트, Zustand 스토어, 훅, SSE 파서 |
-| [agent.md](agent.md) | Planner-Actor-Evaluator 그래프, Tool 9종, 프롬프트 구조, 세션 히스토리 |
+| [agent.md](agent.md) | Agent 런타임 — v2 agentic loop + Trust Kernel (레거시 PAE 그래프 폴백), Tool 9종, 프롬프트 구조, 세션 히스토리 |
 | [data.md](data.md) | DB 스키마, PostGIS 인덱스, Alembic 마이그레이션, ETL 파이프라인, 캐시 키 규약 |
 | [deployment.md](deployment.md) | Docker Compose (dev / prod), Nginx 리버스프록시, 환경변수, 운영 플래그 |
 
@@ -89,5 +96,5 @@
 - Mock 상권: 5개 (강남역 / 홍대 / 건대 / 명동 / 서울역)
 - Real 상권: 1,650개 (서울 전체)
 - ETL 적재: floating_population 9,888 / estimated_sales 21,333 / stores 75,985 / resident_population 39,288 (2025Q4 기준)
-- Agent Tool: 9종 (등록 기준; `get_district_benchmarks` 는 내부 헬퍼) / Card 타입: 5종 / SSE 이벤트: 9종
-- E2E: Ring 0~3 + prod-smoke. 2026-04-30 UX Sweep 회귀 매트릭스 = 기존 25 + Plan 1 신규 13 + Plan 2 통합 5 = **43 시나리오** ([`plan/qa/ux-final-e2e-regression-plan.md`](../plan/qa/ux-final-e2e-regression-plan.md))
+- Agent Tool: 9종 (등록 기준; `get_district_benchmarks` 는 내부 헬퍼) / Card 타입: 5종 / SSE 이벤트: v2 루프 7종 방출 + chat.py `map_cmd` (레거시 PAE 는 `plan`·`warning` 포함 9종, 프론트 `SSEEvent` 유니온은 `error` 포함 10종)
+- E2E (Playwright): spec **44파일 · test 선언 164개** (ring0~3 = 42파일·143선언, prod-smoke 1파일·9선언, 레거시 루트 phase3-scenario 1파일·12선언). 실행 케이스 수는 project 4종 곱·런타임 skip 으로 가변 — 최근 실측 2026-07-02 Mock 전체: 131 passed / 25 failed(loop 무관 사전결함) / 8 skip. UX Sweep 회귀 매트릭스 43 시나리오는 [`plan/qa/ux-final-e2e-regression-plan.md`](../plan/qa/ux-final-e2e-regression-plan.md) 참조

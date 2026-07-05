@@ -1,6 +1,6 @@
 # LLMOps L1 — E2E 검증 Plan
 
-> **Status**: Active
+> **Status**: Active → ✅ 완료 (2026-07-04 문서 정합성 감사에서 구현 완료 확인 — spec 실존 + 7/7 PASS 기록: [llmops-l1-verification.md](llmops-l1-verification.md))
 > **Parent plan**: `docs/plan/infra/llmops-platform.md` §3.3.1 / §4.3
 > **ADR**: `docs/plan/infra/llmops-l1-adr-hosting.md`
 > **Date**: 2026-04-21
@@ -26,6 +26,8 @@ Plan 상위 문서 §4.2 재검토 결과 중 아래 4개 제약이 E2E 검증 �
 | v4 SDK + 잘못된 키 + 생성자 → warn + None | 동일 | None |
 | 5-쿼리 smoke (summary/compare/recommend/risk/simulate, Mock D3001) | `scripts/_l1_smoke.py` (1회용, 제거됨) | `all_ok=True` — 각 쿼리 9~17 SSE 이벤트 |
 | Ring 0 (4 tests) | Playwright | 4/4 PASS (1.9s) |
+
+> ⚠ 2026-07-04 정정: 본 문서 곳곳의 "Langfuse **v4** SDK" 표기(위 §1.1 표 · §3.2 L1-E02 · §3.3 의사코드 · §4.2)와 §5.3 커밋 템플릿의 "SDK **v2.x** 핀" 은 서로 모순이며 둘 다 현행 핀과 불일치한다. 실제 고정 버전은 **v3** — `server/pyproject.toml` 이 `langfuse>=3,<4` + `langchain>=1,<2` 로 핀(L1 작업 중 v2→v3 포팅됨, 근거: [llmops-l1-verification.md](llmops-l1-verification.md)). L1-E02/E03 의 graceful-degrade(키 미설정/SDK 부재/잘못된 키 → None) 검증 취지는 SDK 메이저 버전과 무관하게 유효하다.
 
 ### 1.2 본 Plan 이 추가로 확인할 항목
 
@@ -116,11 +118,13 @@ test.describe('Ring 3 — LLMOps L1 Langfuse wiring', () => {
 ### 4.1 Checklist
 
 - [x] Plan 문서 작성 (본 문서)
-- [ ] `frontend/e2e/ring3-negative/l1-langfuse.spec.ts` 구현 (7 test)
-- [ ] Pass 1 실행 → 실패 root cause → 수정
-- [ ] Ring 0 회귀 (4 tests) 재확인
-- [ ] status 문서 (`docs/status/current-status.md`) 반영
-- [ ] 단일 커밋 + push
+- [x] `frontend/e2e/ring3-negative/l1-langfuse.spec.ts` 구현 (7 test)
+- [x] Pass 1 실행 → 실패 root cause → 수정
+- [x] Ring 0 회귀 (4 tests) 재확인
+- [x] status 문서 (`docs/status/current-status.md`) 반영
+- [x] 단일 커밋 + push
+
+> (2026-07-04 문서 정합성 감사에서 구현 완료 확인 — spec 파일 실존(7 test 선언), "7/7 PASS" 및 L1 커밋(`42b2209` 외)은 [llmops-l1-verification.md](llmops-l1-verification.md)·status 2026-04-21 기록 참조.)
 
 ### 4.2 재검토 (Self-Review Gate)
 
@@ -189,6 +193,8 @@ feat(llmops): L1 Langfuse trace wiring + E2E 회귀 7 scenario
 - Ring 3 에 l1-langfuse.spec.ts 7 test 추가
 - SDK v2.x 핀 (ADR: docs/plan/infra/llmops-l1-adr-hosting.md)
 ```
+
+> ⚠ 2026-07-04 정정: 위 "SDK v2.x 핀" 은 오기 — 현행 실제 핀은 `langfuse>=3,<4`(v3, `server/pyproject.toml`). §1.1 정정 주석 참조.
 
 ---
 

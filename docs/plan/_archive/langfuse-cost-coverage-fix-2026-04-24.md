@@ -13,10 +13,10 @@
   - Accuracy eval Round 2 S1~S8 = 8회+
   - 로컬 개발/수동 chat = 상당수
   → 전량 Anthropic 에 과금되지만 Langfuse cost 0.
-- **Memory 참조**:
-  - [feedback_langfuse_v2_langchain1_incompatible.md](../../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_langfuse_v2_langchain1_incompatible.md) — v2↔langchain 1.x 비호환, v3 + create_trace_id pre-assign 필수
-  - [feedback_otlp_http_cert_override.md](../../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_otlp_http_cert_override.md) — MITM 환경 시 `_certificate_file=False` 추가 필요
-  - [feedback_env_convention_inverted.md](../../../../.claude/projects/C--Users-cyon1-OneDrive-Desktop-Catchment-Area-Analysis/memory/feedback_env_convention_inverted.md) — `.env`=prod, `.env.dev`=dev 관례
+- **Memory 참조** (2026-07-04 정정: 구 머신 경로 링크 제거, 교훈 요지만 보존):
+  - [[feedback_langfuse_v2_langchain1_incompatible]] — v2↔langchain 1.x 비호환, v3 + create_trace_id pre-assign 필수
+  - [[feedback_otlp_http_cert_override]] — MITM 환경 시 `_certificate_file=False` 추가 필요
+  - [[feedback_env_convention_inverted]] — `.env`=prod, `.env.dev`=dev 관례
 
 ## Scope
 - **In Scope**:

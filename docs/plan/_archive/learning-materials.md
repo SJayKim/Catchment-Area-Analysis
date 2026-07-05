@@ -11,6 +11,8 @@
 
 본 repo는 crypto 대비 표면이 크다(Frontend Next.js + Backend FastAPI + LangGraph PAE Agent + PostGIS/Redis 데이터 레이어). 따라서 자료를 **계층별 7개 문서 커리큘럼**으로 나누고, 각 문서를 **독립 컨텍스트의 작성 에이전트**가 자기 슬라이스만 읽고 쓰게 하여(= context bloat 방지) 문서 퀄리티를 유지한다.
 
+> ⚠ 2026-07-04 정정 (문서 정합성 감사): 본 Plan 작성 시점(2026-06-21)과 달리 현행 기본 런타임은 **v2 agentic loop + Trust Kernel** (`config.py` `agent_loop_version="v2"` 기본값, `agent/runtime.py` 디스패치, `server/server/agent/loop/{engine,trust,tools_fc,prompts,models}.py`)이며, PAE 그래프(`agent/graph.py`)는 Mock 폴백·`AGENT_LOOP_VERSION=pae` 롤백 스위치용 legacy 다. 본 커리큘럼과 산출된 `docs/learning/` 문서 세트(§04 PAE 중심 · §05 도구 9종)는 v2 루프/Trust Kernel(수치 바인딩 검증, `trust_numeric_tolerance=0.05`)을 다루지 않는다 — 학습자료 개정 시 v2 문서 추가가 필요하다.
+
 ### 사용자 확정 사항
 - **깊이**: 코드 줄별 해설 포함 (crypto 참고자료 수준) — 단, 비유를 앞세워 비개발자 진입장벽 제거
 - **도식**: Mermaid 다이어그램으로 통일 (flowchart / sequenceDiagram / stateDiagram)
@@ -68,6 +70,9 @@
 - **비유**: 접수창구 — 손님(요청)을 맞고, 단골 기록(세션)을 꺼내고, 분석팀에 넘긴 뒤 결과를 한 줄씩 손님에게 전달.
 
 ### `04-AI에이전트-분석팀.md` — 서비스의 심장 (PAE)
+
+> ⚠ 2026-07-04 정정: PAE 그래프는 현행 legacy(Mock 모드·롤백 폴백) — 기본 경로는 v2 agentic loop(`agent/loop/engine.py`). SSE 방출 집합도 경로별로 다르다: v2 엔진 7종(thinking/tool/tool_end/card/text/suggestion/done), `plan`·`warning` 은 PAE 전용, `map_cmd` 는 `chat.py` 가 에이전트 밖에서 방출. "SSE 9 이벤트" 단일 서술은 PAE 기준.
+
 - **역할**: LangGraph **Planner→Actor→Evaluator→Respond** 그래프를 "분석팀"으로 설명. 가장 깊은 문서.
 - **핵심 Mermaid**: `stateDiagram-v2` — agent.md의 ASCII 그래프를 Mermaid로 (greeting/fast-respond 분기, Evaluator↔Planner 최대 3회 루프 포함).
 - **줄별 해설 대상**:

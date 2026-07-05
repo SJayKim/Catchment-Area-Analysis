@@ -43,7 +43,7 @@
 | **Gemini preview 모델 TTFT 16~45s → Claude Sonnet 4 로 전환 후 1.5~2s (17× 개선)** | current-status.md 2026-04-13 "SSE 스트리밍 성능 최적화" | 모델별 TTFT 히스토그램을 **관측 1순위** 지표로 |
 | **Anthropic API 키 만료 시 매 요청 401 → `_anthropic_valid` 세션 플래그로 우회** | `graph.py`, current-status.md 2026-04-13 | 동일 패턴을 Langfuse 전송 실패에도 적용 (best-effort) |
 | **Mock D3001~D3005 ↔ Real `3120189` district_code 불일치** → F02-H1 / F03-H4 테스트가 하드코딩 시 깨짐 | 커밋 `ff9909c` "런타임 resolve" | Eval runner 도 `USE_MOCK` preflight + district_code 런타임 resolve |
-| **`estimated_sales.monthly_sales` = 분기 누적**. `//3` 월환산 필요 | Plan A `docs/plan/fix/sales-unit-conversion-fix.md`, current-status.md 2026-04-17 | Golden query 의 매출 assertion 은 월 단위 범위로 |
+| **`estimated_sales.monthly_sales` = 분기 누적**. `//3` 월환산 필요 | current-status.md 2026-04-17 매출 단위 fix · `repositories/real/_units.py::MONTHS_PER_QUARTER` (2026-07-04 정정: 구 인용처 `docs/plan/fix/sales-unit-conversion-fix.md` 는 리포에 부재) | Golden query 의 매출 assertion 은 월 단위 범위로 |
 | **Next.js `_` prefix = private folder → 라우트 안됨**. `/api/kakao-sdk` ↔ `/proxy/kakao-sdk` rename | 커밋 `3c5f884` | Langfuse 가 프론트에 노출되는 API 루트 신설 시 동일 함정 주의 |
 | **Windows UTF-8 인코딩**: Python 파일 입출력 `encoding='utf-8'` 명시 누락 시 깨짐 | 반복된 ruff/pytest 환경 이슈 | Eval 리포트 저장 시 `encoding='utf-8'` 강제 |
 | **E2E 검증 시 user 메시지 자체가 키워드 오염** → assistant 메시지만 assertion | `frontend/e2e/helpers/evalPacket.ts` | LLM-as-Judge 입력도 `role=='assistant'` 필터 |
@@ -65,7 +65,7 @@
 - Fine-tuning / 모델 학습 인프라
 - 결제/구독 (`docs/plan/business/commercialization-plan.md`)
 - PII 마스킹 정책 전면 (별도 Security plan, 본 Plan 은 session_id 해시만 규정)
-- `docs/plan/infra/marketscope_improvement.md` 가 다루는 비-LLM 영역 (DB·캐시·인프라)
+- `docs/plan/marketscope_improvement.md` 가 다루는 비-LLM 영역 (DB·캐시·인프라)
 
 ---
 
@@ -321,7 +321,7 @@ MessageBubble
 
 3. **타 Plan 충돌**
    - `docs/plan/infra/load-test-plan.md` — 부하 테스트 중 Langfuse 플러싱이 지연 유발 가능. `LANGFUSE_SAMPLING_RATE=0.1` env 도입.
-   - `docs/plan/infra/marketscope_improvement.md` — DB/캐시 개선과 별도 트랙. 본 Plan 은 LLM 계층에만 집중.
+   - `docs/plan/marketscope_improvement.md` — DB/캐시 개선과 별도 트랙. 본 Plan 은 LLM 계층에만 집중.
    - `docs/plan/business/commercialization-plan.md` — 결제 도입 시 사용자 ID 가 trace 에 포함되어 PII 이슈. session_id 는 **해시 필수**, 원본 저장 금지.
    - PAE 구조 재변경 없음: `graph.py` 에 handler 파라미터만 추가, 노드 시그니처 불변 → `current-status.md` 2026-04-03 PAE 전환 결과와 호환.
 
@@ -413,13 +413,13 @@ MessageBubble
   - `docs/architecture/agent.md` — PAE 그래프 · Tool 레지스트리 · §7 Langfuse wiring 계획
   - `docs/architecture/backend.md` — §5 Services (cache/circuit_breaker/category_resolver)
   - `docs/plan/infra/load-test-plan.md` — L1 도입 후 회귀 테스트 대상
-  - `docs/plan/infra/marketscope_improvement.md` — 비-LLM 인프라 개선 (별도 트랙)
+  - `docs/plan/marketscope_improvement.md` — 비-LLM 인프라 개선 (별도 트랙)
   - `docs/ops/runbook.md` / `docs/ops/disaster-recovery.md` — L4 에서 섹션 추가
   - `docs/status/current-status.md` — 2026-04-13 LLM 전환, 2026-04-17 매출 단위 fix, 2026-04-21 E2E 그린
 - **프로젝트 내 근거 (memory 대체)**:
   - SSE 포맷 — `server/server/api/routes/chat.py`
   - TTFT 모델 벤치마크 — `current-status.md` 2026-04-13
   - district_code Mock/Real 런타임 resolve — 커밋 `ff9909c`
-  - 매출 분기→월 환산 — `docs/plan/fix/sales-unit-conversion-fix.md`
+  - 매출 분기→월 환산 — `repositories/real/_units.py::MONTHS_PER_QUARTER` + current-status.md 2026-04-17 (2026-07-04 정정: 구 인용처 `docs/plan/fix/sales-unit-conversion-fix.md` 는 리포에 부재)
   - Next.js `_` prefix rule — 커밋 `3c5f884`
   - Anthropic 401 세션 플래그 — `server/server/agent/graph.py` `_anthropic_valid`
