@@ -93,7 +93,7 @@ Langfuse 감사(2026-07-06 세션)에서 확인된 사실: **v2 agentic loop(현
 ## Pass 반복
 
 - **Pass 1 (기본 — 이번 실행 범위)**: C1~C7 + V1/V2 green
-- **Pass 2 (엣지/회귀)**: `R0-LF-AGG` + `R3-LF-L1` e2e 재실행 (keys 기본 off 계약 green)
+- **Pass 2 (엣지/회귀)**: `R0-LF-AGG` + `R3-LF-L1` e2e 재실행 (keys 기본 off 계약 green) — ✅ **2026-07-07 실행: 9 passed** (AGG-01~04 전건 + L1-E01/E04/E05/E06/E07). 게이트 항목(AGG 전건·L1-E01/E06) green, done trace_id null 계약 유지, health detail `langfuse` 블록 라이브 확인. **L1-E02/E03 FAIL 은 사전결함** — "v4 SDK import fail → handler None" 전제가 SDK v2→v3 포팅(2026-04-24) 이후 소멸(v3 는 fake key 로도 `LangchainCallbackHandler` 생성, 컨테이너 프로브 확증). 본 변경 diff 는 None-경로 무접촉 → 회귀 아님, 스펙 v3 의미론 재작성은 follow-up. 참고: `.env.e2e` `LLM_PROVIDER=anthropic` 라 실효 경로는 pae 아닌 **v2**(prod 동형) — keys-off 계약은 경로 무관 green
 - **Pass 3 (live 실측)**: `R1-LF-V2SMOKE`(dev 키 기동 → health detail langfuse 블록 → langfuse-cli 로 trace/score/span 확인) + `R1-LF-EVALOPT`(eval opt-in 스모크) + score-config 콘솔 등록(user_feedback)
 
 ## Agent 모델 선택

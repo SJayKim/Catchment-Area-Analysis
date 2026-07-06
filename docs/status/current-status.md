@@ -1,7 +1,19 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-07-06
+> 최종 갱신: 2026-07-07
 > 상세 이력은 git history (`git log --follow docs/status/current-status.md`) + `docs/qa/runs/` + `docs/plan/` 로 복원.
+
+---
+
+## 최근 작업 (2026-07-07)
+
+### Langfuse Ops Hardening Pass 2 — e2e 회귀 green + 로컬 커밋 (push 대기)
+- **Plan**: [langfuse-ops-hardening-2026-07-06](../plan/infra/langfuse-ops-hardening-2026-07-06.md) §Pass 반복
+- ✅ **커밋(로컬)**: `d63a371` feat(observability) 12파일 + `e82b492` docs(observability) 6파일 — **push 안 함** (main push = auto_deploy 트리거, prod 서버 접근 불가 상태 유지).
+- ✅ **Pass 2 e2e 회귀** (e2e 스택 :8002, `USE_MOCK=true` 명시 + Langfuse keys off): **9 passed** — R0-LF-AGG 4/4(AGG-01~04) + R3-LF-L1 게이트(L1-E01/E06) green, done trace_id null 계약 유지. 신규 health detail `langfuse` 블록 라이브 확인(enabled=false/tracer_valid=true/client_initialized=false). 실효 경로는 `.env.e2e` provider=anthropic 로 **v2**(prod 동형).
+- ℹ️ **L1-E02/E03 FAIL = 사전결함**: "v4 SDK import fail → handler None" 전제가 SDK v2→v3 포팅(2026-04-24) 이후 소멸 — v3 는 fake key 로도 handler 생성(컨테이너 프로브 확증), 본 변경 diff 는 None-경로 무접촉 → 회귀 아님. 스펙 v3 의미론 재작성 follow-up.
+- ⚠️ **운영 함정 기록**: ① compose 가 리포 루트 `.env`(USE_MOCK=false) 를 interpolation 으로 읽어 셸 unset 이어도 e2e 스택이 Real 로 뜸 — `USE_MOCK=true` 셸 명시 필수 ② 로컬 docker build pip 레이어 SSL 실패(캐시 축출 후 재현) + `build | tail` 파이프가 실패 exit 를 삼킴 — e2e backend 는 `docker cp server/server/.` 전체 패키지 반영으로 우회(부분 cp 는 7/1 이미지와 비정합 `effective_loop_version` ImportError).
+- 🔧 **잔여**: `.env`/`.env.dev` 수동 diff 적용(Plan §수동 적용 diff) → push + prod 배포(서버 접근 시, 스트리밍 옵션 B 와 동시) → Pass 3(live smoke R1-LF-V2SMOKE · eval opt-in R1-LF-EVALOPT · score-config 등록).
 
 ---
 
@@ -98,7 +110,7 @@
 - 🔧 `agent/nodes/respond.py` 재증식(575 LOC) · `stores/chatStore.ts`(455 LOC) slices 분할 미착수 · `except Exception` 좁히기
 
 ### 🟡 관측성 L2 잔여
-- Langfuse L2 Foundation(2026-05-07) + **v2 루프 L2 wiring 완료(2026-07-06 ops-hardening)** — 잔여: PAE 노드 generation span(planner/evaluator/respond) + L2-C eval harness (Plan [langfuse-l2-token-cost-eval.md](../plan/infra/langfuse-l2-token-cost-eval.md) Pass 2/3) · ops-hardening Pass 2/3(e2e 회귀 + live smoke + score-config 등록) · `.env`/`.env.dev` 수동 diff 적용
+- Langfuse L2 Foundation(2026-05-07) + **v2 루프 L2 wiring 완료(2026-07-06 ops-hardening)** — 잔여: PAE 노드 generation span(planner/evaluator/respond) + L2-C eval harness (Plan [langfuse-l2-token-cost-eval.md](../plan/infra/langfuse-l2-token-cost-eval.md) Pass 2/3) · ops-hardening Pass 3(live smoke·eval opt-in 스모크·score-config 등록 — Pass 2 e2e 회귀는 2026-07-07 green) · `.env`/`.env.dev` 수동 diff 적용
 
 ### 🟡 Phase 2 — Premium (미착수)
 - OAuth2 + 결제(Toss/PortOne) · Tier 게이팅 미들웨어(Free 일 5회) · F04 업종 심층 UI · category_aliases 퍼지 검색(pg_trgm)
