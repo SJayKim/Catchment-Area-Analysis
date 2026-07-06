@@ -69,9 +69,12 @@ export function handleSSEEvent(event: SSEEvent, ctx: EventHandlerContext): void 
       if (currentSteps.length === 0) {
         get().addAgentStep({ id: 'thinking', label: thinkStep || '질문 분석 중...', status: 'in_progress' });
       } else {
-        const hasResponseStep = currentSteps.some((s) => s.id === 'response');
-        if (!hasResponseStep) {
+        const responseStep = currentSteps.find((s) => s.id === 'response');
+        if (!responseStep) {
           get().addAgentStep({ id: 'response', label: thinkStep || '응답 작성 중...', status: 'in_progress' });
+        } else if (thinkStep && responseStep.status === 'in_progress') {
+          // v2 스트리밍 진행 이벤트("응답 작성 중... n%") — 라벨 실시간 갱신
+          get().updateAgentStepStatus('response', 'in_progress', thinkStep);
         }
       }
       break;

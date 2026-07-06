@@ -14,8 +14,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from typing import Any
+
+from langchain_core.messages import AIMessageChunk, message_chunk_to_message
 
 from server.config import settings
 from server.services.circuit_breaker import CircuitBreaker, CircuitOpenError
@@ -113,6 +116,94 @@ async def ainvoke_with_fallback(
                 "loop model candidate failed (%s/%s): %s — trying next",
                 candidate.provider,
                 candidate.model_id,
+                exc,
+            )
+            continue
+
+    await _loop_circuit_breaker.record_failure()
+    assert last_exc is not None
+    raise last_exc
+
+
+def _chunk_text(chunk: Any) -> str:
+    """Extract plain text from an AIMessageChunk (str or content-block list)."""
+    content = getattr(chunk, "content", "")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for block in content:
+            if isinstance(block, dict):
+                if block.get("type") in (None, "text", "text_delta"):
+                    parts.append(block.get("text", ""))
+            elif isinstance(block, str):
+                parts.append(block)
+        return "".join(parts)
+    return str(content)
+
+
+async def astream_with_fallback(
+    messages: list,
+    tools: list[dict] | None,
+    *,
+    callbacks: list | None = None,
+    timeout: float | None = None,
+) -> AsyncGenerator[dict[str, Any], None]:
+    """Stream the first working model in the fallback chain, buffering chunks.
+
+    Same fallback/breaker semantics as ``ainvoke_with_fallback`` — a candidate
+    that fails BEFORE OR MID-STREAM is dropped (its buffer discarded, never
+    shown) and the next one restarts from scratch. Yields:
+
+      {"kind": "delta", "chars": <cumulative text length>, "tool_call": <bool>}
+      {"kind": "final", "message": <AIMessage>}   # exactly once, then returns
+
+    Raises CircuitOpenError when the breaker is open; raises the last provider
+    error if every candidate fails. CancelledError (client abort) propagates
+    without touching the breaker.
+    """
+    _loop_circuit_breaker.check()
+
+    chain = _candidate_chain()
+    if not chain:
+        raise RuntimeError("No LLM provider configured for the v2 loop")
+
+    config: dict[str, Any] = {}
+    if callbacks:
+        config["callbacks"] = callbacks
+
+    last_exc: Exception | None = None
+    for candidate in chain:
+        acc: AIMessageChunk | None = None
+        chars = 0
+        saw_tool_call = False
+        try:
+            llm = _build(candidate)
+            bound = llm.bind_tools(tools) if tools else llm
+            # asyncio.wait_for can't wrap an async iteration — bound the whole
+            # stream with asyncio.timeout instead (respond.py pattern).
+            async with asyncio.timeout(timeout):
+                async for chunk in bound.astream(messages, config=config or None):
+                    acc = chunk if acc is None else acc + chunk
+                    chars += len(_chunk_text(chunk))
+                    saw_tool_call = saw_tool_call or bool(getattr(chunk, "tool_call_chunks", None))
+                    yield {"kind": "delta", "chars": chars, "tool_call": saw_tool_call}
+            if acc is None:
+                raise RuntimeError(f"empty stream from {candidate.provider}/{candidate.model_id}")
+            await _loop_circuit_breaker.record_success()
+            # Normalize the accumulated chunk (tool_call_chunks → tool_calls)
+            # so downstream message history serializes like an ainvoke result.
+            yield {"kind": "final", "message": message_chunk_to_message(acc)}
+            return
+        except CircuitOpenError:
+            raise
+        except Exception as exc:  # noqa: BLE001 — try next provider (buffer discarded)
+            last_exc = exc
+            logger.warning(
+                "loop stream candidate failed (%s/%s, %d chars buffered): %s — trying next",
+                candidate.provider,
+                candidate.model_id,
+                chars,
                 exc,
             )
             continue

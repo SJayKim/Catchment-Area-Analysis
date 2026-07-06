@@ -21,7 +21,7 @@ from langchain_core.messages import (
     ToolMessage,
 )
 
-from server.agent.loop.models import ainvoke_with_fallback
+from server.agent.loop.models import ainvoke_with_fallback, astream_with_fallback
 from server.agent.loop.prompts import LOOP_SYSTEM_PROMPT, corrective_instruction
 from server.agent.loop.tools_fc import (
     ABSTAIN,
@@ -159,6 +159,7 @@ async def run_agent(
     started = time.monotonic()
     fact_idx = 0
     resolved_name = ""  # resolve_district 가 찾은 상권명 — suggestion 개인화용
+    best_pct = 0  # "응답 작성 중 n%" 단조 clamp — mid-stream 폴백 재시작 시 % 역행 방지
 
     yield {"type": "thinking", "step": "질문 분석 중..."}
 
@@ -176,12 +177,40 @@ async def run_agent(
                 # 도구 라운드 이후 모델 턴은 수십 초 걸릴 수 있다 — 진행 표시 유지.
                 yield {"type": "thinking", "step": "결과 분석 중..."}
 
-            ai = await ainvoke_with_fallback(
-                messages,
-                schemas if allow_tools else None,
-                callbacks=callbacks,
-                timeout=settings.llm_timeout_slow,
-            )
+            if settings.agent_loop_stream_final:
+                # 옵션 B: astream 으로 받되 버퍼링 — 수신 중에는 "응답 작성 중 n%"
+                # 진행 이벤트만 방출하고, 본문 텍스트는 Trust 검증 후 일괄 방출.
+                ai = None
+                last_emit_chars = 0
+                async for ev in astream_with_fallback(
+                    messages,
+                    schemas if allow_tools else None,
+                    callbacks=callbacks,
+                    timeout=settings.llm_timeout_slow,
+                ):
+                    if ev["kind"] == "final":
+                        ai = ev["message"]
+                        continue  # 다음 anext 가 곧바로 StopAsyncIteration — 자연 종료
+                    # 도구 턴 서두 텍스트 오인 방지: tool_call 청크 등장 즉시 억제
+                    # + 최소 분량 문턱 미달 시 미방출.
+                    if ev["tool_call"] or ev["chars"] < settings.agent_loop_progress_min_chars:
+                        continue
+                    if ev["chars"] - last_emit_chars < settings.agent_loop_progress_interval_chars:
+                        continue
+                    last_emit_chars = ev["chars"]
+                    pct = min(99, ev["chars"] * 100 // settings.agent_loop_expected_answer_chars)
+                    if pct > best_pct:
+                        best_pct = pct
+                        yield {"type": "thinking", "step": f"응답 작성 중... {pct}%"}
+                if ai is None:
+                    raise RuntimeError("stream ended without a final message")
+            else:
+                ai = await ainvoke_with_fallback(
+                    messages,
+                    schemas if allow_tools else None,
+                    callbacks=callbacks,
+                    timeout=settings.llm_timeout_slow,
+                )
             messages.append(ai)
 
             tool_calls = getattr(ai, "tool_calls", None) or []

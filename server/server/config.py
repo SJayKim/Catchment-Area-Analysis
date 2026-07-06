@@ -82,6 +82,12 @@ class Settings(BaseSettings):
     agent_loop_max_iterations: int = 6  # model turns before forced finalize
     agent_loop_max_tool_calls: int = 12  # total tool executions per request
     agent_loop_wall_clock: float = 90.0  # seconds before forced finalize
+    # v2 final-turn streaming (Option B): astream + buffering + progress
+    # events. Trust semantics unchanged — perceived-latency improvement only.
+    agent_loop_stream_final: bool = True  # rollback switch (env AGENT_LOOP_STREAM_FINAL=false)
+    agent_loop_progress_min_chars: int = 120  # suppress progress below this (tool-call preamble)
+    agent_loop_progress_interval_chars: int = 80  # min char gap between progress events
+    agent_loop_expected_answer_chars: int = 1100  # progress denominator (capped at 99%)
     # Trust Kernel — fuzzy tolerance for binding a response number to a fact.
     trust_numeric_tolerance: float = 0.05
 
