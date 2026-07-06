@@ -39,13 +39,13 @@ config 신규: `agent_loop_stream_final=True` / `agent_loop_progress_min_chars=1
 - [x] C4 `eventHandlers.ts`: response step 라벨 갱신 (`in_progress` 가드)
 - [x] C5 테스트: `test_loop_models_stream.py` 8건 + `test_engine_stream_events.py` 5건 (전건 PASS)
 - [x] C6 stale `test_trust_redaction.py`: 미중복 4케이스 `test_trust_kernel_regressions.py` 이식(23 passed) 후 삭제
-- [ ] V1 server pytest 전체 + ruff (수집 에러 0)
-- [ ] V2 frontend `tsc --noEmit` 0 error
-- [ ] V3 e2e 스택 (:8002, **호스트 `USE_MOCK=false` export**, live 키 liveness)
-- [ ] V4 SSE 타임라인: 진행 % 단조·text 일괄·done 절단 0·무음 구간 해소, 프론트 라벨 갱신 육안
-- [ ] V5 Accuracy Eval S1~S8 (`run_accuracy_round2.sh` BASE=:8002) → verdict — **GATE: 평균 ≥9.0 / 날조 0 / done 절단 0 / S7 ≥9.3**
-- [ ] V6 Langfuse generation usage/cost 기록 회귀 확인
-- [ ] V7 GATE PASS 시에만 main 머지 → auto_deploy 관찰 → prod smoke → status-update
+- [x] V1 server pytest 전체 + ruff — **205 passed / 8 skip**, 수집 에러 0
+- [x] V2 frontend `tsc --noEmit` 0 error
+- [x] V3 e2e 스택 (:8002, USE_MOCK=false printenv 확인, anthropic live 키) — 신규 코드 docker cp + grep 검증
+- [x] V4 SSE 타임라인: 진행 11건 % 단조·text 일괄·done 정상. **발견: 분모 1100 → 99% 정체 12.5s → 2400 상향** (실측 답변 ~2,000자)
+- [x] V5 Accuracy Eval — **GATE PASS 4/4** (평균 10.0 / 날조 0 / 절단 0/9 / S7 10.0). [Verdict](../../qa/runs/eval-stream-b-2026-07-06/_verdict.md)
+- [x] V6 usage probe PASS — streaming 최종 메시지 `usage_metadata` 정상 (컨테이너 내 실호출)
+- [ ] V7 main 머지+push `dc11186` ✅ · CI 5/5 green ✅ · **서버측 auto_deploy 미발화 (timer disabled/blocked 추정)** — 서버에서 `bash scripts/deploy/auto_deploy.sh --force` 또는 timer enable 필요. 발화 후 prod SSE 에 "응답 작성 중 n%" 확인
 
 ## 재검토 (Self-Review Gate)
 
