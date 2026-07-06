@@ -15,6 +15,16 @@
 - ⚠️ **관찰(비차단, follow-up)**: S7-pre(비채점 setup 턴) "여성 543억" — 실제 여성 월매출 289억, 홍대 총매출 532억과 ±5% 퍼지 톨러런스 충돌(2.07%)로 통과한 오도출. 스트리밍 무관 기존 Trust 한계 → 큰 자릿수 원화 tolerance 이중 게이트 or 성별/비율 라벨 바인딩 follow-up.
 - 🔧 **prod 배포 대기** — main push `dc11186` + CI 5/5 green 완료, but 서버측 auto_deploy 미발화 + prod 서버 현재 접근 불가(사용자 확인). 서버 접근 가능 시: `systemctl status marketscope-autodeploy.timer` 확인 → timer enable 또는 `bash scripts/deploy/auto_deploy.sh --force` (CI 게이트·flush_cache·smoke·자동롤백 내장) → prod SSE 에 "응답 작성 중 n%" 확인. 롤백 스위치: env `AGENT_LOOP_STREAM_FINAL=false` + 재기동.
 
+### Langfuse Ops Hardening Pass 1 🆕 — v2 L2 wiring + 무음사망 가시화 + eval 관측 opt-in
+- **Plan**: [langfuse-ops-hardening-2026-07-06](../plan/infra/langfuse-ops-hardening-2026-07-06.md) (감사 P1~P4 일괄)
+- ✅ **v2 L2 wiring**: `engine.py` finalize 에 `marketscope.v2.summary` 19키 metadata + **score 6종**(numeric_match/tool_error_rate/abstention_triggered/trust_corrective_applied/trust_fallback_triggered/trust_masked_count) + 도구별 tool span(duration/error) · LLM 3 call site 에 metadata/tags/run_name **조건부** 전달(handler None=기존과 바이트 동일) · tags `marketscope.{v2|pae}` 동적화 · Trust 블록 `binding_stats` 치환(behavior-preserving 계측).
+- ✅ **무음사망 가시화**: `/api/health/detail` `langfuse` 블록(enabled/tracer_valid/client_initialized/sampling_rate) + `/metrics` `langfuse_trace_missing_total` + runbook 3단 진단 플레이북.
+- ✅ **잠재 결함 fix**: SDK `sample_rate` 이중 샘플링 제거(done trace_id 고아 방지, `should_sample()` 단일 게이트) · flush `asyncio.to_thread` offload(engine+graph — SSE 블로킹 제거).
+- ✅ **eval 관측 opt-in**: `docker-compose.e2e.yml` `${E2E_LANGFUSE_*:-}` 파라미터화 — 기본 off(e2e trace_id null 계약 보존), eval 세션만 dev 키 export.
+- ✅ **검증**: 신규 pytest 4파일 18건 + 전체 **225 passed / 6 deselected(@real), 수집 231** · ruff/format PASS. 로컬 env 드리프트(structlog·slowapi 누락) 복구로 app_client 스킵 0.
+- ⚠️ **수동 적용 대기**: `.env`(TRACING_ENVIRONMENT=production + SESSION_SALT + OTEL 주석) / `.env.dev`(SESSION_SALT) — `protect_secrets.py` 훅 차단. diff 는 Plan §수동 적용 diff 참조.
+- 🔧 **Pass 2/3 잔여**: e2e 회귀(R0-LF-AGG·R3-LF-L1) · live smoke(R1-LF-V2SMOKE — dev 키 기동 후 langfuse-cli 로 trace/span/score 확인) · eval opt-in 스모크(R1-LF-EVALOPT) · score-config(user_feedback) 콘솔 등록.
+
 ---
 
 ## 최근 작업 (2026-07-04)
@@ -55,7 +65,7 @@
 | LLM_PROVIDER | **anthropic** (claude-sonnet-4-6) |
 | Loop | Claude Sonnet (function-calling), fallback gemini-2.5-pro/flash |
 | Agent 모드 | **v2 agentic loop + Trust Kernel** (`AGENT_LOOP_VERSION=v2`, 롤백 스위치=pae) |
-| 관측성 | Langfuse L1 (trace wiring, graceful degrade) |
+| 관측성 | Langfuse L1+L2 (v2 summary/score/tool-span wiring, graceful degrade) |
 
 ---
 
@@ -65,7 +75,7 @@
 - ETL 적재 (2025Q4): floating_pop 9,888 / estimated_sales 21,333 / stores 75,985 / resident 39,288 / worker total 4,724,265
 - Agent Tool 9종 · Card 타입 5종(summary/risk/compare/recommend/simulation)
 - SSE 이벤트: v2 루프 7종(thinking/tool/tool_end/card/text/suggestion/done) + `map_cmd`/greeting 단축은 chat.py, PAE(legacy) 경로는 plan/warning 추가 · 프론트 SSEEvent 유니온 10종(`error` 포함)
-- Backend pytest: 테스트 모듈 22 · 최근 실측 2026-07-04 **190 passed / 6 skipped**(`@pytest.mark.real` DB 통합 6)
+- Backend pytest: 테스트 모듈 28 · 최근 실측 2026-07-06 **225 passed / 6 deselected**(`@pytest.mark.real` DB 통합 6)
 - E2E(Playwright): spec 44파일 · ring0~3 + prod-smoke. 최근 실측 2026-07-02 Mock 131 passed / 25 failed(loop 무관 사전결함) / 8 skip
 
 > 완성도 평가(2026-04-22 스냅샷 안정성85/효율82/정확74)는 이후 해소: backend pytest·Langfuse L2·Heatmap singleflight = 2026-05-07 완료, 정확성 = Eval Round 4(평균 10.0, GATE PASS 4/4, 2026-07-04) 재측정 완료.
@@ -88,7 +98,7 @@
 - 🔧 `agent/nodes/respond.py` 재증식(575 LOC) · `stores/chatStore.ts`(455 LOC) slices 분할 미착수 · `except Exception` 좁히기
 
 ### 🟡 관측성 L2 잔여
-- Langfuse L2 Foundation 구현 완료(2026-05-07) — **노드 wiring(planner/evaluator/respond) + L2-C eval harness 미착수** (Plan [langfuse-l2-token-cost-eval.md](../plan/infra/langfuse-l2-token-cost-eval.md) Pass 2/3)
+- Langfuse L2 Foundation(2026-05-07) + **v2 루프 L2 wiring 완료(2026-07-06 ops-hardening)** — 잔여: PAE 노드 generation span(planner/evaluator/respond) + L2-C eval harness (Plan [langfuse-l2-token-cost-eval.md](../plan/infra/langfuse-l2-token-cost-eval.md) Pass 2/3) · ops-hardening Pass 2/3(e2e 회귀 + live smoke + score-config 등록) · `.env`/`.env.dev` 수동 diff 적용
 
 ### 🟡 Phase 2 — Premium (미착수)
 - OAuth2 + 결제(Toss/PortOne) · Tier 게이팅 미들웨어(Free 일 5회) · F04 업종 심층 UI · category_aliases 퍼지 검색(pg_trgm)

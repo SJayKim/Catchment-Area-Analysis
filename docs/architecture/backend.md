@@ -119,7 +119,7 @@ server/server/
 | Method | Path | 요청 | 응답 | 비고 |
 |---|---|---|---|---|
 | GET | `/health` | — | `{status}` | Liveness |
-| GET | `/api/health/detail` | — | DB pool / Redis / sessions / `agent_mode`(실효 루프 v2\|pae) / `agent_loop_version` / `llm_provider` | Readiness |
+| GET | `/api/health/detail` | — | DB pool / Redis / sessions / `agent_mode`(실효 루프 v2\|pae) / `agent_loop_version` / `llm_provider` / `langfuse`(enabled·tracer_valid·client_initialized·sampling_rate — 무음사망 가시화) | Readiness |
 | POST | `/api/chat` | `{message(≤500), session_id?, district_code?}` | `text/event-stream` | SSE — 이벤트 집합은 아래 표 (경로별 상이) |
 | GET | `/api/districts` | `search?`, `type?`, `limit`, `offset` | `{total, items[]}` | 한글 조사 strip |
 | GET | `/api/districts/{code}` | — | District + polygon | GeoJSON. 없으면 404 |
@@ -128,7 +128,7 @@ server/server/
 | GET | `/api/map-data/heatmap/all` | `quarter?` | `{slots: {0..23: [...]}}` | 프리로드 + singleflight |
 | GET | `/api/districts/{code}/preview` | `role?` | `DistrictPreview` JSON | F13 — LLM 무호출, Redis 24h |
 | POST | `/api/feedback/score` | `{trace_id, value, reason?, comment?}` | 202/204 | F12 L1 — Langfuse score proxy, trace_id 멱등(24h) |
-| GET | `/metrics` | — | `{sse_active_connections, singleflight_coalesced_total, request_counts[], latency[]}` | 운영 관측 (p50/p95/p99/avg ms, 인메모리) |
+| GET | `/metrics` | — | `{sse_active_connections, singleflight_coalesced_total, langfuse_trace_missing_total, request_counts[], latency[]}` | 운영 관측 (p50/p95/p99/avg ms, 인메모리). `langfuse_trace_missing_total` = enabled 인데 done 에 trace_id 없던 요청 수 |
 
 ### `/api/chat` SSE 이벤트
 
@@ -193,8 +193,8 @@ server/server/
 
 ## 8. 테스트
 
-- **Backend pytest**: `server/tests/` — **테스트 모듈 22개 · 테스트 함수 173개** (parametrize 확장 시 수집 196케이스, 이 중 `@pytest.mark.real` DB 통합 6케이스). 최근 실측 2026-07-04: **190 passed / 6 skipped**. Plan: [backend-pytest-coverage-expansion.md](../plan/infra/backend-pytest-coverage-expansion.md).
-  주요 파일: `conftest.py`(fixture 5종, `USE_MOCK=true`·`LLM_PROVIDER=mock` 강제) · `test_services_{cache,circuit_breaker,category_resolver}.py` · `test_repos_mock.py`(10 protocol) · `test_routes_health_and_map.py`(lifespan + httpx ASGITransport) · `test_singleflight.py`(9) · **`test_trust_kernel_regressions.py`(19)** · **`test_v2_loop_qa_regressions.py`(12)** · `test_langfuse_l2.py`(12) + `test_langfuse_aggregate.py`(10) · `test_data_integrity.py`(13 = unit 7 + `@real` 6) · `test_tool_tag_sanitizer.py`(11) + `test_xml_sanitizer.py`(6) · `test_entity_matching.py`(7) · `test_coref_numeric_followup.py`(7) · `test_out_of_scope.py`(7) · `test_numeric_sanity.py`(6) · `test_recommendation_scoring.py`(6) · `test_planner_clarification.py`(4) · `test_chat_session_concurrency.py`(4) · `test_smoke.py`(3) · `test_graph_suggestion_emission.py`(2).
+- **Backend pytest**: `server/tests/` — **테스트 모듈 28개 · 수집 231케이스** (이 중 `@pytest.mark.real` DB 통합 6케이스). 최근 실측 2026-07-06: **225 passed / 6 deselected(@real)**. Plan: [backend-pytest-coverage-expansion.md](../plan/infra/backend-pytest-coverage-expansion.md).
+  주요 파일: `conftest.py`(fixture 5종, `USE_MOCK=true`·`LLM_PROVIDER=mock` 강제) · `test_services_{cache,circuit_breaker,category_resolver}.py` · `test_repos_mock.py`(10 protocol) · `test_routes_health_and_map.py`(lifespan + httpx ASGITransport) · `test_singleflight.py`(9) · **`test_trust_kernel_regressions.py`(23)** · **`test_v2_loop_qa_regressions.py`(12)** · `test_loop_models_stream.py`(8) + `test_engine_stream_events.py`(5) (스트리밍 옵션 B) · `test_loop_models_config.py`(3) + `test_langfuse_ops.py`(7) + `test_v2_loop_langfuse.py`(5) + `test_metrics_langfuse.py`(3) (Langfuse ops-hardening) · `test_langfuse_l2.py`(12) + `test_langfuse_aggregate.py`(10) · `test_data_integrity.py`(13 = unit 7 + `@real` 6) · `test_tool_tag_sanitizer.py`(11) + `test_xml_sanitizer.py`(6) · `test_entity_matching.py`(7) · `test_coref_numeric_followup.py`(7) · `test_out_of_scope.py`(7) · `test_numeric_sanity.py`(6) · `test_recommendation_scoring.py`(6) · `test_planner_clarification.py`(4) · `test_chat_session_concurrency.py`(4) · `test_smoke.py`(3) · `test_graph_suggestion_emission.py`(2).
   CI: `.github/workflows/ci.yml::backend-test` — `pytest -m "not real"` + `--cov=server`(coverage XML artifact), dummy env 주입. `@real` 6케이스는 로컬 opt-in.
 - **E2E (Playwright)**: `frontend/e2e/` — spec 44파일 · test 선언 164개 (ring0~3 = 42파일·143선언 + prod-smoke 1파일·9선언 + 레거시 루트 phase3-scenario 1파일·12선언). 실행 `cd frontend && npm run test:e2e`. 백엔드 SSE 규약까지 커버.
 - **수동 smoke**: `scripts/verify_sales_units.py`, `server/scripts/flush_cache.py` 등 운영 스크립트

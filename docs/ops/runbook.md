@@ -288,6 +288,37 @@ docker compose logs backend --tail 100 | grep agent_done | tail -3
 # → trace_id=- 이면 tracing OFF. docs/plan/infra/langfuse-cost-coverage-fix-2026-04-24.md 참조.
 ```
 
+**무음사망(silent death) 3단 진단** — tracing 이 조용히 꺼지는 사고(SDK 드리프트·auth 실패 등)는
+LLM 과금은 계속되는데 Langfuse 만 0건이 된다. 아래 순서로 격리:
+
+```bash
+# 1단 — 배선 상태: enabled=true 인데 tracer_valid=false 면 import/auth 사망 (재기동 전까지 복구 안 됨)
+curl -s http://localhost:8000/api/health/detail | python -c "import sys,json; print(json.load(sys.stdin)['langfuse'])"
+# {'enabled': True, 'tracer_valid': True, 'client_initialized': True, 'sampling_rate': 1.0} 이 정상
+
+# 2단 — 누적 카운터: enabled 인데 done 에 trace_id 가 없던 요청 수 (0 이 정상, 증가 추세면 사고)
+curl -s http://localhost:8000/metrics | python -c "import sys,json; print(json.load(sys.stdin)['langfuse_trace_missing_total'])"
+
+# 3단 — 개별 요청: agent_done 로그의 trace_id 필드 (위 Tracing sanity #3 과 동일)
+docker compose logs backend --tail 100 | grep agent_done | tail -3
+```
+
+판정: ① `enabled=false` = 키 미설정(의도된 off) ② `enabled=true, tracer_valid=false` = SDK
+import/초기화 사망 → 컨테이너 SDK 버전 확인(위 #1) 후 재빌드/재기동 ③ `tracer_valid=true` 인데
+카운터 증가 = handler 생성 실패·auth 오류 반복 → backend 로그에서 `langfuse` 경고 grep.
+
+**샘플링 semantics (단일 게이트)** — `LANGFUSE_SAMPLING_RATE` 는 `should_sample()` 한 곳에서만
+적용된다 (SDK `sample_rate` 는 이중 샘플링 = done trace_id 고아 문제로 2026-07-06 제거).
+rate<1.0 에서 탈락한 요청은 handler 자체가 안 만들어져 done 에 trace_id 가 없고, 카운터는
+enabled 만 보므로 **샘플링 탈락분도 `langfuse_trace_missing_total` 에 포함된다** — rate<1.0
+운용 시 카운터가 (1-rate) 비율만큼 자연 증가하는 기준선을 감안하고 추세로 판단할 것
+(rate=1.0 운용에서는 0 이 정상이라 즉시 사고 시그널).
+
+**score-config 등록 (user_feedback)** — Langfuse Cloud UI 수작업 1회:
+1. 프로젝트 → Settings → Scores → `+ New score config`
+2. Name: `user_feedback` / Data type: NUMERIC / Min -1, Max 1 (프론트 FeedbackRow 가 up=1, down=-1 전송)
+3. v2 자동 score 6종(`numeric_match`/`tool_error_rate`/`abstention_triggered`/`trust_corrective_applied`/`trust_fallback_triggered`/`trust_masked_count`)은 SDK 가 직접 생성하므로 config 등록 불필요 — 대시보드 필터/차트에서 이름으로 조회.
+
 **Langfuse Cloud — Models pricing 체크리스트**
 (집계된 토큰이 있어도 Models 테이블에 모델 가격이 없으면 `cost = 0`. Anthropic 대시보드와 대조 전 필수 확인.)
 

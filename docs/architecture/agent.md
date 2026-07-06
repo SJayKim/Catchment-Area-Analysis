@@ -146,8 +146,11 @@ v2 는 **역할별 모델 분리가 없다** — 단일 tool-calling 모델을 p
 ## 9. 관측 (Langfuse)
 
 - `.env` 에 `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` 설정 시 활성화 (둘 다 필요).
-- **콜백 주입 wiring 은 양 경로 모두 구현 완료**: v2 는 `engine.py` 가 `get_langfuse_handler` 로 핸들러를 만들어 `ainvoke_with_fallback(callbacks=...)` 로 전 LLM 호출에 전달, PAE 는 `graph.py` 가 `astream` config 에 주입. `done` 이벤트에 `trace_id` 동봉 → 프론트 FeedbackRow 가 `/api/feedback/score` 로 score proxy (F12 L1).
-- 실패/비활성 시 handler=None 으로 graceful degrade (trace 없이 정상 동작).
+- **양 경로 모두 L2 wiring 완료** (2026-07-06 ops-hardening): 콜백 + `metadata`(session hash/request_id/agent_mode) + `tags`(`marketscope.{v2|pae}` — `effective_loop_version()` 동적) + `run_name` 을 전 LLM 호출에 전달. v2 는 `engine.py` 의 `lf_kwargs` **조건부** 전달(handler None 이면 빈 dict — 기존 호출과 동일), PAE 는 `graph.py` 가 `astream` config 에 주입. `done` 이벤트에 `trace_id` 동봉 → 프론트 FeedbackRow 가 `/api/feedback/score` 로 score proxy (F12 L1).
+- **v2 trace 동봉물** (`engine.py` finalize, `lf_trace_id` 없으면 전부 no-op): 도구 실행마다 `attach_tool_span`(as_type=tool, args/duration_ms/error — 결과 본문 미탑재) · 종료 시 `attach_summary_observation(name="marketscope.v2.summary")` 19키 metadata(iterations/tool_calls/trust_* 플래그/numeric_match_rate 등) · **score 6종** = `numeric_match`(scored>0 시) / `tool_error_rate`(calls>0 시) / `abstention_triggered` / `trust_corrective_applied` / `trust_fallback_triggered` / `trust_masked_count`. 앞 3종은 PAE 와 이름 공유. PAE summary 는 기존 `marketscope.pae.summary` 유지.
+- **샘플링 단일 게이트**: `should_sample()` 만 적용 — SDK `sample_rate` 는 이중 샘플링(done 에 trace_id 를 동봉했는데 SDK 가 trace 를 드랍하는 고아)을 만들어 제거 (`langfuse_tracer.py::_get_client`).
+- **flush offload**: 양 경로 모두 `await asyncio.to_thread(_lf_flush, ...)` — 동기 flush 의 이벤트 루프 블로킹 제거.
+- 실패/비활성 시 handler=None 으로 graceful degrade (trace 없이 정상 동작). 무음사망 가시화: `/api/health/detail` `langfuse` 블록(enabled/tracer_valid/client_initialized/sampling_rate) + `/metrics` `langfuse_trace_missing_total` — 진단 절차는 [ops/runbook.md](../ops/runbook.md) 참조.
 
 ## 10. 확장 포인트
 

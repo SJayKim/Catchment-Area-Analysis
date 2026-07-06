@@ -85,7 +85,8 @@ compose project 명은 `name: marketscope-dev` 로 명시 (기본 네트워크 �
 | `NEXT_PUBLIC_PREMIUM_CTA_ENABLED` | Phase E.3 — `'true'` 일 때만 FreeLimitSurvey Premium CTA 노출 | default off |
 | `ANTHROPIC_API_KEY` / `GOOGLE_API_KEY` | LLM | 필수 |
 | `SEOUL_OPENDATA_API_KEY` | ETL | Real 모드에서 필수 |
-| `LANGFUSE_*` | 관측 (선택) | 비워두면 비활성 |
+| `LANGFUSE_*` | 관측 (선택) | 비워두면 비활성. `LANGFUSE_TRACING_ENVIRONMENT` 관례: `.env`=production / `.env.dev`=development / e2e=`e2e`. `LANGFUSE_SESSION_SALT` 는 고정값 필수(비우면 재시작마다 세션 해시 분절). `LANGFUSE_OTEL_INSECURE=true` 는 로컬 MITM 전용 — **prod 서버 복사 금지** |
+| `E2E_LANGFUSE_{PUBLIC_KEY,SECRET_KEY,HOST,TRACING_ENVIRONMENT}` | e2e/eval 트래픽 관측 **opt-in** — `docker-compose.e2e.yml` 이 `${E2E_LANGFUSE_*:-}` 로 주입 | 기본 empty = 관측 off (e2e trace_id null 계약 보존). eval 세션만 dev 프로젝트 키 export, environment 기본 `e2e` |
 
 `scripts/validate_env.py` 가 빌드/기동 전에 누락 검증.
 
@@ -165,9 +166,9 @@ Playwright E2E 실행 잡은 CI 에 **없음** — E2E 는 로컬 `cd frontend &
 ## 7. 모니터링 & 로깅
 
 - Docker `json-file` log driver, max-size=50m, max-file=5 (서비스별)
-- `/api/health/detail` — DB pool / Redis / session 메트릭
-- `/metrics` — SSE 게이지 / singleflight / 경로별 latency (인메모리 집계)
-- Langfuse (선택): `LANGFUSE_*` 설정 시 LLM trace
+- `/api/health/detail` — DB pool / Redis / session 메트릭 + `langfuse` 블록(enabled/tracer_valid/client_initialized/sampling_rate)
+- `/metrics` — SSE 게이지 / singleflight / `langfuse_trace_missing_total`(무음사망 카운터) / 경로별 latency (인메모리 집계)
+- Langfuse (선택): `LANGFUSE_*` 설정 시 LLM trace — 무음사망 진단 플레이북은 [ops/runbook.md](../ops/runbook.md) 참조
 - 자동배포 로그: journal(`marketscope-autodeploy.service`) + `data/deploy-logs/`
 - 향후: Prometheus exporter 연동
 
