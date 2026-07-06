@@ -510,8 +510,12 @@ async def run_agent(
             except Exception:
                 logger.debug("langfuse aggregate stats emit failed", exc_info=True)
 
-        # best-effort flush — 예외 삼킴
-        _lf_flush(lf_handler)
+        # best-effort flush — 예외 삼킴. 동기 flush 의 이벤트 루프 블로킹을
+        # 피해 스레드로 offload (CancelledError 는 미포착으로 전파).
+        try:
+            await asyncio.to_thread(_lf_flush, lf_handler)
+        except Exception:
+            logger.debug("langfuse flush offload failed", exc_info=True)
 
     # Suggestion + done (trace_id 는 Langfuse 활성 시에만 포함)
     # greeting/clarification 노드는 실행 중 자체 tailored suggestion 을 이미 방출한다.

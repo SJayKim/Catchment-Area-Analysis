@@ -82,12 +82,18 @@ async def ainvoke_with_fallback(
     *,
     callbacks: list | None = None,
     timeout: float | None = None,
+    metadata: dict | None = None,
+    tags: list[str] | None = None,
+    run_name: str | None = None,
 ) -> Any:
     """Invoke the first working model in the fallback chain.
 
     Binds ``tools`` (OpenAI-function-shaped dicts) when provided so the model
     can emit tool_calls. Raises CircuitOpenError when the breaker is open;
     raises the last provider error if every candidate fails.
+
+    ``metadata``/``tags``/``run_name`` land in the LangChain RunnableConfig
+    (client-side only — Langfuse trace enrichment, request body unchanged).
     """
     _loop_circuit_breaker.check()
 
@@ -98,6 +104,12 @@ async def ainvoke_with_fallback(
     config: dict[str, Any] = {}
     if callbacks:
         config["callbacks"] = callbacks
+    if metadata:
+        config["metadata"] = metadata
+    if tags:
+        config["tags"] = tags
+    if run_name:
+        config["run_name"] = run_name
 
     last_exc: Exception | None = None
     for candidate in chain:
@@ -148,6 +160,9 @@ async def astream_with_fallback(
     *,
     callbacks: list | None = None,
     timeout: float | None = None,
+    metadata: dict | None = None,
+    tags: list[str] | None = None,
+    run_name: str | None = None,
 ) -> AsyncGenerator[dict[str, Any], None]:
     """Stream the first working model in the fallback chain, buffering chunks.
 
@@ -161,6 +176,9 @@ async def astream_with_fallback(
     Raises CircuitOpenError when the breaker is open; raises the last provider
     error if every candidate fails. CancelledError (client abort) propagates
     without touching the breaker.
+
+    ``metadata``/``tags``/``run_name`` land in the LangChain RunnableConfig
+    (client-side only — Langfuse trace enrichment, request body unchanged).
     """
     _loop_circuit_breaker.check()
 
@@ -171,6 +189,12 @@ async def astream_with_fallback(
     config: dict[str, Any] = {}
     if callbacks:
         config["callbacks"] = callbacks
+    if metadata:
+        config["metadata"] = metadata
+    if tags:
+        config["tags"] = tags
+    if run_name:
+        config["run_name"] = run_name
 
     last_exc: Exception | None = None
     for candidate in chain:

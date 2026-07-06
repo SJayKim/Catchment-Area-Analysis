@@ -42,6 +42,9 @@ _MAX_RESPONSE_TIME_SAMPLES = 500
 # Active SSE connections gauge
 _sse_active_connections: int = 0
 
+# Langfuse 무음사망 감지 — enabled 인데 done 이벤트에 trace_id 가 없던 요청 수
+_langfuse_trace_missing_total: int = 0
+
 # ---------------------------------------------------------------------------
 # Public helpers for SSE connection tracking
 # ---------------------------------------------------------------------------
@@ -65,6 +68,19 @@ def get_sse_active_connections() -> int:
     """Return the current number of active SSE connections."""
     with _lock:
         return _sse_active_connections
+
+
+def record_langfuse_trace_missing() -> None:
+    """Langfuse 활성 상태인데 trace_id 없이 done 이 나간 요청을 카운트."""
+    global _langfuse_trace_missing_total
+    with _lock:
+        _langfuse_trace_missing_total += 1
+
+
+def get_langfuse_trace_missing_total() -> int:
+    """Return the langfuse trace-missing counter (무음사망 시그널)."""
+    with _lock:
+        return _langfuse_trace_missing_total
 
 
 # ---------------------------------------------------------------------------
@@ -147,6 +163,7 @@ async def get_metrics() -> JSONResponse:
         counts_snapshot = dict(_request_counts)
         times_snapshot = {k: list(v) for k, v in _response_times.items()}
         sse_conns = _sse_active_connections
+        lf_trace_missing = _langfuse_trace_missing_total
     coalesced_total = get_coalesced_count()
 
     # Build request counts grouped by endpoint
@@ -182,6 +199,7 @@ async def get_metrics() -> JSONResponse:
         {
             "sse_active_connections": sse_conns,
             "singleflight_coalesced_total": coalesced_total,
+            "langfuse_trace_missing_total": lf_trace_missing,
             "request_counts": request_summary,
             "latency": latency_summary,
         }

@@ -8,6 +8,7 @@ text / suggestion / done. (greeting + map_cmd are handled in chat.py.)
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
@@ -35,7 +36,6 @@ from server.agent.loop.tools_fc import (
 from server.agent.loop.trust import (
     binding_stats,
     find_scale_errors,
-    find_unbound_numbers,
     grounded_fallback,
     mask_unbound,
     should_fallback,
@@ -132,15 +132,33 @@ async def run_agent(
 ) -> AsyncGenerator[dict[str, Any], None]:
     """Model-driven loop with Trust Kernel. Yields SSE event dicts."""
     from server.services.langfuse_tracer import (
-        flush as _lf_flush,
-    )
-    from server.services.langfuse_tracer import (
+        attach_summary_observation,
+        attach_tool_span,
+        build_langchain_metadata,
+        build_langchain_tags,
+        district_type_for,
+        emit_score,
         get_langfuse_handler,
         get_trace_id,
+    )
+    from server.services.langfuse_tracer import (
+        flush as _lf_flush,
     )
 
     lf_handler = get_langfuse_handler(session_id=session_id, request_id=request_id)
     callbacks = [lf_handler] if lf_handler is not None else None
+    lf_trace_id = get_trace_id(lf_handler)
+    # Langfuse 활성 시에만 LangChain config 키를 전달 — handler None 이면 빈 dict
+    # 로 기존 호출과 바이트 동일 (구 시그니처 fake 를 쓰는 테스트 보호).
+    lf_kwargs: dict[str, Any] = (
+        {
+            "metadata": build_langchain_metadata(lf_handler),
+            "tags": build_langchain_tags(),
+            "run_name": "marketscope.v2",
+        }
+        if lf_handler is not None
+        else {}
+    )
 
     schemas = tool_schemas()
     messages: list = [
@@ -160,6 +178,14 @@ async def run_agent(
     fact_idx = 0
     resolved_name = ""  # resolve_district 가 찾은 상권명 — suggestion 개인화용
     best_pct = 0  # "응답 작성 중 n%" 단조 clamp — mid-stream 폴백 재시작 시 % 역행 방지
+    iteration = -1  # finalize 가 iterations_used 로 참조 — 루프 진입 전 예외 대비
+    tool_errors = 0
+    trust_corrective = False
+    trust_fallback = False
+    trust_masked = 0
+    final_scored_total = 0
+    final_unbound_count = 0
+    final_scale_count = 0
 
     yield {"type": "thinking", "step": "질문 분석 중..."}
 
@@ -187,6 +213,7 @@ async def run_agent(
                     schemas if allow_tools else None,
                     callbacks=callbacks,
                     timeout=settings.llm_timeout_slow,
+                    **lf_kwargs,
                 ):
                     if ev["kind"] == "final":
                         ai = ev["message"]
@@ -210,6 +237,7 @@ async def run_agent(
                     schemas if allow_tools else None,
                     callbacks=callbacks,
                     timeout=settings.llm_timeout_slow,
+                    **lf_kwargs,
                 )
             messages.append(ai)
 
@@ -229,8 +257,18 @@ async def run_agent(
                 progress, done = labels_for_tool(name)
                 yield {"type": "tool", "name": name, "input": args, "progress_label": progress}
 
+                tool_started = time.monotonic()
                 result, error = await execute_fc_tool(name, args)
                 called_tools.add(name)
+                if error:
+                    tool_errors += 1
+                attach_tool_span(
+                    lf_trace_id,
+                    name=name,
+                    args=args,
+                    duration_ms=round((time.monotonic() - tool_started) * 1000, 1),
+                    error=error,
+                )
 
                 if name == ABSTAIN:
                     abstain_reason = (result or {}).get("reason") or "데이터가 없습니다."
@@ -273,9 +311,14 @@ async def run_agent(
                 "서울 지역 상권명을 알려주시면 분석해 드리겠습니다."
             )
 
-        unbound = find_unbound_numbers(final_text, fact_pool, computed)
+        # binding_stats 는 find_unbound_numbers 와 동일 경로/동일 unmatched 반환
+        # (scored_total 이 덤으로 나옴) — behavior-preserving 계측 치환.
+        final_scored_total, unbound = binding_stats(final_text, fact_pool, computed)
         scale_errors = find_scale_errors(final_text, fact_pool, computed)
+        final_unbound_count = len(unbound)
+        final_scale_count = len(scale_errors)
         if (unbound or scale_errors) and abstain_reason is None:
+            trust_corrective = True
             logger.info(
                 "trust: %d unbound / %d scale-suspect numbers, corrective pass",
                 len(unbound),
@@ -294,7 +337,7 @@ async def run_agent(
                 # 않으므로 그 메타 발화가 최종 답변으로 유출된다. 재작성은
                 # 컨텍스트에 이미 있는 도구 결과만으로 한다.
                 ai2 = await ainvoke_with_fallback(
-                    messages, None, callbacks=callbacks, timeout=settings.llm_timeout_slow
+                    messages, None, callbacks=callbacks, timeout=settings.llm_timeout_slow, **lf_kwargs
                 )
                 corrected = _text_of(ai2)
                 if _is_answer_shaped(corrected):
@@ -302,18 +345,22 @@ async def run_agent(
             except Exception:  # noqa: BLE001
                 logger.warning("trust corrective pass failed", exc_info=True)
 
-            still = find_unbound_numbers(final_text, fact_pool, computed)
+            # 교정 후 재측정 — 종전의 find_unbound_numbers + binding_stats 이중
+            # 계산을 단일 호출로 통합 (동일 반환).
+            final_scored_total, still = binding_stats(final_text, fact_pool, computed)
             still_scale = find_scale_errors(final_text, fact_pool, computed)
+            final_unbound_count = len(still)
+            final_scale_count = len(still_scale)
             if still or still_scale:
-                scored_total, _ = binding_stats(final_text, fact_pool, computed)
-                if should_fallback(len(still), scored_total):
+                if should_fallback(len(still), final_scored_total):
                     # Entity-mismatch-grade fabrication — 폐기가 맞다.
                     logger.warning(
                         "trust: %d/%d still unbound → deterministic fallback",
                         len(still),
-                        scored_total,
+                        final_scored_total,
                     )
                     final_text = grounded_fallback(fact_pool, cards_emitted=cards_emitted > 0)
+                    trust_fallback = True
                 else:
                     # 소수 잔존 — draft 를 살리고 해당 수치만 마스킹 (Round 3 P1:
                     # 과잉 방어의 가용성 손실 방지).
@@ -323,9 +370,11 @@ async def run_agent(
                         len(still_scale),
                     )
                     final_text = mask_unbound(final_text, still + [s.number for s in still_scale])
+                    trust_masked = len(still) + len(still_scale)
 
         if not final_text.strip():
             final_text = grounded_fallback(fact_pool, cards_emitted=cards_emitted > 0)
+            trust_fallback = True
 
         for chunk in _chunks(final_text):
             yield {"type": "text", "content": chunk}
@@ -342,7 +391,58 @@ async def run_agent(
             "content": "죄송합니다. 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
         }
     finally:
-        _lf_flush(lf_handler)
+        # ---- Langfuse finalize (v2 L2) — lf_trace_id None 이면 전부 no-op ----
+        if lf_trace_id:
+            try:
+                elapsed = time.monotonic() - started
+                numeric_match_rate = (
+                    (final_scored_total - final_unbound_count) / final_scored_total if final_scored_total > 0 else None
+                )
+                attach_summary_observation(
+                    lf_trace_id,
+                    name="marketscope.v2.summary",
+                    metadata={
+                        "district_code": district_code or "anonymous",
+                        "district_type": district_type_for(district_code),
+                        "district_name": district_name,
+                        "resolved_name": resolved_name or None,
+                        "data_quarter": data_quarter,
+                        "iterations_used": iteration + 1,
+                        "tool_calls_made": tool_calls_made,
+                        "tool_error_count": tool_errors,
+                        "card_count": cards_emitted,
+                        "called_tools": sorted(called_tools),
+                        "wall_clock_s": round(elapsed, 2),
+                        "budget_exhausted": (
+                            tool_calls_made >= settings.agent_loop_max_tool_calls
+                            or elapsed >= settings.agent_loop_wall_clock
+                        ),
+                        "abstention_triggered": abstain_reason is not None,
+                        "trust_unbound_final": final_unbound_count,
+                        "trust_scale_error_count": final_scale_count,
+                        "trust_corrective_applied": trust_corrective,
+                        "trust_fallback_triggered": trust_fallback,
+                        "trust_masked_count": trust_masked,
+                        "numeric_match_rate": numeric_match_rate,
+                    },
+                )
+                # score 6종 — numeric_match/tool_error_rate 는 분모 있을 때만
+                if numeric_match_rate is not None:
+                    emit_score(lf_trace_id, "numeric_match", numeric_match_rate)
+                if tool_calls_made > 0:
+                    emit_score(lf_trace_id, "tool_error_rate", tool_errors / tool_calls_made)
+                emit_score(lf_trace_id, "abstention_triggered", 1.0 if abstain_reason is not None else 0.0)
+                emit_score(lf_trace_id, "trust_corrective_applied", 1.0 if trust_corrective else 0.0)
+                emit_score(lf_trace_id, "trust_fallback_triggered", 1.0 if trust_fallback else 0.0)
+                emit_score(lf_trace_id, "trust_masked_count", float(trust_masked))
+            except Exception:
+                logger.debug("langfuse v2 summary emit failed", exc_info=True)
+        # flush offload — 동기 flush 의 이벤트 루프 블로킹 제거 (best-effort,
+        # CancelledError 는 미포착으로 전파 — abort 의미론 보존)
+        try:
+            await asyncio.to_thread(_lf_flush, lf_handler)
+        except Exception:
+            logger.debug("langfuse flush offload failed", exc_info=True)
 
     done_payload: dict[str, Any] = {"type": "done"}
     trace_id = get_trace_id(lf_handler)

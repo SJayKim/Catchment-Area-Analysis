@@ -14,7 +14,11 @@ from sse_starlette.sse import EventSourceResponse
 from server.agent.history import ConversationHistory
 from server.agent.runtime import effective_loop_version, run_agent
 from server.config import settings
-from server.middleware.metrics import sse_connection_closed, sse_connection_opened
+from server.middleware.metrics import (
+    record_langfuse_trace_missing,
+    sse_connection_closed,
+    sse_connection_opened,
+)
 from server.repositories import get_data_access
 
 router = APIRouter(prefix="/api", tags=["chat"])
@@ -139,6 +143,7 @@ class ChatRequest(BaseModel):
 async def health_detail(request: Request) -> dict:
     """Expose runtime metrics for load testing & monitoring."""
     from server.services.cache import get_cache_service
+    from server.services.langfuse_tracer import status as langfuse_status
 
     # DB pool stats
     engine = getattr(request.app.state, "db_engine", None)
@@ -179,6 +184,8 @@ async def health_detail(request: Request) -> dict:
         "agent_loop_version": settings.agent_loop_version,
         "llm_provider": settings.llm_provider,
         "use_mock": settings.use_mock,
+        # Langfuse 무음사망 가시화 — enabled 인데 tracer_valid=False 면 배선 사망
+        "langfuse": langfuse_status(),
     }
 
 
@@ -371,6 +378,10 @@ async def chat(request: Request, body: ChatRequest) -> EventSourceResponse:
                                 body.district_code or "-",
                                 event.get("trace_id") or "-",
                             )
+                            # 무음사망 카운터 — enabled 인데 trace_id 부재 = 시그널
+                            # (e2e 는 keys off → enabled=False → 오염 없음)
+                            if settings.langfuse_enabled and not event.get("trace_id"):
+                                record_langfuse_trace_missing()
 
                         yield {"data": json.dumps(event, ensure_ascii=False, default=str)}
 
