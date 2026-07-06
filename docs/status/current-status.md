@@ -1,7 +1,19 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-07-04
+> 최종 갱신: 2026-07-06
 > 상세 이력은 git history (`git log --follow docs/status/current-status.md`) + `docs/qa/runs/` + `docs/plan/` 로 복원.
+
+---
+
+## 최근 작업 (2026-07-06)
+
+### v2 final 스트리밍 옵션 B 구현 + Eval GATE PASS 4/4 (평균 10.0) ⭐ — astream 버퍼링 + 진행 이벤트, Trust 의미론 무변경
+- **Plan**: [v2-stream-final-option-b-2026-07-06](../plan/infra/v2-stream-final-option-b-2026-07-06.md) · **Verdict**: [eval-stream-b-2026-07-06/_verdict.md](../qa/runs/eval-stream-b-2026-07-06/_verdict.md)
+- ✅ **구현**: `models.py` `astream_with_fallback` 신설(delta/final async generator, mid-stream 폴백 시 버퍼 폐기 후 다음 후보, `asyncio.timeout`, breaker parity, abort 무기록) · `engine.py` 메인 턴 분기 — "응답 작성 중... n%" thinking 방출(tool_call/120자 억제 + 80자 스로틀 + monotonic clamp), **Trust 게이트·`_chunks` 일괄 방출 무변경**(검증-후-방출 보존) · config 4필드(`AGENT_LOOP_STREAM_FINAL` 롤백 토글, 분모 2400 — V4 실측로 99% 정체 12.5s 해소) · `eventHandlers.ts` response step 라벨 실시간 갱신.
+- ✅ **테스트**: models 스트림 8건 + engine 이벤트 5건 신설 · stale `test_trust_redaction.py`(untracked, 죽은 `redact_unbound` import) 미중복 4케이스 이식 후 삭제. pytest **205 passed/8 skip** · ruff/format PASS · tsc 0 error.
+- ✅ **Eval 재판정** (e2e :8002 Real·docker cp 반영·캐시 flush·GT 스냅샷): S1~S8 **전건 fresh 10.0**, 날조 0, done 절단 0/9, S7 10.0 → **GATE 4/4 PASS**. 스트리밍 불변식 9/9(% 단조·도구 턴 억제·text 일괄). 무음 수십 초 → 진행 이벤트 간격 ~3s. V6 usage probe PASS(streaming `usage_metadata` 정상 — Langfuse cost 전제 유지).
+- ⚠️ **관찰(비차단, follow-up)**: S7-pre(비채점 setup 턴) "여성 543억" — 실제 여성 월매출 289억, 홍대 총매출 532억과 ±5% 퍼지 톨러런스 충돌(2.07%)로 통과한 오도출. 스트리밍 무관 기존 Trust 한계 → 큰 자릿수 원화 tolerance 이중 게이트 or 성별/비율 라벨 바인딩 follow-up.
+- 🔧 main 머지 → 자동배포(auto_deploy 2분 폴링, flush_cache 내장) → prod smoke 진행 중.
 
 ---
 
@@ -66,10 +78,9 @@
 **Plan**: [auto-deploy-on-push.md](../plan/infra/auto-deploy-on-push.md)
 - C9/C10 완료(자동배포 3회 SUCCESS · 롤백 무중단 검증) → Pass 3 잔여: 2분 폴링 24h 관찰(no-op 부하·API rate) · 수동 배포 세션 전 timer disable 관례화
 
-### 🟡 스트리밍 재설계 (eval-gated, 설계만 완료)
-**Plan**: [deferred-backlog-2026-07-04.md](../plan/fix/deferred-backlog-2026-07-04.md) Item 3
-- v2 루프는 검증-후-방출(비스트리밍). 옵션 B(astream 버퍼링 + 진행 세분화) 권고안 기록됨
-- 착수 게이트: eval 스택 가용 + S1~S8 평균 ≥9.0 · 날조 0 재판정
+### 🟡 Trust 퍼지 톨러런스 충돌 follow-up 🆕
+**출처**: [eval-stream-b-2026-07-06/_verdict.md](../qa/runs/eval-stream-b-2026-07-06/_verdict.md) §관찰-1
+- "543억"↔총매출 532억(2.07%) ±5% 충돌로 오도출 통과 — 큰 자릿수 원화 상대+절대 이중 게이트 or 성별/비율 필드 라벨 바인딩 검토
 
 ### 🟡 Refactoring Phase 1 Pass 2 — 잔여분
 **Plan**: [phase1-low-mid-risk-2026-04-23.md](../plan/infra/phase1-low-mid-risk-2026-04-23.md)
