@@ -13,7 +13,7 @@
 - ✅ **테스트**: models 스트림 8건 + engine 이벤트 5건 신설 · stale `test_trust_redaction.py`(untracked, 죽은 `redact_unbound` import) 미중복 4케이스 이식 후 삭제. pytest **205 passed/8 skip** · ruff/format PASS · tsc 0 error.
 - ✅ **Eval 재판정** (e2e :8002 Real·docker cp 반영·캐시 flush·GT 스냅샷): S1~S8 **전건 fresh 10.0**, 날조 0, done 절단 0/9, S7 10.0 → **GATE 4/4 PASS**. 스트리밍 불변식 9/9(% 단조·도구 턴 억제·text 일괄). 무음 수십 초 → 진행 이벤트 간격 ~3s. V6 usage probe PASS(streaming `usage_metadata` 정상 — Langfuse cost 전제 유지).
 - ⚠️ **관찰(비차단, follow-up)**: S7-pre(비채점 setup 턴) "여성 543억" — 실제 여성 월매출 289억, 홍대 총매출 532억과 ±5% 퍼지 톨러런스 충돌(2.07%)로 통과한 오도출. 스트리밍 무관 기존 Trust 한계 → 큰 자릿수 원화 tolerance 이중 게이트 or 성별/비율 라벨 바인딩 follow-up.
-- 🔧 main 머지 → 자동배포(auto_deploy 2분 폴링, flush_cache 내장) → prod smoke 진행 중.
+- 🔧 **prod 배포 대기** — main push `dc11186` + CI 5/5 green 완료, but 서버측 auto_deploy 미발화 + prod 서버 현재 접근 불가(사용자 확인). 서버 접근 가능 시: `systemctl status marketscope-autodeploy.timer` 확인 → timer enable 또는 `bash scripts/deploy/auto_deploy.sh --force` (CI 게이트·flush_cache·smoke·자동롤백 내장) → prod SSE 에 "응답 작성 중 n%" 확인. 롤백 스위치: env `AGENT_LOOP_STREAM_FINAL=false` + 재기동.
 
 ---
 
