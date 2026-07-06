@@ -1,0 +1,112 @@
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "resolve_district", "input": {"name": "성수역"}, "progress_label": "상권 찾는 중..."}
+
+data: {"type": "tool_end", "name": "resolve_district", "done_label": "상권 확인"}
+
+data: {"type": "tool", "name": "resolve_district", "input": {"name": "건대"}, "progress_label": "상권 찾는 중..."}
+
+data: {"type": "tool_end", "name": "resolve_district", "done_label": "상권 확인"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compare_districts", "input": {"district_codes": ["3120052", "3120053"]}, "progress_label": "상권 비교 분석 중..."}
+
+data: {"type": "card", "card_type": "compare", "data": {"districts": {"3120052": {"district_code": "3120052", "district_name": "성수역", "floating_pop": 1412369, "main_age": "20대", "store_count": 1526, "close_rate": 2.4, "monthly_sales": 22132857556, "status": "stable", "quarter": "2025Q4", "sales_per_store": 14503839, "pop_per_store": 926}, "3120053": {"district_code": "3120053", "district_name": "건대입구역(건대)", "floating_pop": 2771403, "main_age": "20대", "store_count": 1545, "close_rate": 3.8, "monthly_sales": 26001164651, "status": "stable", "quarter": "2025Q4", "sales_per_store": 16829233, "pop_per_store": 1794}}, "district_codes": ["3120052", "3120053"], "winners": {"highest_pop": "건대입구역(건대)", "highest_sales": "건대입구역(건대)", "lowest_close_rate": "성수역", "best_efficiency": "건대입구역(건대)"}, "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "tool_end", "name": "compare_districts", "done_label": "상권 비교 완료"}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3120052"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3120053"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "2771403 / 1412369"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "26001164651 / 22132857556 * 100 - 100"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "16829233 / 14503839 * 100 - 100"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "thinking", "step": "응답 작성 중... 5%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 10%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 15%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 20%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 24%"}
+
+: ping - 2026-07-06 01:11:40.483701+00:00
+
+data: {"type": "thinking", "step": "응답 작성 중... 29%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 33%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 37%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 40%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 45%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 48%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 52%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 56%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 60%"}
+
+data: {"type": "text", "content": "데이터를 모두 확보했습니다. 아래에 비교 분석 결과를 정리해 드립니다.\n\n---\n\n# 🏙️ 성수역 vs 건대입구역 상권 비교 (2025Q4)\n\n## 📊 핵심 지표"}
+
+data: {"type": "text", "content": " 한눈에 보기\n\n| 지표 | 성수역 | 건대입구역 | 우위 |\n|------|--------|-----------|------|\n| 분기 유동인구 | 141만 명"}
+
+data: {"type": "text", "content": " | 277만 명 | 🏆 건대 (약 1.96배) |\n| 월 추정 매출 | 약 221억 원 | 약 260억 원 | 🏆 건대 (+17.5%) |\n| 점포 수 | 1,"}
+
+data: {"type": "text", "content": "526개 | 1,545개 | 비슷 |\n| 점포당 월매출 | 약 1,450만 원 | 약 1,683만 원 | 🏆 건대 (+16%) |\n| 폐업률 | **2.4%** "}
+
+data: {"type": "text", "content": "| 3.8% | 🏆 성수 (안정적) |\n| 피크 시간대 | 오후 2시 | 오후 5시 | - |\n| 핵심 연령대 | 20·30대 | **20대 집중** | - |\n"}
+
+data: {"type": "text", "content": "\n---\n\n## 👥 유동인구 심층 분석\n\n### 성수역\n- **분기 총 141만 명** — 피크는 **오후 2시** (낮 시간대 강세)\n- 성별: 여성 53.7%"}
+
+data: {"type": "text", "content": " / 남성 46.3%\n- 연령: 20대(27.3%) → 30대(24.4%) → 40대(16.2%) 순으로 **20~30대가 고르게 분포**\n- 낮 시간대(11시~"}
+
+data: {"type": "text", "content": "17시)에 유동인구가 집중 → 카페·브런치·쇼핑 소비 패턴\n\n### 건대입구역\n- **분기 총 277만 명** — 피크는 **오후 5시** (저녁 시간대 강세)\n"}
+
+data: {"type": "text", "content": "- 성별: 여성 54.7% / 남성 45.3%\n- 연령: **20대가 41.5%로 압도적** → 30대(18%) 이후 급감\n- 자정(0시) 유동인구도 46만 명으"}
+
+data: {"type": "text", "content": "로 **야간 상권 활성도 매우 높음**\n\n---\n\n## 💡 상권별 특성 해석\n\n### 🟢 성수역 — \"감도 높은 트렌드 상권\"\n- 유동인구는 건대의 절반 수준이지"}
+
+data: {"type": "text", "content": "만, **폐업률 2.4%로 서울 내 매우 안정적**\n- 20·30대가 고르게 분포 → 구매력 있는 소비층\n- 낮 시간대 중심 → **카페, 편집숍, 팝업스토어, "}
+
+data: {"type": "text", "content": "F&B** 등 체험형 업종에 유리\n- 임대료 대비 안정적 수익 구조를 원하는 창업자에게 적합\n\n### 🔵 건대입구역 — \"볼륨 큰 20대 소비 상권\"\n- 유동인구"}
+
+data: {"type": "text", "content": "·매출 모두 성수 대비 우위, **점포당 매출도 1,683만 원으로 더 높음**\n- 20대 비중 41.5% + 야간 유동인구 강세 → **주점, 노래방, 분식, "}
+
+data: {"type": "text", "content": "편의형 외식** 등 야간 소비 업종 최적\n- 단, 폐업률 3.8%로 성수 대비 높아 **경쟁 강도와 업종 선택이 중요**\n\n---\n\n## 🎯 창업 관점 결론\n\n|"}
+
+data: {"type": "text", "content": " 상황 | 추천 상권 |\n|------|----------|\n| 안정적 수익·낮은 리스크 원할 때 | ✅ **성수역** |\n| 높은 매출 볼륨·야간 장사 원할 때"}
+
+data: {"type": "text", "content": " | ✅ **건대입구역** |\n| 20대 타깃 트렌디한 브랜드 | ✅ **건대입구역** |\n| 30대 이상 타깃·프리미엄 업종 | ✅ **성수역** |\n\n> 추정"}
+
+data: {"type": "text", "content": "치이며 실제와 다를 수 있습니다(참고용).\n\n특정 업종으로 시뮬레이션이나 추천이 필요하시면 말씀해 주세요! 😊"}
+
+data: {"type": "suggestion", "questions": ["각 상권 추천 업종 알려줘", "유동인구 시간대별로 비교해줘", "리스크가 낮은 곳은?"]}
+
+data: {"type": "done"}
+

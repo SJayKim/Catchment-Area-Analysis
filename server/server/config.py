@@ -87,7 +87,8 @@ class Settings(BaseSettings):
     agent_loop_stream_final: bool = True  # rollback switch (env AGENT_LOOP_STREAM_FINAL=false)
     agent_loop_progress_min_chars: int = 120  # suppress progress below this (tool-call preamble)
     agent_loop_progress_interval_chars: int = 80  # min char gap between progress events
-    agent_loop_expected_answer_chars: int = 1100  # progress denominator (capped at 99%)
+    agent_loop_expected_answer_chars: int = 2400  # progress denominator (capped at 99%)
+    # ↑ 실측(V4) 분석 답변 ~2,000자 기준 — 작게 잡으면 99% 정체 구간이 길어진다.
     # Trust Kernel — fuzzy tolerance for binding a response number to a fact.
     trust_numeric_tolerance: float = 0.05
 

@@ -1,0 +1,72 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "get_district_summary", "input": {"district_code": "3120189"}, "progress_label": "상권 요약 분석 중..."}
+
+data: {"type": "card", "card_type": "summary", "data": {"districtName": "강남역", "districtType": "발달상권", "summary": "분기 유동인구 745만 3천명, 월 추정 매출 1395억 6천만원의 안정적인 발달상권입니다.", "monthlySales": 139568168199, "floatingPopulation": {"quarterTotal": 7453202, "peakHour": 17, "byHour": [{"hour": 0, "pop": 903516}, {"hour": 6, "pop": 1389371}, {"hour": 11, "pop": 1360561}, {"hour": 14, "pop": 1414726}, {"hour": 17, "pop": 1653367}, {"hour": 21, "pop": 731661}]}, "topCategories": [{"name": "일반의원", "count": 476}, {"name": "부동산중개업", "count": 447}, {"name": "한식음식점", "count": 410}, {"name": "세무사사무소", "count": 397}, {"name": "화장품", "count": 240}], "status": "stable", "closeRate": {"current": 2.3, "average": 6.5}, "insights": {"ageInsight": "20대 (26.8%)", "perStoreSales": 27307409, "franchiseRatio": 9.7, "weekendUplift": -72.7}, "dataQuarter": "2025Q4", "dataSources": [{"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}], "benchmarks": {"districtType": "발달상권", "sampleCount": 120, "rankings": {"floatingPop": "상위 25%", "monthlySales": "상위 25%", "closeRate": "상위 25% (우수)", "storeCount": "상위 25%", "perStoreSales": "하위 25%"}, "seoulAvg": {"floating_pop": 92000, "monthly_sales": 55000000000, "close_rate": 5.9, "store_count": 950, "per_store_sales": 46000000}}}}
+
+data: {"type": "tool_end", "name": "get_district_summary", "done_label": "상권 요약 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "thinking", "step": "응답 작성 중... 6%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 10%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 15%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 19%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 24%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 28%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 32%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 36%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 41%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 45%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 48%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 52%"}
+
+data: {"type": "text", "content": "강남역 상권 요약 분석 결과입니다! 📊\n\n---\n\n## 🏙️ 강남역 상권 요약 (2025Q4)\n**상권 유형:** 발달상권 | **상태:** 안정적\n\n---\n\n#"}
+
+data: {"type": "text", "content": "## 👣 유동인구\n| 항목 | 수치 |\n|------|------|\n| 분기 유동인구 | **745만 3천 명** |\n| 피크 시간대 | **오후 5시** |\n|"}
+
+data: {"type": "text", "content": " 서울 평균 대비 | **상위 25%** |\n\n> 오후 5시(퇴근 시간대)에 유동인구가 **165만 명**으로 가장 많으며, 직장인 유동이 강한 전형적인 오피스·"}
+
+data: {"type": "text", "content": "상업 복합 상권입니다.\n\n---\n\n### 💰 매출\n| 항목 | 수치 |\n|------|------|\n| 월 추정 매출 | **약 1,396억 원** |\n| 점포당"}
+
+data: {"type": "text", "content": " 월 매출 | **약 2,731만 원** |\n| 서울 평균 월 매출 | 약 550억 원 |\n| 서울 평균 대비 | **상위 25%** |\n\n> 전체 매출 규모는 "}
+
+data: {"type": "text", "content": "서울 최상위권이나, **점포당 매출은 하위 25%** 수준입니다. 점포 수가 워낙 많아 개별 점포의 파이가 분산되는 구조입니다.\n\n---\n\n### 🏪 점포 현황\n"}
+
+data: {"type": "text", "content": "| 항목 | 수치 |\n|------|------|\n| 폐업률 | **2.3%** |\n| 서울 평균 폐업률 | 6.5% |\n| 프랜차이즈 비율 | **9.7%** "}
+
+data: {"type": "text", "content": "|\n| 서울 평균 대비 | **상위 25% (우수)** |\n\n> 폐업률이 서울 평균(6.5%)의 **절반 이하**로, 상권 안정성이 매우 높습니다. 독립 점포 비"}
+
+data: {"type": "text", "content": "중이 높아 개성 있는 브랜드도 경쟁력을 가질 수 있습니다.\n\n---\n\n### 🏆 Top 5 업종 (점포 수 기준)\n| 순위 | 업종 | 점포 수 |\n|------"}
+
+data: {"type": "text", "content": "|------|---------|\n| 1 | 일반의원 | 476개 |\n| 2 | 부동산중개업 | 447개 |\n| 3 | 한식음식점 | 410개 |\n| 4 | 세무"}
+
+data: {"type": "text", "content": "사사무소 | 397개 |\n| 5 | 화장품 | 240개 |\n\n> 의원·세무사 등 **전문직 서비스업** 비중이 높은 것이 강남역만의 특징입니다.\n\n---\n\n###"}
+
+data: {"type": "text", "content": " 💡 핵심 인사이트\n| 항목 | 내용 |\n|------|------|\n| 주요 고객층 | **20대 (26.8%)** |\n| 주말 유동 변화 | 평일 대비 **-"}
+
+data: {"type": "text", "content": "72.7%** (주말 급감) |\n\n> ⚠️ **주말 유동인구가 평일 대비 72.7% 감소**합니다. 직장인 의존도가 매우 높은 상권으로, **주말 매출 비중이 낮"}
+
+data: {"type": "text", "content": "은 업종**(전문직 서비스, 점심 식당 등)이 유리하고, 주말 매출이 중요한 업종은 신중한 검토가 필요합니다.\n\n---\n\n> 추정치이며 실제와 다를 수 있습니다("}
+
+data: {"type": "text", "content": "참고용)."}
+
+data: {"type": "suggestion", "questions": ["강남역 추천 업종 알려줘", "강남역 리스크는 어때?", "강남역 유동인구 자세히"]}
+
+data: {"type": "done"}
+

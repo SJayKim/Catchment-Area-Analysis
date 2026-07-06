@@ -1,0 +1,68 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.54052101713452, "lng": 127.06941385153138, "zoom": 4}, "district_code": "3120053", "district_name": "건대입구역(건대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "recommend_business", "input": {"district_code": "3120053"}, "progress_label": "업종 추천 분석 중..."}
+
+data: {"type": "card", "card_type": "recommend", "data": {"district_code": "3120053", "quarter": "2025Q4", "recommendations": [{"rank": 1, "category_name": "편의점", "category_code": "CS300002", "score": 95.0, "per_store_sales": 184053847, "store_count": 8, "close_rate": 0.0, "age_match": 70.7, "monthly_sales": 1472430777, "reasons": ["점포당 월매출 18405만원", "타겟 고객 매칭률 71%", "경쟁 점포 8개 (밀집도 0.5%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 2, "category_name": "의약품", "category_code": "CS300018", "score": 67.3, "per_store_sales": 65310421, "store_count": 20, "close_rate": 0.0, "age_match": 79.4, "monthly_sales": 1306208429, "reasons": ["점포당 월매출 6531만원", "타겟 고객 매칭률 79%", "경쟁 점포 20개 (밀집도 1.3%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 3, "category_name": "안경", "category_code": "CS300016", "score": 64.5, "per_store_sales": 38959491, "store_count": 9, "close_rate": 0.0, "age_match": 80.1, "monthly_sales": 350635426, "reasons": ["점포당 월매출 3896만원", "타겟 고객 매칭률 80%", "경쟁 점포 9개 (밀집도 0.6%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 4, "category_name": "육류판매", "category_code": "CS300007", "score": 62.1, "per_store_sales": 33000000, "store_count": 5, "close_rate": 0.0, "age_match": 70.7, "monthly_sales": 165000000, "reasons": ["점포당 월매출 3300만원", "타겟 고객 매칭률 71%", "경쟁 점포 5개 (밀집도 0.3%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}, {"rank": 5, "category_name": "치과의원", "category_code": "CS200007", "score": 61.2, "per_store_sales": 29223831, "store_count": 13, "close_rate": 0.0, "age_match": 70.0, "monthly_sales": 379909806, "reasons": ["점포당 월매출 2922만원", "타겟 고객 매칭률 70%", "경쟁 점포 13개 (밀집도 0.8%)", "폐업률 낮음 (0.0%)"], "saturation": "여유", "cost_category": "소자본"}], "total_categories_analyzed": 35, "dataSources": [{"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_floating_pop", "name": "상권-유동인구", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarFlpopQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "tool_end", "name": "recommend_business", "done_label": "업종 추천 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "thinking", "step": "응답 작성 중... 6%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 9%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 15%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 19%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 23%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 27%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 31%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 35%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 38%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 42%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 46%"}
+
+data: {"type": "text", "content": "건대입구역 상권의 창업 추천 업종 분석 결과입니다! 🏪\n\n---\n\n## 🏆 건대입구역 창업 추천 업종 TOP 5 (2025Q4)\n\n| 순위 | 업종 | 추천 점수"}
+
+data: {"type": "text", "content": " | 점포당 월매출 | 현재 점포수 | 폐업률 | 포화도 |\n|:---:|------|:---:|---:|:---:|:---:|:---:|\n| 1 | 🥇 편의점 "}
+
+data: {"type": "text", "content": "| 95.0점 | 약 1억 8,405만 원 | 8개 | 0.0% | 여유 |\n| 2 | 🥈 의약품(약국) | 67.3점 | 약 6,531만 원 | 20개 | 0."}
+
+data: {"type": "text", "content": "0% | 여유 |\n| 3 | 🥉 안경 | 64.5점 | 약 3,896만 원 | 9개 | 0.0% | 여유 |\n| 4 | 육류판매 | 62.1점 | 약 3,300만"}
+
+data: {"type": "text", "content": " 원 | 5개 | 0.0% | 여유 |\n| 5 | 치과의원 | 61.2점 | 약 2,922만 원 | 13개 | 0.0% | 여유 |\n\n---\n\n## 📊 핵심 인사"}
+
+data: {"type": "text", "content": "이트\n\n### 1️⃣ 편의점 — 압도적 1위 (95점)\n- 점포당 월매출 **약 1억 8,405만 원**으로 전 업종 중 최고\n- 현재 8개 점포로 **포화도 여"}
+
+data: {"type": "text", "content": "유**, 진입 여지 충분\n- 20~30대 유동인구 비중이 높은 건대 특성상 편의점 수요가 매우 강함\n- 폐업률 **0.0%** — 안정성 최상\n\n### 2️⃣ 의"}
+
+data: {"type": "text", "content": "약품(약국) — 안정적 수익 (67점)\n- 타겟 고객 매칭률 **79.4%**로 전 업종 중 최상위\n- 월 총매출 약 **13억 원** 규모의 탄탄한 시장\n- 단"}
+
+data: {"type": "text", "content": ", 약국은 약사 면허 필요 — 진입 장벽 존재\n\n### 3️⃣ 안경 — 틈새 고수익 (64점)\n- 타겟 매칭률 **80.1%** 1위 — 건대 주요 고객층과 가장"}
+
+data: {"type": "text", "content": " 잘 맞는 업종\n- 9개 점포로 경쟁 밀도 낮고, 폐업률 0%의 안정적 업종\n\n### 4️⃣ 육류판매 — 소규모 진입 유리 (62점)\n- 경쟁 점포 **5개**로"}
+
+data: {"type": "text", "content": " 가장 낮은 경쟁 강도\n- 건대 먹자골목 수요와 연계 가능\n\n### 5️⃣ 치과의원 — 전문직 안정 수익 (61점)\n- 유동인구 대비 수요 꾸준, 폐업률 0%\n-"}
+
+data: {"type": "text", "content": " 전문 면허 필요 업종\n\n---\n\n## 💡 창업 전략 제언\n\n> **소자본 일반 창업자**라면 → **편의점 또는 안경점** 우선 검토\n> **전문직 자격 보유자"}
+
+data: {"type": "text", "content": "**라면 → **약국·치과** 안정적 수익 기대 가능\n> 건대 상권은 **20~30대 유동인구 중심**으로, 타겟 매칭률이 높은 업종일수록 유리합니다.\n\n추정치이"}
+
+data: {"type": "text", "content": "며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["건대입구역(건대) 매출 시뮬레이션 해줘", "건대입구역(건대) 리스크 분석해줘", "비슷한 상권과 비교해줘"]}
+
+data: {"type": "done"}
+
