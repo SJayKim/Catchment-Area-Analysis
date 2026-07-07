@@ -10,13 +10,11 @@ docs/
 ├── architecture/   계층 1 — 시스템 설계 (overview / backend / frontend / agent / data / deployment)
 ├── spec/           계층 2 — 기능 스펙 (F01~F13, D01, B01)
 ├── ops/            운영 (quickstart, runbook, DR, deployment, database setup, serving stability)
-├── plan/           구현 계획 (완료 plan 도 이력 기록으로 유지)
-│   ├── business/   상용화 / 비즈니스 (commercialization-plan.md)
-│   ├── docs/       문서 / 학습 자료 계획 (learning-materials.md)
-│   ├── fix/        버그 / 정확도 hotfix (out-of-scope, district-click-race, accuracy-gap …)
-│   ├── infra/      서빙 안정성 / 배포 / Langfuse / refactoring
-│   ├── qa/         QA sweep (user-journey, e2e-quality, ux-phase-a-f-test-plan, ux-final-e2e-regression-plan)
-│   └── ui/         UX Sweep phase 묶음 (ux-sweep-phase-{a,b,c,d,e,f}-*)
+├── plan/           진행 중/대기 구현 계획만 (완료분은 git history)
+│   ├── business/   상용화 (commercialization-plan)
+│   ├── fix/        버그 / 정확도 hotfix (trust-fallback-redaction)
+│   ├── infra/      배포 / 안정성 / Langfuse / refactoring (auto-deploy · v2-stream · langfuse-* · phase1 · apps-in-toss)
+│   └── qa/         QA / E2E 회귀 (ux-final-e2e-regression-plan)
 ├── qa/             E2E test plan + runs/
 ├── learning/       학습 자료 — 비개발자용 커리큘럼 00~06 + ARCHITECTURE-MAP.md
 ├── status/         현재 상태 단일 마스터 (current-status.md)
@@ -55,7 +53,7 @@ docs/
 
 ## 문서 삭제/정리 원칙
 
-- **완료된 plan**: 유지 — 의사결정·이력 기록 (2026-07-04 원칙 변경, 기존 "삭제" 원칙 폐기). `archive/` 는 운영하지 않음
+- **완료된 plan**: git history 로 이관 후 트리에서 제거 (2026-07-07 docs diet 정책). 이력은 `git log` + `status/current-status.md` "이력 요약"
 - **구식 status 리포트**: 단일 `status/current-status.md` 만 유지
 - **레이어별 중복 정보**: `architecture/` 가 단일 진실. spec 은 링크로 대체
 - **수치/설정값**: `config.py` / `docker-compose.yml` 이 단일 진실

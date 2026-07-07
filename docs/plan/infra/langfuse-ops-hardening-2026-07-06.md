@@ -1,6 +1,6 @@
 # Langfuse Ops Hardening — v2 L2 wiring + 무음사망 가시화 + eval 관측 opt-in
 
-> 작성: 2026-07-06 · 선행: [langfuse-l2-token-cost-eval.md](langfuse-l2-token-cost-eval.md) (L2 Foundation) · [langfuse-aggregate-stats-2026-04-28.md](../_archive/langfuse-aggregate-stats-2026-04-28.md) (PAE 11차원/6스코어)
+> 작성: 2026-07-06 · 선행: [langfuse-l2-token-cost-eval.md](langfuse-l2-token-cost-eval.md) (L2 Foundation) · langfuse-aggregate-stats-2026-04-28.md (git history) (PAE 11차원/6스코어)
 
 ## Context
 

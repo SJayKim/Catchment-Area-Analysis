@@ -1,6 +1,6 @@
 # v2 final 스트리밍 옵션 B — astream 버퍼링 + 진행 이벤트 세분화 (Trust 의미론 무변경)
 
-> 작성: 2026-07-06 · 선행: [deferred-backlog-2026-07-04.md](../fix/deferred-backlog-2026-07-04.md) Item 3 (옵션 B 권고 + 착수 게이트)
+> 작성: 2026-07-06 · 선행: deferred-backlog-2026-07-04.md (git history) Item 3 (옵션 B 권고 + 착수 게이트)
 
 ## Context
 

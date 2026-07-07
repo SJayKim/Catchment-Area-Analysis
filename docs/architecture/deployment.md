@@ -182,7 +182,7 @@ Playwright E2E 실행 잡은 CI 에 **없음** — E2E 는 로컬 `cd frontend &
 
 ## 9. 부하 테스트 & 용량 상한
 
-**loadtest/ 스택 구현 완료**: `locustfile.py`(SSE chat 부하) + `scenarios/` 8종(`a_basic_summary` ~ `h_redis_failure`: ramp / mixed intent / greeting 단축 / semaphore 포화 / spike / 세션 격리 / mid-stream disconnect / Redis 장애) + `run_all_tests.py` + `sse_client.py`. 실행 전제: `USE_MOCK=true LLM_PROVIDER=mock` backend `:8002`, `pip install -e ".[loadtest]"`. 사용법은 [loadtest/README.md](../../loadtest/README.md), 설계 배경은 [plan/infra/load-test-plan.md](../plan/infra/load-test-plan.md).
+**loadtest/ 스택 구현 완료**: `locustfile.py`(SSE chat 부하) + `scenarios/` 8종(`a_basic_summary` ~ `h_redis_failure`: ramp / mixed intent / greeting 단축 / semaphore 포화 / spike / 세션 격리 / mid-stream disconnect / Redis 장애) + `run_all_tests.py` + `sse_client.py`. 실행 전제: `USE_MOCK=true LLM_PROVIDER=mock` backend `:8002`, `pip install -e ".[loadtest]"`. 사용법은 [loadtest/README.md](../../loadtest/README.md).
 
 현재 상한:
 

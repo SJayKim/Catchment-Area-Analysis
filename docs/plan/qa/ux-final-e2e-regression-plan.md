@@ -3,11 +3,11 @@
 > 시리즈: **UX Sweep 2026-04-30** Phase A-F 종합 회귀
 > 본 plan 영역: 6 phase 28 항목 통합 회귀 (4 viewport · real-DB · 통합 user journey 5건)
 > 1회성 sweep — Pass 1/2/3 + prod-smoke 대조
-> 선행: [ux-phase-a-f-test-plan.md](ux-phase-a-f-test-plan.md) Pass 1 verdict 가 진입 게이트
+> 선행: ux-phase-a-f-test-plan.md (완료·git history) Pass 1 verdict 가 진입 게이트
 
 ## Context
 
-[ux-phase-a-f-test-plan.md](ux-phase-a-f-test-plan.md) (이하 Plan 1) 의 Pass 1 (mock chromium) 통과 후 1회성으로 실행하는 종합 회귀. UX Sweep Phase A-F 의 28 항목이 다음을 보장:
+ux-phase-a-f-test-plan.md (완료·git history) (이하 Plan 1) 의 Pass 1 (mock chromium) 통과 후 1회성으로 실행하는 종합 회귀. UX Sweep Phase A-F 의 28 항목이 다음을 보장:
 
 1. **4 viewport 무회귀** — chromium / mobile-iphone / mobile-galaxy / tablet-ipad
 2. **real-DB 핵심 journey 5건 + 통합 A→F user journey 5건** 정상 동작
@@ -203,7 +203,7 @@ Plan 1 의 시나리오는 reference-only 로 다시 열거하지 않고 grep �
 
 ## Metadata
 
-- **선행 plan**: [ux-phase-a-f-test-plan.md](ux-phase-a-f-test-plan.md) (Plan 1) — Pass 1 verdict 가 본 plan 진입 게이트
+- **선행 plan**: ux-phase-a-f-test-plan.md (완료·git history) (Plan 1) — Pass 1 verdict 가 본 plan 진입 게이트
 - **메모리 활용**: `feedback_compose_override_anon_node_modules` / `feedback_stale_container_vs_source` / `feedback_e2e_user_message_pollution` / `feedback_playwright_sse_capture` / `feedback_marketscope_sse_format`
 - **prod-smoke 정합 plan**: `docs/plan/infra/prod-baked-url-smoke-2026-04-24.md`
 - **artifact 저장 경로**: `docs/qa/runs/ux-final-e2e-2026-04-30/pass{1,2,3}/summary.md` + `screenshots/` + `prod-hit-log.jsonl`

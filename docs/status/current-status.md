@@ -1,66 +1,15 @@
 # 현재 진행 상황
 
 > 최종 갱신: 2026-07-07
-> 상세 이력은 git history (`git log --follow docs/status/current-status.md`) + `docs/qa/runs/` + `docs/plan/` 로 복원.
+> 상세 이력은 git history (`git log --follow docs/status/current-status.md`) + 활성 `docs/plan/` 참조.
 
 ---
 
-## 최근 작업 (2026-07-07)
+## 미결 / 블로커 (세션 진입 시 필독)
 
-### Langfuse Ops Hardening Pass 2 — e2e 회귀 green + 로컬 커밋 (push 대기)
-- **Plan**: [langfuse-ops-hardening-2026-07-06](../plan/infra/langfuse-ops-hardening-2026-07-06.md) §Pass 반복
-- ✅ **커밋(로컬)**: `d63a371` feat(observability) 12파일 + `e82b492` docs(observability) 6파일 — **push 안 함** (main push = auto_deploy 트리거, prod 서버 접근 불가 상태 유지).
-- ✅ **Pass 2 e2e 회귀** (e2e 스택 :8002, `USE_MOCK=true` 명시 + Langfuse keys off): **9 passed** — R0-LF-AGG 4/4(AGG-01~04) + R3-LF-L1 게이트(L1-E01/E06) green, done trace_id null 계약 유지. 신규 health detail `langfuse` 블록 라이브 확인(enabled=false/tracer_valid=true/client_initialized=false). 실효 경로는 `.env.e2e` provider=anthropic 로 **v2**(prod 동형).
-- ℹ️ **L1-E02/E03 FAIL = 사전결함**: "v4 SDK import fail → handler None" 전제가 SDK v2→v3 포팅(2026-04-24) 이후 소멸 — v3 는 fake key 로도 handler 생성(컨테이너 프로브 확증), 본 변경 diff 는 None-경로 무접촉 → 회귀 아님.
-- ✅ **E02/E03 스펙 v3 의미론 재작성 완료 (07-07 오후)**: E02 = `sys.modules["langfuse"]=None` 포이즈닝으로 패키지 부재/드리프트 시뮬(handler None + `_tracer_valid=False` + `status()` 무음사망 노출 검증) · E03 = **TRACE-BAD-KEY-LAZY** 로 반전 — v3 lazy init 계약 핀(bad key/host 도 handler 생성 + trace_id 32자 사전 배정 + `client_initialized=True`, 무음 실패 검출은 health detail/`langfuse_trace_missing_total` 가시화 몫). l1-langfuse **7/7 green**(33.7s) + tsc 0 error. 워킹트리 수정분 — push 배치 커밋 대기.
-- ⚠️ **운영 함정 기록**: ① compose 가 리포 루트 `.env`(USE_MOCK=false) 를 interpolation 으로 읽어 셸 unset 이어도 e2e 스택이 Real 로 뜸 — `USE_MOCK=true` 셸 명시 필수 ② 로컬 docker build pip 레이어 SSL 실패(캐시 축출 후 재현) + `build | tail` 파이프가 실패 exit 를 삼킴 — e2e backend 는 `docker cp server/server/.` 전체 패키지 반영으로 우회(부분 cp 는 7/1 이미지와 비정합 `effective_loop_version` ImportError).
-- 🔧 **잔여**: `.env`/`.env.dev` 수동 diff 적용(Plan §수동 적용 diff) → push + prod 배포(서버 접근 시, 스트리밍 옵션 B 와 동시) → Pass 3(live smoke R1-LF-V2SMOKE · eval opt-in R1-LF-EVALOPT · score-config 등록).
-
----
-
-## 최근 작업 (2026-07-06)
-
-### v2 final 스트리밍 옵션 B 구현 + Eval GATE PASS 4/4 (평균 10.0) ⭐ — astream 버퍼링 + 진행 이벤트, Trust 의미론 무변경
-- **Plan**: [v2-stream-final-option-b-2026-07-06](../plan/infra/v2-stream-final-option-b-2026-07-06.md) · **Verdict**: [eval-stream-b-2026-07-06/_verdict.md](../qa/runs/eval-stream-b-2026-07-06/_verdict.md)
-- ✅ **구현**: `models.py` `astream_with_fallback` 신설(delta/final async generator, mid-stream 폴백 시 버퍼 폐기 후 다음 후보, `asyncio.timeout`, breaker parity, abort 무기록) · `engine.py` 메인 턴 분기 — "응답 작성 중... n%" thinking 방출(tool_call/120자 억제 + 80자 스로틀 + monotonic clamp), **Trust 게이트·`_chunks` 일괄 방출 무변경**(검증-후-방출 보존) · config 4필드(`AGENT_LOOP_STREAM_FINAL` 롤백 토글, 분모 2400 — V4 실측로 99% 정체 12.5s 해소) · `eventHandlers.ts` response step 라벨 실시간 갱신.
-- ✅ **테스트**: models 스트림 8건 + engine 이벤트 5건 신설 · stale `test_trust_redaction.py`(untracked, 죽은 `redact_unbound` import) 미중복 4케이스 이식 후 삭제. pytest **205 passed/8 skip** · ruff/format PASS · tsc 0 error.
-- ✅ **Eval 재판정** (e2e :8002 Real·docker cp 반영·캐시 flush·GT 스냅샷): S1~S8 **전건 fresh 10.0**, 날조 0, done 절단 0/9, S7 10.0 → **GATE 4/4 PASS**. 스트리밍 불변식 9/9(% 단조·도구 턴 억제·text 일괄). 무음 수십 초 → 진행 이벤트 간격 ~3s. V6 usage probe PASS(streaming `usage_metadata` 정상 — Langfuse cost 전제 유지).
-- ⚠️ **관찰(비차단, follow-up)**: S7-pre(비채점 setup 턴) "여성 543억" — 실제 여성 월매출 289억, 홍대 총매출 532억과 ±5% 퍼지 톨러런스 충돌(2.07%)로 통과한 오도출. 스트리밍 무관 기존 Trust 한계 → 큰 자릿수 원화 tolerance 이중 게이트 or 성별/비율 라벨 바인딩 follow-up.
-- 🔧 **prod 배포 대기** — main push `dc11186` + CI 5/5 green 완료, but 서버측 auto_deploy 미발화 + prod 서버 현재 접근 불가(사용자 확인). 서버 접근 가능 시: `systemctl status marketscope-autodeploy.timer` 확인 → timer enable 또는 `bash scripts/deploy/auto_deploy.sh --force` (CI 게이트·flush_cache·smoke·자동롤백 내장) → prod SSE 에 "응답 작성 중 n%" 확인. 롤백 스위치: env `AGENT_LOOP_STREAM_FINAL=false` + 재기동.
-
-### Langfuse Ops Hardening Pass 1 🆕 — v2 L2 wiring + 무음사망 가시화 + eval 관측 opt-in
-- **Plan**: [langfuse-ops-hardening-2026-07-06](../plan/infra/langfuse-ops-hardening-2026-07-06.md) (감사 P1~P4 일괄)
-- ✅ **v2 L2 wiring**: `engine.py` finalize 에 `marketscope.v2.summary` 19키 metadata + **score 6종**(numeric_match/tool_error_rate/abstention_triggered/trust_corrective_applied/trust_fallback_triggered/trust_masked_count) + 도구별 tool span(duration/error) · LLM 3 call site 에 metadata/tags/run_name **조건부** 전달(handler None=기존과 바이트 동일) · tags `marketscope.{v2|pae}` 동적화 · Trust 블록 `binding_stats` 치환(behavior-preserving 계측).
-- ✅ **무음사망 가시화**: `/api/health/detail` `langfuse` 블록(enabled/tracer_valid/client_initialized/sampling_rate) + `/metrics` `langfuse_trace_missing_total` + runbook 3단 진단 플레이북.
-- ✅ **잠재 결함 fix**: SDK `sample_rate` 이중 샘플링 제거(done trace_id 고아 방지, `should_sample()` 단일 게이트) · flush `asyncio.to_thread` offload(engine+graph — SSE 블로킹 제거).
-- ✅ **eval 관측 opt-in**: `docker-compose.e2e.yml` `${E2E_LANGFUSE_*:-}` 파라미터화 — 기본 off(e2e trace_id null 계약 보존), eval 세션만 dev 키 export.
-- ✅ **검증**: 신규 pytest 4파일 18건 + 전체 **225 passed / 6 deselected(@real), 수집 231** · ruff/format PASS. 로컬 env 드리프트(structlog·slowapi 누락) 복구로 app_client 스킵 0.
-- ⚠️ **수동 적용 대기**: `.env`(TRACING_ENVIRONMENT=production + SESSION_SALT + OTEL 주석) / `.env.dev`(SESSION_SALT) — `protect_secrets.py` 훅 차단. diff 는 Plan §수동 적용 diff 참조.
-- 🔧 **Pass 2/3 잔여**: e2e 회귀(R0-LF-AGG·R3-LF-L1) · live smoke(R1-LF-V2SMOKE — dev 키 기동 후 langfuse-cli 로 trace/span/score 확인) · eval opt-in 스모크(R1-LF-EVALOPT) · score-config(user_feedback) 콘솔 등록.
-
----
-
-## 최근 작업 (2026-07-04)
-
-### v2 프로덕션 배포 완료 ⭐ — Eval R4 GATE PASS 4/4 → prod DB 복구 → 컷오버/스모크 전항목 PASS
-- **Plan**: [prod-deploy-2026-07-04](../plan/infra/prod-deploy-2026-07-04.md) · **Verdict**: [eval-round4-2026-07-04/_verdict.md](../qa/runs/eval-round4-2026-07-04/_verdict.md)
-- **Trust Kernel P1/P2 근본원인 5건(RC1~RC5) fix**: fact_pool `#N` 접미키 매칭 · `_COMPOUND_RE` "3억 5,000만원" 오파싱 · truncate본↔ToolMessage 불일치 · still-unbound 전체대체 과잉방어(`should_fallback` ≥3 AND ≥50% + `mask_unbound` "[미확인]" + 카드 존재 시 abstention 금지) · 원화 floor 미만 스케일 오기(`find_scale_mismatches`). 신규 `test_trust_kernel_regressions.py` 19케이스, pytest 187 passed.
-- **Eval R4**: S2 3.3→10.0 · S4 3.3→10.0 · S8 9.2→10.0, 평균 10.0, 날조 0/8 → GATE PASS 4/4.
-- **prod DB 복구**: data-only 단일 트랜잭션(TRUNCATE→COPY→setval), worker_sum 4,724,265 · catmeta 100 · unit_price NULL 0 · aliases 32. 스모크: 외부도메인 200×5 · SSE 3건(직장인구 87,191=DB · 카페→CS100010 시뮬 3,864만=GT) · Anthropic 401/404 0건(2개월 Gemini fallback 해소).
-
-### Deferred 백로그 처리 — daily_avg→quarter_total rename + recommend score 밴드 정규화
-- **Plan**: [deferred-backlog-2026-07-04](../plan/fix/deferred-backlog-2026-07-04.md)
-- **Item 1** `daily_avg`→`quarter_total` rename: '일평균' 라벨·분할 날조 근원(06-26 S7 물리모순) 근본 정정. 백엔드 10파일 + 프론트 2파일(types.ts `quarterTotal` + `dailyAvg?` deprecated fallback) + 테스트 3건. trust/numeric_sanity 매처는 신규 키 + 구 키 legacy 유지 → **배포 시 `flush_cache.py` 필수**.
-- **Item 2** recommend score: min-max 0~100(1위 항상 100.0 고정 오독) → `_band_scores` 순수함수(55~95 유계 밴드, 동점/단일=75.0). mock recommendations.json 재스케일, 회귀 3케이스.
-- **Item 3** 스트리밍 재설계 — **설계만, 착수 보류** (eval-gated). 토큰 스트리밍 ↔ Trust Kernel 검증-후-방출 충돌. 옵션 B(astream 버퍼링) 권고.
-- **검증**: pytest 190 passed/6 skip · ruff PASS · tsc 0 error.
-
-### 자동배포 파이프라인 Pass 1+2 (C1~C10) 🆕 — auto_deploy.sh + systemd timer 폴링
-- **Plan**: [auto-deploy-on-push](../plan/infra/auto-deploy-on-push.md)
-- origin/main push 를 2분 폴링 감지 → CI green 게이트 → prev-auto 재태그 → ff merge → 빌드 → healthy 대기 → flush_cache → smoke 4항목 → 실패 시 prev-auto 자동 롤백.
-- 신규 4파일: `scripts/deploy/auto_deploy.sh`(flock·`--ff-only`·ERR trap 롤백·`last-deploy.json`) · `install_autodeploy.sh` · systemd `marketscope-autodeploy.{service,timer}`(`TimeoutStartSec=1800`). 안전설계: 본 서버=작업세션 겸용이라 **reset 금지**, 호스트 env 오염 방어.
-- **Pass 2 (C9/C10) 완료** — timer 설치 후 라이브 리허설로 결함 3건 발견·즉시 fix: ① 서버발 커밋 no-op 기준 `.last-deployed-sha` 교체(`3fc7d9a`) ② freshness 마커 false-positive → server/·frontend/ diff push 만 검사(`e1d28e4`) ③ 롤백 후 frontend cold-start 가짜 ROLLBACK_FAILED → `wait_frontend`(90s)(`1f5d19b`). C9 자동배포 3회 연속 SUCCESS(4.5분→23초 캐시), C10 smoke 실패 주입 → prev-auto 복귀 ROLLED_BACK 무중단, BLOCKED_DIRTY 2회 검증.
-- **다음**: Pass 3 — 2분 폴링 24h 관찰(no-op 부하·API rate) · 수동 배포 세션 전 timer disable 관례.
+1. **prod 자동배포 미발화 (push 는 완료)** — 07-07 11:11 push `origin/main=c98ea5d`(ops-hardening `d63a371`+docs 2 + E02/E03 재작성) + CI 5/5 green, 스트리밍 옵션 B `dc11186` 은 07-06 기push. 그러나 **CI green 후 28분간 prod 미반영** — health detail `langfuse` 블록 미등장 + 다운타임 블립 0 = 배포 시도 자체 없음(07-06 미발화와 동일 증상). prod 는 07-04 배포본에 머묾. 서버 진단: `systemctl status marketscope-autodeploy.timer` · `journalctl -u marketscope-autodeploy.service -n 100 --no-pager`(BLOCKED_DIRTY/CI 게이트/freshness 로그) · `cat last-deploy.json` · `git status --short`(서버 워킹트리 dirty 여부) → 해소 후 `bash scripts/deploy/auto_deploy.sh --force`. 롤백 스위치 `AGENT_LOOP_STREAM_FINAL=false`. **별건**: prod `redis_connected=false` 지속 관측 — Redis 컨테이너 상태 확인 필요.
+2. **`.env`/`.env.dev` 수동 diff 미적용** — `TRACING_ENVIRONMENT=production` + `SESSION_SALT` + OTEL 주석. `protect_secrets.py` 훅이 Edit 차단 → 수동 적용 필요([langfuse-ops-hardening](../plan/infra/langfuse-ops-hardening-2026-07-06.md) §수동 적용 diff).
+3. **auto-deploy Pass 3** — 2분 폴링 24h 관찰(no-op 부하·API rate) · 수동 배포 세션 전 timer disable 관례화([auto-deploy-on-push](../plan/infra/auto-deploy-on-push.md)).
 
 ---
 
@@ -75,77 +24,58 @@
 
 | LLM 설정 | 값 |
 |----------|-----|
-| LLM_PROVIDER | **anthropic** (claude-sonnet-4-6) |
-| Loop | Claude Sonnet (function-calling), fallback gemini-2.5-pro/flash |
-| Agent 모드 | **v2 agentic loop + Trust Kernel** (`AGENT_LOOP_VERSION=v2`, 롤백 스위치=pae) |
+| LLM_PROVIDER | **anthropic** (claude-sonnet-4-6), fallback gemini-2.5-pro/flash |
+| Agent 모드 | **v2 agentic loop + Trust Kernel** (`AGENT_LOOP_VERSION=v2`, 롤백=pae) |
 | 관측성 | Langfuse L1+L2 (v2 summary/score/tool-span wiring, graceful degrade) |
 
 ---
 
 ## 현재 서비스 지표
 
-- Mock 상권 5개 · Real 상권 1,650개
-- ETL 적재 (2025Q4): floating_pop 9,888 / estimated_sales 21,333 / stores 75,985 / resident 39,288 / worker total 4,724,265
-- Agent Tool 9종 · Card 타입 5종(summary/risk/compare/recommend/simulation)
-- SSE 이벤트: v2 루프 7종(thinking/tool/tool_end/card/text/suggestion/done) + `map_cmd`/greeting 단축은 chat.py, PAE(legacy) 경로는 plan/warning 추가 · 프론트 SSEEvent 유니온 10종(`error` 포함)
-- Backend pytest: 테스트 모듈 28 · 최근 실측 2026-07-06 **225 passed / 6 deselected**(`@pytest.mark.real` DB 통합 6)
-- E2E(Playwright): spec 44파일 · ring0~3 + prod-smoke. 최근 실측 2026-07-02 Mock 131 passed / 25 failed(loop 무관 사전결함) / 8 skip
-
-> 완성도 평가(2026-04-22 스냅샷 안정성85/효율82/정확74)는 이후 해소: backend pytest·Langfuse L2·Heatmap singleflight = 2026-05-07 완료, 정확성 = Eval Round 4(평균 10.0, GATE PASS 4/4, 2026-07-04) 재측정 완료.
+- Mock 상권 5개 · Real 상권 1,650개 · ETL(2025Q4): floating_pop 9,888 / estimated_sales 21,333 / stores 75,985 / resident 39,288 / worker 4,724,265
+- Agent Tool 9종 · Card 5종(summary/risk/compare/recommend/simulation) · SSE: v2 7종 + `map_cmd`/greeting(chat.py), PAE +plan/warning · 프론트 SSEEvent 10종
+- Backend pytest: 모듈 28 · 최근 실측 2026-07-06 **225 passed / 6 deselected(@real)** · E2E spec 44파일(ring0~3 + prod-smoke)
+- 정확도: **Eval R4 평균 10.0 · GATE PASS 4/4**(2026-07-04) → 스트리밍 옵션 B 재판정 fresh 10.0(2026-07-06). 완성도(2026-04-22 85/82/74)는 이후 전항목 해소.
 
 ---
 
 ## Next Items (우선순위 순)
 
-### 🟠 자동배포 파이프라인 Pass 3 (24h 관찰)
-**Plan**: [auto-deploy-on-push.md](../plan/infra/auto-deploy-on-push.md)
-- C9/C10 완료(자동배포 3회 SUCCESS · 롤백 무중단 검증) → Pass 3 잔여: 2분 폴링 24h 관찰(no-op 부하·API rate) · 수동 배포 세션 전 timer disable 관례화
+### 🟡 Trust 퍼지 톨러런스 충돌 follow-up
+[eval-stream-b-2026-07-06/_verdict.md](../qa/runs/eval-stream-b-2026-07-06/_verdict.md) §관찰-1 — "543억"↔총매출 532억(2.07%) ±5% 충돌로 오도출 통과. 큰 자릿수 원화 상대+절대 이중 게이트 or 성별/비율 라벨 바인딩 검토.
 
-### 🟡 Trust 퍼지 톨러런스 충돌 follow-up 🆕
-**출처**: [eval-stream-b-2026-07-06/_verdict.md](../qa/runs/eval-stream-b-2026-07-06/_verdict.md) §관찰-1
-- "543억"↔총매출 532억(2.07%) ±5% 충돌로 오도출 통과 — 큰 자릿수 원화 상대+절대 이중 게이트 or 성별/비율 필드 라벨 바인딩 검토
-
-### 🟡 Refactoring Phase 1 Pass 2 — 잔여분
-**Plan**: [phase1-low-mid-risk-2026-04-23.md](../plan/infra/phase1-low-mid-risk-2026-04-23.md)
-- ✅ `api/errors.py` 래퍼 · ✅ `respond.py`→`agent/utils/formatting.py` 분할
-- 🔧 `agent/nodes/respond.py` 재증식(575 LOC) · `stores/chatStore.ts`(455 LOC) slices 분할 미착수 · `except Exception` 좁히기
+### 🟡 Refactoring Phase 1 Pass 2 잔여
+[phase1-low-mid-risk-2026-04-23.md](../plan/infra/phase1-low-mid-risk-2026-04-23.md) — `respond.py` 재증식(575 LOC) · `chatStore.ts`(455 LOC) slices 분할 · `except Exception` 좁히기 미착수.
 
 ### 🟡 관측성 L2 잔여
-- Langfuse L2 Foundation(2026-05-07) + **v2 루프 L2 wiring 완료(2026-07-06 ops-hardening)** — 잔여: PAE 노드 generation span(planner/evaluator/respond) + L2-C eval harness (Plan [langfuse-l2-token-cost-eval.md](../plan/infra/langfuse-l2-token-cost-eval.md) Pass 2/3) · ops-hardening Pass 3(live smoke·eval opt-in 스모크·score-config 등록 — Pass 2 e2e 회귀는 2026-07-07 green) · `.env`/`.env.dev` 수동 diff 적용
+[langfuse-l2-token-cost-eval.md](../plan/infra/langfuse-l2-token-cost-eval.md) Pass 2/3 — PAE 노드 generation span + L2-C eval harness · ops-hardening Pass 3(live smoke·eval opt-in·score-config 등록).
 
 ### 🟡 Phase 2 — Premium (미착수)
-- OAuth2 + 결제(Toss/PortOne) · Tier 게이팅 미들웨어(Free 일 5회) · F04 업종 심층 UI · category_aliases 퍼지 검색(pg_trgm)
+OAuth2 + 결제(Toss/PortOne) · Tier 게이팅(Free 일 5회) · F04 업종 심층 UI · category_aliases 퍼지 검색(pg_trgm).
 
-### 🟢 장기 / 후순위
-- 세션 저장소 Redis/Postgres 이관 · `store_history` 대안 데이터셋 · Docker 이미지 최적화
+### 🟢 장기
+세션 저장소 Redis/Postgres 이관 · `store_history` 대안 데이터셋 · Docker 이미지 최적화.
 
 ---
 
 ## 이력 요약
 
-> 상세는 각 Plan / `docs/qa/runs/` / git history 참조.
+> 상세는 활성 `docs/plan/` · git history · `docs/qa/runs/{eval-round4-2026-07-04, eval-stream-b-2026-07-06}` 참조.
 
 | 날짜 | 주요 내용 |
 |------|----------|
-| 2026-07-03 | Accuracy Eval Round 3(v2 Real) GATE FAIL 2/4(평균 8.2) → P1 Trust Kernel fallback 붕괴 + P2 S8 스케일 오기 발견(07-04 R4 에서 해소). v2→main 머지 완료(결과 트리 = v2 tip byte-동일). |
-| 2026-07-02 | /qa v2 Real 최초 품질검증 — 날조 0/10 GT 전수일치, 건강도 90→99, HIGH 2 fix(trust 교정턴 메타발화 가드 · simulate category resolve). v2 E2E 마무리 — S9-5 fix + PAE baseline로 v2 회귀 0 실증(근본원인=compose env 오설정). |
-| 2026-06-26 | S7 coref 수치 날조 fix Pass 3(tool 5/5·날조 0/5) + 죽은 모델 ID `claude-sonnet-4-20250514`→`claude-sonnet-4-6`. [Plan](../plan/fix/s7-coref-toolless-fabrication.md) |
-| 2026-06-25 | 데이터 신뢰성 — 적재 결손 3건(worker 전량0·unit_price NULL·aliases NULL) 근본수정 + 컬럼내용 검증 게이트 + 적대검증 워크플로우(11 finding). [Plan](../plan/fix/data-reliability-2026-06-25.md) |
-| 2026-06-10 | Accuracy Eval Round 2 평균 8.0→9.4 + ISSUE-003 라이브 검증 + S7 coref P1 발견. [Verdict](../qa/runs/eval-round2-2026-06-10/_verdict.md) |
-| 2026-06-09 | P0 백로그 — recommend 저점포수 floor(`_apply_store_floor` MIN_RELIABLE_STORES=3) + Hero H1 break-keep. [Plan](../plan/fix/p0-backlog-2026-06-09.md) |
-| 2026-06-08 | QA 풀앱 패스 건강도 98→99 — out_of_scope/greeting 중복 suggestion fix(`graph.py`). |
-| 2026-05-07 | 4 Plan Pass 1 — Heatmap singleflight 재도입 + backend pytest 확장(35 신규) + W1 boost 측정(baseline 96.9%) + Langfuse L2 Foundation. |
-| 2026-04-30 | UX Sweep Phase A-F Pass 1 — 13 신규 e2e + 통합 5 journey(j06). [Plan](../plan/qa/ux-phase-a-f-test-plan.md) |
-| 2026-04-29 | Out-of-Scope(서울 외) 거부 3중 가드 — out_of_scope intent + STRONG_TOP1_MIN(0.70) + prompt rule. [Plan](../plan/fix/out-of-scope-handling-2026-04-29.md) |
-| 2026-04-28 | Prod 재배포(district-click-race fix) · Tool 함수명 노출 fix(alembic 005 + Langfuse 11차원/6스코어 + `_ToolTagSanitizer`) · Langfuse 통계 집계 Phase 1+2. |
-| 2026-04-27 | P0 우선순위 6건 — W1 entity_matching boost · RESPOND XML leak `_XMLTagSanitizer` · Planner empty-plan clarification · Eval drift guard. [Plan](../plan/fix/p0-priority-2026-04-27.md) |
-| 2026-04-24 | User-Journey Sweep(Pass3 99.1%) · Data Trust `numeric_sanity` · E2E 품질 Sweep 107 · Refactoring Pass1+2 · Langfuse 비용 커버리지 fix(SDK v2→v3). |
-| 2026-04-23 | F-01 ETL fix(21,333 행 재적재) + Accuracy Gap W1/W2/W3(entity_matching/abstention/rewriter + learned_aliases 004) · LLMOps L1 v3 포팅 · v0.4.0 재배포(라우트 `/` `/app` 분리). |
-| 2026-04-21~22 | E2E 회귀 Pass 1~3 그린(Mock 39 + Real 24) · LLMOps L1 trace wiring · 완성도 평가 85/82/74. |
-| 2026-04-16~19 | **프로덕션 런치**(marketscope.robitlabs.co.kr) — 외부 nginx + LE · `docker-compose.prod.yml` · 문서 계층화 · 매출 단위 fix. |
-| 2026-04-13~14 | 분석 품질 Phase 1~3(3단 해석법) · SSE TTFT 25s→1.5s · 서빙 안정성 Phase 1~10(Circuit Breaker · `/metrics` · DR). |
-| 2026-04-03~08 | PAE Agent 전환 · Repository 패턴 · Phase 3 완료(F06/F09/F10) · Docker 통합 · QA P0 다수. |
-| 2026-03-30~04-02 | **Phase 1B 완료** — SHP→PostGIS 1,650 적재 · Real 모드 전환 · DB 셋업 자동화 · ETL 적재 · E2E 32/32. |
+| 2026-07-07 | Langfuse Ops Hardening Pass 2 — e2e 회귀 9 passed(R0-LF-AGG 4/4 · R3-LF-L1) + E02/E03 v3 의미론 재작성(l1-langfuse 7/7). `c98ea5d` 까지 push + CI green — **auto_deploy 미발화 재확인**(28분 미반영, 블로커 §1). |
+| 2026-07-06 | v2 스트리밍 옵션 B(astream 버퍼링 + "응답 작성 중 n%" 진행 이벤트, Trust 의미론 무변경) → Eval GATE PASS 4/4 평균 10.0. + Langfuse ops-hardening Pass 1(v2 L2 wiring: summary 19키/score 6종/tool span + 무음사망 가시화). pytest 225. |
+| 2026-07-04 | **v2 프로덕션 배포** — Eval R4 GATE PASS 4/4(평균 10.0·날조 0) + Trust Kernel RC1~RC5 fix + prod DB 복구(worker 4,724,265). Deferred 백로그(daily_avg→quarter_total rename·recommend 밴드) + 자동배포 파이프라인 Pass 1+2(auto_deploy.sh + systemd timer). |
+| 2026-07-02~03 | Eval Round 3 GATE FAIL 2/4(평균 8.2, P1 fallback 붕괴·P2 S8 스케일 → R4 해소) · v2→main 머지 · /qa v2 Real 첫 검증(날조 0/10, 건강도 99). |
+| 2026-06-25~26 | S7 coref 수치 날조 fix Pass 3(죽은 모델 ID `claude-sonnet-4-6` 교체) · 데이터 신뢰성 적재 결손 3건 근본수정 + 적대검증. |
+| 2026-06-08~10 | Accuracy Eval Round 2 평균 8.0→9.4 · P0 백로그(recommend store floor) · out_of_scope/greeting suggestion fix. |
+| 2026-05-07 | 4 Plan Pass 1 — Heatmap singleflight 재도입 + backend pytest 확장 + W1 boost + Langfuse L2 Foundation. |
+| 2026-04-27~30 | UX Sweep Phase A-F Pass 1(13 e2e + j06) · Out-of-Scope 3중 가드 · Prod 재배포(district-click-race) · Tool 함수명 노출 fix · P0 우선순위 6건. |
+| 2026-04-23~24 | F-01 ETL fix(21,333 재적재) + Accuracy Gap W1/W2/W3 · User-Journey Sweep(99.1%) · numeric_sanity · LLMOps L1 v3 포팅 · v0.4.0 재배포. |
+| 2026-04-16~22 | **프로덕션 런치**(marketscope.robitlabs.co.kr) — 외부 nginx + LE · prod compose · 문서 계층화 · E2E 회귀 Pass 1~3 · LLMOps L1 wiring. |
+| 2026-04-03~14 | PAE Agent 전환 · Repository 패턴 · Phase 3(F06/F09/F10) · Docker 통합 · 분석 품질 Phase 1~3 · SSE TTFT 25s→1.5s · 서빙 안정성 Phase 1~10(Circuit Breaker · /metrics · DR). |
+| 2026-03-30~04-02 | **Phase 1B 완료** — SHP→PostGIS 1,650 적재 · Real 전환 · ETL · E2E 32/32. |
 
 ---
 
@@ -154,7 +84,7 @@
 | 영역 | 경로 |
 |------|------|
 | 종합 QA | `docs/qa/README.md` · `docs/qa/test-plan.md` · 최근 로그 `docs/qa/runs/` |
-| 분석 품질 eval | `docs/qa/runs/eval-round4-2026-07-04/` (최신 — GATE PASS 4/4) · `eval-round3-2026-07-03/` · `eval-round2-2026-06-10/` |
-| 아키텍처 | `docs/architecture/overview.md` (backend/frontend/agent/data/deployment) |
+| 분석 품질 eval | `eval-round4-2026-07-04/`(GATE PASS 4/4) · `eval-stream-b-2026-07-06/`(최신 스트리밍) |
+| 아키텍처 | `docs/architecture/overview.md` (+ backend/frontend/agent/data/deployment) |
 | 기능 목록 | `docs/spec/feature-list.md` · `features/F01~F13-*.md` |
 | 배포/운영 | `docs/ops/` (runbook · disaster-recovery · production-deployment) |

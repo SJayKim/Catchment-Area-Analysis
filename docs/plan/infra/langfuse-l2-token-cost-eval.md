@@ -26,10 +26,10 @@ L1 (trace wiring + graceful degrade + 11차원 metadata + 6 score) 은 2026-04-2
 - [[feedback_langfuse_otel_insecure_partial]] — REST 호출은 OTEL_INSECURE 미적용
 
 ### 관련 Plan
-- [llmops-platform.md](./llmops-platform.md) — 전체 LLMOps 청사진
-- [llmops-l1-verification.md](./llmops-l1-verification.md) — L1 trace wiring 검증
-- [langfuse-aggregate-stats-2026-04-28.md](./langfuse-aggregate-stats-2026-04-28.md) — 11차원 metadata + 6 score
-- [langfuse-cost-coverage-fix-2026-04-24.md](./langfuse-cost-coverage-fix-2026-04-24.md) — v3 SDK drift 가드
+- llmops-platform.md (git history) — 전체 LLMOps 청사진
+- llmops-l1-verification.md (git history) — L1 trace wiring 검증
+- langfuse-aggregate-stats-2026-04-28.md (git history) — 11차원 metadata + 6 score
+- langfuse-cost-coverage-fix-2026-04-24.md (git history) — v3 SDK drift 가드
 
 ### 코드 스폿
 - `server/server/services/langfuse_tracer.py` — v3 Client + CallbackHandler 싱글톤
@@ -175,7 +175,7 @@ USE_MOCK=false python server/scripts/langfuse_eval/run_experiment.py \
 - [ ] Dataset upsert 시 동일 name 중복 → Langfuse 가 새 ID 생성. `dataset_manager.py` 에 by-name 검색 후 update 처리
 - [ ] 메모리 교훈: SDK drift 회귀 — `validate_env.py` 에 `langfuse>=3` assert 보강
 - [ ] 메모리 교훈: REST 호출 verify — dev MITM 환경에선 `LANGFUSE_HOST` HTTP 강제 또는 cert path 명시
-- [ ] 다른 Plan 충돌: [accuracy-gap-eval-round2-2026-04-24.md](../fix/accuracy-gap-eval-round2-2026-04-24.md) 의 수동 grading 과 중복 — Round 3 부터는 본 harness 로 대체
+- [ ] 다른 Plan 충돌: accuracy-gap-eval-round2-2026-04-24.md (git history) 의 수동 grading 과 중복 — Round 3 부터는 본 harness 로 대체
 
 ### Scenario (E2E Ring Mapping)
 | Ring | ID | 시나리오 |

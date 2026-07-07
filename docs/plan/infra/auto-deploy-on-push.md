@@ -2,7 +2,7 @@
 
 ## Context
 
-- 본 머신이 **프로덕션 배포 서버**(marketscope.robitlabs.co.kr, `docker-compose.prod.yml` 스택)다. 현재 배포는 매번 수동 세션(git pull → 롤백 태그 → build → up → flush → smoke)으로 진행 — 최근 사례 [prod-deploy-2026-07-04](prod-deploy-2026-07-04.md).
+- 본 머신이 **프로덕션 배포 서버**(marketscope.robitlabs.co.kr, `docker-compose.prod.yml` 스택)다. 현재 배포는 매번 수동 세션(git pull → 롤백 태그 → build → up → flush → smoke)으로 진행 — 최근 사례 prod-deploy-2026-07-04 (git history).
 - origin/main 에 push 가 도착하면 이 서버가 **자동으로 감지 → CI green 확인 → 재빌드/재기동 → 캐시 flush → smoke → 실패 시 자동 롤백** 하도록 상시 파이프라인을 세팅한다.
 - **방식 결정: GitHub → 서버 "폴링(pull) 방식"** (systemd timer + 배포 스크립트).
   - 대안 A) GitHub Actions self-hosted runner: GitHub 워크플로우가 prod 서버에서 임의 코드 실행 — 공격면·러너 유지보수 부담. 기각.
@@ -74,7 +74,7 @@ systemd timer (2분)
 
 ### 의존성 / 선행 Plan
 
-- 선행: [prod-deploy-2026-07-04](prod-deploy-2026-07-04.md) 배포 절차가 golden path — 스크립트는 그 런로그의 코드화.
+- 선행: prod-deploy-2026-07-04 (git history) 배포 절차가 golden path — 스크립트는 그 런로그의 코드화.
 - **선결 조건**: 현재 로컬 main 이 origin 대비 ahead(미push 커밋 존재, 사용자 push 승인 대기 — status 2026-07-04). 자동배포는 "origin/main = 진실의 원천" 전제이므로 **활성화 전에 push 정리 필수**. 스크립트도 local ahead 상태면 BLOCKED_AHEAD 로 중단하게 방어.
 - GitHub API 무인증 rate limit 60req/h — 2분 폴링(30/h) + 커밋 있을 때만 check-runs 호출이라 여유. private 전환 시 `GITHUB_TOKEN` env 지원(옵션 처리).
 
