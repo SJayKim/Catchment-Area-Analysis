@@ -87,19 +87,20 @@ Redis data loss is acceptable — cache rebuilds on next request. Backend degrad
 
 ```bash
 # Diagnose
-docker compose logs --tail=50 backend | grep -i "llm\|anthropic\|gemini\|claude\|timeout"
+docker compose logs --tail=50 backend | grep -i "llm\|anthropic\|openai\|gpt\|gemini\|claude\|timeout"
 docker compose exec backend python -c "import httpx; print(httpx.get('https://api.anthropic.com').status_code)"
 
 # Recovery
 # 1. Check API key validity
 docker compose exec backend printenv ANTHROPIC_API_KEY | head -c 10
+docker compose exec backend printenv OPENAI_API_KEY | head -c 10
 docker compose exec backend printenv GOOGLE_API_KEY | head -c 10
 
-# 2. Switch provider if one is down — edit .env: LLM_PROVIDER=gemini (or anthropic)
+# 2. Switch provider if one is down — edit .env: LLM_PROVIDER=gemini (or anthropic / openai)
 docker compose up -d backend
 ```
 
-Agent has built-in timeout and fallback chain (anthropic → gemini-pro → gemini-flash). Users receive a friendly error when all providers fail.
+Agent has built-in timeout and preferred-first fallback chain (anthropic → openai → gemini-pro → gemini-flash; `LLM_PROVIDER` promotes its provider to the front). Users receive a friendly error when all providers fail.
 
 ---
 
@@ -272,8 +273,9 @@ docker compose logs backend --tail 100 | grep agent_done | tail -3
 | 모델 ID | 역할 |
 |---|---|
 | `claude-sonnet-4-6` | v2 루프 1순위 / PAE planner·respond (anthropic mode) |
-| `gemini-2.5-pro` | v2 fallback 2순위 / PAE respond (gemini mode) |
-| `gemini-2.5-flash` | v2 fallback 3순위 / PAE planner·evaluator (gemini mode) |
+| `gpt-5.4-mini` | v2 fallback 2순위(canary) / PAE (openai mode) |
+| `gemini-2.5-pro` | v2 fallback 3순위 / PAE respond (gemini mode) |
+| `gemini-2.5-flash` | v2 fallback 4순위 / PAE planner·evaluator (gemini mode) |
 
 > 구 모델 ID `claude-sonnet-4-20250514` 는 은퇴(404) — 2026-06-26 에 `claude-sonnet-4-6` 으로 교체됨.
 

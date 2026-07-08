@@ -14,7 +14,7 @@
 | Tier | Free (Phase 2에서 Free 일 5회 제한 예정) |
 | 의존성 | F01 (상권 선택), D01 (데이터) |
 | 아키텍처 | **v2 agentic loop** (LLM function-calling + Trust Kernel) → FastAPI SSE → Next.js ChatPanel |
-| LLM | per-invoke fallback chain: `claude-sonnet-4-6` → `gemini-2.5-pro` → `gemini-2.5-flash` (전부 env-overridable) / Mock 프로바이더는 PAE 폴백 |
+| LLM | per-invoke preferred-first fallback chain: `claude-sonnet-4-6` → `gpt-5.4-mini` → `gemini-2.5-pro` → `gemini-2.5-flash` (전부 env-overridable, `LLM_PROVIDER` 가 선호 프로바이더를 맨 앞으로 승격) / Mock 프로바이더는 PAE 폴백 |
 | 현재 세팅 | `agent_loop_version=v2` (config 기본값), budget governor 6턴 / 12콜 / 90s |
 
 ## 2. 실행 구조
@@ -92,7 +92,7 @@ SSE 파서: `lib/sseParser.ts` (async generator) · 이벤트 dispatch: `lib/eve
 
 | 상황 | 처리 |
 |---|---|
-| LLM 타임아웃 (모델 턴 60s) | per-invoke fallback chain (claude → gemini pro → flash), 전 후보 실패 시 사과 `text` + `done` |
+| LLM 타임아웃 (모델 턴 60s) | per-invoke preferred-first fallback chain (claude → gpt → gemini pro → flash), 전 후보 실패 시 사과 `text` + `done` |
 | Circuit Breaker OPEN | 5회 실패 → OPEN 60s → HALF_OPEN 재시도 |
 | Tool 에러 (v2) | `ToolMessage` 로 모델에 전달, 모델이 재시도/우회 판단 |
 | 예산 상한 (v2) | 6턴/12콜/90s — 마지막 허용 턴은 prose 강제 finalize |

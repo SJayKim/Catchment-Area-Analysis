@@ -86,9 +86,10 @@ server/server/
 | `database_url` / `database_url_sync` | — | async + Alembic용 동기 URL |
 | `redis_url` | `redis://localhost:6379/0` | Redis 접속. Mock 모드에서 미사용 |
 | `seoul_opendata_api_key` / `data_go_kr_api_key` | — | ETL API 키 |
-| `llm_provider` | `gemini` | `gemini` / `anthropic` / `mock` (현 운영 env 는 `anthropic`) |
+| `llm_provider` | `gemini` | `gemini` / `anthropic` / `openai` / `mock` — 선호 프로바이더를 체인 맨 앞으로 승격 (현 운영 env 는 `anthropic`) |
 | `gemini_model_pro` / `gemini_model_flash` | `gemini-2.5-pro` / `2.5-flash` | Gemini 모델 ID — v2 fallback 체인 + PAE 역할별 |
 | `anthropic_model` | `claude-sonnet-4-6` | Anthropic 모델 ID (은퇴 모델 hotfix 용 env-오버라이드 가능) |
+| `openai_model` | `gpt-5.4-mini` | OpenAI 모델 ID — v2 fallback 체인 2순위(canary) + PAE (openai mode) |
 | `agent_loop_version` | `v2` | **현행 런타임 스위치** — `v2`(모델주도 루프 + Trust Kernel) / `pae`(레거시 롤백). mock provider 는 항상 PAE 폴백 |
 | `agent_loop_max_iterations` | `6` | v2 budget governor — 모델 턴 상한 (마지막 턴은 도구 없이 prose 강제) |
 | `agent_loop_max_tool_calls` | `12` | v2 budget governor — 요청당 도구 실행 총량 |
@@ -119,7 +120,7 @@ server/server/
 | Method | Path | 요청 | 응답 | 비고 |
 |---|---|---|---|---|
 | GET | `/health` | — | `{status}` | Liveness |
-| GET | `/api/health/detail` | — | DB pool / Redis / sessions / `agent_mode`(실효 루프 v2\|pae) / `agent_loop_version` / `llm_provider` / `langfuse`(enabled·tracer_valid·client_initialized·sampling_rate — 무음사망 가시화) | Readiness |
+| GET | `/api/health/detail` | — | DB pool / Redis / sessions / `agent_mode`(실효 루프 v2\|pae) / `agent_loop_version` / `llm_provider` / `llm_chain`(현 체인의 `provider:model_id` 리스트 — 키/순서 1-curl 확인) / `langfuse`(enabled·tracer_valid·client_initialized·sampling_rate — 무음사망 가시화) | Readiness |
 | POST | `/api/chat` | `{message(≤500), session_id?, district_code?}` | `text/event-stream` | SSE — 이벤트 집합은 아래 표 (경로별 상이) |
 | GET | `/api/districts` | `search?`, `type?`, `limit`, `offset` | `{total, items[]}` | 한글 조사 strip |
 | GET | `/api/districts/{code}` | — | District + polygon | GeoJSON. 없으면 404 |

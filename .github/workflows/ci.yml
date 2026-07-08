@@ -58,6 +58,7 @@ jobs:
       LLM_PROVIDER: "mock"
       ANTHROPIC_API_KEY: "sk-ant-test-dummy"
       GOOGLE_API_KEY: "test-dummy"
+      OPENAI_API_KEY: "sk-test-dummy"
       SEOUL_OPENDATA_API_KEY: "test-dummy"
       LANGFUSE_PUBLIC_KEY: ""
       LANGFUSE_SECRET_KEY: ""

@@ -25,7 +25,7 @@ pytest -m "not real"        # CI 게이트 (@real DB 통합 6케이스 제외 �
 ## Agent 디스패치 (`agent/runtime.py::run_agent`)
 
 - `agent_loop_version=="v2"` && `llm_provider!="mock"` → **v2 loop** (`agent/loop/engine.py`, 모델주도 function-calling + Trust Kernel). 그 외(특히 Mock) → legacy **PAE** (`agent/graph.py`, Planner-Actor-Evaluator).
-- **LLM fallback chain** (키 존재 기준): anthropic `claude-sonnet-4-6` → gemini-2.5-pro → flash. 모델 ID 는 전부 settings(env-overridable) — 하드코딩 은퇴사고(dead model 404) 방지.
+- **LLM preferred-first fallback chain** (키 존재 기준 base): anthropic `claude-sonnet-4-6` → openai `gpt-5.4-mini` → gemini-2.5-pro → flash. `LLM_PROVIDER` 가 선호 프로바이더 블록을 맨 앞으로 승격(예 `LLM_PROVIDER=openai` → GPT 1순위). 모델 ID 는 전부 settings(env-overridable) — 하드코딩 은퇴사고(dead model 404) 방지.
 - Tool 9종 도메인 + 메타 3종(resolve_district/compute/abstain) = 스키마 12. Card 발행 5종. 새 Tool 은 `@register_tool` + `loop/tools_fc.py::tool_schemas()` 등록.
 
 ## DB / 마이그레이션
