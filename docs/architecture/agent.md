@@ -81,13 +81,14 @@ v2 는 **역할별 모델 분리가 없다** — 단일 tool-calling 모델을 p
 | 순서 | provider / model | 조건 |
 |---|---|---|
 | 1 | anthropic / `settings.anthropic_model` (기본 `claude-sonnet-4-6`) | ANTHROPIC_API_KEY 존재 시 (tool_use 정확도 우선) |
-| 2 | gemini / `settings.gemini_model_pro` (기본 `gemini-2.5-pro`) | GOOGLE_API_KEY 존재 시 |
-| 3 | gemini / `settings.gemini_model_flash` (기본 `gemini-2.5-flash`) | 〃 |
+| 2 | openai / `settings.openai_model` (기본 `gpt-5.4-mini`) | OPENAI_API_KEY 존재 시 (fallback canary) |
+| 3 | gemini / `settings.gemini_model_pro` (기본 `gemini-2.5-pro`) | GOOGLE_API_KEY 존재 시 |
+| 4 | gemini / `settings.gemini_model_flash` (기본 `gemini-2.5-flash`) | 〃 |
 
 - 모델 ID 는 전부 settings 유래(env-overridable) — 하드코딩 ID 은퇴 사고(2026-06 dead model) 재발 방지 설계.
-- 파라미터: temperature 0.3, max tokens 4096. 실패 시 다음 후보로 진행, 전 후보 실패 시 마지막 예외 re-raise.
+- 파라미터: temperature 0.3, max tokens 4096. openai 분기만 `temperature` 생략(GPT-5.x 추론 모델이 비기본값 거부 — langchain-openai 이 max_tokens→max_completion_tokens 매핑). 실패 시 다음 후보로 진행, 전 후보 실패 시 마지막 예외 re-raise.
 - 모듈 레벨 CircuitBreaker `"loop_llm"` (실패 임계 5회 / 회복 60s — `circuit_breaker_*` settings 주입).
-- 기본 `llm_provider` 는 config 상 `"gemini"` 이나, 체인은 **키 존재 기준**이라 Anthropic 키가 있으면 Claude 가 1순위다 (현 운영 환경은 `.env` 로 anthropic 사용).
+- 체인은 **preferred-first**: 위 순서는 키 존재 기준 base 이고, `settings.llm_provider` 의 프로바이더 블록이 stable-partition 으로 맨 앞으로 승격된다 (`LLM_PROVIDER=openai` 면 새 env 없이 GPT 가 1순위). 선호 프로바이더 키가 없거나 오타면 base 체인 그대로 + per-process 1회 경고(steady-state 가시성은 health `llm_chain` 필드 담당). 현 운영 환경은 `.env` 로 anthropic 사용.
 
 ## 5. Tool 레지스트리 (`agent/tools/registry.py`)
 
@@ -140,7 +141,7 @@ v2 는 **역할별 모델 분리가 없다** — 단일 tool-calling 모델을 p
 - **Actor** (`agent/nodes/actor.py`): plan 을 의존성 layer 로 위상 정렬 후 layer 내 **`asyncio.gather` 병렬 실행**. Tool 1회 `asyncio.timeout(settings.tool_execution_timeout)`(15s) + transient DB 에러만 2회 재시도(fixed 0.5s). card_type 매핑 시 `card` 이벤트 발행.
 - **Evaluator** (`agent/nodes/evaluator.py`): `evaluator_skip_simple=true` 면 단순 케이스 rule 판정, 아니면 flash LLM 으로 충분성 판정 + suggestion 생성. LLM 타임아웃 `llm_timeout_fast`(15s).
 - **Respond** (`agent/nodes/respond.py`): 최종 응답 토큰 스트리밍 + post-hoc `numeric_sanity` 검사(경고 시 `warning` 이벤트). Tool 이름 누출 sanitizer 포함.
-- **역할별 모델** (`graph.py::_create_llm`): planner 는 Anthropic 키 유효 시 `claude-sonnet-4-6`(하드코딩), gemini provider 에서 respond/default → `gemini_model_pro`, planner/evaluator → `gemini_model_flash`. tenacity 2회 재시도 + 지수 백오프 1~4s + CircuitBreaker `"llm"`.
+- **역할별 모델** (`graph.py::_create_llm`): 모델 ID 는 전부 settings 유래(de-hardcode — 리터럴 `claude-sonnet-4-6` 제거). planner 는 Anthropic 키 유효 시 `settings.anthropic_model`, gemini provider 에서 respond/default → `gemini_model_pro`, planner/evaluator → `gemini_model_flash`. `LLM_PROVIDER=openai` + 키 존재 시 전 역할 openai(`settings.openai_model`) 사용. tenacity 2회 재시도 + 지수 백오프 1~4s + CircuitBreaker `"llm"`.
 - **상태** (`agent/state.py::AgentState`): 주요 필드 = `user_intent` / `intent_confidence` / `referenced_districts` / `plan: list[ToolPlanStep]` / `tool_results: dict[str, dict]` / `execution_round` / `card_emissions` / `response_mode`(`"direct" | "tool_assisted" | "clarification_direct" | "greeting_direct"`) / `quality_flags`. SSE 큐는 상태 밖(graph.py)에서 관리 (`sse_queue_maxsize=256`).
 
 ## 9. 관측 (Langfuse)
@@ -156,5 +157,5 @@ v2 는 **역할별 모델 분리가 없다** — 단일 tool-calling 모델을 p
 
 - **새 Tool 추가**: `agent/tools/<name>.py` 작성 → `@register_tool` 데코레이터 → v2 용 스키마를 `agent/loop/tools_fc.py::tool_schemas()` 에 추가 (PAE 경로도 쓰려면 `intents.yaml` plan 프리셋에 매핑).
 - **새 Intent (PAE 전용)**: `agent/config/intents.yaml` 에 패턴 + Tool plan 프리셋 추가. v2 는 intent 분류가 없고 모델이 도구를 직접 선택한다.
-- **LLM 교체**: `settings.llm_provider` + `anthropic_model` / `gemini_model_pro` / `gemini_model_flash` env 오버라이드. v2 체인 순서는 `loop/models.py::_candidate_chain`.
+- **LLM 교체**: `settings.llm_provider`(선호 프로바이더 preferred-first) + `anthropic_model` / `openai_model` / `gemini_model_pro` / `gemini_model_flash` env 오버라이드. v2 체인 순서는 `loop/models.py::_candidate_chain`.
 - **롤백**: `AGENT_LOOP_VERSION=pae` — 코드 배포 없이 레거시 그래프로 전환.

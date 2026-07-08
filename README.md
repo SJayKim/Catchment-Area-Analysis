@@ -111,7 +111,7 @@ MarketScope-AI/
 ## 기술 스택
 
 Next.js 14 · Kakao Map SDK · deck.gl · Zustand · Recharts · Tailwind (Frontend) /
-FastAPI (Python 3.12, async) · **v2 Agentic Loop + Trust Kernel** (레거시 PAE=LangGraph 폴백) · Claude Sonnet → Gemini 2.5 fallback chain (Backend) /
+FastAPI (Python 3.12, async) · **v2 Agentic Loop + Trust Kernel** (레거시 PAE=LangGraph 폴백) · Claude Sonnet → OpenAI GPT → Gemini 2.5 preferred-first fallback chain (Backend) /
 PostgreSQL 16 + PostGIS · Redis 7 · Docker Compose (Infra).
 
 > 버전·역할 상세표: [docs/architecture/overview.md §3](docs/architecture/overview.md).

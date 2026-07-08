@@ -1,6 +1,6 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-07-07
+> 최종 갱신: 2026-07-08
 > 상세 이력은 git history (`git log --follow docs/status/current-status.md`) + 활성 `docs/plan/` 참조.
 
 ---
@@ -34,12 +34,15 @@
 
 - Mock 상권 5개 · Real 상권 1,650개 · ETL(2025Q4): floating_pop 9,888 / estimated_sales 21,333 / stores 75,985 / resident 39,288 / worker 4,724,265
 - Agent Tool 9종 · Card 5종(summary/risk/compare/recommend/simulation) · SSE: v2 7종 + `map_cmd`/greeting(chat.py), PAE +plan/warning · 프론트 SSEEvent 10종
-- Backend pytest: 모듈 28 · 최근 실측 2026-07-06 **225 passed / 6 deselected(@real)** · E2E spec 44파일(ring0~3 + prod-smoke)
+- Backend pytest: 모듈 30 · 최근 실측 2026-07-08 **241 passed / 6 deselected(@real)**(LLM gateway +16) · E2E spec 44파일(ring0~3 + prod-smoke)
 - 정확도: **Eval R4 평균 10.0 · GATE PASS 4/4**(2026-07-04) → 스트리밍 옵션 B 재판정 fresh 10.0(2026-07-06). 완성도(2026-04-22 85/82/74)는 이후 전항목 해소.
 
 ---
 
 ## Next Items (우선순위 순)
+
+### 🟡 LLM Gateway — OpenAI GPT 지원 Pass 3 (live 활성화 잔여)
+[llm-gateway-openai-2026-07-08.md](../plan/infra/llm-gateway-openai-2026-07-08.md) — Pass 1+2(코드+ops/env/docs) 완료·main merge. **Pass 3(live) 미착수**: 실키 스모크 · 폴백 증명 · Langfuse `provider:openai` cost · PAE 경로 · prod 카나리아. 선행조건 = auto-deploy 발화 회복(미결 §1) + `.env`/`.env.dev` 실키 수동 적용(protect_secrets 훅 차단).
 
 ### 🟡 Trust 퍼지 톨러런스 충돌 follow-up
 [eval-stream-b-2026-07-06/_verdict.md](../qa/runs/eval-stream-b-2026-07-06/_verdict.md) §관찰-1 — "543억"↔총매출 532억(2.07%) ±5% 충돌로 오도출 통과. 큰 자릿수 원화 상대+절대 이중 게이트 or 성별/비율 라벨 바인딩 검토.
@@ -64,6 +67,7 @@ OAuth2 + 결제(Toss/PortOne) · Tier 게이팅(Free 일 5회) · F04 업종 심
 
 | 날짜 | 주요 내용 |
 |------|----------|
+| 2026-07-08 | LLM Gateway OpenAI 지원 Pass 1+2 — `LLM_PROVIDER` 선호-우선 체인(v2) + openai 프로바이더(v2 loop + PAE) + PAE 모델 ID de-hardcode + health `llm_chain` + ops/env/compose/docs sync. pytest 241 green · ruff clean. `feat/llm-gateway-openai` → main merge(PR). Pass 3(live)는 auto-deploy 블로커 선행. |
 | 2026-07-07 | Langfuse Ops Hardening Pass 2 — e2e 회귀 9 passed(R0-LF-AGG 4/4 · R3-LF-L1) + E02/E03 v3 의미론 재작성(l1-langfuse 7/7). `c98ea5d` 까지 push + CI green — **auto_deploy 미발화 재확인**(28분 미반영, 블로커 §1). |
 | 2026-07-06 | v2 스트리밍 옵션 B(astream 버퍼링 + "응답 작성 중 n%" 진행 이벤트, Trust 의미론 무변경) → Eval GATE PASS 4/4 평균 10.0. + Langfuse ops-hardening Pass 1(v2 L2 wiring: summary 19키/score 6종/tool span + 무음사망 가시화). pytest 225. |
 | 2026-07-04 | **v2 프로덕션 배포** — Eval R4 GATE PASS 4/4(평균 10.0·날조 0) + Trust Kernel RC1~RC5 fix + prod DB 복구(worker 4,724,265). Deferred 백로그(daily_avg→quarter_total rename·recommend 밴드) + 자동배포 파이프라인 Pass 1+2(auto_deploy.sh + systemd timer). |
