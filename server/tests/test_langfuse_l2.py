@@ -57,6 +57,18 @@ def test_normalize_openai_style_completion_keys() -> None:
     assert _normalize_usage(payload) == (100, 50)
 
 
+def test_normalize_langchain_aimessage_usage_metadata() -> None:
+    """OpenAI via LangChain — ChatOpenAI 응답은 AIMessage.usage_metadata 로 온다.
+
+    드리프트 가드: openai 프로바이더 추가 후에도 표준 LangChain 키 경로가
+    깨지지 않음을 고정 (별도 openai raw-key 분기 불필요).
+    """
+    from langchain_core.messages import AIMessage
+
+    msg = AIMessage(content="x", usage_metadata={"input_tokens": 11, "output_tokens": 7, "total_tokens": 18})
+    assert _normalize_usage(msg) == (11, 7)
+
+
 def test_normalize_returns_zero_when_no_usage() -> None:
     assert _normalize_usage(None) == (0, 0)
     assert _normalize_usage({}) == (0, 0)

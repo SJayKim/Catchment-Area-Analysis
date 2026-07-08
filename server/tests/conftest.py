@@ -16,6 +16,7 @@ os.environ.setdefault("LLM_PROVIDER", "mock")
 os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 # Dummy keys so config.py doesn't validate against live services
 os.environ.setdefault("ANTHROPIC_API_KEY", "sk-ant-test-dummy")
+os.environ.setdefault("OPENAI_API_KEY", "sk-openai-test-dummy")
 os.environ.setdefault("GOOGLE_API_KEY", "test-dummy")
 os.environ.setdefault("LANGFUSE_PUBLIC_KEY", "")
 os.environ.setdefault("LANGFUSE_SECRET_KEY", "")

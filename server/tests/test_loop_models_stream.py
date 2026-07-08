@@ -166,6 +166,31 @@ async def test_timeout_moves_to_next_candidate(monkeypatch, fresh_breaker):
     assert final["message"].content == "빠른 후보"
 
 
+async def test_openai_style_split_args_tool_call(monkeypatch, fresh_breaker):
+    # OpenAI 형: 같은 index 로 args 가 여러 청크에 분할 도착 → `+` 병합으로 완성.
+    llm = _FakeStreamLLM(
+        chunks=[
+            AIMessageChunk(
+                content="",
+                tool_call_chunks=[_tc_chunk("get_estimated_sales", '{"district', "call_1", index=0)],
+            ),
+            AIMessageChunk(
+                content="",
+                tool_call_chunks=[_tc_chunk(None, '_code": "D1"}', None, index=0)],
+            ),
+        ]
+    )
+    _patch_chain(monkeypatch, [llm])
+
+    deltas, final = await _drain(astream_with_fallback([], None))
+
+    assert all(d["tool_call"] is True for d in deltas)
+    tool_calls = final["message"].tool_calls
+    assert len(tool_calls) == 1
+    assert tool_calls[0]["name"] == "get_estimated_sales"
+    assert tool_calls[0]["args"] == {"district_code": "D1"}
+
+
 async def test_gemini_style_single_chunk_tool_call(monkeypatch, fresh_breaker):
     # Gemini 형: 완결 tool_call 이 단일 청크로 도착해도 동일하게 조립.
     llm = _FakeStreamLLM(
