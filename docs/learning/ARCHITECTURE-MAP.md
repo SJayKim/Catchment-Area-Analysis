@@ -183,7 +183,7 @@ flowchart TB
 | wall clock | `agent_loop_wall_clock` = **90s** | `config.py:84` |
 | 도구 스키마 | **12종** = 도메인 9종 + 메타 3종 | `loop/tools_fc.py::tool_schemas` |
 | 메타툴 | `resolve_district`(상권명→코드) · `compute`(AST 안전 산술, eval 미사용) · `abstain`(데이터 없음/서울 외 1급 거부) | `tools_fc.py` |
-| LLM 체인 | per-invoke 폴백: anthropic `claude-sonnet-4-6` → `gemini-2.5-pro` → `gemini-2.5-flash` | `loop/models.py::ainvoke_with_fallback` |
+| LLM 체인 | per-invoke 폴백(선호-우선): anthropic `claude-sonnet-4-6` → openai `gpt-5.4-mini` → `gemini-2.5-pro` → `gemini-2.5-flash` (`LLM_PROVIDER` 가 선호 프로바이더를 맨 앞으로 승격) | `loop/models.py::ainvoke_with_fallback` |
 | 수치 허용오차 | `trust_numeric_tolerance` = **0.05** (±5%) | `config.py:86` |
 | Trust 집행 | 교정 1회 → `should_fallback`(unbound ≥3 AND ≥50%) 시 `grounded_fallback`, 미만이면 `mask_unbound` | `loop/trust.py` |
 
@@ -384,7 +384,7 @@ cd frontend && npx tsc --noEmit                 # 타입체크
 cd server && ruff check . && pytest             # 린트 + 테스트
 ```
 
-핵심 env: `USE_MOCK`(true/false), `AGENT_LOOP_VERSION`(`v2` 기본 / `pae` 롤백 스위치), `LLM_PROVIDER`(anthropic/gemini/mock — mock 이면 레거시 폴백), `DATABASE_URL`, `REDIS_URL`, `NEXT_PUBLIC_API_URL`(SSE 직접호출용, `:8000` 권장), `NEXT_PUBLIC_KAKAO_MAP_KEY`, `ANTHROPIC_API_KEY`.
+핵심 env: `USE_MOCK`(true/false), `AGENT_LOOP_VERSION`(`v2` 기본 / `pae` 롤백 스위치), `LLM_PROVIDER`(anthropic/openai/gemini/mock — mock 이면 레거시 폴백), `DATABASE_URL`, `REDIS_URL`, `NEXT_PUBLIC_API_URL`(SSE 직접호출용, `:8000` 권장), `NEXT_PUBLIC_KAKAO_MAP_KEY`, `ANTHROPIC_API_KEY`.
 관련 설정(`config.py`): `agent_loop_max_iterations=6` · `agent_loop_max_tool_calls=12` · `agent_loop_wall_clock=90.0` · `trust_numeric_tolerance=0.05`. (구 `AGENT_MODE` 설정은 제거됨 — 관측 필드 `agent_mode` 는 `runtime.py::effective_loop_version()` 실효값을 보고한다.)
 
 ---

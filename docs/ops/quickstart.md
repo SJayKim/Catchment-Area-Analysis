@@ -13,7 +13,7 @@
 | Python | 3.12+ | `python --version` |
 | Git | 2.30+ | `git --version` |
 
-**필수 키**: Kakao Map JS Key ([developers.kakao.com](https://developers.kakao.com)) + LLM Key — Anthropic ([console.anthropic.com](https://console.anthropic.com)) 또는 Gemini ([aistudio.google.com/apikey](https://aistudio.google.com/apikey))
+**필수 키**: Kakao Map JS Key ([developers.kakao.com](https://developers.kakao.com)) + LLM Key — Anthropic ([console.anthropic.com](https://console.anthropic.com)) · OpenAI ([platform.openai.com](https://platform.openai.com)) · Gemini ([aistudio.google.com/apikey](https://aistudio.google.com/apikey)) 중 택1
 
 **선택 키**: 서울 열린데이터 ([data.seoul.go.kr](https://data.seoul.go.kr), Path C 전용) · Langfuse ([langfuse.com](https://langfuse.com), LLM 트레이싱)
 
@@ -33,7 +33,7 @@ cp .env.example .env.dev   # .env=prod, .env.dev=로컬 dev 관례
 ANTHROPIC_API_KEY=sk-ant-...        # Anthropic 사용 시
 GOOGLE_API_KEY=AI...                # Gemini 사용 시 (기본값)
 NEXT_PUBLIC_KAKAO_MAP_KEY=your_kakao_js_key
-LLM_PROVIDER=gemini                 # "gemini" 또는 "anthropic"
+LLM_PROVIDER=gemini                 # "gemini" / "anthropic" / "openai" (선호 프로바이더를 폴백 체인 앞으로)
 # AGENT_LOOP_VERSION=v2             # 기본 v2 (Trust Kernel 루프) — 레거시 PAE 롤백 시 pae
 ```
 
@@ -159,7 +159,7 @@ docker compose logs -f db                         # 로그
 → `.env.dev` `NEXT_PUBLIC_KAKAO_MAP_KEY` 확인. Docker 빌드 시 키는 **빌드 타임 build-arg** — `docker compose build frontend` 전 호스트 `export NEXT_PUBLIC_KAKAO_MAP_KEY=...` 필수. Kakao Developers 콘솔 → 플랫폼 → Web → 사이트 도메인에 `http://localhost:3000` 등록.
 
 ### AI 챗봇이 응답하지 않음
-→ `ANTHROPIC_API_KEY` / `GOOGLE_API_KEY` 와 `LLM_PROVIDER` 값 일치 확인. Backend 로그: `docker compose logs -f backend`.
+→ `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GOOGLE_API_KEY` 중 `LLM_PROVIDER` 에 맞는 키 존재 확인. Backend 로그: `docker compose logs -f backend`.
 
 ---
 
