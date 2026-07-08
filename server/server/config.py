@@ -27,8 +27,9 @@ class Settings(BaseSettings):
     data_go_kr_api_key: str = ""
 
     # LLM
-    llm_provider: str = "gemini"  # "anthropic" | "gemini" | "mock"
+    llm_provider: str = "gemini"  # "anthropic" | "openai" | "gemini" | "mock"
     anthropic_api_key: str = ""
+    openai_api_key: str = ""
     google_api_key: str = ""
 
     # Per-role Gemini model (pro for critical, flash for lightweight)
@@ -40,6 +41,11 @@ class Settings(BaseSettings):
     # Anthropic model — env-overridable so a retired model ID (the 2026-06
     # "dead model" incident) can be hotfixed without a code deploy.
     anthropic_model: str = "claude-sonnet-4-6"
+
+    # OpenAI model — GPT-5.x reasoning model. env-overridable (same dead-model
+    # hotfix rationale as anthropic_model). Reasoning models reject a non-default
+    # temperature, so the _build openai branch omits it (loop/models.py).
+    openai_model: str = "gpt-5.4-mini"
 
     # Langfuse (LLMOps L1 — Trace 활성화)
     # 빈 값이면 tracing 비활성. 둘 중 하나만 세팅 시 경고 로그 후 비활성.

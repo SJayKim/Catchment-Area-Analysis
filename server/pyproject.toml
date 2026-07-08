@@ -23,6 +23,7 @@ dependencies = [
     "langgraph>=0.2",
     "langchain-anthropic>=0.3",
     "langchain-google-genai>=2.0",
+    "langchain-openai>=1",
     "langchain-core>=0.3",
     # langfuse v3 는 `langchain` 풀패키지 + modern `langchain_core` 에 의존.
     # v2 는 legacy `langchain.callbacks.base` 를 요구했고 langchain 1.x 에서 제거됨 → v3 로 상향.

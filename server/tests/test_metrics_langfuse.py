@@ -37,3 +37,13 @@ async def test_health_detail_exposes_langfuse_block(app_client) -> None:
     assert set(lf.keys()) == {"enabled", "tracer_valid", "client_initialized", "sampling_rate"}
     # 테스트 env 는 keys="" → disabled (무음사망과 구분되는 "의도된 off")
     assert lf["enabled"] is False
+
+
+@pytest.mark.asyncio
+async def test_health_detail_exposes_llm_chain(app_client) -> None:
+    """배포 직후 컨테이너가 인지한 LLM 체인/순서를 원큐 확인하는 필드."""
+    r = await app_client.get("/api/health/detail")
+    assert r.status_code == 200
+    chain = r.json()["llm_chain"]
+    assert isinstance(chain, list)
+    assert all(isinstance(x, str) and ":" in x for x in chain)

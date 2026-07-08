@@ -142,6 +142,7 @@ class ChatRequest(BaseModel):
 @router.get("/health/detail")
 async def health_detail(request: Request) -> dict:
     """Expose runtime metrics for load testing & monitoring."""
+    from server.agent.loop.models import chain_summary
     from server.services.cache import get_cache_service
     from server.services.langfuse_tracer import status as langfuse_status
 
@@ -183,6 +184,7 @@ async def health_detail(request: Request) -> dict:
         "agent_mode": effective_loop_version(),
         "agent_loop_version": settings.agent_loop_version,
         "llm_provider": settings.llm_provider,
+        "llm_chain": chain_summary(),
         "use_mock": settings.use_mock,
         # Langfuse 무음사망 가시화 — enabled 인데 tracer_valid=False 면 배선 사망
         "langfuse": langfuse_status(),
