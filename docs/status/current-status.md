@@ -1,6 +1,6 @@
 # 현재 진행 상황
 
-> 최종 갱신: 2026-07-08
+> 최종 갱신: 2026-07-09
 > 상세 이력은 git history (`git log --follow docs/status/current-status.md`) + 활성 `docs/plan/` 참조.
 
 ---
@@ -67,6 +67,7 @@ OAuth2 + 결제(Toss/PortOne) · Tier 게이팅(Free 일 5회) · F04 업종 심
 
 | 날짜 | 주요 내용 |
 |------|----------|
+| 2026-07-09 | LLM Gateway 문서 sync 잔여분 — Pass 2 가 놓친 문서 3건(`deployment.md` env 표 · `quickstart.md` · `learning/ARCHITECTURE-MAP.md`) 코드 실값 대조 보강(`LLM_PROVIDER`+openai·모델 ID passthrough 4종·§7 health `llm_chain`·체인 openai(`gpt-5.4-mini`) 누락 교정). `6ab8b5a` → main push, docs-only behavior-neutral. Pass 3(live) 블로커 무변동. |
 | 2026-07-08 | LLM Gateway OpenAI 지원 Pass 1+2 — `LLM_PROVIDER` 선호-우선 체인(v2) + openai 프로바이더(v2 loop + PAE) + PAE 모델 ID de-hardcode + health `llm_chain` + ops/env/compose/docs sync. pytest 241 green · ruff clean. `feat/llm-gateway-openai` → main merge(PR). Pass 3(live)는 auto-deploy 블로커 선행. |
 | 2026-07-07 | Langfuse Ops Hardening Pass 2 — e2e 회귀 9 passed(R0-LF-AGG 4/4 · R3-LF-L1) + E02/E03 v3 의미론 재작성(l1-langfuse 7/7). `c98ea5d` 까지 push + CI green — **auto_deploy 미발화 재확인**(28분 미반영, 블로커 §1). |
 | 2026-07-06 | v2 스트리밍 옵션 B(astream 버퍼링 + "응답 작성 중 n%" 진행 이벤트, Trust 의미론 무변경) → Eval GATE PASS 4/4 평균 10.0. + Langfuse ops-hardening Pass 1(v2 L2 wiring: summary 19키/score 6종/tool span + 무음사망 가시화). pytest 225. |
