@@ -22,7 +22,7 @@ def _use_v2() -> bool:
    │   SystemMessage(LOOP_SYSTEM_PROMPT + 컨텍스트) + 히스토리 최근 6턴 + HumanMessage
    ▼
  ┌────────────── 모델 턴 (budget governor 내 반복) ──────────────┐
- │  ainvoke_with_fallback(messages, tool_schemas | None)         │
+ │  ainvoke/astream_with_fallback(messages, tool_schemas | None) │
  │    ├─ tool_calls 없음 (또는 마지막 턴) → 최종 prose ──────────┼──▶ Trust Kernel (§3)
  │    └─ tool_calls 있음 → 순차(직렬) 실행                        │
  │         `tool` → execute_fc_tool → (card 매핑 시 `card`)       │
@@ -45,6 +45,21 @@ def _use_v2() -> bool:
 | `agent_loop_max_tool_calls` | 12 | 요청당 도구 실행 총량 |
 | `agent_loop_wall_clock` | 90.0s | 경과 시 강제 finalize |
 | `llm_timeout_slow` | 60s | 모델 턴 1회 타임아웃 |
+
+### 최종 응답 스트리밍 — 옵션 B (`agent_loop_stream_final`)
+
+`agent_loop_stream_final=true`(기본값, env `AGENT_LOOP_STREAM_FINAL`)면 모델 턴을 `astream_with_fallback` 으로 수신하되 **버퍼링** — 본문 텍스트는 Trust Kernel 검증 후 일괄 방출하고, 수신 중에는 기존 `thinking` 이벤트로 `"응답 작성 중... {pct}%"` 진행 표시만 내보낸다 (**신규 SSE 타입 없음** — 이벤트 계약 불변, Trust 의미론 무변경, 체감 침묵 구간 완화 전용). (engine.py:206-233, `models.py::astream_with_fallback`)
+
+- **pct 산식**: `min(99, 누적 chars × 100 ÷ agent_loop_expected_answer_chars)` — 99% cap + `best_pct` 단조 증가 (감소 방출 없음).
+- **억제 규칙**: 누적 120자(`agent_loop_progress_min_chars`) 미만 미방출 (도구 턴 서두 텍스트 오인 방지) · 직전 방출 대비 80자(`agent_loop_progress_interval_chars`) 미만 간격 미방출 · **tool_call 청크 등장 즉시 억제**.
+- **롤백**: `AGENT_LOOP_STREAM_FINAL=false` → 기존 `ainvoke_with_fallback` 경로 (본문 동일, 진행 이벤트만 사라짐).
+
+| config 필드 | 기본값 | 의미 |
+|---|---|---|
+| `agent_loop_stream_final` | `true` | 옵션 B on/off (롤백 스위치) |
+| `agent_loop_progress_min_chars` | 120 | 진행 이벤트 최소 분량 문턱 |
+| `agent_loop_progress_interval_chars` | 80 | 진행 이벤트 간 최소 문자 간격 |
+| `agent_loop_expected_answer_chars` | 2400 | pct 분모 (99% cap) |
 
 ### 메타툴 3종 (`agent/loop/tools_fc.py` — 도메인 레지스트리 밖에서 로컬 처리)
 
@@ -88,6 +103,7 @@ v2 는 **역할별 모델 분리가 없다** — 단일 tool-calling 모델을 p
 - 모델 ID 는 전부 settings 유래(env-overridable) — 하드코딩 ID 은퇴 사고(2026-06 dead model) 재발 방지 설계.
 - 파라미터: temperature 0.3, max tokens 4096. openai 분기만 `temperature` 생략(GPT-5.x 추론 모델이 비기본값 거부 — langchain-openai 이 max_tokens→max_completion_tokens 매핑). 실패 시 다음 후보로 진행, 전 후보 실패 시 마지막 예외 re-raise.
 - 모듈 레벨 CircuitBreaker `"loop_llm"` (실패 임계 5회 / 회복 60s — `circuit_breaker_*` settings 주입).
+- `astream_with_fallback`(옵션 B 스트리밍 경로, §2)도 per-invoke 로 **동일 체인·breaker 의미론**을 탄다 — 후보가 스트림 도중 실패하면 해당 버퍼는 폐기(사용자 노출 0)되고 다음 후보가 처음부터 재시작.
 - 체인은 **preferred-first**: 위 순서는 키 존재 기준 base 이고, `settings.llm_provider` 의 프로바이더 블록이 stable-partition 으로 맨 앞으로 승격된다 (`LLM_PROVIDER=openai` 면 새 env 없이 GPT 가 1순위). 선호 프로바이더 키가 없거나 오타면 base 체인 그대로 + per-process 1회 경고(steady-state 가시성은 health `llm_chain` 필드 담당). 현 운영 환경은 `.env` 로 anthropic 사용.
 
 ## 5. Tool 레지스트리 (`agent/tools/registry.py`)
@@ -122,7 +138,7 @@ v2 는 **역할별 모델 분리가 없다** — 단일 tool-calling 모델을 p
 | `map_cmd` | X | X | **O — 유일한 방출처** (district 해석 성공 시 에이전트 실행 전 1회) |
 | `done` 부가 payload | `trace_id` | `trace_id` + `quality_flags` + `quality_match_rate` | — |
 
-- v2 의 `thinking` 은 "질문 분석 → 데이터 수집 → 결과 분석 → (필요 시) 수치 검증" 진행 표시를 겸한다 (비스트리밍 침묵 구간 완화).
+- v2 의 `thinking` 은 "질문 분석 → 데이터 수집 → 결과 분석 → **응답 작성 중 n%**(옵션 B 진행 이벤트, §2) → (필요 시) 수치 검증" 진행 표시를 겸한다 — 본문은 Trust 검증 후 일괄 방출되므로 침묵 구간을 진행률로 메운다.
 - 프론트 `SSEEvent` 유니온은 위에 더해 클라이언트 전용 `error` 를 포함해 10종.
 
 ## 7. 세션 / 히스토리 (`agent/history.py` + chat.py 세션 저장소)

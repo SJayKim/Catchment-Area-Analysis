@@ -102,6 +102,8 @@ docker compose up -d backend
 
 Agent has built-in timeout and preferred-first fallback chain (anthropic → openai → gemini-pro → gemini-flash; `LLM_PROVIDER` promotes its provider to the front). Users receive a friendly error when all providers fail.
 
+Agent rollback switches: `AGENT_LOOP_VERSION=pae` (legacy PAE graph) · `AGENT_LOOP_STREAM_FINAL=false` (v2 최종 응답 스트리밍 옵션 B off — 본문/Trust 동일, "응답 작성 중 n%" 진행 이벤트만 소실. [architecture/agent.md §2](../architecture/agent.md) 참조).
+
 ---
 
 ### Scenario 4: Full Outage (All Services Down)

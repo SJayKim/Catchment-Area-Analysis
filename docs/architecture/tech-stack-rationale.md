@@ -65,7 +65,7 @@
 | 루프 엔진 | AI가 필요한 도구를 직접 고르고 호출을 반복하며 답변 완성. 예산(모델 턴 6회·도구 12회·90초) 초과 시 강제 마무리 | `agent/loop/engine.py` |
 | Trust Kernel (검증기) | 답변 속 숫자가 실제 도구 결과에 근거하는지 대조, 근거 없는 숫자는 교정 | `agent/loop/trust.py` |
 | FC 도구 12종 | 도메인 조회기 9종 + 메타 3종(상권명 해석 `resolve_district` · 안전 계산 `compute` · 답변 거절 `abstain`) | `agent/loop/tools_fc.py` |
-| 모델 폴백 | Anthropic 장애 시 Gemini pro → flash 로 자동 대체 | `agent/loop/models.py` |
+| 모델 폴백 | Anthropic 장애 시 OpenAI → Gemini pro → flash 로 자동 대체 (`LLM_PROVIDER` 로 선호 프로바이더 승격) | `agent/loop/models.py` |
 | 프롬프트 계약 | "상권명은 먼저 resolve, 산술은 반드시 compute, 데이터 없으면 abstain" 규칙 | `agent/loop/prompts.py` |
 
 **PAE 그래프 (레거시 — mock 경로 전용)** — mock provider/E2E 테스트에서만 실행:
@@ -153,7 +153,7 @@
 
 **Claude + Gemini 역할 분담 (레거시 — PAE 경로)** — 대안: 단일 LLM
 - 역할마다 다른 모델: 계획 수립은 정확도가 중요해 Claude Sonnet 4, 검수는 횟수가 많아 저렴·빠른 Gemini Flash, 최종 답변은 한국어 품질 좋은 모델. 한 모델로 통일하면 비싼 모델은 비용 폭탄, 싼 모델은 품질 하락. 한쪽 장애 시 다른 쪽으로 자동 전환(fallback)되는 보험 효과도 있다.
-- **v2 루프(현행 기본)는 역할 분담 대신 단일 tool-calling 모델 + 폴백 체인**: anthropic `claude-sonnet-4-6` → gemini pro → gemini flash (`agent/loop/models.py`). 모델 ID 는 전부 settings 에서 오기 때문에 env 로 hotfix 가능(하드코딩 은퇴 모델 ID 사고 재발 방지). 역할 분담의 보험 효과(장애 시 자동 전환)는 per-invoke 폴백 체인으로 승계.
+- **v2 루프(현행 기본)는 역할 분담 대신 단일 tool-calling 모델 + 폴백 체인**: anthropic `claude-sonnet-4-6` → openai `gpt-5.4-mini` → gemini pro → gemini flash (`agent/loop/models.py`, `LLM_PROVIDER` 가 선호 프로바이더를 맨 앞으로 승격). 모델 ID 는 전부 settings 에서 오기 때문에 env 로 hotfix 가능(하드코딩 은퇴 모델 ID 사고 재발 방지). 역할 분담의 보험 효과(장애 시 자동 전환)는 per-invoke 폴백 체인으로 승계.
 
 ### 데이터 쪽
 

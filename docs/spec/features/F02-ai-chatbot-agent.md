@@ -60,6 +60,7 @@ Card 타입 5종: `summary` / `risk` / `compare` / `recommend` / `simulation` �
 ```
 
 - **v2 기본 방출 7종**: `thinking / tool / tool_end / card / text / suggestion / done`
+- **최종 응답 스트리밍(옵션 B)**: 본문 `text` 는 Trust 검증 후 일괄 방출하되 작성 중 진행률을 `thinking`("응답 작성 중... n%")으로 표시 — 신규 이벤트 타입 없음, 롤백 `AGENT_LOOP_STREAM_FINAL=false`. 상세: [architecture/agent.md §2](../../architecture/agent.md)
 - **PAE 추가 2종**: `plan`(Planner 완료) · `warning`(respond numeric_sanity 경고)
 - **`map_cmd`·greeting 단축**(`text`+`suggestion`+`done`): `api/routes/chat.py` 가 에이전트 밖에서 방출
 - 프론트 `SSEEvent` 유니온: 위에 `error` 포함 **10종**

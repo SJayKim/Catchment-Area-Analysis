@@ -74,6 +74,7 @@ compose project 명은 `name: marketscope-dev` 로 명시 (기본 네트워크 �
 | `DATABASE_URL` / `DATABASE_URL_SYNC` | PostgreSQL async / sync | `postgresql+asyncpg://...` |
 | `REDIS_URL` | Redis 접속 | `redis://redis:6379/0` |
 | `AGENT_LOOP_VERSION` | **Agent 아키텍처 스위치** — `v2`(모델주도 루프 + Trust Kernel, config 기본값) / `pae`(레거시 롤백). mock 프로바이더는 항상 PAE 폴백 | `v2` (`.env` 에 명시) |
+| `AGENT_LOOP_STREAM_FINAL` | v2 최종 응답 스트리밍(옵션 B) **롤백 스위치** — `false` 면 ainvoke 일괄 수신(본문 동일, "응답 작성 중 n%" 진행 이벤트만 소실). 진행 튜닝 3종 `AGENT_LOOP_PROGRESS_MIN_CHARS`(120) / `AGENT_LOOP_PROGRESS_INTERVAL_CHARS`(80) / `AGENT_LOOP_EXPECTED_ANSWER_CHARS`(2400) 도 env-overridable. ⚠ **prod compose 는 4종 모두 passthrough 미정의** — 컨테이너는 config 기본값(`true`)으로 동작하며, prod 롤백은 `docker-compose.prod.yml` environment 블록에 추가 후 재기동이 선행돼야 한다. 로컬은 `.env.dev`(dev compose `env_file` / 네이티브 실행 config.py 로드)로 오버라이드 가능 | 기본 `true` (미주입) |
 | `LLM_PROVIDER` | 선호 프로바이더를 폴백 체인 맨 앞으로 승격 — `anthropic` / `openai` / `gemini`(코드 기본값) / `mock`. 키 없거나 오타면 base 체인(anthropic→openai→gemini) 유지 | `anthropic` (현 운영) |
 | `BACKEND_INTERNAL_URL` | 프론트 → 백엔드 rewrite 대상. **compose 파일이 `http://backend:8000` 하드코딩 주입** — `.env.example` 에는 없음 | `http://backend:8000` |
 | `NEXT_PUBLIC_API_URL` | 브라우저용 (SSE 직접 호출). `/api` 로 끝나면 빌드 실패 가드 | `https://marketscope.robitlabs.co.kr` |

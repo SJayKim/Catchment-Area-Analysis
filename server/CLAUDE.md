@@ -10,7 +10,7 @@ cd server
 pip install -e ".[dev]"
 uvicorn server.main:app --reload --port 8000
 ruff check --fix . && ruff format .
-pytest                      # 전체 (테스트 모듈 28)
+pytest                      # 전체 (테스트 모듈 30)
 pytest -m "not real"        # CI 게이트 (@real DB 통합 6케이스 제외 — 로컬 opt-in)
 ```
 
