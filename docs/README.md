@@ -12,11 +12,11 @@ docs/
 ├── ops/            운영 (quickstart, runbook, DR, deployment, database setup, serving stability)
 ├── plan/           진행 중/대기 구현 계획만 (완료분은 git history)
 │   ├── business/   상용화 (commercialization-plan)
-│   ├── fix/        버그 / 정확도 hotfix (trust-fallback-redaction)
+│   ├── fix/        버그 / 정확도 hotfix (현재 활성 없음)
 │   ├── infra/      배포 / 안정성 / Langfuse / refactoring (auto-deploy · v2-stream · langfuse-* · phase1 · apps-in-toss)
 │   └── qa/         QA / E2E 회귀 (ux-final-e2e-regression-plan)
 ├── qa/             E2E test plan + runs/
-├── learning/       학습 자료 — 비개발자용 커리큘럼 00~06 + ARCHITECTURE-MAP.md
+├── learning/       학습 자료 — 비개발자용 커리큘럼 00~07 + ARCHITECTURE-MAP.md
 ├── status/         현재 상태 단일 마스터 (current-status.md)
 ├── screenshots/    UI 스크린샷 (dev, e2e-qa, real-mode, ux)
 ├── images/         README 이미지

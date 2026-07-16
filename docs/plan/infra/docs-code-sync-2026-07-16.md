@@ -101,9 +101,9 @@
 - [x] P2-5 07-관측-품질기록실.md 신설 + 00/MAP 링크 → **commit ②**
 
 **Pass 3 — 정리 (§3.3)**
-- [ ] P3-1 완료 plan 2건 게이트 검증 → 삭제
-- [ ] P3-2 status 지표 교정 + 이력 row → **commit ③**
-- [ ] P3-3 메모리 저장(learning 취급 기준) + 역검증 Explore 1회
+- [x] P3-1 완료 plan 2건 게이트 검증 → 삭제 (게이트 ①: docs-diet 산출물 실존 확인 + trust-fallback 는 R4 mask_unbound 로 대체 반영·`redact_unbound` 부재 확인 / ②: 인바운드 링크 0 — plan·docs README 2건 갱신 / ③: 잔여 항목 없음)
+- [x] P3-2 status 지표 교정(E2E 188) + 이력 row → **commit ③**
+- [x] P3-3 역검증 Explore 1회 — 10항목 중 10 PASS (l1-langfuse "9 test" 보고는 검증자가 `RegExp.test()` 호출을 오집계한 거짓양성 — 정본 패턴 재측정 선언 11 = test 7 + skip 4 확인) + 메모리 저장
 
 ### 재검토
 - **엣지1 — 다른 세션 산출물 충돌**: status 미결 블록·pass3 plan 은 불변경 (Out 명시).

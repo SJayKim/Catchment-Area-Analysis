@@ -9,8 +9,8 @@
 | 카테고리 | 내용 | 활성 문서 |
 |---|---|---|
 | business/ | 상용화 / 비즈니스 | [commercialization-plan.md](business/commercialization-plan.md) — Phase 2 로드맵 (미착수) |
-| fix/ | 버그 / 정확도 hotfix | [trust-fallback-redaction-2026-07-03.md](fix/trust-fallback-redaction-2026-07-03.md) |
-| infra/ | 배포 / 안정성 / 관측성 / refactoring | [auto-deploy-on-push](infra/auto-deploy-on-push.md) · [v2-stream-final-option-b](infra/v2-stream-final-option-b-2026-07-06.md) · [langfuse-ops-hardening](infra/langfuse-ops-hardening-2026-07-06.md) · [langfuse-l2-token-cost-eval](infra/langfuse-l2-token-cost-eval.md) · [phase1-low-mid-risk](infra/phase1-low-mid-risk-2026-04-23.md) · [apps-in-toss-deploy](infra/apps-in-toss-deploy.md) · [docs-diet-cleanup](infra/docs-diet-cleanup-2026-07-07.md) |
+| fix/ | 버그 / 정확도 hotfix | — (현재 활성 없음) |
+| infra/ | 배포 / 안정성 / 관측성 / refactoring | [pass3-live-activation-2026-07-16](infra/pass3-live-activation-2026-07-16.md) · [llm-gateway-openai-2026-07-08](infra/llm-gateway-openai-2026-07-08.md) · [auto-deploy-on-push](infra/auto-deploy-on-push.md) · [v2-stream-final-option-b](infra/v2-stream-final-option-b-2026-07-06.md) · [langfuse-ops-hardening](infra/langfuse-ops-hardening-2026-07-06.md) · [langfuse-l2-token-cost-eval](infra/langfuse-l2-token-cost-eval.md) · [phase1-low-mid-risk](infra/phase1-low-mid-risk-2026-04-23.md) · [apps-in-toss-deploy](infra/apps-in-toss-deploy.md) · [docs-code-sync-2026-07-16](infra/docs-code-sync-2026-07-16.md) |
 | qa/ | QA sweep / E2E 회귀 | [ux-final-e2e-regression-plan.md](qa/ux-final-e2e-regression-plan.md) |
 
 ## Plan 작성 규칙
