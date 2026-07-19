@@ -24,6 +24,7 @@ from server.agent.utils.numeric_sanity import (
     _collect_tool_scalars,
     extract_numbers,
     find_scale_mismatches,
+    match_numbers_to_tools,
 )
 
 
@@ -181,3 +182,35 @@ class TestScaleGuard:
         # 10만원 미만(객단가 등)은 스케일 검사 범위 밖 — 오탐 억제
         pool = {"simulate_revenue#1": {"monthly_avg": 5_000_000}}
         assert find_scale_mismatches("평균 객단가는 5만 원입니다.", pool) == []
+
+
+class TestPortedFromTrustRedaction:
+    """stale test_trust_redaction.py(untracked, redact_unbound 시절)의 미중복 케이스 이식.
+
+    redact_unbound 는 mask_unbound 로 대체되어(graduated enforcement) 해당
+    클래스는 폐기 — 여기 남긴 것은 스칼라 수집/바인딩 계약 케이스뿐이다.
+    """
+
+    def test_topcategories_count_key_collected(self):
+        pool = {"get_district_summary#1": {"topCategories": [{"name": "일반의원", "count": 476}]}}
+        scalars = _collect_tool_scalars(pool)
+        assert (476.0, "개") in {(v, u) for _t, v, u in scalars}
+
+    def test_legit_mid_range_simulation_values_bind(self):
+        pool = {"simulate_revenue#1": {"simulation": {"low": 16150005, "avg": 38636376}}}
+        text = "하위 25%는 약 1,615만 원, 평균은 약 3,864만 원입니다."
+        assert find_unbound_numbers(text, pool) == []
+
+    def test_recommendation_list_values_bind(self):
+        pool = {"recommend_business#1": {"recommendations": [{"per_store_sales": 184053847}]}}
+        assert find_unbound_numbers("점포당 월매출 약 1억 8,405만 원", pool) == []
+        pool2 = {"recommend_business#1": {"recommendations": [{"monthly_sales": 1472430777}]}}
+        assert find_unbound_numbers("월 매출 약 14억 7,243만 원", pool2) == []
+
+    def test_pae_default_floor_unchanged(self):
+        # thresholds 미지정(PAE 사후 warning 경로)에서 145만 원은 여전히 비채점 —
+        # v2 전용 floor 인하가 공유 기본값을 건드리지 않았다는 회귀 가드.
+        numbers = extract_numbers("점포당 145만 원")
+        matched, unmatched = match_numbers_to_tools(numbers, {})
+        assert matched == 0
+        assert unmatched == []

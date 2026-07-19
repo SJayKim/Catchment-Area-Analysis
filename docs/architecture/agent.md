@@ -22,7 +22,7 @@ def _use_v2() -> bool:
    │   SystemMessage(LOOP_SYSTEM_PROMPT + 컨텍스트) + 히스토리 최근 6턴 + HumanMessage
    ▼
  ┌────────────── 모델 턴 (budget governor 내 반복) ──────────────┐
- │  ainvoke_with_fallback(messages, tool_schemas | None)         │
+ │  ainvoke/astream_with_fallback(messages, tool_schemas | None) │
  │    ├─ tool_calls 없음 (또는 마지막 턴) → 최종 prose ──────────┼──▶ Trust Kernel (§3)
  │    └─ tool_calls 있음 → 순차(직렬) 실행                        │
  │         `tool` → execute_fc_tool → (card 매핑 시 `card`)       │
@@ -45,6 +45,21 @@ def _use_v2() -> bool:
 | `agent_loop_max_tool_calls` | 12 | 요청당 도구 실행 총량 |
 | `agent_loop_wall_clock` | 90.0s | 경과 시 강제 finalize |
 | `llm_timeout_slow` | 60s | 모델 턴 1회 타임아웃 |
+
+### 최종 응답 스트리밍 — 옵션 B (`agent_loop_stream_final`)
+
+`agent_loop_stream_final=true`(기본값, env `AGENT_LOOP_STREAM_FINAL`)면 모델 턴을 `astream_with_fallback` 으로 수신하되 **버퍼링** — 본문 텍스트는 Trust Kernel 검증 후 일괄 방출하고, 수신 중에는 기존 `thinking` 이벤트로 `"응답 작성 중... {pct}%"` 진행 표시만 내보낸다 (**신규 SSE 타입 없음** — 이벤트 계약 불변, Trust 의미론 무변경, 체감 침묵 구간 완화 전용). (engine.py:206-233, `models.py::astream_with_fallback`)
+
+- **pct 산식**: `min(99, 누적 chars × 100 ÷ agent_loop_expected_answer_chars)` — 99% cap + `best_pct` 단조 증가 (감소 방출 없음).
+- **억제 규칙**: 누적 120자(`agent_loop_progress_min_chars`) 미만 미방출 (도구 턴 서두 텍스트 오인 방지) · 직전 방출 대비 80자(`agent_loop_progress_interval_chars`) 미만 간격 미방출 · **tool_call 청크 등장 즉시 억제**.
+- **롤백**: `AGENT_LOOP_STREAM_FINAL=false` → 기존 `ainvoke_with_fallback` 경로 (본문 동일, 진행 이벤트만 사라짐).
+
+| config 필드 | 기본값 | 의미 |
+|---|---|---|
+| `agent_loop_stream_final` | `true` | 옵션 B on/off (롤백 스위치) |
+| `agent_loop_progress_min_chars` | 120 | 진행 이벤트 최소 분량 문턱 |
+| `agent_loop_progress_interval_chars` | 80 | 진행 이벤트 간 최소 문자 간격 |
+| `agent_loop_expected_answer_chars` | 2400 | pct 분모 (99% cap) |
 
 ### 메타툴 3종 (`agent/loop/tools_fc.py` — 도메인 레지스트리 밖에서 로컬 처리)
 
@@ -81,13 +96,15 @@ v2 는 **역할별 모델 분리가 없다** — 단일 tool-calling 모델을 p
 | 순서 | provider / model | 조건 |
 |---|---|---|
 | 1 | anthropic / `settings.anthropic_model` (기본 `claude-sonnet-4-6`) | ANTHROPIC_API_KEY 존재 시 (tool_use 정확도 우선) |
-| 2 | gemini / `settings.gemini_model_pro` (기본 `gemini-2.5-pro`) | GOOGLE_API_KEY 존재 시 |
-| 3 | gemini / `settings.gemini_model_flash` (기본 `gemini-2.5-flash`) | 〃 |
+| 2 | openai / `settings.openai_model` (기본 `gpt-5.4-mini`) | OPENAI_API_KEY 존재 시 (fallback canary) |
+| 3 | gemini / `settings.gemini_model_pro` (기본 `gemini-2.5-pro`) | GOOGLE_API_KEY 존재 시 |
+| 4 | gemini / `settings.gemini_model_flash` (기본 `gemini-2.5-flash`) | 〃 |
 
 - 모델 ID 는 전부 settings 유래(env-overridable) — 하드코딩 ID 은퇴 사고(2026-06 dead model) 재발 방지 설계.
-- 파라미터: temperature 0.3, max tokens 4096. 실패 시 다음 후보로 진행, 전 후보 실패 시 마지막 예외 re-raise.
+- 파라미터: temperature 0.3, max tokens 4096. openai 분기만 `temperature` 생략(GPT-5.x 추론 모델이 비기본값 거부 — langchain-openai 이 max_tokens→max_completion_tokens 매핑). 실패 시 다음 후보로 진행, 전 후보 실패 시 마지막 예외 re-raise.
 - 모듈 레벨 CircuitBreaker `"loop_llm"` (실패 임계 5회 / 회복 60s — `circuit_breaker_*` settings 주입).
-- 기본 `llm_provider` 는 config 상 `"gemini"` 이나, 체인은 **키 존재 기준**이라 Anthropic 키가 있으면 Claude 가 1순위다 (현 운영 환경은 `.env` 로 anthropic 사용).
+- `astream_with_fallback`(옵션 B 스트리밍 경로, §2)도 per-invoke 로 **동일 체인·breaker 의미론**을 탄다 — 후보가 스트림 도중 실패하면 해당 버퍼는 폐기(사용자 노출 0)되고 다음 후보가 처음부터 재시작.
+- 체인은 **preferred-first**: 위 순서는 키 존재 기준 base 이고, `settings.llm_provider` 의 프로바이더 블록이 stable-partition 으로 맨 앞으로 승격된다 (`LLM_PROVIDER=openai` 면 새 env 없이 GPT 가 1순위). 선호 프로바이더 키가 없거나 오타면 base 체인 그대로 + per-process 1회 경고(steady-state 가시성은 health `llm_chain` 필드 담당). 현 운영 환경은 `.env` 로 anthropic 사용.
 
 ## 5. Tool 레지스트리 (`agent/tools/registry.py`)
 
@@ -121,7 +138,7 @@ v2 는 **역할별 모델 분리가 없다** — 단일 tool-calling 모델을 p
 | `map_cmd` | X | X | **O — 유일한 방출처** (district 해석 성공 시 에이전트 실행 전 1회) |
 | `done` 부가 payload | `trace_id` | `trace_id` + `quality_flags` + `quality_match_rate` | — |
 
-- v2 의 `thinking` 은 "질문 분석 → 데이터 수집 → 결과 분석 → (필요 시) 수치 검증" 진행 표시를 겸한다 (비스트리밍 침묵 구간 완화).
+- v2 의 `thinking` 은 "질문 분석 → 데이터 수집 → 결과 분석 → **응답 작성 중 n%**(옵션 B 진행 이벤트, §2) → (필요 시) 수치 검증" 진행 표시를 겸한다 — 본문은 Trust 검증 후 일괄 방출되므로 침묵 구간을 진행률로 메운다.
 - 프론트 `SSEEvent` 유니온은 위에 더해 클라이언트 전용 `error` 를 포함해 10종.
 
 ## 7. 세션 / 히스토리 (`agent/history.py` + chat.py 세션 저장소)
@@ -140,18 +157,21 @@ v2 는 **역할별 모델 분리가 없다** — 단일 tool-calling 모델을 p
 - **Actor** (`agent/nodes/actor.py`): plan 을 의존성 layer 로 위상 정렬 후 layer 내 **`asyncio.gather` 병렬 실행**. Tool 1회 `asyncio.timeout(settings.tool_execution_timeout)`(15s) + transient DB 에러만 2회 재시도(fixed 0.5s). card_type 매핑 시 `card` 이벤트 발행.
 - **Evaluator** (`agent/nodes/evaluator.py`): `evaluator_skip_simple=true` 면 단순 케이스 rule 판정, 아니면 flash LLM 으로 충분성 판정 + suggestion 생성. LLM 타임아웃 `llm_timeout_fast`(15s).
 - **Respond** (`agent/nodes/respond.py`): 최종 응답 토큰 스트리밍 + post-hoc `numeric_sanity` 검사(경고 시 `warning` 이벤트). Tool 이름 누출 sanitizer 포함.
-- **역할별 모델** (`graph.py::_create_llm`): planner 는 Anthropic 키 유효 시 `claude-sonnet-4-6`(하드코딩), gemini provider 에서 respond/default → `gemini_model_pro`, planner/evaluator → `gemini_model_flash`. tenacity 2회 재시도 + 지수 백오프 1~4s + CircuitBreaker `"llm"`.
+- **역할별 모델** (`graph.py::_create_llm`): 모델 ID 는 전부 settings 유래(de-hardcode — 리터럴 `claude-sonnet-4-6` 제거). planner 는 Anthropic 키 유효 시 `settings.anthropic_model`, gemini provider 에서 respond/default → `gemini_model_pro`, planner/evaluator → `gemini_model_flash`. `LLM_PROVIDER=openai` + 키 존재 시 전 역할 openai(`settings.openai_model`) 사용. tenacity 2회 재시도 + 지수 백오프 1~4s + CircuitBreaker `"llm"`.
 - **상태** (`agent/state.py::AgentState`): 주요 필드 = `user_intent` / `intent_confidence` / `referenced_districts` / `plan: list[ToolPlanStep]` / `tool_results: dict[str, dict]` / `execution_round` / `card_emissions` / `response_mode`(`"direct" | "tool_assisted" | "clarification_direct" | "greeting_direct"`) / `quality_flags`. SSE 큐는 상태 밖(graph.py)에서 관리 (`sse_queue_maxsize=256`).
 
 ## 9. 관측 (Langfuse)
 
 - `.env` 에 `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` 설정 시 활성화 (둘 다 필요).
-- **콜백 주입 wiring 은 양 경로 모두 구현 완료**: v2 는 `engine.py` 가 `get_langfuse_handler` 로 핸들러를 만들어 `ainvoke_with_fallback(callbacks=...)` 로 전 LLM 호출에 전달, PAE 는 `graph.py` 가 `astream` config 에 주입. `done` 이벤트에 `trace_id` 동봉 → 프론트 FeedbackRow 가 `/api/feedback/score` 로 score proxy (F12 L1).
-- 실패/비활성 시 handler=None 으로 graceful degrade (trace 없이 정상 동작).
+- **양 경로 모두 L2 wiring 완료** (2026-07-06 ops-hardening): 콜백 + `metadata`(session hash/request_id/agent_mode) + `tags`(`marketscope.{v2|pae}` — `effective_loop_version()` 동적) + `run_name` 을 전 LLM 호출에 전달. v2 는 `engine.py` 의 `lf_kwargs` **조건부** 전달(handler None 이면 빈 dict — 기존 호출과 동일), PAE 는 `graph.py` 가 `astream` config 에 주입. `done` 이벤트에 `trace_id` 동봉 → 프론트 FeedbackRow 가 `/api/feedback/score` 로 score proxy (F12 L1).
+- **v2 trace 동봉물** (`engine.py` finalize, `lf_trace_id` 없으면 전부 no-op): 도구 실행마다 `attach_tool_span`(as_type=tool, args/duration_ms/error — 결과 본문 미탑재) · 종료 시 `attach_summary_observation(name="marketscope.v2.summary")` 19키 metadata(iterations/tool_calls/trust_* 플래그/numeric_match_rate 등) · **score 6종** = `numeric_match`(scored>0 시) / `tool_error_rate`(calls>0 시) / `abstention_triggered` / `trust_corrective_applied` / `trust_fallback_triggered` / `trust_masked_count`. 앞 3종은 PAE 와 이름 공유. PAE summary 는 기존 `marketscope.pae.summary` 유지.
+- **샘플링 단일 게이트**: `should_sample()` 만 적용 — SDK `sample_rate` 는 이중 샘플링(done 에 trace_id 를 동봉했는데 SDK 가 trace 를 드랍하는 고아)을 만들어 제거 (`langfuse_tracer.py::_get_client`).
+- **flush offload**: 양 경로 모두 `await asyncio.to_thread(_lf_flush, ...)` — 동기 flush 의 이벤트 루프 블로킹 제거.
+- 실패/비활성 시 handler=None 으로 graceful degrade (trace 없이 정상 동작). 무음사망 가시화: `/api/health/detail` `langfuse` 블록(enabled/tracer_valid/client_initialized/sampling_rate) + `/metrics` `langfuse_trace_missing_total` — 진단 절차는 [ops/runbook.md](../ops/runbook.md) 참조.
 
 ## 10. 확장 포인트
 
 - **새 Tool 추가**: `agent/tools/<name>.py` 작성 → `@register_tool` 데코레이터 → v2 용 스키마를 `agent/loop/tools_fc.py::tool_schemas()` 에 추가 (PAE 경로도 쓰려면 `intents.yaml` plan 프리셋에 매핑).
 - **새 Intent (PAE 전용)**: `agent/config/intents.yaml` 에 패턴 + Tool plan 프리셋 추가. v2 는 intent 분류가 없고 모델이 도구를 직접 선택한다.
-- **LLM 교체**: `settings.llm_provider` + `anthropic_model` / `gemini_model_pro` / `gemini_model_flash` env 오버라이드. v2 체인 순서는 `loop/models.py::_candidate_chain`.
+- **LLM 교체**: `settings.llm_provider`(선호 프로바이더 preferred-first) + `anthropic_model` / `openai_model` / `gemini_model_pro` / `gemini_model_flash` env 오버라이드. v2 체인 순서는 `loop/models.py::_candidate_chain`.
 - **롤백**: `AGENT_LOOP_VERSION=pae` — 코드 배포 없이 레거시 그래프로 전환.

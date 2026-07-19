@@ -21,7 +21,7 @@ MarketScope AI는 기술적으로는 거의 다 만들어진 상태(Phase 1A 100
 | 사업자등록/약관/도메인 | 없음 |
 | Real 모드 블로커 | `districts.boundary` NULL (지도 폴리곤 표시 불가), `district_summary` Real DB 분기 미작동 |
 
-> ⚠ 2026-07-04 정정 (문서 정합성 감사): 위 표는 2026-04-08 스냅샷. 현재는 — 백엔드 테스트 `server/tests` **22모듈·173 테스트 함수**(parametrize 수집 196케이스, 최근 실측 190 passed/6 skipped) · E2E **spec 44파일·test 선언 164개** · CI 5잡(`.github/workflows/ci.yml`) + push 자동배포 파이프라인(`scripts/deploy/auto_deploy.sh`) 운영 · Real 모드 블로커(boundary NULL, `district_summary` 분기) 해소 · `marketscope.robitlabs.co.kr` 프로덕션 라이브. 수익화(Phase 2)·고객·마케팅 축은 여전히 0 으로 유효.
+> ⚠ 2026-07-16 정정 (문서 정합성 감사): 위 표는 2026-04-08 스냅샷. 현재는 — 백엔드 테스트 `server/tests` **30모듈·수집 247케이스**(최근 실측 2026-07-08 241 passed/6 deselected) · E2E **spec 44파일·test 선언 188개** · CI 5잡(`.github/workflows/ci.yml`) + push 자동배포 파이프라인(`scripts/deploy/auto_deploy.sh`) 운영 · Real 모드 블로커(boundary NULL, `district_summary` 분기) 해소 · `marketscope.robitlabs.co.kr` 프로덕션 라이브. 수익화(Phase 2)·고객·마케팅 축은 여전히 0 으로 유효.
 
 **경쟁 환경** (가장 중요한 진실):
 오픈업/소상공인365/우리마을가게/나이스비즈맵 — 경쟁사 4개 모두 무료. 이들은 정부·대기업이 운영하는 "데이터 대시보드"입니다. **데이터로는 절대 이길 수 없으며**, 우리의 단 하나의 무기는 **"데이터를 해석해서 결정을 내려주는 AI 컨설턴트"** 포지셔닝입니다.

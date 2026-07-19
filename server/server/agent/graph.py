@@ -65,13 +65,26 @@ def _create_llm(role: str = "default"):
 
         return FakeListChatModel(responses=responses, sleep=0.02)
 
+    # OpenAI GPT for every role when selected as provider. Key-gated: an empty
+    # key would crash ChatOpenAI init, so without it we fall through to the
+    # branches below (graceful degrade). No temperature — GPT-5.x reasoning
+    # models reject a non-default value.
+    if LLM_PROVIDER == "openai" and settings.openai_api_key:
+        from langchain_openai import ChatOpenAI
+
+        return ChatOpenAI(
+            model=settings.openai_model,
+            api_key=settings.openai_api_key,  # type: ignore[arg-type]
+            max_tokens=4096,
+        )
+
     # Planner uses Anthropic Claude Sonnet for superior intent classification.
     # Guarded by _anthropic_valid flag to avoid retrying a known-bad key.
     if role == "planner" and settings.anthropic_api_key and _anthropic_valid:
         from langchain_anthropic import ChatAnthropic
 
         return ChatAnthropic(
-            model="claude-sonnet-4-6",
+            model=settings.anthropic_model,
             api_key=settings.anthropic_api_key,  # type: ignore[arg-type]
             max_tokens=4096,
             temperature=0.3,
@@ -93,7 +106,7 @@ def _create_llm(role: str = "default"):
         from langchain_anthropic import ChatAnthropic
 
         return ChatAnthropic(
-            model="claude-sonnet-4-6",
+            model=settings.anthropic_model,
             api_key=settings.anthropic_api_key,  # type: ignore[arg-type]
             max_tokens=4096,
             temperature=0.3,
@@ -510,8 +523,12 @@ async def run_agent(
             except Exception:
                 logger.debug("langfuse aggregate stats emit failed", exc_info=True)
 
-        # best-effort flush — 예외 삼킴
-        _lf_flush(lf_handler)
+        # best-effort flush — 예외 삼킴. 동기 flush 의 이벤트 루프 블로킹을
+        # 피해 스레드로 offload (CancelledError 는 미포착으로 전파).
+        try:
+            await asyncio.to_thread(_lf_flush, lf_handler)
+        except Exception:
+            logger.debug("langfuse flush offload failed", exc_info=True)
 
     # Suggestion + done (trace_id 는 Langfuse 활성 시에만 포함)
     # greeting/clarification 노드는 실행 중 자체 tailored suggestion 을 이미 방출한다.

@@ -91,6 +91,13 @@ services:
       CORS_ORIGINS: '["https://marketscope.robitlabs.co.kr","http://localhost:3200","http://localhost:3000","http://localhost:80","http://localhost","http://frontend:3000"]'
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # 모델 ID passthrough — env 미설정 시 pydantic 기본값 복제. 빈 문자열 주입 금지
+      # (${VAR:-} 형은 ChatX(model="") 크래시 유발 → 반드시 :-<기본ID> 형).
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-6}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.4-mini}
+      GEMINI_MODEL_PRO: ${GEMINI_MODEL_PRO:-gemini-2.5-pro}
+      GEMINI_MODEL_FLASH: ${GEMINI_MODEL_FLASH:-gemini-2.5-flash}
       # v2 = function-calling 루프 (기본). 롤백: AGENT_LOOP_VERSION=pae 로 재기동.
       AGENT_LOOP_VERSION: ${AGENT_LOOP_VERSION:-v2}
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}

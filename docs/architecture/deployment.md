@@ -74,7 +74,8 @@ compose project 명은 `name: marketscope-dev` 로 명시 (기본 네트워크 �
 | `DATABASE_URL` / `DATABASE_URL_SYNC` | PostgreSQL async / sync | `postgresql+asyncpg://...` |
 | `REDIS_URL` | Redis 접속 | `redis://redis:6379/0` |
 | `AGENT_LOOP_VERSION` | **Agent 아키텍처 스위치** — `v2`(모델주도 루프 + Trust Kernel, config 기본값) / `pae`(레거시 롤백). mock 프로바이더는 항상 PAE 폴백 | `v2` (`.env` 에 명시) |
-| `LLM_PROVIDER` | `gemini`(코드 기본값) / `anthropic` / `mock` | `anthropic` (현 운영) |
+| `AGENT_LOOP_STREAM_FINAL` | v2 최종 응답 스트리밍(옵션 B) **롤백 스위치** — `false` 면 ainvoke 일괄 수신(본문 동일, "응답 작성 중 n%" 진행 이벤트만 소실). 진행 튜닝 3종 `AGENT_LOOP_PROGRESS_MIN_CHARS`(120) / `AGENT_LOOP_PROGRESS_INTERVAL_CHARS`(80) / `AGENT_LOOP_EXPECTED_ANSWER_CHARS`(2400) 도 env-overridable. ⚠ **prod compose 는 4종 모두 passthrough 미정의** — 컨테이너는 config 기본값(`true`)으로 동작하며, prod 롤백은 `docker-compose.prod.yml` environment 블록에 추가 후 재기동이 선행돼야 한다. 로컬은 `.env.dev`(dev compose `env_file` / 네이티브 실행 config.py 로드)로 오버라이드 가능 | 기본 `true` (미주입) |
+| `LLM_PROVIDER` | 선호 프로바이더를 폴백 체인 맨 앞으로 승격 — `anthropic` / `openai` / `gemini`(코드 기본값) / `mock`. 키 없거나 오타면 base 체인(anthropic→openai→gemini) 유지 | `anthropic` (현 운영) |
 | `BACKEND_INTERNAL_URL` | 프론트 → 백엔드 rewrite 대상. **compose 파일이 `http://backend:8000` 하드코딩 주입** — `.env.example` 에는 없음 | `http://backend:8000` |
 | `NEXT_PUBLIC_API_URL` | 브라우저용 (SSE 직접 호출). `/api` 로 끝나면 빌드 실패 가드 | `https://marketscope.robitlabs.co.kr` |
 | `NEXT_PUBLIC_KAKAO_MAP_KEY` | Kakao SDK (빌드 타임 bake) | 발급 키 |
@@ -83,9 +84,11 @@ compose project 명은 `name: marketscope-dev` 로 명시 (기본 네트워크 �
 | `NEXT_PUBLIC_KAKAO_CHANNEL_URL` | F12 FeedbackFab kakao 모드 우선 (선택) | 둘 중 하나만 있어도 FAB 노출 |
 | `NEXT_PUBLIC_FEEDBACK_FORM_URL` | F12 FeedbackFab tally 모드 폴백 (선택) | (위와 동일) |
 | `NEXT_PUBLIC_PREMIUM_CTA_ENABLED` | Phase E.3 — `'true'` 일 때만 FreeLimitSurvey Premium CTA 노출 | default off |
-| `ANTHROPIC_API_KEY` / `GOOGLE_API_KEY` | LLM | 필수 |
+| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GOOGLE_API_KEY` | LLM 프로바이더 키 — 폴백 체인상 **최소 1개 필수** (존재하는 키만 체인에 편입) | 최소 1개 (현 운영 anthropic) |
+| `ANTHROPIC_MODEL` / `OPENAI_MODEL` / `GEMINI_MODEL_PRO` / `GEMINI_MODEL_FLASH` | 모델 ID 오버라이드 (선택) — 미설정 시 config.py 기본값. prod compose 가 `${VAR:-<기본ID>}` 형으로 passthrough | 비우면 기본 ID |
 | `SEOUL_OPENDATA_API_KEY` | ETL | Real 모드에서 필수 |
-| `LANGFUSE_*` | 관측 (선택) | 비워두면 비활성 |
+| `LANGFUSE_*` | 관측 (선택) | 비워두면 비활성. `LANGFUSE_TRACING_ENVIRONMENT` 관례: `.env`=production / `.env.dev`=development / e2e=`e2e`. `LANGFUSE_SESSION_SALT` 는 고정값 필수(비우면 재시작마다 세션 해시 분절). `LANGFUSE_OTEL_INSECURE=true` 는 로컬 MITM 전용 — **prod 서버 복사 금지** |
+| `E2E_LANGFUSE_{PUBLIC_KEY,SECRET_KEY,HOST,TRACING_ENVIRONMENT}` | e2e/eval 트래픽 관측 **opt-in** — `docker-compose.e2e.yml` 이 `${E2E_LANGFUSE_*:-}` 로 주입 | 기본 empty = 관측 off (e2e trace_id null 계약 보존). eval 세션만 dev 프로젝트 키 export, environment 기본 `e2e` |
 
 `scripts/validate_env.py` 가 빌드/기동 전에 누락 검증.
 
@@ -165,9 +168,9 @@ Playwright E2E 실행 잡은 CI 에 **없음** — E2E 는 로컬 `cd frontend &
 ## 7. 모니터링 & 로깅
 
 - Docker `json-file` log driver, max-size=50m, max-file=5 (서비스별)
-- `/api/health/detail` — DB pool / Redis / session 메트릭
-- `/metrics` — SSE 게이지 / singleflight / 경로별 latency (인메모리 집계)
-- Langfuse (선택): `LANGFUSE_*` 설정 시 LLM trace
+- `/api/health/detail` — DB pool / Redis / session 메트릭 + `llm_chain`(활성 폴백 체인의 `provider:model_id` 리스트 — 배포 후 활성 프로바이더/순서 1-curl 확인) + `langfuse` 블록(enabled/tracer_valid/client_initialized/sampling_rate)
+- `/metrics` — SSE 게이지 / singleflight / `langfuse_trace_missing_total`(무음사망 카운터) / 경로별 latency (인메모리 집계)
+- Langfuse (선택): `LANGFUSE_*` 설정 시 LLM trace — 무음사망 진단 플레이북은 [ops/runbook.md](../ops/runbook.md) 참조
 - 자동배포 로그: journal(`marketscope-autodeploy.service`) + `data/deploy-logs/`
 - 향후: Prometheus exporter 연동
 
@@ -181,7 +184,7 @@ Playwright E2E 실행 잡은 CI 에 **없음** — E2E 는 로컬 `cd frontend &
 
 ## 9. 부하 테스트 & 용량 상한
 
-**loadtest/ 스택 구현 완료**: `locustfile.py`(SSE chat 부하) + `scenarios/` 8종(`a_basic_summary` ~ `h_redis_failure`: ramp / mixed intent / greeting 단축 / semaphore 포화 / spike / 세션 격리 / mid-stream disconnect / Redis 장애) + `run_all_tests.py` + `sse_client.py`. 실행 전제: `USE_MOCK=true LLM_PROVIDER=mock` backend `:8002`, `pip install -e ".[loadtest]"`. 사용법은 [loadtest/README.md](../../loadtest/README.md), 설계 배경은 [plan/infra/load-test-plan.md](../plan/infra/load-test-plan.md).
+**loadtest/ 스택 구현 완료**: `locustfile.py`(SSE chat 부하) + `scenarios/` 8종(`a_basic_summary` ~ `h_redis_failure`: ramp / mixed intent / greeting 단축 / semaphore 포화 / spike / 세션 격리 / mid-stream disconnect / Redis 장애) + `run_all_tests.py` + `sse_client.py`. 실행 전제: `USE_MOCK=true LLM_PROVIDER=mock` backend `:8002`, `pip install -e ".[loadtest]"`. 사용법은 [loadtest/README.md](../../loadtest/README.md).
 
 현재 상한:
 

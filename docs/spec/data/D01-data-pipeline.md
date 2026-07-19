@@ -9,7 +9,7 @@
 | 목적 | 서울 상권 관련 공공데이터를 수집하여 PostGIS DB 에 적재 |
 | Phase | 1B — **완료** (2025Q4 기준 적재 완료) |
 | 갱신 주기 | 분기별 (현재 CLI 수동 실행, 스케줄러는 향후 계획) |
-| 적재 현황 | districts 1,650 / floating_population 9,888 / estimated_sales 21,333 / stores 75,985 / resident_population 39,288 |
+| 적재 현황 | districts 1,650 / floating_population 9,888 / estimated_sales 21,333 / stores 75,985 / resident_population 39,288 (worker 인구 합계 4,724,265 — corrected seed 무결성 마커) |
 
 ## 2. 데이터 소스
 

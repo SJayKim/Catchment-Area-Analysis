@@ -157,7 +157,7 @@ SSE `type` → store action 매핑. `SSEEvent` 유니온(`lib/types.ts`)은 **10
 
 | type | 처리 |
 |---|---|
-| `thinking` | `agentSteps` 에 thinking 추가 |
+| `thinking` | 첫 이벤트 → `thinking` step 추가. 이후 이벤트 → `response` step 생성 후 **라벨 실시간 갱신**(`updateAgentStepStatus('response', 'in_progress', step)`) — v2 옵션 B 진행 이벤트("응답 작성 중... n%")가 이 갱신으로 표시된다 |
 | `plan` | 이전 thinking 완료 + plan step 추가 (PAE 경로 전용 — v2 루프는 `plan` 미방출) |
 | `tool` / `tool_end` | progress 라벨 + 종료 마킹 |
 | `text` | 마지막 assistant 메시지에 append. 첫 수신 시 in_progress step 일괄 완료 + 1.5s 후 `agentSteps` 클리어 |
@@ -216,7 +216,7 @@ SSE `type` → store action 매핑. `SSEEvent` 유니온(`lib/types.ts`)은 **10
 
 `frontend/playwright.config.ts`: 4 project (chromium / mobile-iphone / mobile-galaxy / tablet-ipad) / 1 worker / 60s timeout / 30s expect / retries 0 (trace 는 `on-first-retry` 설정이나 retries 0 이라 사실상 비활성). Base URL `E2E_BASE_URL || http://localhost:3001`.
 
-`frontend/e2e/` 구조 (2026-04-30 UX Sweep 기준):
+`frontend/e2e/` 구조 — spec 44파일 · test 선언 188개 (ring0 4파일·18 / ring1 25파일·99 / ring2 6파일·13 / ring3 7파일·35 + prod-smoke 1파일·11 + 레거시 루트 1파일·12, 2026-07-16 실측 — skip 선언 포함):
 
 ```
 ring0-preflight/       00-stack-up                      (인프라 sanity)

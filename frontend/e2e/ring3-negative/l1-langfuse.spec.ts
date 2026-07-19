@@ -6,8 +6,8 @@
  *
  * 검증 범위:
  *   L1-E01  TRACE-DOWN baseline (키 미설정 → 정상 SSE, trace_id=null)
- *   L1-E02  TRACE-SDK-MISSING (langfuse v4 SDK + `langfuse.callback` import fail → None)
- *   L1-E03  TRACE-BAD-KEY (잘못된 키 → CallbackHandler 생성 실패 → None)
+ *   L1-E02  TRACE-SDK-MISSING (langfuse 패키지 import 불가 → handler None + _tracer_valid False)
+ *   L1-E03  TRACE-BAD-KEY-LAZY (v3: bad key/host 도 handler 생성 — 무음 실패는 ops 가시화로 검출)
  *   L1-E04  HASH-DETERMINISTIC (동일 salt + session → 동일 16-hex)
  *   L1-E05  HASH-SALT-INDEPENDENT (salt 변경 시 해시 격리)
  *   L1-E06  DONE-TRACE-ID-OPTIONAL (trace_id 부재 done 이벤트, 프론트 파서 정상)
@@ -217,33 +217,39 @@ test.describe('Ring 3 — LLMOps L1 Langfuse wiring', () => {
     expect(hasEventLine).toBe(false);
   });
 
-  test('L1-E02 TRACE-SDK-MISSING: v4 SDK 환경에서 handler None', async () => {
-    // 현재 컨테이너에는 langfuse v4 가 설치되어 있고, graph.py 는 v2 `langfuse.callback`
-    // 경로를 시도한다. ImportError → `None` 반환 + `_tracer_valid=False` 가 L1 설계의 핵심.
+  test('L1-E02 TRACE-SDK-MISSING: 패키지 import 불가 시 handler None', async () => {
+    // v3 (SDK v2→v3 포팅 2026-04-24) 는 `from langfuse import Langfuse` 를 _get_client()
+    // 안에서 lazy import 한다. 컨테이너에는 v3 가 설치되어 있으므로 sys.modules 포이즈닝
+    // (None sentinel → import halt)으로 "패키지 부재/드리프트" 를 시뮬레이션한다.
+    // import 실패 → None + _tracer_valid=False + graceful degrade 가 L1 설계의 핵심
+    // (컨테이너 SDK 드리프트로 tracing 이 무음사망했던 사고의 회귀 핀).
     const packet = new EvalPacket({
       id: 'L1-E02-TRACE-SDK-MISSING',
-      title: 'v4 SDK 에서 v2 API import fail → None',
-      story: 'langfuse v4 는 `langfuse.callback` 경로가 없음. get_langfuse_handler() 가 None 을 반환하고 _tracer_valid 플래그를 내려야 한다.',
+      title: '패키지 import 불가 → handler None + _tracer_valid False',
+      story: 'langfuse import 가 불가능한 환경(패키지 미설치/드리프트)에서 get_langfuse_handler() 는 None 을 반환하고 _tracer_valid 를 내린다. status() 는 enabled=True + tracer_valid=False 로 무음사망을 노출한다.',
       steps: [
-        'backend python -c 로 langfuse_tracer 직접 호출',
+        'backend python -c 에서 sys.modules["langfuse"]=None 포이즈닝 후 langfuse_tracer 호출',
         'ImportError handling → None',
       ],
       mode: 'Mock',
       ring: 3,
-      criteria: ['handler None', '_tracer_valid False', 'log warn 텍스트 포함'],
+      criteria: ['handler None', '_tracer_valid False', 'log warn 텍스트 포함', 'status 가 tracer_valid=False 노출'],
     });
 
     const code = [
-      'import importlib, server.services.langfuse_tracer as m',
+      'import sys, importlib, server.services.langfuse_tracer as m',
       // 모듈 캐시 리셋 — 이전 테스트 영향 제거
       'importlib.reload(m)',
       // Langfuse 키 2개 세팅 (활성화 조건 충족)
       'from server.config import settings',
       'settings.langfuse_public_key = "pk-test"',
       'settings.langfuse_secret_key = "sk-test"',
+      // None sentinel → 이후 `from langfuse import ...` 가 ImportError 로 halt
+      'sys.modules["langfuse"] = None',
       'h = m.get_langfuse_handler("s1", "r1")',
       'print("HANDLER=" + ("None" if h is None else "NOT_NONE"))',
       'print("VALID=" + str(m._tracer_valid))',
+      'print("STATUS=" + str(m.status()))',
     ].join('; ');
 
     const r = dockerPy(code);
@@ -261,7 +267,9 @@ test.describe('Ring 3 — LLMOps L1 Langfuse wiring', () => {
     const stderr = r.stderr || '';
     const handlerNone = stdout.includes('HANDLER=None');
     const validFalse = stdout.includes('VALID=False');
-    const warnLogged = stderr.includes('langfuse package unavailable') || stderr.includes('import failed');
+    const warnLogged =
+      (stderr + stdout).includes('langfuse package unavailable') || (stderr + stdout).includes('import failed');
+    const statusExposed = stdout.includes("'tracer_valid': False");
 
     packet.writeAutoVerdict({
       result: handlerNone && validFalse ? 'PASS' : 'FAIL',
@@ -269,7 +277,8 @@ test.describe('Ring 3 — LLMOps L1 Langfuse wiring', () => {
       checks: [
         { criterion: 'handler None', met: handlerNone, evidence: stdout.slice(0, 80) },
         { criterion: '_tracer_valid False', met: validFalse, evidence: stdout.slice(0, 80) },
-        { criterion: 'warn log', met: warnLogged, evidence: stderr.slice(0, 80) },
+        { criterion: 'warn log', met: warnLogged, evidence: (stderr + stdout).slice(0, 80) },
+        { criterion: 'status tracer_valid=False', met: statusExposed, evidence: stdout.slice(-120) },
       ],
     });
 
@@ -277,18 +286,22 @@ test.describe('Ring 3 — LLMOps L1 Langfuse wiring', () => {
     expect(validFalse).toBe(true);
   });
 
-  test('L1-E03 TRACE-BAD-KEY: 생성자 실패 시 None 반환', async () => {
-    // v2 SDK 가 있어도, 잘못된 키 + 네트워크 없는 호스트로 생성자 예외 시 None.
-    // v4 환경에서는 E02 처럼 import 단계에서 이미 fail — 동일한 None 경로로 수렴.
-    // 즉 E03 은 "키 있음 + 어떤 형태로든 실패 = None" 을 확증한다.
+  test('L1-E03 TRACE-BAD-KEY-LAZY: v3 는 bad key 로도 handler 생성 (무음 실패)', async () => {
+    // v3 의미론: Langfuse() 생성자는 키/host 를 eager 검증하지 않는다. 잘못된 키 +
+    // unreachable host 로도 handler 는 생성되고 trace_id 가 사전 배정되며(create_trace_id
+    // 는 로컬 해시 — 네트워크 무접촉), 실제 실패는 OTEL export 시점에 무음으로 발생한다.
+    // 따라서 이 케이스의 검출은 코드가 아닌 ops 가시화 몫 — /api/health/detail `langfuse`
+    // 블록 + /metrics `langfuse_trace_missing_total` (runbook 진단 플레이북).
+    // 이 테스트는 그 lazy-init 계약을 핀한다: eager 검증이 도입돼 계약이 바뀌면
+    // (bad key → None → done 의 trace_id 소실) 여기서 즉시 드러난다.
     const packet = new EvalPacket({
-      id: 'L1-E03-TRACE-BAD-KEY',
-      title: '키 있음 + 생성 실패 → None',
-      story: 'langfuse_public_key/secret_key 가 있어도 생성자가 실패하면 None 을 반환하고 _tracer_valid 를 내린다.',
-      steps: ['backend python -c 에서 키 세팅 + handler 호출'],
+      id: 'L1-E03-TRACE-BAD-KEY-LAZY',
+      title: 'v3 lazy init — bad key 도 handler 생성 + trace_id 사전 배정',
+      story: '잘못된 키/host 에서도 v3 는 handler 를 생성하고(_tracer_valid 유지) trace_id 를 사전 배정한다. export 실패는 무음 — 검출은 health detail langfuse 블록/metrics 가시화가 담당.',
+      steps: ['backend python -c 에서 bad key + unreachable host 세팅 + handler 호출'],
       mode: 'Mock',
       ring: 3,
-      criteria: ['handler None', '_tracer_valid False'],
+      criteria: ['handler NOT None', '_tracer_valid True', 'trace_id 사전 배정(len>0)', 'client_initialized True'],
     });
 
     const code = [
@@ -301,6 +314,8 @@ test.describe('Ring 3 — LLMOps L1 Langfuse wiring', () => {
       'h = m.get_langfuse_handler("abc", "req")',
       'print("HANDLER=" + ("None" if h is None else "NOT_NONE"))',
       'print("VALID=" + str(m._tracer_valid))',
+      'print("TRACE_ID_LEN=" + str(len(str(getattr(h, "_ms_trace_id", "") or ""))))',
+      'print("CLIENT_INIT=" + str(m.status()["client_initialized"]))',
     ].join('; ');
 
     const r = dockerPy(code);
@@ -315,20 +330,26 @@ test.describe('Ring 3 — LLMOps L1 Langfuse wiring', () => {
     }
 
     const stdout = r.stdout || '';
-    const handlerNone = stdout.includes('HANDLER=None');
-    const validFalse = stdout.includes('VALID=False');
+    const handlerCreated = stdout.includes('HANDLER=NOT_NONE');
+    const validTrue = stdout.includes('VALID=True');
+    const traceIdLen = parseInt(stdout.match(/TRACE_ID_LEN=(\d+)/)?.[1] || '0', 10);
+    const clientInit = stdout.includes('CLIENT_INIT=True');
 
     packet.writeAutoVerdict({
-      result: handlerNone && validFalse ? 'PASS' : 'FAIL',
+      result: handlerCreated && validTrue && traceIdLen > 0 && clientInit ? 'PASS' : 'FAIL',
       reason: `stdout="${stdout.slice(0, 200)}"`,
       checks: [
-        { criterion: 'handler None', met: handlerNone, evidence: stdout.slice(0, 80) },
-        { criterion: '_tracer_valid False', met: validFalse, evidence: stdout.slice(0, 80) },
+        { criterion: 'handler NOT None', met: handlerCreated, evidence: stdout.slice(0, 80) },
+        { criterion: '_tracer_valid True', met: validTrue, evidence: stdout.slice(0, 80) },
+        { criterion: 'trace_id len>0', met: traceIdLen > 0, evidence: `${traceIdLen}` },
+        { criterion: 'client_initialized True', met: clientInit, evidence: `${clientInit}` },
       ],
     });
 
-    expect(handlerNone).toBe(true);
-    expect(validFalse).toBe(true);
+    expect(handlerCreated).toBe(true);
+    expect(validTrue).toBe(true);
+    expect(traceIdLen).toBeGreaterThan(0);
+    expect(clientInit).toBe(true);
   });
 
   test('L1-E04 HASH-DETERMINISTIC: 동일 salt + session → 동일 해시', async () => {

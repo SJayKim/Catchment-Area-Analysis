@@ -1,0 +1,52 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.49757108020325, "lng": 127.0277513790423, "zoom": 4}, "district_code": "3120189", "district_name": "강남역", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "simulate_revenue", "input": {"district_code": "3120189", "category_code": "카페"}, "progress_label": "매출 시뮬레이션 중..."}
+
+data: {"type": "card", "card_type": "simulation", "data": {"district_code": "3120189", "category_code": "CS100010", "category_name": "", "quarter": "2025Q4", "simulation": {"low": 16150005, "avg": 38636376, "high": 90950031}, "basis": {"total_monthly_sales": 4597728847, "store_count": 119, "additional_competitors": 0, "effective_stores": 119, "unit_price": null, "default_unit_price": 12000, "price_ratio": 1.0}, "percentiles": {"p25_ratio": 0.418, "p75_ratio": 2.354, "sample_count": 1066, "reliable": true}, "seoul_comparison": {"seoul_avg": 10885213, "diff_percent": 254.9, "label": "높음"}, "disclaimer": "본 시뮬레이션은 카드매출 기반 추정치이며, 실제 매출과 다를 수 있습니다.", "dataSources": [{"id": "seoul_estimated_sales", "name": "상권-추정매출", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarSelngQq", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}, {"id": "seoul_store_info", "name": "상권-점포", "organization": "서울특별시", "platform": "서울 열린데이터광장", "api_endpoint": "VwsmTrdarStorW", "url": "https://data.seoul.go.kr", "license": "공공누리 제1유형", "collection_method": "API"}]}}
+
+data: {"type": "tool_end", "name": "simulate_revenue", "done_label": "매출 시뮬레이션 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "thinking", "step": "응답 작성 중... 6%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 9%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 13%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 17%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 21%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 26%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 30%"}
+
+data: {"type": "thinking", "step": "수치 검증 중..."}
+
+data: {"type": "text", "content": "## ☕ 강남역 카페 월 매출 시뮬레이션 (2025Q4)\n\n### 📊 예상 월 매출 범위\n\n| 구간 | 월 매출 |\n|------|---------|\n| 🔴 하위"}
+
+data: {"type": "text", "content": " 25% (어려운 경우) | 약 **1,615만 원** |\n| 🟡 평균 | 약 **3,864만 원** |\n| 🟢 상위 25% (잘 되는 경우) | 약 **9,09"}
+
+data: {"type": "text", "content": "5만 원** |\n\n---\n\n### 🔍 핵심 분석\n\n1. **수치 해석**\n   - 강남역 카페 평균 월 매출 **약 3,864만 원**은 서울 전체 카페 평균(*"}
+
+data: {"type": "text", "content": "*약 1,089만 원**) 대비 **+255% 수준**으로 압도적으로 높습니다.\n   - 기준 객단가는 **12,000원**, 분석 대상 점포 수는 **119개*"}
+
+data: {"type": "text", "content": "*입니다.\n\n2. **의미 해석**\n   - 강남역은 서울 최대 유동인구 상권 중 하나로, 카페 매출 포텐셜이 매우 높습니다.\n   - 단, 하위 25%는 1,6"}
+
+data: {"type": "text", "content": "15만 원에 그쳐 **상위권과 하위권 격차가 매우 큽니다.** 입지(역 출구 방향, 층수, 가시성)에 따라 결과가 크게 갈립니다.\n\n3. **실행 시사점**\n  "}
+
+data: {"type": "text", "content": " - 🏆 **잘 되면** 월 9,095만 원 이상도 가능하지만, 그만큼 **임차료·권리금 부담도 상당**합니다.\n   - 경쟁 점포가 **119개**로 포화 상태"}
+
+data: {"type": "text", "content": "에 가까우므로, 차별화 전략(스페셜티 원두, 공간 콘셉트, SNS 마케팅 등)이 필수입니다.\n   - 손익분기 검토 시 임차료·인건비·재료비 구조를 사전에 면밀히"}
+
+data: {"type": "text", "content": " 따져보시길 권장합니다.\n\n---\n> 추정치이며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["강남역 추천 업종 알려줘", "강남역 리스크는 어때?", "강남역 유동인구 자세히"]}
+
+data: {"type": "done"}
+

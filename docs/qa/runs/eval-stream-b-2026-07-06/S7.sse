@@ -1,0 +1,62 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3120103", "quarter": "2025Q4"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "tool", "name": "resolve_district", "input": {"name": "성수"}, "progress_label": "상권 찾는 중..."}
+
+data: {"type": "tool_end", "name": "resolve_district", "done_label": "상권 확인"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "get_floating_population", "input": {"district_code": "3120052", "quarter": "2025Q4"}, "progress_label": "유동인구 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_floating_population", "done_label": "유동인구 조회 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "4106209 / 1412369"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "thinking", "step": "응답 작성 중... 5%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 9%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 14%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 18%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 22%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 26%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 29%"}
+
+data: {"type": "text", "content": "---\n\n## 🚶 유동인구 비교 — 홍대 압승\n\n| 지표 | 홍대입구역 | 성수역 |\n|------|-----------|--------|\n| **분기 유동인구*"}
+
+data: {"type": "text", "content": "* | **4,106,209명** | 1,412,369명 |\n| **피크 시간대** | 17시 (저녁) | 14시 (오후) |\n| **20대 비율** | 43.5"}
+
+data: {"type": "text", "content": "% | 27.3% |\n| **여성 비율** | 52.7% | 53.7% |\n\n### 📌 핵심 포인트\n\n1. **홍대가 약 2.9배 많습니다.** 분기 유동인구 기"}
+
+data: {"type": "text", "content": "준 홍대(410만 명) vs 성수(141만 명)로 압도적 차이.\n\n2. **피크 시간대가 다릅니다.**\n   - 홍대: **17시** → 퇴근 후 저녁 유흥·식사"}
+
+data: {"type": "text", "content": " 수요 집중\n   - 성수: **14시** → 낮 시간대 카페·브런치 중심 방문\n\n3. **연령대 구성이 다릅니다.**\n   - 홍대: 20대가 43.5%로 압도"}
+
+data: {"type": "text", "content": "적 → 트렌디·저단가 업종 유리\n   - 성수: 30~40대 비율(40.6%)이 상대적으로 높음 → 프리미엄·감성 업종 유리\n\n### 💡 시사점\n- **유동인구 "}
+
+data: {"type": "text", "content": "규모** 자체는 홍대가 훨씬 크지만, **성수는 구매력 있는 30~40대** 비중이 높아 객단가 높은 업종에 유리합니다.\n- 창업 목적이라면 **대중적·회전율 높"}
+
+data: {"type": "text", "content": "은 업종 → 홍대**, **프리미엄·소수 타깃 업종 → 성수**가 전략적으로 맞습니다.\n\n> 추정치이며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대) 추천 업종 알려줘", "홍대입구역(홍대) 리스크는 어때?", "홍대입구역(홍대) 유동인구 자세히"]}
+
+data: {"type": "done"}
+

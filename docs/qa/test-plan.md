@@ -2,7 +2,7 @@
 
 > 북극성: 소비자 관점의 **서비스 경험(map click → AI 분석 → card → next action)**을 객관적으로 검증한다. 엄격한 evaluator-PASS-only 완료 게이트, 판정은 **fresh subagent**가 담당.
 
-> ⚠ **2026-07-04 문서 정합성 감사 현행화**: 본 플랜은 2026-04-06(P0 8건 merge 직후) 작성됐고, 이후 스위트가 크게 확장·재편됐다 — 현행 spec **44파일 · test 선언 164개** (ring0 4 / ring1 25 / ring2 j01~j06 6 / ring3 7 / prod-smoke 1 / 레거시 루트 `phase3-scenario` 1). 본문 파일명·수치·실행 커맨드는 현행 코드 기준으로 정정했다. 또한 Real 모드 기본 Agent 는 PAE 가 아닌 **v2 agentic loop + Trust Kernel**(`agent_loop_version="v2"`, mock provider 는 PAE 폴백 — `server/server/agent/runtime.py`)이다.
+> ⚠ **2026-07-16 문서 정합성 현행화**: 본 플랜은 2026-04-06(P0 8건 merge 직후) 작성됐고, 이후 스위트가 크게 확장·재편됐다 — 현행 spec **44파일 · test 선언 188개** (ring0 4파일·18 / ring1 25파일·99 / ring2 j01~j06 6파일·13 / ring3 7파일·35 / prod-smoke 1파일·11 / 레거시 루트 `phase3-scenario` 1파일·12 — skip 선언 포함). 본문 파일명·수치·실행 커맨드는 현행 코드 기준으로 정정했다. 또한 Real 모드 기본 Agent 는 PAE 가 아닌 **v2 agentic loop + Trust Kernel**(`agent_loop_version="v2"`, mock provider 는 PAE 폴백 — `server/server/agent/runtime.py`)이다.
 
 ---
 
@@ -69,7 +69,7 @@ Mock PASS만으로는 shipped 판정 불가 — 최소한 happy-path는 Real에�
 
 ## Section B — Test Suite 구조
 
-`frontend/e2e/` 스위트 구조 (2026-07-04 현행 — spec 44파일 · test 선언 164개):
+`frontend/e2e/` 스위트 구조 (2026-07-16 현행 — spec 44파일 · test 선언 188개):
 
 ```
 frontend/e2e/
@@ -112,7 +112,7 @@ frontend/e2e/
 │   ├── neg-prompt-injection.spec.ts
 │   ├── neg-feedback-missing.spec.ts
 │   ├── ops-endpoints.spec.ts
-│   ├── l1-langfuse.spec.ts
+│   ├── l1-langfuse.spec.ts       # E02/E03 v3 의미론 (2026-07-07 재작성) — active 7 + skip 4
 │   ├── reg-2026-04-17.spec.ts
 │   └── p0-regression.spec.ts     # P0-1~P0-8 describe 블록 8개
 │   # (당초 계획한 neg-over-3-compare.spec.ts 는 별도 파일로 생성되지 않음 —

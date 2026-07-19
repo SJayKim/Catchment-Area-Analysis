@@ -1,0 +1,88 @@
+data: {"type": "map_cmd", "action": "move", "params": {"lat": 37.551948188199205, "lng": 126.92128794258537, "zoom": 4}, "district_code": "3120103", "district_name": "홍대입구역(홍대)", "district_type": "발달상권"}
+
+data: {"type": "thinking", "step": "질문 분석 중..."}
+
+data: {"type": "thinking", "step": "데이터 수집 중..."}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3120103"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "tool", "name": "resolve_district", "input": {"name": "성수동"}, "progress_label": "상권 찾는 중..."}
+
+data: {"type": "tool_end", "name": "resolve_district", "done_label": "상권 확인"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "get_estimated_sales", "input": {"district_code": "3110131"}, "progress_label": "매출 데이터 조회 중..."}
+
+data: {"type": "tool_end", "name": "get_estimated_sales", "done_label": "매출 조회 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "53200280285 / 17737244308"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "tool", "name": "compute", "input": {"expression": "1924711 / 327970"}, "progress_label": "계산 중..."}
+
+data: {"type": "tool_end", "name": "compute", "done_label": "계산 완료"}
+
+data: {"type": "thinking", "step": "결과 분석 중..."}
+
+data: {"type": "thinking", "step": "응답 작성 중... 7%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 12%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 16%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 21%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 25%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 28%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 32%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 36%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 40%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 44%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 48%"}
+
+data: {"type": "thinking", "step": "응답 작성 중... 52%"}
+
+data: {"type": "text", "content": "2025Q4 기준 홍대 vs 성수동 카페거리 매출 비교 결과입니다.\n\n---\n\n## 🏆 홍대 vs 성수동 카페거리 — 매출 비교 (2025Q4)\n\n### 📊 핵심"}
+
+data: {"type": "text", "content": " 지표 한눈에\n\n| 지표 | 홍대입구역 | 성수동 카페거리 | 차이 |\n|------|-----------|--------------|------|\n| **월 추"}
+
+data: {"type": "text", "content": "정 매출** | 약 **532억 원** | 약 **177억 원** | 홍대 **약 3배** ↑ |\n| **월 결제 건수** | 약 **192만 건** | 약 **"}
+
+data: {"type": "text", "content": "33만 건** | 홍대 **약 5.9배** ↑ |\n| **평균 객단가** | **27,641원** | **54,082원** | 성수 **약 2배** ↑ |\n| *"}
+
+data: {"type": "text", "content": "*주말 매출 비중** | 35.4% | 31.0% | 홍대 소폭 ↑ |\n| **피크 시간대** | 17~21시 (31.7%) | 17~21시 (32.1%) | 동"}
+
+data: {"type": "text", "content": "일 |\n| **주력 연령** | 20대 (41.5%) | 30대 (28.1%) | 세대 차이 |\n\n---\n\n### 🔍 심층 분석\n\n#### 1️⃣ 규모 — 홍대의"}
+
+data: {"type": "text", "content": " 압도적 우위\n홍대는 월 매출 **약 532억 원**으로 성수동(약 177억 원)의 **약 3배** 규모입니다. 결제 건수는 무려 **5.9배** 차이로, 홍대가"}
+
+data: {"type": "text", "content": " 훨씬 많은 소비자를 처리하는 **대형 상권**임을 보여줍니다.\n\n#### 2️⃣ 객단가 — 성수동의 프리미엄 포지셔닝\n성수동의 평균 객단가는 **54,082원*"}
+
+data: {"type": "text", "content": "*으로 홍대(27,641원)의 **약 2배**입니다. 방문객 수는 적지만 **1회 소비 금액이 높은 고급·감성 소비** 패턴이 뚜렷합니다.\n\n#### 3️⃣ 고객"}
+
+data: {"type": "text", "content": "층 — 뚜렷한 세대 차이\n- **홍대**: 20대가 41.5%로 압도적 → 트렌디하고 가성비 중심의 젊은 소비\n- **성수동**: 30대가 28.1%로 주력, 4"}
+
+data: {"type": "text", "content": "0대(18.6%)·50대(14.7%)도 두텁게 분포 → 구매력 있는 성인 소비층\n\n#### 4️⃣ 성별 매출\n- **홍대**: 여성(54.3%) > 남성(41.0"}
+
+data: {"type": "text", "content": "%) — 여성 소비 우세\n- **성수동**: 남성(48.1%) ≈ 여성(44.7%) — 비교적 균형\n\n---\n\n### 💡 창업·투자 시사점\n\n| 전략 | 추천 상"}
+
+data: {"type": "text", "content": "권 |\n|------|---------|\n| 높은 유동인구·박리다매형 | **홍대** |\n| 프리미엄·고객단가 업종 | **성수동** |\n| 20대 타깃 F&B·"}
+
+data: {"type": "text", "content": "엔터테인먼트 | **홍대** |\n| 30~40대 타깃 라이프스타일·브랜드 팝업 | **성수동** |\n\n> 추정치이며 실제와 다를 수 있습니다(참고용)."}
+
+data: {"type": "suggestion", "questions": ["홍대입구역(홍대) 추천 업종 알려줘", "홍대입구역(홍대) 리스크는 어때?", "홍대입구역(홍대) 유동인구 자세히"]}
+
+data: {"type": "done"}
+

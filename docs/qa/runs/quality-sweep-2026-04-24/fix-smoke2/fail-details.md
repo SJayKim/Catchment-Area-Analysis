@@ -1,1 +1,0 @@
-# Quality Sweep — FAIL Details

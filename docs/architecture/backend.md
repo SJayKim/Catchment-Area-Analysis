@@ -86,9 +86,10 @@ server/server/
 | `database_url` / `database_url_sync` | — | async + Alembic용 동기 URL |
 | `redis_url` | `redis://localhost:6379/0` | Redis 접속. Mock 모드에서 미사용 |
 | `seoul_opendata_api_key` / `data_go_kr_api_key` | — | ETL API 키 |
-| `llm_provider` | `gemini` | `gemini` / `anthropic` / `mock` (현 운영 env 는 `anthropic`) |
+| `llm_provider` | `gemini` | `gemini` / `anthropic` / `openai` / `mock` — 선호 프로바이더를 체인 맨 앞으로 승격 (현 운영 env 는 `anthropic`) |
 | `gemini_model_pro` / `gemini_model_flash` | `gemini-2.5-pro` / `2.5-flash` | Gemini 모델 ID — v2 fallback 체인 + PAE 역할별 |
 | `anthropic_model` | `claude-sonnet-4-6` | Anthropic 모델 ID (은퇴 모델 hotfix 용 env-오버라이드 가능) |
+| `openai_model` | `gpt-5.4-mini` | OpenAI 모델 ID — v2 fallback 체인 2순위(canary) + PAE (openai mode) |
 | `agent_loop_version` | `v2` | **현행 런타임 스위치** — `v2`(모델주도 루프 + Trust Kernel) / `pae`(레거시 롤백). mock provider 는 항상 PAE 폴백 |
 | `agent_loop_max_iterations` | `6` | v2 budget governor — 모델 턴 상한 (마지막 턴은 도구 없이 prose 강제) |
 | `agent_loop_max_tool_calls` | `12` | v2 budget governor — 요청당 도구 실행 총량 |
@@ -119,7 +120,7 @@ server/server/
 | Method | Path | 요청 | 응답 | 비고 |
 |---|---|---|---|---|
 | GET | `/health` | — | `{status}` | Liveness |
-| GET | `/api/health/detail` | — | DB pool / Redis / sessions / `agent_mode`(실효 루프 v2\|pae) / `agent_loop_version` / `llm_provider` | Readiness |
+| GET | `/api/health/detail` | — | DB pool / Redis / sessions / `agent_mode`(실효 루프 v2\|pae) / `agent_loop_version` / `llm_provider` / `llm_chain`(현 체인의 `provider:model_id` 리스트 — 키/순서 1-curl 확인) / `langfuse`(enabled·tracer_valid·client_initialized·sampling_rate — 무음사망 가시화) | Readiness |
 | POST | `/api/chat` | `{message(≤500), session_id?, district_code?}` | `text/event-stream` | SSE — 이벤트 집합은 아래 표 (경로별 상이) |
 | GET | `/api/districts` | `search?`, `type?`, `limit`, `offset` | `{total, items[]}` | 한글 조사 strip |
 | GET | `/api/districts/{code}` | — | District + polygon | GeoJSON. 없으면 404 |
@@ -128,7 +129,7 @@ server/server/
 | GET | `/api/map-data/heatmap/all` | `quarter?` | `{slots: {0..23: [...]}}` | 프리로드 + singleflight |
 | GET | `/api/districts/{code}/preview` | `role?` | `DistrictPreview` JSON | F13 — LLM 무호출, Redis 24h |
 | POST | `/api/feedback/score` | `{trace_id, value, reason?, comment?}` | 202/204 | F12 L1 — Langfuse score proxy, trace_id 멱등(24h) |
-| GET | `/metrics` | — | `{sse_active_connections, singleflight_coalesced_total, request_counts[], latency[]}` | 운영 관측 (p50/p95/p99/avg ms, 인메모리) |
+| GET | `/metrics` | — | `{sse_active_connections, singleflight_coalesced_total, langfuse_trace_missing_total, request_counts[], latency[]}` | 운영 관측 (p50/p95/p99/avg ms, 인메모리). `langfuse_trace_missing_total` = enabled 인데 done 에 trace_id 없던 요청 수 |
 
 ### `/api/chat` SSE 이벤트
 
@@ -193,10 +194,10 @@ server/server/
 
 ## 8. 테스트
 
-- **Backend pytest**: `server/tests/` — **테스트 모듈 22개 · 테스트 함수 173개** (parametrize 확장 시 수집 196케이스, 이 중 `@pytest.mark.real` DB 통합 6케이스). 최근 실측 2026-07-04: **190 passed / 6 skipped**. Plan: [backend-pytest-coverage-expansion.md](../plan/infra/backend-pytest-coverage-expansion.md).
-  주요 파일: `conftest.py`(fixture 5종, `USE_MOCK=true`·`LLM_PROVIDER=mock` 강제) · `test_services_{cache,circuit_breaker,category_resolver}.py` · `test_repos_mock.py`(10 protocol) · `test_routes_health_and_map.py`(lifespan + httpx ASGITransport) · `test_singleflight.py`(9) · **`test_trust_kernel_regressions.py`(19)** · **`test_v2_loop_qa_regressions.py`(12)** · `test_langfuse_l2.py`(12) + `test_langfuse_aggregate.py`(10) · `test_data_integrity.py`(13 = unit 7 + `@real` 6) · `test_tool_tag_sanitizer.py`(11) + `test_xml_sanitizer.py`(6) · `test_entity_matching.py`(7) · `test_coref_numeric_followup.py`(7) · `test_out_of_scope.py`(7) · `test_numeric_sanity.py`(6) · `test_recommendation_scoring.py`(6) · `test_planner_clarification.py`(4) · `test_chat_session_concurrency.py`(4) · `test_smoke.py`(3) · `test_graph_suggestion_emission.py`(2).
+- **Backend pytest**: `server/tests/` — **테스트 모듈 30개 · 수집 247케이스** (이 중 `@pytest.mark.real` DB 통합 6케이스). 최근 실측 2026-07-08: **241 passed / 6 deselected(@real)**.
+  주요 파일: `conftest.py`(fixture 5종, `USE_MOCK=true`·`LLM_PROVIDER=mock` 강제) · `test_services_{cache,circuit_breaker,category_resolver}.py` · `test_repos_mock.py`(10 protocol) · `test_routes_health_and_map.py`(lifespan + httpx ASGITransport) · `test_singleflight.py`(9) · **`test_trust_kernel_regressions.py`(23)** · **`test_v2_loop_qa_regressions.py`(12)** · `test_loop_models_stream.py`(8) + `test_engine_stream_events.py`(5) (스트리밍 옵션 B) · `test_loop_models_chain.py`(9) + `test_pae_create_llm.py`(4) (LLM Gateway openai) · `test_loop_models_config.py`(3) + `test_langfuse_ops.py`(7) + `test_v2_loop_langfuse.py`(5) + `test_metrics_langfuse.py`(3) (Langfuse ops-hardening) · `test_langfuse_l2.py`(12) + `test_langfuse_aggregate.py`(10) · `test_data_integrity.py`(13 = unit 7 + `@real` 6) · `test_tool_tag_sanitizer.py`(11) + `test_xml_sanitizer.py`(6) · `test_entity_matching.py`(7) · `test_coref_numeric_followup.py`(7) · `test_out_of_scope.py`(7) · `test_numeric_sanity.py`(6) · `test_recommendation_scoring.py`(6) · `test_planner_clarification.py`(4) · `test_chat_session_concurrency.py`(4) · `test_smoke.py`(3) · `test_graph_suggestion_emission.py`(2).
   CI: `.github/workflows/ci.yml::backend-test` — `pytest -m "not real"` + `--cov=server`(coverage XML artifact), dummy env 주입. `@real` 6케이스는 로컬 opt-in.
-- **E2E (Playwright)**: `frontend/e2e/` — spec 44파일 · test 선언 164개 (ring0~3 = 42파일·143선언 + prod-smoke 1파일·9선언 + 레거시 루트 phase3-scenario 1파일·12선언). 실행 `cd frontend && npm run test:e2e`. 백엔드 SSE 규약까지 커버.
+- **E2E (Playwright)**: `frontend/e2e/` — spec 44파일 · test 선언 188개 (ring0 4파일·18 / ring1 25파일·99 / ring2 6파일·13 / ring3 7파일·35 = ring0~3 소계 42파일·165 + prod-smoke 1파일·11(active 9 + skip 2) + 레거시 루트 phase3-scenario 1파일·12). 산정: `test(`/`test.skip(`/`test.fixme(` 선언 수 기준 (2026-07-16 실측). 실행 `cd frontend && npm run test:e2e`. 백엔드 SSE 규약까지 커버.
 - **수동 smoke**: `scripts/verify_sales_units.py`, `server/scripts/flush_cache.py` 등 운영 스크립트
 
 ## 9. 레이트/쿼터

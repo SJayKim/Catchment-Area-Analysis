@@ -85,11 +85,13 @@ def _get_client():
         return None
 
     try:
+        # 샘플링은 should_sample() 단일 게이트 — SDK sample_rate 를 함께 주면
+        # 이중 샘플링이 되어 done 이벤트에 동봉한 trace_id 가 고아가 된다
+        # (handler 는 만들어졌는데 SDK 가 trace 를 드랍).
         _client = Langfuse(
             public_key=settings.langfuse_public_key,
             secret_key=settings.langfuse_secret_key,
             host=settings.langfuse_host,
-            sample_rate=settings.langfuse_sampling_rate,
         )
     except Exception:
         logger.warning("langfuse client init failed", exc_info=True)
@@ -227,11 +229,24 @@ def build_langchain_metadata(handler) -> dict:
 
 def build_langchain_tags() -> list[str]:
     """Per-request Langfuse tags. 대시보드 필터용으로 provider/mode 를 축으로 둔다."""
+    # lazy import — services 레이어에서 agent 로의 모듈-로드 순환 방지
+    from server.agent.runtime import effective_loop_version
+
     return [
-        "marketscope.pae",
+        f"marketscope.{effective_loop_version()}",
         f"provider:{settings.llm_provider}",
         f"mode:{'mock' if settings.use_mock else 'real'}",
     ]
+
+
+def status() -> dict:
+    """Langfuse 배선 상태 스냅샷 — `/api/health/detail` 무음사망 가시화용."""
+    return {
+        "enabled": settings.langfuse_enabled,
+        "tracer_valid": _tracer_valid,
+        "client_initialized": _client is not None,
+        "sampling_rate": settings.langfuse_sampling_rate,
+    }
 
 
 def get_trace_id(handler) -> str | None:
@@ -329,6 +344,7 @@ def attach_summary_observation(
     *,
     metadata: dict,
     output: dict | None = None,
+    name: str = "marketscope.pae.summary",
 ) -> None:
     """그래프 종료 후 Planner/Actor/Evaluator 결정값을 trace 에 동봉.
 
@@ -336,6 +352,9 @@ def attach_summary_observation(
     span 을 추가 발행하는 우회 패턴. CallbackHandler 가 만든 langchain
     spans 와 동일 trace_id 로 묶이며, summary span 의 metadata 가 Langfuse UI
     의 trace 레벨 필터/groupby 에 그대로 반영됨.
+
+    v2 루프는 `name="marketscope.v2.summary"` 로 호출한다 (default 는 PAE
+    호출부/기존 테스트 계약 유지).
 
     None / 비활성 / 예외 모두 silent — SSE 응답 경로에 차단 발생 금지.
     """
@@ -355,7 +374,7 @@ def attach_summary_observation(
     try:
         span = client.start_observation(
             trace_context=TraceContext(trace_id=trace_id),
-            name="marketscope.pae.summary",
+            name=name,
             as_type="agent",
             metadata=clean_metadata,
             output=output,
@@ -369,6 +388,55 @@ def attach_summary_observation(
             end_fn()
     except Exception:
         logger.debug("langfuse summary observation end failed", exc_info=True)
+
+
+def attach_tool_span(
+    trace_id: str | None,
+    *,
+    name: str,
+    args: dict | None = None,
+    duration_ms: float | None = None,
+    error: str | None = None,
+    output_excerpt: str | None = None,
+) -> None:
+    """v2 루프의 도구 실행 1건을 tool-typed 0-duration span 으로 동봉.
+
+    tool 결과 본문은 싣지 않는다 — untruncated 원본은 ToolMessage 로 이미
+    LLM generation input 에 존재하므로 중복 탑재는 페이로드 낭비.
+
+    None / 비활성 / 예외 모두 silent — attach_summary_observation 과 동일 패턴.
+    """
+    if not trace_id:
+        return
+    if not _tracer_valid:
+        return
+    client = _get_client()
+    if client is None:
+        return
+    try:
+        from langfuse.types import TraceContext
+    except ImportError:
+        return
+
+    metadata = {k: v for k, v in {"duration_ms": duration_ms, "error": error}.items() if v is not None}
+    try:
+        span = client.start_observation(
+            trace_context=TraceContext(trace_id=trace_id),
+            name=name,
+            as_type="tool",
+            input=args or None,
+            output=output_excerpt,
+            metadata=metadata or None,
+        )
+    except Exception:
+        logger.debug("langfuse tool span start failed", exc_info=True)
+        return
+    try:
+        end_fn = getattr(span, "end", None)
+        if callable(end_fn):
+            end_fn()
+    except Exception:
+        logger.debug("langfuse tool span end failed", exc_info=True)
 
 
 # ---------------------------------------------------------------------------

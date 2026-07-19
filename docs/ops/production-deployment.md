@@ -123,10 +123,19 @@ origin/main push 를 systemd timer(2분 폴링)가 감지해 자동 배포한다
 
 ```
 timer(2min) → scripts/deploy/auto_deploy.sh
-  fetch → 신규 커밋 없으면 no-op → dirty/ahead 가드 → CI green 게이트(check-runs API)
-  → prev-auto 재태그 → ff merge → build(.env.dev 임시이동) → up -d → healthy 대기
+  fetch → origin/main tip == data/deploy-logs/.last-deployed-sha 면 no-op (--force 로 우회)
+  → dirty/ahead 가드 → CI green 게이트(check-runs API)
+  → prev-auto 재태그 → ff merge → build(.env.dev 임시이동)
+  → image freshness 마커 (server/·frontend/ 소스 변경 push 한정 — backend 이미지
+    Created 가 deploy 시작보다 과거면 stale build 판정 → 롤백. unchanged push 는
+    전체 캐시 히트가 정상이라 skip)
+  → up -d → backend healthy 대기 + frontend cold-start 대기(:3200, ~10-20s — compose
+    healthcheck 이 없어 recreate 직후 거부 구간을 여기서 흡수)
   → flush_cache.py → smoke 4항목 → 실패 시 prev-auto 자동 롤백
+    (롤백 recreate 후에도 healthy/frontend 대기 + smoke 재검증 — 가짜 ROLLBACK_FAILED 방지)
 ```
+
+> v2 운영 롤백 스위치: `AGENT_LOOP_VERSION=pae`(루프 전환) · `AGENT_LOOP_STREAM_FINAL=false`(옵션 B 진행 이벤트만 끔 — 본문 동일). 후자는 prod compose 에 passthrough 가 없어 `docker-compose.prod.yml` environment 블록 추가가 선행돼야 한다 ([architecture/deployment.md §3](../architecture/deployment.md)).
 
 ### 활성화 / 비활성화
 

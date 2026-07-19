@@ -97,10 +97,13 @@ services:
       DATABASE_URL_SYNC: postgresql://marketscope:e2epassword@db:5432/marketscope_e2e
       REDIS_URL: redis://redis:6379/0
       CORS_ORIGINS: '["http://localhost:3001","http://localhost:3000","http://frontend:3000"]'
-      # Telemetry 비활성 — 운영 Langfuse / PostHog 로 절대 유출 금지
-      LANGFUSE_PUBLIC_KEY: ""
-      LANGFUSE_SECRET_KEY: ""
-      LANGFUSE_HOST: ""
+      # Telemetry 기본 비활성 — 운영 Langfuse / PostHog 로 절대 유출 금지.
+      # eval 세션만 opt-in: E2E_LANGFUSE_* 를 호스트에서 export 하면 dev 프로젝트
+      # 키 + environment=e2e 태그로 수집 (미설정 시 기존과 동일하게 off).
+      LANGFUSE_PUBLIC_KEY: ${E2E_LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${E2E_LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_HOST: ${E2E_LANGFUSE_HOST:-}
+      LANGFUSE_TRACING_ENVIRONMENT: ${E2E_LANGFUSE_TRACING_ENVIRONMENT:-e2e}
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }

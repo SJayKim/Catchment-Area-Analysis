@@ -1,7 +1,7 @@
 # 아키텍처 맵 — MarketScope AI (상권분석)
 
-> 실제 구현 코드 기준의 구조·설계도·코드 매핑 문서. **학습용**. (2026-07-05 v2 아키텍처 기준 개정 — 공통 색상 팔레트 적용)
-> 서술형 학습 코스는 [`00-시작하기.md`](./00-시작하기.md) ~ [`06-데이터레이어-자료실.md`](./06-데이터레이어-자료실.md) 참고.
+> 실제 구현 코드 기준의 구조·설계도·코드 매핑 문서. **학습용**. (2026-07-16 실측 기준 개정 — 스트리밍 옵션 B·openai 체인 반영)
+> 서술형 학습 코스는 [`00-시작하기.md`](./00-시작하기.md) ~ [`07-관측-품질기록실.md`](./07-관측-품질기록실.md) 참고.
 > 레이어별 상세는 [`../architecture/`](../architecture/) (backend/frontend/agent/data) 참고.
 > Mermaid 색상 범례 정본은 [`00-시작하기.md`](./00-시작하기.md#공통-색상-범례) 참고 (🔵프론트 / 🟣백엔드 / 🔴에이전트 / 🟢데이터 / 🟠외부·LLM / 🩷Trust 게이트).
 
@@ -55,7 +55,7 @@ flowchart TB
         REPO --> RD
     end
 
-    LLM["🤖 LLM<br/>Claude Sonnet (claude-sonnet-4-6)<br/>→ Gemini 2.5 pro → flash 폴백 체인"]
+    LLM["🤖 LLM<br/>Claude Sonnet (claude-sonnet-4-6)<br/>→ GPT (gpt-5.4-mini) → Gemini 2.5 pro → flash<br/>선호-우선 폴백 체인 (LLM_PROVIDER 승격)"]
 
     USER --> FE
     FE -->|"REST + SSE<br/>POST /api/chat"| BE
@@ -79,7 +79,7 @@ flowchart TB
 | 경계 | 색 | 의미 |
 |---|---|---|
 | **REST + SSE** | 🔵↔🟣 | 브라우저 ↔ 백엔드. 질문은 POST, 답변은 SSE 스트림 (v2 루프 방출 7종 + chat.py 계층의 `map_cmd`) |
-| **LLM** | 🔴↔🟠 | 에이전트 ↔ Claude/Gemini. 단일 tool-calling 모델에 per-invoke 폴백 체인 |
+| **LLM** | 🔴↔🟠 | 에이전트 ↔ Claude/GPT/Gemini. 단일 tool-calling 모델에 per-invoke 선호-우선 폴백 체인 |
 | **Repository** | 🔴↔🟢 | 도구 ↔ DB. `USE_MOCK` 한 줄로 가짜/진짜 데이터 전환 |
 | **Trust 게이트** | 🩷 | 답변 방출 직전 수치 검증 — v2 를 v2 답게 만드는 관문 |
 
@@ -114,7 +114,7 @@ sequenceDiagram
     rect rgba(255,235,238,0.45)
     note over E: 반복 루프 (최대 6 모델 턴)
     API->>E: 메시지 + district_code + 히스토리(최근 6턴)
-    E->>LLM: ainvoke_with_fallback(도구 스키마 12종 바인딩)
+    E->>LLM: ainvoke/astream_with_fallback(도구 스키마 12종 바인딩)
     LLM-->>E: tool_calls (예: get_district_summary)
     loop 각 tool call (순차 실행)
         E-->>U: tool 이벤트
@@ -125,6 +125,9 @@ sequenceDiagram
         E-->>U: card 이벤트 (card_type 매핑 시) → tool_end
     end
     Note over E: budget governor —<br/>도구 12회 / 90s 초과 시 강제 마무리,<br/>마지막 턴은 도구 없이 prose 강제
+    opt 최종 답변 astream 수신 (옵션 B — 본문은 버퍼링)
+        E-->>U: thinking "응답 작성 중... n%" (진행 이벤트)
+    end
     end
 
     rect rgba(252,228,236,0.45)
@@ -146,14 +149,14 @@ sequenceDiagram
 ## 3. AI 에이전트 내부 — v2 agentic loop + Trust Kernel
 
 런타임은 **v2 모델주도 루프**다. `agent/runtime.py::_use_v2` 가
-`agent_loop_version == "v2"`(config.py:80 기본값) **이고** `llm_provider != "mock"` 일 때
+`agent_loop_version == "v2"`(config.py:86 기본값) **이고** `llm_provider != "mock"` 일 때
 `agent/loop/engine.py` 로 디스패치한다. (레거시 각주: mock 모드는 FakeListChatModel 이
 tool-call 을 못 하므로 레거시 경로(`graph.py`)를 탄다 — Mock E2E 도 그 경로다.)
 
 ```mermaid
 flowchart TB
     START((START)) --> SYS["시스템 프롬프트 + 컨텍스트<br/>+ 히스토리 최근 6턴"]
-    SYS --> TURN["🤖 모델 턴<br/>ainvoke_with_fallback(스키마 12종)"]
+    SYS --> TURN["🤖 모델 턴<br/>ainvoke/astream_with_fallback(스키마 12종)<br/>옵션 B: 버퍼링 + 응답 작성 중 n%"]
     TURN -->|tool_calls 有| EXEC["🔧 도구 순차 실행<br/>tool→(card)→tool_end 이벤트<br/>결과는 fact_pool 축적"]
     EXEC --> BUDGET{"budget governor<br/>턴≤6 · 도구≤12 · 90s"}
     BUDGET -->|여유| TURN
@@ -177,14 +180,15 @@ flowchart TB
 
 | 구성요소 | 값/역할 | 코드 |
 |---|---|---|
-| 디스패치 | `agent_loop_version="v2"` (기본) + `llm_provider!="mock"` | `agent/runtime.py::_use_v2` · `config.py:80` |
-| 모델 턴 상한 | `agent_loop_max_iterations` = **6** (마지막 턴 prose 강제) | `config.py:82` |
-| 도구 실행 총량 | `agent_loop_max_tool_calls` = **12** | `config.py:83` |
-| wall clock | `agent_loop_wall_clock` = **90s** | `config.py:84` |
+| 디스패치 | `agent_loop_version="v2"` (기본) + `llm_provider!="mock"` | `agent/runtime.py::_use_v2` · `config.py:86` |
+| 모델 턴 상한 | `agent_loop_max_iterations` = **6** (마지막 턴 prose 강제) | `config.py:88` |
+| 도구 실행 총량 | `agent_loop_max_tool_calls` = **12** | `config.py:89` |
+| wall clock | `agent_loop_wall_clock` = **90s** | `config.py:90` |
+| 최종 응답 스트리밍 (옵션 B) | `agent_loop_stream_final=true` — astream 버퍼링 + `thinking` "응답 작성 중 n%"(min(99, chars×100÷2400) 단조·억제 120/80자·tool_call 청크 억제). 본문은 Trust 후 일괄 방출. 롤백 `AGENT_LOOP_STREAM_FINAL=false` | `loop/engine.py:206-231` · `models.py::astream_with_fallback` · `config.py:93-96` |
 | 도구 스키마 | **12종** = 도메인 9종 + 메타 3종 | `loop/tools_fc.py::tool_schemas` |
 | 메타툴 | `resolve_district`(상권명→코드) · `compute`(AST 안전 산술, eval 미사용) · `abstain`(데이터 없음/서울 외 1급 거부) | `tools_fc.py` |
-| LLM 체인 | per-invoke 폴백: anthropic `claude-sonnet-4-6` → `gemini-2.5-pro` → `gemini-2.5-flash` | `loop/models.py::ainvoke_with_fallback` |
-| 수치 허용오차 | `trust_numeric_tolerance` = **0.05** (±5%) | `config.py:86` |
+| LLM 체인 | per-invoke 폴백(선호-우선): anthropic `claude-sonnet-4-6` → openai `gpt-5.4-mini` → `gemini-2.5-pro` → `gemini-2.5-flash` (`LLM_PROVIDER` 가 선호 프로바이더를 맨 앞으로 승격) | `loop/models.py::ainvoke_with_fallback` / `::astream_with_fallback` |
+| 수치 허용오차 | `trust_numeric_tolerance` = **0.05** (±5%) | `config.py:99` |
 | Trust 집행 | 교정 1회 → `should_fallback`(unbound ≥3 AND ≥50%) 시 `grounded_fallback`, 미만이면 `mask_unbound` | `loop/trust.py` |
 
 > **설계 포인트 3가지:** ① 계획을 미리 세우지 않는다 — **모델이 매 턴 도구를 직접 고른다** (그래서 `plan` 이벤트가 없다). ② 도구는 **순차 실행**된다 (병렬화가 필요한 조합은 `get_district_summary` 처럼 도구 **내부**에 캡슐화). ③ 응답 후 **Trust Kernel 이 수치를 검증**한 뒤에야 방출한다 (검증-후-방출 — 토큰 단위 스트리밍이 아닌 90자 청크인 이유).
@@ -212,7 +216,7 @@ flowchart TB
 | `repositories/protocols.py` | **10개 인터페이스 정의** (로직 없음) | 계약 우선 |
 | `repositories/mock/` · `real/` | 같은 인터페이스 두 구현체 (`USE_MOCK` 분기) | Repository 패턴 |
 | `repositories/data_access.py` | 10개 repo 묶는 Facade | 의존성 주입 |
-| `services/` | cache · circuit_breaker · category_resolver · singleflight · langfuse | 인프라 서비스 |
+| `services/` | cache · circuit_breaker · category_resolver · singleflight · langfuse_tracer(관측 — [학습문서 07](07-관측-품질기록실.md)) | 인프라 서비스 |
 | `models/` | SQLAlchemy ORM (district/sales/store/population/...) | DB 스키마 |
 | `data/etl/` | 공공데이터 수집 스크립트 | ETL |
 
@@ -262,19 +266,19 @@ flowchart TB
 
 | 설계도 노드 | 구현 함수 | file:line |
 |---|---|---|
-| 루프 본체 (모델 턴 + budget governor + Trust 집행) | `run_agent` | `agent/loop/engine.py:124` (루프: 166 · Trust 집행: 240) |
+| 루프 본체 (모델 턴 + budget governor + Trust 집행) | `run_agent` | `agent/loop/engine.py:124` (루프: 193 · 옵션 B 수신부: 206 · Trust 집행: 307) |
 | 교정 턴 메타 발화 필터 | `_is_answer_shaped` | `engine.py:113` |
 | 도구 스키마 12종 (도메인 9 + 메타 3) | `tool_schemas` | `agent/loop/tools_fc.py:37` |
 | 도구 실행 (메타 3종 로컬 / 도메인 9종 registry 위임) | `execute_fc_tool` / `safe_compute` | `tools_fc.py:237, 202` |
 | 업종명 → category_code 정규화 | `_normalize_category` | `tools_fc.py:219` |
-| LLM 폴백 체인 | `_candidate_chain` / `ainvoke_with_fallback` | `agent/loop/models.py:38, 76` |
+| LLM 폴백 체인 | `_candidate_chain` / `ainvoke_with_fallback` / `astream_with_fallback` | `agent/loop/models.py:48, 130, 210` |
 | 수치 바인딩 검사 | `find_unbound_numbers` / `binding_stats` | `agent/loop/trust.py:41, 68` |
 | ×10/×100 자릿수 오기 검출 | `find_scale_errors` | `trust.py:87` |
 | 마스킹 / 전체 대체 판정 | `mask_unbound` / `should_fallback` | `trust.py:106, 122` |
 | 결정론적 폴백 텍스트 | `grounded_fallback` | `trust.py:268` |
 | 시스템 프롬프트 / 교정 지시 | `LOOP_SYSTEM_PROMPT` / `corrective_instruction` | `agent/loop/prompts.py:6, 40` |
 
-> 라인 번호는 2026-07-05 확인값 — 드리프트가 의심되면 함수명으로 grep 하라.
+> 라인 번호는 2026-07-16 확인값 — 드리프트가 의심되면 함수명으로 grep 하라.
 
 ### 5-3. 도구(Tool) 레지스트리
 
@@ -311,6 +315,7 @@ flowchart TB
 | 지도클릭 프리뷰 (LLM無) | `setPreview` | `chatStore.ts:144` |
 | SSE 스트림 파서 | `parseSSEStream` | `lib/sseParser.ts:10` |
 | 이벤트→스토어 dispatch | `handleSSEEvent` | `lib/eventHandlers.ts:55` |
+| 진행률 라벨 실시간 갱신 ("응답 작성 중 n%") | `thinking` 케이스의 `updateAgentStepStatus('response', …)` | `eventHandlers.ts:65-81` |
 | 도구 진행 라벨 매핑 | `TOOL_LABELS` | `eventHandlers.ts:5` |
 | 카드 컴포넌트 매핑 | `registry.ts` | `components/chat/cards/registry.ts` |
 
@@ -333,8 +338,9 @@ flowchart TB
 |---|---|---|
 | 루프 전환 스위치 | `AGENT_LOOP_VERSION` 하나로 신형/레거시 전환 (환경변수 롤백 가능). mock 프로바이더는 항상 레거시 폴백 | `agent/runtime.py` · `config.py:80` |
 | Trust Kernel (검증-후-방출) | 답변의 모든 수치를 도구 반환값에 ±5% 바인딩. 교정→마스킹→결정론적 대체 단계 집행 | `agent/loop/trust.py` + `engine.py` 집행부 |
-| Budget governor | 모델 턴 6 / 도구 12회 / 90s — 마지막 턴은 도구 없이 prose 강제 종결 | `config.py:82-84` · `loop/engine.py` |
-| 모델 ID settings 화 | 하드코딩 모델 ID 금지 — 은퇴 모델 404 를 env 로 핫픽스 ("죽은 모델 ID" 교훈) + per-invoke 폴백 체인 | `loop/models.py` · `config.py:37-42` |
+| Budget governor | 모델 턴 6 / 도구 12회 / 90s — 마지막 턴은 도구 없이 prose 강제 종결 | `config.py:88-90` · `loop/engine.py` |
+| v2 스트리밍 옵션 B | 최종 턴 astream 버퍼링 + `thinking` "응답 작성 중 n%" 진행 이벤트 — 이벤트 계약·Trust 의미론 불변, 체감 침묵만 제거. 롤백 `AGENT_LOOP_STREAM_FINAL=false` | `loop/engine.py:206-231` · `models.py::astream_with_fallback` · `config.py:93-96` |
+| 모델 ID settings 화 | 하드코딩 모델 ID 금지 — 은퇴 모델 404 를 env 로 핫픽스 ("죽은 모델 ID" 교훈) + per-invoke 선호-우선 폴백 체인(anthropic→openai→gemini) | `loop/models.py` · `config.py:37-48` |
 | Mock/Real 분기 | `USE_MOCK` 한 플래그로 DB 없이 단독 기동 | `config.py` · `main.py:21` |
 | SSE 직접 호출 | Next rewrite 우회(버퍼링 방지) | `chatStore.ts` (`NEXT_PUBLIC_API_URL` 직접) |
 | 매출 월환산 | DB는 분기누적(`THSMON_SELNG_AMT`) → repo에서 ÷ 환산 | `real/_units.py` (`MONTHS_PER_QUARTER`) |
@@ -384,9 +390,9 @@ cd frontend && npx tsc --noEmit                 # 타입체크
 cd server && ruff check . && pytest             # 린트 + 테스트
 ```
 
-핵심 env: `USE_MOCK`(true/false), `AGENT_LOOP_VERSION`(`v2` 기본 / `pae` 롤백 스위치), `LLM_PROVIDER`(anthropic/gemini/mock — mock 이면 레거시 폴백), `DATABASE_URL`, `REDIS_URL`, `NEXT_PUBLIC_API_URL`(SSE 직접호출용, `:8000` 권장), `NEXT_PUBLIC_KAKAO_MAP_KEY`, `ANTHROPIC_API_KEY`.
+핵심 env: `USE_MOCK`(true/false), `AGENT_LOOP_VERSION`(`v2` 기본 / `pae` 롤백 스위치), `LLM_PROVIDER`(anthropic/openai/gemini/mock — mock 이면 레거시 폴백), `DATABASE_URL`, `REDIS_URL`, `NEXT_PUBLIC_API_URL`(SSE 직접호출용, `:8000` 권장), `NEXT_PUBLIC_KAKAO_MAP_KEY`, `ANTHROPIC_API_KEY`.
 관련 설정(`config.py`): `agent_loop_max_iterations=6` · `agent_loop_max_tool_calls=12` · `agent_loop_wall_clock=90.0` · `trust_numeric_tolerance=0.05`. (구 `AGENT_MODE` 설정은 제거됨 — 관측 필드 `agent_mode` 는 `runtime.py::effective_loop_version()` 실효값을 보고한다.)
 
 ---
 
-> 📖 더 깊게: 개념을 비유로 풀어쓴 [`00-시작하기.md`](./00-시작하기.md) 코스 / 정밀 스펙은 [`../architecture/`](../architecture/) (overview·backend·frontend·agent·data·deployment).
+> 📖 더 깊게: 개념을 비유로 풀어쓴 [`00-시작하기.md`](./00-시작하기.md) 코스 (관측/Langfuse 는 [`07-관측-품질기록실.md`](./07-관측-품질기록실.md)) / 정밀 스펙은 [`../architecture/`](../architecture/) (overview·backend·frontend·agent·data·deployment).

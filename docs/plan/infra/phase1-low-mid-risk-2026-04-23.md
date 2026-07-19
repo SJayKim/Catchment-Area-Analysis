@@ -110,8 +110,8 @@
 - [ ] **엣지케이스**: chatStore slice 분할 시 action 간 cross-reference (e.g. `sendMessage` 가 `setPreview` 호출) 보존
 - [ ] **Memory 교훈**: `Any` 제거는 import 문 제거 Edit 1회로 — `feedback_formatter_strips_unused_imports.md` 위반 금지
 - [ ] **Memory 교훈**: except 좁힌 후 추가 로그는 printf-style — `feedback_structlog_extra_silent.md`
-- [ ] **타 Plan 충돌**: [accuracy-gap-fix.md](../fix/accuracy-gap-fix.md) W4 (Card-level PDF) 와 chatStore 분할 순서 — W4 deferred 상태라 무충돌
-- [ ] **타 Plan 충돌**: [llmops-l1-verification.md](./llmops-l1-verification.md) C-8 프로덕션 재검증 이전에 respond.py 분할이 끝나지 않아야 함 → Pass 2 는 dev 검증까지만, 프로덕션 재빌드는 별도 세션
+- [ ] **타 Plan 충돌**: accuracy-gap-fix.md (git history) W4 (Card-level PDF) 와 chatStore 분할 순서 — W4 deferred 상태라 무충돌
+- [ ] **타 Plan 충돌**: llmops-l1-verification.md (git history) C-8 프로덕션 재검증 이전에 respond.py 분할이 끝나지 않아야 함 → Pass 2 는 dev 검증까지만, 프로덕션 재빌드는 별도 세션
 
 ## Scenario (E2E Ring Mapping)
 

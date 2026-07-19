@@ -27,8 +27,9 @@ class Settings(BaseSettings):
     data_go_kr_api_key: str = ""
 
     # LLM
-    llm_provider: str = "gemini"  # "anthropic" | "gemini" | "mock"
+    llm_provider: str = "gemini"  # "anthropic" | "openai" | "gemini" | "mock"
     anthropic_api_key: str = ""
+    openai_api_key: str = ""
     google_api_key: str = ""
 
     # Per-role Gemini model (pro for critical, flash for lightweight)
@@ -40,6 +41,11 @@ class Settings(BaseSettings):
     # Anthropic model — env-overridable so a retired model ID (the 2026-06
     # "dead model" incident) can be hotfixed without a code deploy.
     anthropic_model: str = "claude-sonnet-4-6"
+
+    # OpenAI model — GPT-5.x reasoning model. env-overridable (same dead-model
+    # hotfix rationale as anthropic_model). Reasoning models reject a non-default
+    # temperature, so the _build openai branch omits it (loop/models.py).
+    openai_model: str = "gpt-5.4-mini"
 
     # Langfuse (LLMOps L1 — Trace 활성화)
     # 빈 값이면 tracing 비활성. 둘 중 하나만 세팅 시 경고 로그 후 비활성.
@@ -82,6 +88,13 @@ class Settings(BaseSettings):
     agent_loop_max_iterations: int = 6  # model turns before forced finalize
     agent_loop_max_tool_calls: int = 12  # total tool executions per request
     agent_loop_wall_clock: float = 90.0  # seconds before forced finalize
+    # v2 final-turn streaming (Option B): astream + buffering + progress
+    # events. Trust semantics unchanged — perceived-latency improvement only.
+    agent_loop_stream_final: bool = True  # rollback switch (env AGENT_LOOP_STREAM_FINAL=false)
+    agent_loop_progress_min_chars: int = 120  # suppress progress below this (tool-call preamble)
+    agent_loop_progress_interval_chars: int = 80  # min char gap between progress events
+    agent_loop_expected_answer_chars: int = 2400  # progress denominator (capped at 99%)
+    # ↑ 실측(V4) 분석 답변 ~2,000자 기준 — 작게 잡으면 99% 정체 구간이 길어진다.
     # Trust Kernel — fuzzy tolerance for binding a response number to a fact.
     trust_numeric_tolerance: float = 0.05
 
