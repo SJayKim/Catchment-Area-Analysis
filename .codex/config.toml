@@ -1,0 +1,13 @@
+[shell_environment_policy]
+inherit = "core"
+
+[shell_environment_policy.set]
+PYTHONIOENCODING = "utf-8"
+NODE_TLS_REJECT_UNAUTHORIZED = "0"
+
+[mcp_servers.playwright]
+command = "npx"
+args = [
+    "-y",
+    "@anthropic-ai/mcp-server-playwright",
+]

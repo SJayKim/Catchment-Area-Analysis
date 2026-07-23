@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python 'C:\\Users\\cyon1\\OneDrive\\Desktop\\Catchment-Area-Analysis\\.codex\\hooks\\protect_secrets.py'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python 'C:\\Users\\cyon1\\OneDrive\\Desktop\\Catchment-Area-Analysis\\.codex\\hooks\\ruff_format.py'"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python 'C:\\Users\\cyon1\\OneDrive\\Desktop\\Catchment-Area-Analysis\\.codex\\hooks\\inject_gotchas.py'"
+          }
+        ]
+      }
+    ]
+  }
+}
